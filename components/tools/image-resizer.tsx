@@ -31,6 +31,7 @@ type SizePreset = {
   label: string
   width: number
   height: number
+  ratio: string
 }
 
 const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[] }> = [
@@ -38,111 +39,111 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     id: "instagram",
     label: "Instagram",
     sizes: [
-      { id: "instagram-square-post", platform: "instagram", platformLabel: "Instagram", label: "Square Post", width: 1080, height: 1080 },
-      { id: "instagram-4x5-vertical", platform: "instagram", platformLabel: "Instagram", label: "4:5 Vertical", width: 1080, height: 1350 },
-      { id: "instagram-3x4-vertical", platform: "instagram", platformLabel: "Instagram", label: "3:4 Vertical", width: 1080, height: 1440 },
-      { id: "instagram-horizontal", platform: "instagram", platformLabel: "Instagram", label: "Horizontal", width: 1080, height: 566 },
-      { id: "instagram-story-reels", platform: "instagram", platformLabel: "Instagram", label: "Story/Reels", width: 1080, height: 1920 },
-      { id: "instagram-profile", platform: "instagram", platformLabel: "Instagram", label: "Profile", width: 320, height: 320 },
+      { id: "instagram-square-post", platform: "instagram", platformLabel: "Instagram", label: "Square Post", width: 1080, height: 1080, ratio: "1:1" },
+      { id: "instagram-4x5-vertical", platform: "instagram", platformLabel: "Instagram", label: "4:5 Vertical", width: 1080, height: 1350, ratio: "4:5" },
+      { id: "instagram-3x4-vertical", platform: "instagram", platformLabel: "Instagram", label: "3:4 Vertical", width: 1080, height: 1440, ratio: "3:4" },
+      { id: "instagram-horizontal", platform: "instagram", platformLabel: "Instagram", label: "Horizontal", width: 1080, height: 566, ratio: "1.91:1" },
+      { id: "instagram-story-reels", platform: "instagram", platformLabel: "Instagram", label: "Story/Reels", width: 1080, height: 1920, ratio: "9:16" },
+      { id: "instagram-profile", platform: "instagram", platformLabel: "Instagram", label: "Profile", width: 320, height: 320, ratio: "1:1" },
     ],
   },
   {
     id: "facebook",
     label: "Facebook",
     sizes: [
-      { id: "facebook-post", platform: "facebook", platformLabel: "Facebook", label: "Post", width: 1200, height: 630 },
-      { id: "facebook-story", platform: "facebook", platformLabel: "Facebook", label: "Story", width: 1080, height: 1920 },
-      { id: "facebook-cover-photo", platform: "facebook", platformLabel: "Facebook", label: "Cover Photo", width: 820, height: 312 },
-      { id: "facebook-profile", platform: "facebook", platformLabel: "Facebook", label: "Profile", width: 320, height: 320 },
-      { id: "facebook-carousel", platform: "facebook", platformLabel: "Facebook", label: "Carousel", width: 1200, height: 1200 },
+      { id: "facebook-post", platform: "facebook", platformLabel: "Facebook", label: "Post", width: 1200, height: 630, ratio: "1.91:1" },
+      { id: "facebook-story", platform: "facebook", platformLabel: "Facebook", label: "Story", width: 1080, height: 1920, ratio: "9:16" },
+      { id: "facebook-cover-photo", platform: "facebook", platformLabel: "Facebook", label: "Cover Photo", width: 820, height: 312, ratio: "2.63:1" },
+      { id: "facebook-profile", platform: "facebook", platformLabel: "Facebook", label: "Profile", width: 320, height: 320, ratio: "1:1" },
+      { id: "facebook-carousel", platform: "facebook", platformLabel: "Facebook", label: "Carousel", width: 1200, height: 1200, ratio: "1:1" },
     ],
   },
   {
     id: "twitter",
     label: "Twitter/X",
     sizes: [
-      { id: "twitter-post", platform: "twitter", platformLabel: "Twitter/X", label: "Post", width: 1200, height: 675 },
-      { id: "twitter-square-post", platform: "twitter", platformLabel: "Twitter/X", label: "Square Post", width: 1080, height: 1080 },
-      { id: "twitter-header", platform: "twitter", platformLabel: "Twitter/X", label: "Header", width: 1500, height: 500 },
-      { id: "twitter-profile", platform: "twitter", platformLabel: "Twitter/X", label: "Profile", width: 400, height: 400 },
+      { id: "twitter-post", platform: "twitter", platformLabel: "Twitter/X", label: "Post", width: 1200, height: 675, ratio: "16:9" },
+      { id: "twitter-square-post", platform: "twitter", platformLabel: "Twitter/X", label: "Square Post", width: 1080, height: 1080, ratio: "1:1" },
+      { id: "twitter-header", platform: "twitter", platformLabel: "Twitter/X", label: "Header", width: 1500, height: 500, ratio: "3:1" },
+      { id: "twitter-profile", platform: "twitter", platformLabel: "Twitter/X", label: "Profile", width: 400, height: 400, ratio: "1:1" },
     ],
   },
   {
     id: "tiktok",
     label: "TikTok",
     sizes: [
-      { id: "tiktok-vertical-cover", platform: "tiktok", platformLabel: "TikTok", label: "Vertical Cover", width: 1080, height: 1920 },
-      { id: "tiktok-feed-square", platform: "tiktok", platformLabel: "TikTok", label: "Feed Square", width: 1080, height: 1080 },
-      { id: "tiktok-profile", platform: "tiktok", platformLabel: "TikTok", label: "Profile", width: 200, height: 200 },
+      { id: "tiktok-vertical-cover", platform: "tiktok", platformLabel: "TikTok", label: "Vertical Cover", width: 1080, height: 1920, ratio: "9:16" },
+      { id: "tiktok-feed-square", platform: "tiktok", platformLabel: "TikTok", label: "Feed Square", width: 1080, height: 1080, ratio: "1:1" },
+      { id: "tiktok-profile", platform: "tiktok", platformLabel: "TikTok", label: "Profile", width: 200, height: 200, ratio: "1:1" },
     ],
   },
   {
     id: "linkedin",
     label: "LinkedIn",
     sizes: [
-      { id: "linkedin-post", platform: "linkedin", platformLabel: "LinkedIn", label: "Post", width: 1200, height: 627 },
-      { id: "linkedin-cover", platform: "linkedin", platformLabel: "LinkedIn", label: "Cover", width: 1584, height: 396 },
-      { id: "linkedin-profile", platform: "linkedin", platformLabel: "LinkedIn", label: "Profile", width: 400, height: 400 },
+      { id: "linkedin-post", platform: "linkedin", platformLabel: "LinkedIn", label: "Post", width: 1200, height: 627, ratio: "1.91:1" },
+      { id: "linkedin-cover", platform: "linkedin", platformLabel: "LinkedIn", label: "Cover", width: 1584, height: 396, ratio: "4:1" },
+      { id: "linkedin-profile", platform: "linkedin", platformLabel: "LinkedIn", label: "Profile", width: 400, height: 400, ratio: "1:1" },
     ],
   },
   {
     id: "youtube",
     label: "YouTube",
     sizes: [
-      { id: "youtube-thumbnail", platform: "youtube", platformLabel: "YouTube", label: "Thumbnail", width: 1280, height: 720 },
-      { id: "youtube-channel-banner", platform: "youtube", platformLabel: "YouTube", label: "Channel Banner", width: 2560, height: 1440 },
-      { id: "youtube-profile", platform: "youtube", platformLabel: "YouTube", label: "Profile", width: 800, height: 800 },
+      { id: "youtube-thumbnail", platform: "youtube", platformLabel: "YouTube", label: "Thumbnail", width: 1280, height: 720, ratio: "16:9" },
+      { id: "youtube-channel-banner", platform: "youtube", platformLabel: "YouTube", label: "Channel Banner", width: 2560, height: 1440, ratio: "16:9" },
+      { id: "youtube-profile", platform: "youtube", platformLabel: "YouTube", label: "Profile", width: 800, height: 800, ratio: "1:1" },
     ],
   },
   {
     id: "pinterest",
     label: "Pinterest",
     sizes: [
-      { id: "pinterest-standard-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Standard Pin", width: 1000, height: 1500 },
-      { id: "pinterest-square-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Square Pin", width: 1000, height: 1000 },
-      { id: "pinterest-board-cover", platform: "pinterest", platformLabel: "Pinterest", label: "Board Cover", width: 800, height: 800 },
+      { id: "pinterest-standard-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Standard Pin", width: 1000, height: 1500, ratio: "2:3" },
+      { id: "pinterest-square-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Square Pin", width: 1000, height: 1000, ratio: "1:1" },
+      { id: "pinterest-board-cover", platform: "pinterest", platformLabel: "Pinterest", label: "Board Cover", width: 800, height: 800, ratio: "1:1" },
     ],
   },
   {
     id: "threads",
     label: "Threads",
     sizes: [
-      { id: "threads-post-square", platform: "threads", platformLabel: "Threads", label: "Post Square", width: 1080, height: 1080 },
-      { id: "threads-vertical", platform: "threads", platformLabel: "Threads", label: "Vertical", width: 1080, height: 1350 },
+      { id: "threads-post-square", platform: "threads", platformLabel: "Threads", label: "Post Square", width: 1080, height: 1080, ratio: "1:1" },
+      { id: "threads-vertical", platform: "threads", platformLabel: "Threads", label: "Vertical", width: 1080, height: 1350, ratio: "4:5" },
     ],
   },
   {
     id: "snapchat",
     label: "Snapchat",
     sizes: [
-      { id: "snapchat-story", platform: "snapchat", platformLabel: "Snapchat", label: "Story", width: 1080, height: 1920 },
-      { id: "snapchat-profile", platform: "snapchat", platformLabel: "Snapchat", label: "Profile", width: 320, height: 320 },
+      { id: "snapchat-story", platform: "snapchat", platformLabel: "Snapchat", label: "Story", width: 1080, height: 1920, ratio: "9:16" },
+      { id: "snapchat-profile", platform: "snapchat", platformLabel: "Snapchat", label: "Profile", width: 320, height: 320, ratio: "1:1" },
     ],
   },
   {
     id: "bluesky",
     label: "Bluesky",
     sizes: [
-      { id: "bluesky-post-square", platform: "bluesky", platformLabel: "Bluesky", label: "Post Square", width: 1200, height: 1200 },
-      { id: "bluesky-landscape", platform: "bluesky", platformLabel: "Bluesky", label: "Landscape", width: 1200, height: 675 },
-      { id: "bluesky-banner", platform: "bluesky", platformLabel: "Bluesky", label: "Banner", width: 1500, height: 500 },
+      { id: "bluesky-post-square", platform: "bluesky", platformLabel: "Bluesky", label: "Post Square", width: 1200, height: 1200, ratio: "1:1" },
+      { id: "bluesky-landscape", platform: "bluesky", platformLabel: "Bluesky", label: "Landscape", width: 1200, height: 675, ratio: "16:9" },
+      { id: "bluesky-banner", platform: "bluesky", platformLabel: "Bluesky", label: "Banner", width: 1500, height: 500, ratio: "3:1" },
     ],
   },
   {
     id: "whatsapp",
     label: "WhatsApp",
     sizes: [
-      { id: "whatsapp-profile", platform: "whatsapp", platformLabel: "WhatsApp", label: "Profile", width: 640, height: 640 },
-      { id: "whatsapp-status", platform: "whatsapp", platformLabel: "WhatsApp", label: "Status", width: 1080, height: 1920 },
+      { id: "whatsapp-profile", platform: "whatsapp", platformLabel: "WhatsApp", label: "Profile", width: 640, height: 640, ratio: "1:1" },
+      { id: "whatsapp-status", platform: "whatsapp", platformLabel: "WhatsApp", label: "Status", width: 1080, height: 1920, ratio: "9:16" },
     ],
   },
   {
     id: "reddit",
     label: "Reddit",
     sizes: [
-      { id: "reddit-post", platform: "reddit", platformLabel: "Reddit", label: "Post", width: 1200, height: 628 },
-      { id: "reddit-banner", platform: "reddit", platformLabel: "Reddit", label: "Banner", width: 1920, height: 384 },
-      { id: "reddit-profile", platform: "reddit", platformLabel: "Reddit", label: "Profile", width: 256, height: 256 },
+      { id: "reddit-post", platform: "reddit", platformLabel: "Reddit", label: "Post", width: 1200, height: 628, ratio: "1.91:1" },
+      { id: "reddit-banner", platform: "reddit", platformLabel: "Reddit", label: "Banner", width: 1920, height: 384, ratio: "5:1" },
+      { id: "reddit-profile", platform: "reddit", platformLabel: "Reddit", label: "Profile", width: 256, height: 256, ratio: "1:1" },
     ],
   },
 ]
@@ -156,6 +157,7 @@ type GeneratedImage = {
   platformLabel: string
   width: number
   height: number
+  ratio: string
   fileName: string
   sourceFile: File
   url: string
@@ -192,6 +194,14 @@ export function ImageResizer() {
   const activePreviewPreset = useMemo(() => {
     return PRESET_BY_ID.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null
   }, [activePreviewPresetId, selectedPresetList])
+
+  // Group selected presets by platform for chip display
+  const selectedChips = useMemo(() => {
+    return selectedPresetList.map((preset) => ({
+      id: preset.id,
+      label: `${preset.platformLabel} ${preset.label}`,
+    }))
+  }, [selectedPresetList])
 
   useEffect(() => {
     if (files.length === 0) {
@@ -250,6 +260,14 @@ export function ImageResizer() {
       const next = new Set(prev)
       if (checked) next.add(presetId)
       else next.delete(presetId)
+      return next
+    })
+  }
+
+  const removeChip = (presetId: string) => {
+    setSelectedSizes((prev) => {
+      const next = new Set(prev)
+      next.delete(presetId)
       return next
     })
   }
@@ -341,6 +359,7 @@ export function ImageResizer() {
           platformLabel: preset.platformLabel,
           width: preset.width,
           height: preset.height,
+          ratio: preset.ratio,
           fileName: `${sourceName}_${preset.id}.jpg`,
           sourceFile: file,
           url: rendered.url,
@@ -453,11 +472,46 @@ export function ImageResizer() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+
+              {/* Selected Sizes Chip Summary */}
+              {selectedChips.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedChips.map((chip) => (
+                      <span
+                        key={chip.id}
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
+                      >
+                        {chip.label}
+                        <button
+                          type="button"
+                          onClick={() => removeChip(chip.id)}
+                          className="ml-0.5 rounded-full hover:text-destructive"
+                          aria-label={`Remove ${chip.label}`}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <Accordion type="multiple" className="rounded-lg border border-border px-3">
                 {PLATFORM_GROUPS.map((group) => (
                   <AccordionItem key={group.id} value={group.id}>
                     <AccordionTrigger className="py-3">
-                      <span>{group.label}</span>
+                      <span className="flex items-center gap-2">
+                        {group.label}
+                        {group.sizes.some((s) => selectedSizes.has(s.id)) && (
+                          <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">
+                            {group.sizes.filter((s) => selectedSizes.has(s.id)).length}
+                          </span>
+                        )}
+                      </span>
                     </AccordionTrigger>
                     <AccordionContent className="space-y-3">
                       <div className="flex gap-2">
@@ -491,9 +545,10 @@ export function ImageResizer() {
                               />
                               <span>{preset.label}</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {preset.width}x{preset.height}
-                            </span>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
+                              <span>{preset.width}×{preset.height}</span>
+                            </div>
                           </label>
                         ))}
                       </div>
@@ -503,7 +558,7 @@ export function ImageResizer() {
               </Accordion>
 
               <p className="text-xs text-muted-foreground">
-                Selected sizes: {selectedPresetList.length} • Files: {files.length}
+                Selected: {selectedPresetList.length} sizes • Files: {files.length}
               </p>
 
               <Button
@@ -511,7 +566,7 @@ export function ImageResizer() {
                 disabled={isProcessing || files.length === 0 || selectedPresetList.length === 0}
                 className="w-full"
               >
-                {isProcessing ? "Processing..." : "Generate Selected"}
+                {isProcessing ? "Processing..." : `Generate ${selectedPresetList.length > 0 ? selectedPresetList.length : ""} Selected`}
               </Button>
             </CardContent>
           </Card>
@@ -523,7 +578,7 @@ export function ImageResizer() {
               <CardHeader>
                 <CardTitle className="text-base">Crop Preview</CardTitle>
                 <CardDescription>
-                  Drag overlay on the original image to set crop position for the selected size.
+                  Drag the overlay to adjust crop position for each size.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -537,7 +592,7 @@ export function ImageResizer() {
                   >
                     {selectedPresetList.map((preset) => (
                       <option key={preset.id} value={preset.id}>
-                        {preset.platformLabel} - {preset.label} ({preset.width}x{preset.height})
+                        {preset.platformLabel} — {preset.label} ({preset.ratio}) {preset.width}×{preset.height}
                       </option>
                     ))}
                   </select>
@@ -599,6 +654,10 @@ export function ImageResizer() {
                     )
                   })()}
                 </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {activePreviewPreset.platformLabel} — {activePreviewPreset.label} • {activePreviewPreset.ratio} • {activePreviewPreset.width}×{activePreviewPreset.height}px
+                </p>
               </CardContent>
             </Card>
           )}
@@ -611,7 +670,7 @@ export function ImageResizer() {
                   Generated Previews
                 </CardTitle>
                 <CardDescription>
-                  Generated outputs for all uploaded files and selected sizes.
+                  {generatedImages.length} image{generatedImages.length !== 1 ? "s" : ""} generated across {files.length} file{files.length !== 1 ? "s" : ""}.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -627,7 +686,7 @@ export function ImageResizer() {
                             {item.platformLabel} {item.presetLabel}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {item.width}x{item.height} • {item.sourceFile.name}
+                            {item.ratio} • {item.width}×{item.height} • {item.sourceFile.name}
                           </p>
                         </div>
                         <Button
@@ -661,7 +720,7 @@ export function ImageResizer() {
               <CardHeader>
                 <CardTitle className="text-base">Results</CardTitle>
                 <CardDescription>
-                  Configure sizes, adjust crop preview, and click Generate Selected.
+                  Select sizes, adjust crop preview, then click Generate Selected.
                 </CardDescription>
               </CardHeader>
             </Card>
