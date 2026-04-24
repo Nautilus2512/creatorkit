@@ -16,7 +16,7 @@ export default function Home() {
             consistent design tokens in seconds.
           </p>
           <Button asChild size="lg">
-            <Link href="/metadata-remover">Try Free Tools</Link>
+            <Link href="/tools/metadata-remover">Try Free Tools</Link>
           </Button>
         </section>
 
