@@ -1,26 +1,28 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Download, CheckCircle2 } from "lucide-react"
 import JSZip from "jszip"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 
 type PlatformId =
   | "instagram"
-  | "twitter"
   | "facebook"
+  | "twitter"
+  | "tiktok"
   | "linkedin"
   | "youtube"
-  | "tiktok"
   | "pinterest"
-
-type ResizeMode = "cover" | "fit"
+  | "threads"
+  | "snapchat"
+  | "bluesky"
+  | "whatsapp"
+  | "reddit"
 
 type SizePreset = {
   id: string
@@ -36,17 +38,12 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     id: "instagram",
     label: "Instagram",
     sizes: [
-      { id: "instagram-post", platform: "instagram", platformLabel: "Instagram", label: "Post", width: 1080, height: 1080 },
-      { id: "instagram-story", platform: "instagram", platformLabel: "Instagram", label: "Story", width: 1080, height: 1920 },
-      { id: "instagram-reel", platform: "instagram", platformLabel: "Instagram", label: "Reel", width: 1080, height: 1920 },
-    ],
-  },
-  {
-    id: "twitter",
-    label: "Twitter/X",
-    sizes: [
-      { id: "twitter-post", platform: "twitter", platformLabel: "Twitter/X", label: "Post", width: 1200, height: 675 },
-      { id: "twitter-header", platform: "twitter", platformLabel: "Twitter/X", label: "Header", width: 1500, height: 500 },
+      { id: "instagram-square-post", platform: "instagram", platformLabel: "Instagram", label: "Square Post", width: 1080, height: 1080 },
+      { id: "instagram-4x5-vertical", platform: "instagram", platformLabel: "Instagram", label: "4:5 Vertical", width: 1080, height: 1350 },
+      { id: "instagram-3x4-vertical", platform: "instagram", platformLabel: "Instagram", label: "3:4 Vertical", width: 1080, height: 1440 },
+      { id: "instagram-horizontal", platform: "instagram", platformLabel: "Instagram", label: "Horizontal", width: 1080, height: 566 },
+      { id: "instagram-story-reels", platform: "instagram", platformLabel: "Instagram", label: "Story/Reels", width: 1080, height: 1920 },
+      { id: "instagram-profile", platform: "instagram", platformLabel: "Instagram", label: "Profile", width: 320, height: 320 },
     ],
   },
   {
@@ -55,7 +52,28 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     sizes: [
       { id: "facebook-post", platform: "facebook", platformLabel: "Facebook", label: "Post", width: 1200, height: 630 },
       { id: "facebook-story", platform: "facebook", platformLabel: "Facebook", label: "Story", width: 1080, height: 1920 },
-      { id: "facebook-cover", platform: "facebook", platformLabel: "Facebook", label: "Cover", width: 820, height: 312 },
+      { id: "facebook-cover-photo", platform: "facebook", platformLabel: "Facebook", label: "Cover Photo", width: 820, height: 312 },
+      { id: "facebook-profile", platform: "facebook", platformLabel: "Facebook", label: "Profile", width: 320, height: 320 },
+      { id: "facebook-carousel", platform: "facebook", platformLabel: "Facebook", label: "Carousel", width: 1200, height: 1200 },
+    ],
+  },
+  {
+    id: "twitter",
+    label: "Twitter/X",
+    sizes: [
+      { id: "twitter-post", platform: "twitter", platformLabel: "Twitter/X", label: "Post", width: 1200, height: 675 },
+      { id: "twitter-square-post", platform: "twitter", platformLabel: "Twitter/X", label: "Square Post", width: 1080, height: 1080 },
+      { id: "twitter-header", platform: "twitter", platformLabel: "Twitter/X", label: "Header", width: 1500, height: 500 },
+      { id: "twitter-profile", platform: "twitter", platformLabel: "Twitter/X", label: "Profile", width: 400, height: 400 },
+    ],
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    sizes: [
+      { id: "tiktok-vertical-cover", platform: "tiktok", platformLabel: "TikTok", label: "Vertical Cover", width: 1080, height: 1920 },
+      { id: "tiktok-feed-square", platform: "tiktok", platformLabel: "TikTok", label: "Feed Square", width: 1080, height: 1080 },
+      { id: "tiktok-profile", platform: "tiktok", platformLabel: "TikTok", label: "Profile", width: 200, height: 200 },
     ],
   },
   {
@@ -64,6 +82,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     sizes: [
       { id: "linkedin-post", platform: "linkedin", platformLabel: "LinkedIn", label: "Post", width: 1200, height: 627 },
       { id: "linkedin-cover", platform: "linkedin", platformLabel: "LinkedIn", label: "Cover", width: 1584, height: 396 },
+      { id: "linkedin-profile", platform: "linkedin", platformLabel: "LinkedIn", label: "Profile", width: 400, height: 400 },
     ],
   },
   {
@@ -71,20 +90,59 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     label: "YouTube",
     sizes: [
       { id: "youtube-thumbnail", platform: "youtube", platformLabel: "YouTube", label: "Thumbnail", width: 1280, height: 720 },
-      { id: "youtube-banner", platform: "youtube", platformLabel: "YouTube", label: "Banner", width: 2560, height: 1440 },
+      { id: "youtube-channel-banner", platform: "youtube", platformLabel: "YouTube", label: "Channel Banner", width: 2560, height: 1440 },
+      { id: "youtube-profile", platform: "youtube", platformLabel: "YouTube", label: "Profile", width: 800, height: 800 },
     ],
-  },
-  {
-    id: "tiktok",
-    label: "TikTok",
-    sizes: [{ id: "tiktok-cover", platform: "tiktok", platformLabel: "TikTok", label: "Video Cover", width: 1080, height: 1920 }],
   },
   {
     id: "pinterest",
     label: "Pinterest",
     sizes: [
-      { id: "pinterest-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Pin", width: 1000, height: 1500 },
+      { id: "pinterest-standard-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Standard Pin", width: 1000, height: 1500 },
+      { id: "pinterest-square-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Square Pin", width: 1000, height: 1000 },
       { id: "pinterest-board-cover", platform: "pinterest", platformLabel: "Pinterest", label: "Board Cover", width: 800, height: 800 },
+    ],
+  },
+  {
+    id: "threads",
+    label: "Threads",
+    sizes: [
+      { id: "threads-post-square", platform: "threads", platformLabel: "Threads", label: "Post Square", width: 1080, height: 1080 },
+      { id: "threads-vertical", platform: "threads", platformLabel: "Threads", label: "Vertical", width: 1080, height: 1350 },
+    ],
+  },
+  {
+    id: "snapchat",
+    label: "Snapchat",
+    sizes: [
+      { id: "snapchat-story", platform: "snapchat", platformLabel: "Snapchat", label: "Story", width: 1080, height: 1920 },
+      { id: "snapchat-profile", platform: "snapchat", platformLabel: "Snapchat", label: "Profile", width: 320, height: 320 },
+    ],
+  },
+  {
+    id: "bluesky",
+    label: "Bluesky",
+    sizes: [
+      { id: "bluesky-post-square", platform: "bluesky", platformLabel: "Bluesky", label: "Post Square", width: 1200, height: 1200 },
+      { id: "bluesky-landscape", platform: "bluesky", platformLabel: "Bluesky", label: "Landscape", width: 1200, height: 675 },
+      { id: "bluesky-banner", platform: "bluesky", platformLabel: "Bluesky", label: "Banner", width: 1500, height: 500 },
+    ],
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    sizes: [
+      { id: "whatsapp-profile", platform: "whatsapp", platformLabel: "WhatsApp", label: "Profile", width: 640, height: 640 },
+      { id: "whatsapp-status", platform: "whatsapp", platformLabel: "WhatsApp", label: "Status", width: 1080, height: 1920 },
+    ],
+  },
+  {
+    id: "reddit",
+    label: "Reddit",
+    sizes: [
+      { id: "reddit-post", platform: "reddit", platformLabel: "Reddit", label: "Post", width: 1200, height: 628 },
+      { id: "reddit-banner", platform: "reddit", platformLabel: "Reddit", label: "Banner", width: 1920, height: 384 },
+      { id: "reddit-profile", platform: "reddit", platformLabel: "Reddit", label: "Profile", width: 256, height: 256 },
     ],
   },
 ]
@@ -100,43 +158,87 @@ type GeneratedImage = {
   height: number
   fileName: string
   sourceFile: File
-  offsetX: number
-  offsetY: number
   url: string
   blob: Blob
+}
+
+type DragState = {
+  presetId: string
+  startX: number
+  startY: number
+  startOffsetX: number
+  startOffsetY: number
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 export function ImageResizer() {
   const [files, setFiles] = useState<File[]>([])
-  const [activePlatform, setActivePlatform] = useState<PlatformId>("instagram")
-  const [selectedSizes, setSelectedSizes] = useState<Set<string>>(
-    new Set(["instagram-post", "instagram-story"])
-  )
-  const [resizeMode, setResizeMode] = useState<ResizeMode>("cover")
-  const [fitBackground, setFitBackground] = useState<"white" | "black">("white")
+  const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set(["instagram-square-post", "instagram-story-reels"]))
+  const [cropOffsets, setCropOffsets] = useState<Record<string, { x: number; y: number }>>({})
+  const [activePreviewPresetId, setActivePreviewPresetId] = useState<string>("instagram-square-post")
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
-  const [dragState, setDragState] = useState<{
-    id: string
-    startX: number
-    startY: number
-    startOffsetX: number
-    startOffsetY: number
-  } | null>(null)
+  const [dragState, setDragState] = useState<DragState | null>(null)
+  const [firstFileUrl, setFirstFileUrl] = useState<string | null>(null)
+  const [firstFileSize, setFirstFileSize] = useState<{ width: number; height: number } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const activeGroup = useMemo(
-    () => PLATFORM_GROUPS.find((group) => group.id === activePlatform) ?? PLATFORM_GROUPS[0],
-    [activePlatform]
-  )
-
   const selectedPresetList = useMemo(() => {
-    return [...selectedSizes].map((id) => PRESET_BY_ID.get(id)).filter((preset): preset is SizePreset => Boolean(preset))
+    return [...selectedSizes]
+      .map((id) => PRESET_BY_ID.get(id))
+      .filter((preset): preset is SizePreset => Boolean(preset))
   }, [selectedSizes])
+
+  const activePreviewPreset = useMemo(() => {
+    return PRESET_BY_ID.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null
+  }, [activePreviewPresetId, selectedPresetList])
+
+  useEffect(() => {
+    if (files.length === 0) {
+      setFirstFileUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+      setFirstFileSize(null)
+      return
+    }
+
+    const url = URL.createObjectURL(files[0])
+    setFirstFileUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return url
+    })
+
+    let cancelled = false
+    createImageBitmap(files[0]).then((bitmap) => {
+      if (!cancelled) {
+        setFirstFileSize({ width: bitmap.width, height: bitmap.height })
+      }
+      bitmap.close()
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [files])
+
+  useEffect(() => {
+    if (selectedPresetList.length === 0) return
+    if (!selectedSizes.has(activePreviewPresetId)) {
+      setActivePreviewPresetId(selectedPresetList[0].id)
+    }
+  }, [selectedPresetList, selectedSizes, activePreviewPresetId])
+
+  useEffect(() => {
+    return () => {
+      if (firstFileUrl) URL.revokeObjectURL(firstFileUrl)
+      generatedImages.forEach((item) => URL.revokeObjectURL(item.url))
+    }
+  }, [firstFileUrl, generatedImages])
 
   const handleFilesSelected = (selectedFiles: File[]) => {
     setFiles(selectedFiles)
+    setCropOffsets({})
     setGeneratedImages((prev) => {
       prev.forEach((item) => URL.revokeObjectURL(item.url))
       return []
@@ -152,12 +254,18 @@ export function ImageResizer() {
     })
   }
 
-  const selectAllForPlatform = (platformId: PlatformId) => {
-    const group = PLATFORM_GROUPS.find((item) => item.id === platformId)
-    if (!group) return
+  const selectAllForPlatform = (group: { sizes: SizePreset[] }) => {
     setSelectedSizes((prev) => {
       const next = new Set(prev)
       group.sizes.forEach((size) => next.add(size.id))
+      return next
+    })
+  }
+
+  const deselectAllForPlatform = (group: { sizes: SizePreset[] }) => {
+    setSelectedSizes((prev) => {
+      const next = new Set(prev)
+      group.sizes.forEach((size) => next.delete(size.id))
       return next
     })
   }
@@ -167,7 +275,6 @@ export function ImageResizer() {
     bitmapHeight: number,
     targetWidth: number,
     targetHeight: number,
-    mode: ResizeMode,
     offsetXRatio: number,
     offsetYRatio: number
   ) => {
@@ -179,44 +286,22 @@ export function ImageResizer() {
     let drawX = 0
     let drawY = 0
 
-    if (mode === "cover") {
-      if (srcAspect > targetAspect) {
-        drawHeight = targetHeight
-        drawWidth = targetHeight * srcAspect
-      } else {
-        drawWidth = targetWidth
-        drawHeight = targetWidth / srcAspect
-      }
-
-      const overflowX = Math.max(0, drawWidth - targetWidth)
-      const overflowY = Math.max(0, drawHeight - targetHeight)
-      drawX = (targetWidth - drawWidth) / 2 + (overflowX / 2) * offsetXRatio
-      drawY = (targetHeight - drawHeight) / 2 + (overflowY / 2) * offsetYRatio
+    if (srcAspect > targetAspect) {
+      drawHeight = targetHeight
+      drawWidth = targetHeight * srcAspect
     } else {
-      if (srcAspect > targetAspect) {
-        drawWidth = targetWidth
-        drawHeight = targetWidth / srcAspect
-      } else {
-        drawHeight = targetHeight
-        drawWidth = targetHeight * srcAspect
-      }
-
-      const roomX = Math.max(0, targetWidth - drawWidth)
-      const roomY = Math.max(0, targetHeight - drawHeight)
-      drawX = roomX / 2 + (roomX / 2) * offsetXRatio
-      drawY = roomY / 2 + (roomY / 2) * offsetYRatio
+      drawWidth = targetWidth
+      drawHeight = targetWidth / srcAspect
     }
 
+    const overflowX = Math.max(0, drawWidth - targetWidth)
+    const overflowY = Math.max(0, drawHeight - targetHeight)
+    drawX = (targetWidth - drawWidth) / 2 + (overflowX / 2) * offsetXRatio
+    drawY = (targetHeight - drawHeight) / 2 + (overflowY / 2) * offsetYRatio
     return { drawX, drawY, drawWidth, drawHeight }
   }
 
-  const renderVariant = async (
-    file: File,
-    preset: SizePreset,
-    mode: ResizeMode,
-    offsetX: number,
-    offsetY: number
-  ) => {
+  const renderVariant = async (file: File, preset: SizePreset, offsetX: number, offsetY: number) => {
     const bitmap = await createImageBitmap(file)
     const canvas = document.createElement("canvas")
     canvas.width = preset.width
@@ -226,15 +311,7 @@ export function ImageResizer() {
       bitmap.close()
       return null
     }
-
-    if (mode === "fit") {
-      ctx.fillStyle = fitBackground === "white" ? "#ffffff" : "#000000"
-      ctx.fillRect(0, 0, preset.width, preset.height)
-    } else {
-      ctx.clearRect(0, 0, preset.width, preset.height)
-    }
-
-    const rect = getDrawRect(bitmap.width, bitmap.height, preset.width, preset.height, mode, offsetX, offsetY)
+    const rect = getDrawRect(bitmap.width, bitmap.height, preset.width, preset.height, offsetX, offsetY)
     ctx.drawImage(bitmap, rect.drawX, rect.drawY, rect.drawWidth, rect.drawHeight)
     bitmap.close()
 
@@ -254,7 +331,8 @@ export function ImageResizer() {
     for (const file of files) {
       const sourceName = file.name.replace(/\.[^/.]+$/, "")
       for (const preset of selectedPresetList) {
-        const rendered = await renderVariant(file, preset, resizeMode, 0, 0)
+        const offset = cropOffsets[preset.id] ?? { x: 0, y: 0 }
+        const rendered = await renderVariant(file, preset, offset.x, offset.y)
         if (!rendered) continue
         nextGenerated.push({
           id: `${file.name}-${file.lastModified}-${preset.id}`,
@@ -265,8 +343,6 @@ export function ImageResizer() {
           height: preset.height,
           fileName: `${sourceName}_${preset.id}.jpg`,
           sourceFile: file,
-          offsetX: 0,
-          offsetY: 0,
           url: rendered.url,
           blob: rendered.blob,
         })
@@ -280,60 +356,45 @@ export function ImageResizer() {
     setIsProcessing(false)
   }
 
-  const updateRenderedItem = async (id: string) => {
-    const current = generatedImages.find((item) => item.id === id)
-    if (!current) return
-    const preset = PRESET_BY_ID.get(current.presetId)
-    if (!preset) return
-
-    const rendered = await renderVariant(current.sourceFile, preset, resizeMode, current.offsetX, current.offsetY)
-    if (!rendered) return
-
-    setGeneratedImages((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item
-        URL.revokeObjectURL(item.url)
-        return { ...item, blob: rendered.blob, url: rendered.url }
-      })
-    )
-  }
-
-  const handleDragStart = (id: string, event: React.PointerEvent<HTMLDivElement>) => {
+  const handleCropDragStart = (presetId: string, event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault()
-    const current = generatedImages.find((item) => item.id === id)
-    if (!current) return
+    const current = cropOffsets[presetId] ?? { x: 0, y: 0 }
     setDragState({
-      id,
+      presetId,
       startX: event.clientX,
       startY: event.clientY,
-      startOffsetX: current.offsetX,
-      startOffsetY: current.offsetY,
+      startOffsetX: current.x,
+      startOffsetY: current.y,
     })
   }
 
-  const handleDragMove = (id: string, event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragState || dragState.id !== id) return
+  const handleCropDragMove = (preset: SizePreset, event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState || dragState.presetId !== preset.id || !firstFileSize) return
     const rect = event.currentTarget.getBoundingClientRect()
-    const deltaXRatio = (event.clientX - dragState.startX) / Math.max(1, rect.width / 2)
-    const deltaYRatio = (event.clientY - dragState.startY) / Math.max(1, rect.height / 2)
+    const srcAspect = firstFileSize.width / firstFileSize.height
+    const targetAspect = preset.width / preset.height
+    const overlayWidth =
+      srcAspect > targetAspect ? rect.height * targetAspect : rect.width
+    const overlayHeight =
+      srcAspect > targetAspect ? rect.height : rect.width / targetAspect
+    const movableX = Math.max(1, rect.width - overlayWidth)
+    const movableY = Math.max(1, rect.height - overlayHeight)
 
-    setGeneratedImages((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              offsetX: clamp(dragState.startOffsetX + deltaXRatio, -1, 1),
-              offsetY: clamp(dragState.startOffsetY + deltaYRatio, -1, 1),
-            }
-          : item
-      )
-    )
+    const deltaXRatio = (event.clientX - dragState.startX) / (movableX / 2)
+    const deltaYRatio = (event.clientY - dragState.startY) / (movableY / 2)
+
+    setCropOffsets((prev) => ({
+      ...prev,
+      [preset.id]: {
+        x: clamp(dragState.startOffsetX + deltaXRatio, -1, 1),
+        y: clamp(dragState.startOffsetY + deltaYRatio, -1, 1),
+      },
+    }))
   }
 
-  const handleDragEnd = async (id: string) => {
-    if (!dragState || dragState.id !== id) return
+  const handleCropDragEnd = (presetId: string) => {
+    if (!dragState || dragState.presetId !== presetId) return
     setDragState(null)
-    await updateRenderedItem(id)
   }
 
   const downloadFile = (url: string, name: string) => {
@@ -347,7 +408,8 @@ export function ImageResizer() {
     if (generatedImages.length === 0) return
     const zip = new JSZip()
     generatedImages.forEach((item) => {
-      zip.file(item.fileName, item.blob)
+      const folder = zip.folder(item.sourceFile.name.replace(/\.[^/.]+$/, ""))
+      folder?.file(item.fileName, item.blob)
     })
     const zipBlob = await zip.generateAsync({ type: "blob" })
     const zipUrl = URL.createObjectURL(zipBlob)
@@ -360,7 +422,7 @@ export function ImageResizer() {
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Image Resizer</h2>
         <p className="text-muted-foreground">
-          Batch resize images for social media with platform presets, fit modes, and manual crop positioning.
+          Select platform sizes, adjust crop previews, and batch export ready-to-post assets.
         </p>
       </div>
 
@@ -387,93 +449,58 @@ export function ImageResizer() {
             <CardHeader>
               <CardTitle className="text-base">Size Selection</CardTitle>
               <CardDescription>
-                Choose platform presets, select sizes, then generate selected outputs.
+                Choose sizes by platform. Use Select All / Deselect All per group.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Platform</Label>
-                <Select
-                  value={activePlatform}
-                  onValueChange={(value) => setActivePlatform(value as PlatformId)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select platform" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PLATFORM_GROUPS.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">{activeGroup.label} sizes</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => selectAllForPlatform(activeGroup.id)}
-                >
-                  Select All
-                </Button>
-              </div>
-
-              <div className="grid gap-2">
-                {activeGroup.sizes.map((preset) => (
-                  <label
-                    key={preset.id}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-                  >
-                    <div
-                      className="flex items-center gap-2"
-                    >
-                      <Checkbox
-                        checked={selectedSizes.has(preset.id)}
-                        onCheckedChange={(checked) => toggleSize(preset.id, Boolean(checked))}
-                      />
-                      <span>{preset.label}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {preset.width}x{preset.height}
-                    </span>
-                  </label>
+              <Accordion type="multiple" className="rounded-lg border border-border px-3">
+                {PLATFORM_GROUPS.map((group) => (
+                  <AccordionItem key={group.id} value={group.id}>
+                    <AccordionTrigger className="py-3">
+                      <span>{group.label}</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-3">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => selectAllForPlatform(group)}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deselectAllForPlatform(group)}
+                        >
+                          Deselect All
+                        </Button>
+                      </div>
+                      <div className="grid gap-2">
+                        {group.sizes.map((preset) => (
+                          <label
+                            key={preset.id}
+                            className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={selectedSizes.has(preset.id)}
+                                onCheckedChange={(checked) => toggleSize(preset.id, Boolean(checked))}
+                              />
+                              <span>{preset.label}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {preset.width}x{preset.height}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="fit-mode">Fit / Letterbox mode</Label>
-                  <Switch
-                    id="fit-mode"
-                    checked={resizeMode === "fit"}
-                    onCheckedChange={(checked) => setResizeMode(checked ? "fit" : "cover")}
-                  />
-                </div>
-                {resizeMode === "fit" && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={fitBackground === "white" ? "default" : "outline"}
-                      onClick={() => setFitBackground("white")}
-                    >
-                      White background
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={fitBackground === "black" ? "default" : "outline"}
-                      onClick={() => setFitBackground("black")}
-                    >
-                      Black background
-                    </Button>
-                  </div>
-                )}
-              </div>
+              </Accordion>
 
               <p className="text-xs text-muted-foreground">
                 Selected sizes: {selectedPresetList.length} • Files: {files.length}
@@ -491,6 +518,91 @@ export function ImageResizer() {
         </div>
 
         <div className="space-y-4">
+          {files.length > 0 && selectedPresetList.length > 0 && firstFileUrl && firstFileSize && activePreviewPreset && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Crop Preview</CardTitle>
+                <CardDescription>
+                  Drag overlay on the original image to set crop position for the selected size.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="crop-size">Preview size</Label>
+                  <select
+                    id="crop-size"
+                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                    value={activePreviewPreset.id}
+                    onChange={(e) => setActivePreviewPresetId(e.target.value)}
+                  >
+                    {selectedPresetList.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.platformLabel} - {preset.label} ({preset.width}x{preset.height})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  className="relative h-72 overflow-hidden rounded-md border border-border bg-muted/40"
+                  onPointerDown={(event) => handleCropDragStart(activePreviewPreset.id, event)}
+                  onPointerMove={(event) => handleCropDragMove(activePreviewPreset, event)}
+                  onPointerUp={() => handleCropDragEnd(activePreviewPreset.id)}
+                  onPointerLeave={() => handleCropDragEnd(activePreviewPreset.id)}
+                  style={{ cursor: "grab" }}
+                >
+                  <img
+                    src={firstFileUrl}
+                    alt="Original preview"
+                    className="h-full w-full object-contain select-none"
+                    draggable={false}
+                  />
+                  {(() => {
+                    const containerW = 100
+                    const containerH = 72
+                    const srcAspect = firstFileSize.width / firstFileSize.height
+                    const targetAspect = activePreviewPreset.width / activePreviewPreset.height
+                    const imgW = srcAspect > containerW / containerH ? containerW : containerH * srcAspect
+                    const imgH = srcAspect > containerW / containerH ? containerW / srcAspect : containerH
+                    const imgX = (containerW - imgW) / 2
+                    const imgY = (containerH - imgH) / 2
+                    const offset = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
+
+                    let rectW = imgW
+                    let rectH = imgH
+                    let rectX = imgX
+                    let rectY = imgY
+
+                    if (srcAspect > targetAspect) {
+                      rectH = imgH
+                      rectW = imgH * targetAspect
+                      const extra = imgW - rectW
+                      rectX = imgX + extra / 2 + (extra / 2) * offset.x
+                    } else {
+                      rectW = imgW
+                      rectH = imgW / targetAspect
+                      const extra = imgH - rectH
+                      rectY = imgY + extra / 2 + (extra / 2) * offset.y
+                    }
+
+                    return (
+                      <div
+                        className="pointer-events-none absolute border-2 border-primary"
+                        style={{
+                          left: `${rectX}%`,
+                          top: `${rectY}%`,
+                          width: `${rectW}%`,
+                          height: `${rectH}%`,
+                          boxShadow: "0 0 0 9999px rgba(0,0,0,0.25)",
+                        }}
+                      />
+                    )
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {generatedImages.length > 0 ? (
             <Card>
               <CardHeader>
@@ -499,7 +611,7 @@ export function ImageResizer() {
                   Generated Previews
                 </CardTitle>
                 <CardDescription>
-                  Drag inside a preview to reposition crop, then download individually or as ZIP.
+                  Generated outputs for all uploaded files and selected sizes.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -515,7 +627,7 @@ export function ImageResizer() {
                             {item.platformLabel} {item.presetLabel}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {item.width}x{item.height}
+                            {item.width}x{item.height} • {item.sourceFile.name}
                           </p>
                         </div>
                         <Button
@@ -527,25 +639,11 @@ export function ImageResizer() {
                           Download
                         </Button>
                       </div>
-                      <div
-                        className="relative overflow-hidden rounded-md border border-border"
-                        onPointerDown={(event) => handleDragStart(item.id, event)}
-                        onPointerMove={(event) => handleDragMove(item.id, event)}
-                        onPointerUp={() => handleDragEnd(item.id)}
-                        onPointerLeave={() => handleDragEnd(item.id)}
-                        style={{ cursor: "grab" }}
-                      >
-                        <img
-                          src={item.url}
-                          alt={`${item.platformLabel} ${item.presetLabel} preview`}
-                          className="w-full select-none"
-                          style={{
-                            transform: `translate(${item.offsetX * 8}px, ${item.offsetY * 8}px)`,
-                            userSelect: "none",
-                          }}
-                          draggable={false}
-                        />
-                      </div>
+                      <img
+                        src={item.url}
+                        alt={`${item.platformLabel} ${item.presetLabel} preview`}
+                        className="w-full rounded-md border border-border"
+                      />
                     </div>
                   ))}
                 </div>
@@ -563,7 +661,7 @@ export function ImageResizer() {
               <CardHeader>
                 <CardTitle className="text-base">Results</CardTitle>
                 <CardDescription>
-                  Generated previews will appear here after you select sizes and click Generate Selected.
+                  Configure sizes, adjust crop preview, and click Generate Selected.
                 </CardDescription>
               </CardHeader>
             </Card>
