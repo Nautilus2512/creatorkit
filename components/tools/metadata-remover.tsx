@@ -158,7 +158,7 @@ export function MetadataRemover() {
   }, [files.length])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">
           Metadata Remover
@@ -168,8 +168,8 @@ export function MetadataRemover() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -201,7 +201,7 @@ export function MetadataRemover() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {files.length > 0 && (
             <Card>
               <CardHeader>

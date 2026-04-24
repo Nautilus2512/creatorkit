@@ -126,7 +126,7 @@ export function ImageResizer() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Image Resizer</h2>
         <p className="text-muted-foreground">
@@ -134,8 +134,8 @@ export function ImageResizer() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Upload Image</CardTitle>
@@ -187,7 +187,7 @@ export function ImageResizer() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {processedFiles.length > 0 ? (
             <Card>
               <CardHeader>

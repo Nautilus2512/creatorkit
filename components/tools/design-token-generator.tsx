@@ -180,7 +180,7 @@ export function DesignTokenGenerator() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">
           Design Token Generator
@@ -190,8 +190,8 @@ export function DesignTokenGenerator() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Primary Brand Color</CardTitle>
@@ -219,9 +219,6 @@ export function DesignTokenGenerator() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Generated Palette</CardTitle>
@@ -233,7 +230,9 @@ export function DesignTokenGenerator() {
               <ColorPalette shades={primaryShades} name="primary" />
             </CardContent>
           </Card>
+        </div>
 
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Core Scales</CardTitle>
