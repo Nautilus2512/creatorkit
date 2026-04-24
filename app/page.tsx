@@ -24,39 +24,45 @@ export default function Home() {
           id="features"
           className="mt-14 grid gap-4 md:mt-16 md:grid-cols-3"
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Metadata Remover</CardTitle>
-              <CardDescription>
-                Detect EXIF data and strip sensitive metadata directly in your browser.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Protect privacy by removing GPS location, device details, and timestamps before sharing images.
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Image Resizer</CardTitle>
-              <CardDescription>
-                Generate optimized dimensions for major social platforms instantly.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Create Instagram, LinkedIn, YouTube, and Facebook-ready assets from one upload.
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Design Token Generator</CardTitle>
-              <CardDescription>
-                Turn one brand color into production-ready design tokens.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              Export consistent palettes, typography, spacing, and radius tokens as CSS or Tailwind config.
-            </CardContent>
-          </Card>
+          <Link href="/tools/metadata-remover" className="group block">
+            <Card className="h-full transition-colors group-hover:border-primary/60">
+              <CardHeader>
+                <CardTitle>Metadata Remover</CardTitle>
+                <CardDescription>
+                  Detect EXIF data and strip sensitive metadata directly in your browser.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Protect privacy by removing GPS location, device details, and timestamps before sharing images.
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/tools/image-resizer" className="group block">
+            <Card className="h-full transition-colors group-hover:border-primary/60">
+              <CardHeader>
+                <CardTitle>Image Resizer</CardTitle>
+                <CardDescription>
+                  Generate optimized dimensions for major social platforms instantly.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Create Instagram, LinkedIn, YouTube, and Facebook-ready assets from one upload.
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/tools/design-tokens" className="group block">
+            <Card className="h-full transition-colors group-hover:border-primary/60">
+              <CardHeader>
+                <CardTitle>Design Token Generator</CardTitle>
+                <CardDescription>
+                  Turn one brand color into production-ready design tokens.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Export consistent palettes, typography, spacing, and radius tokens as CSS or Tailwind config.
+              </CardContent>
+            </Card>
+          </Link>
         </section>
 
         <section
