@@ -134,104 +134,119 @@ export function ImageResizer() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Upload Image</CardTitle>
-          <CardDescription>
-            Upload one image and we will generate all social media sizes in your browser.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FileDropzone
-            accept="image/*"
-            onFilesSelected={handleFilesSelected}
-            maxFiles={1}
-            multiple={false}
-          />
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Upload Image</CardTitle>
+              <CardDescription>
+                Upload one image and we will generate all social media sizes in your browser.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FileDropzone
+                accept="image/*"
+                onFilesSelected={handleFilesSelected}
+                maxFiles={1}
+                multiple={false}
+              />
+            </CardContent>
+          </Card>
 
-      {files.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Target Sizes</CardTitle>
-            <CardDescription>
-              Auto-generate all predefined social media formats.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {SOCIAL_PRESETS.map((preset) => (
-                <div
-                  key={preset.key}
-                  className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm"
-                >
-                  <p className="font-medium">{preset.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {preset.width}x{preset.height}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <Button
-              onClick={resizeImages}
-              disabled={isProcessing}
-              className="w-full"
-            >
-              {isProcessing ? "Processing..." : "Generate All Sizes"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {processedFiles.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              Resized Images
-            </CardTitle>
-            <CardDescription>
-              Preview and download each generated size.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {processedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="space-y-3 rounded-lg border border-border bg-muted/50 p-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{file.name}</p>
+          {files.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Target Sizes</CardTitle>
+                <CardDescription>
+                  Auto-generate all predefined social media formats.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {SOCIAL_PRESETS.map((preset) => (
+                    <div
+                      key={preset.key}
+                      className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm"
+                    >
+                      <p className="font-medium">{preset.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {file.width}x{file.height}
+                        {preset.width}x{preset.height}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => downloadFile(file.url, file.fileName)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                  </div>
-                  <img
-                    src={file.url}
-                    alt={`${file.name} preview`}
-                    className="w-full rounded-md border border-border object-cover"
-                  />
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Button variant="outline" className="w-full" onClick={downloadAll}>
-              Download All as ZIP
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+                <Button
+                  onClick={resizeImages}
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? "Processing..." : "Generate All Sizes"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          {processedFiles.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  Resized Images
+                </CardTitle>
+                <CardDescription>
+                  Preview and download each generated size.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {processedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="space-y-3 rounded-lg border border-border bg-muted/50 p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {file.width}x{file.height}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadFile(file.url, file.fileName)}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                      </div>
+                      <img
+                        src={file.url}
+                        alt={`${file.name} preview`}
+                        className="w-full rounded-md border border-border object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full" onClick={downloadAll}>
+                  Download All as ZIP
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Results</CardTitle>
+                <CardDescription>
+                  Resized previews and download actions will appear here.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

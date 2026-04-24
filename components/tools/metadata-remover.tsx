@@ -168,130 +168,136 @@ export function MetadataRemover() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="h-4 w-4" />
-            Privacy Protection
-          </CardTitle>
-          <CardDescription>
-            Strips GPS coordinates, camera info, timestamps, and other embedded
-            data from your images.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FileDropzone
-            accept=".jpg,.jpeg,.png,.heic,image/jpeg,image/png,image/heic"
-            onFilesSelected={handleFilesSelected}
-            maxFiles={20}
-          />
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-4 w-4" />
+                Privacy Protection
+              </CardTitle>
+              <CardDescription>
+                Strips GPS coordinates, camera info, timestamps, and other embedded
+                data from your images.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileDropzone
+                accept=".jpg,.jpeg,.png,.heic,image/jpeg,image/png,image/heic"
+                onFilesSelected={handleFilesSelected}
+                maxFiles={20}
+              />
 
+              {files.length > 0 && (
+                <Button
+                  onClick={removeMetadata}
+                  disabled={isProcessing}
+                  className="w-full"
+                >
+                  {isProcessing ? "Processing..." : `Remove Metadata from ${selectedCountLabel}`}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
           {files.length > 0 && (
-            <Button
-              onClick={removeMetadata}
-              disabled={isProcessing}
-              className="w-full"
-            >
-              {isProcessing ? "Processing..." : `Remove Metadata from ${selectedCountLabel}`}
-            </Button>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Detected EXIF Metadata</CardTitle>
+                <CardDescription>
+                  Preview of common fields found before cleanup.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                {files.map((file, index) => {
+                  const metadata = metadataByFile[keyForFile(file)]
+                  return (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="space-y-2 rounded-lg border border-border p-3"
+                    >
+                      <p className="truncate text-sm font-medium">{file.name}</p>
+                      <div className="grid gap-1 text-xs text-muted-foreground">
+                        <p className="flex items-center gap-2">
+                          <MapPin className="h-3.5 w-3.5" />
+                          GPS: {metadata?.gps ?? "Not found"}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Camera className="h-3.5 w-3.5" />
+                          Device: {metadata?.device ?? "Not found"}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5" />
+                          Date: {metadata?.date ?? "Not found"}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
 
-      {files.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Detected EXIF Metadata</CardTitle>
-            <CardDescription>
-              Preview of common fields found before cleanup.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {files.map((file, index) => {
-              const metadata = metadataByFile[keyForFile(file)]
-              return (
-                <div
-                  key={`${file.name}-${index}`}
-                  className="space-y-2 rounded-lg border border-border p-3"
-                >
-                  <p className="truncate text-sm font-medium">{file.name}</p>
-                  <div className="grid gap-1 text-xs text-muted-foreground">
-                    <p className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5" />
-                      GPS: {metadata?.gps ?? "Not found"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Camera className="h-3.5 w-3.5" />
-                      Device: {metadata?.device ?? "Not found"}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Date: {metadata?.date ?? "Not found"}
-                    </p>
-                  </div>
+          {processedFiles.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  Processed Files
+                </CardTitle>
+                <CardDescription>
+                  Your files are ready to download. All metadata has been removed.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid gap-2">
+                  {processedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3"
+                    >
+                      <span className="truncate text-sm">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => downloadFile(file.url, file.name)}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-      )}
-
-      {processedFiles.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              Processed Files
-            </CardTitle>
-            <CardDescription>
-              Your files are ready to download. All metadata has been removed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-2">
-              {processedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3"
-                >
-                  <span className="truncate text-sm">{file.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => downloadFile(file.url, file.name)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
+                {processedFiles.length > 1 && (
+                  <Button variant="outline" className="w-full" onClick={downloadAll}>
+                    Download All
                   </Button>
-                </div>
-              ))}
-            </div>
-            {processedFiles.length > 1 && (
-              <Button variant="outline" className="w-full" onClick={downloadAll}>
-                Download All
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-      {errors.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Some files were not processed</CardTitle>
-            <CardDescription>
-              These files were skipped due to browser decoding limitations or file issues.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+          {errors.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Some files were not processed</CardTitle>
+                <CardDescription>
+                  These files were skipped due to browser decoding limitations or file issues.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                  {errors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

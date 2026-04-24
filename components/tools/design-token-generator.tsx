@@ -190,135 +190,141 @@ export function DesignTokenGenerator() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Primary Brand Color</CardTitle>
-          <CardDescription>
-            Pick a hex value to auto-generate your token system.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="max-w-md space-y-2">
-            <Label htmlFor="primary">Primary</Label>
-            <div className="flex gap-2">
-              <Input
-                id="primary"
-                type="color"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="h-10 w-14 cursor-pointer p-1"
-              />
-              <Input
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="flex-1 font-mono text-sm"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Primary Brand Color</CardTitle>
+              <CardDescription>
+                Pick a hex value to auto-generate your token system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-w-md space-y-2">
+                <Label htmlFor="primary">Primary</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="primary"
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="h-10 w-14 cursor-pointer p-1"
+                  />
+                  <Input
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="flex-1 font-mono text-sm"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Generated Palette</CardTitle>
-          <CardDescription>
-            Click on any shade to copy its value to clipboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <ColorPalette shades={primaryShades} name="primary" />
-        </CardContent>
-      </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Generated Palette</CardTitle>
+              <CardDescription>
+                Click on any shade to copy its value to clipboard.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ColorPalette shades={primaryShades} name="primary" />
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Core Scales</CardTitle>
-          <CardDescription>
-            Typography, spacing, and border radius tokens are generated automatically.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2 rounded-lg border border-border p-3">
-            <p className="text-sm font-medium">Typography</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              {Object.entries(typographyScale).map(([token, value]) => (
-                <p key={token}>
-                  {token}: {value}
-                </p>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2 rounded-lg border border-border p-3">
-            <p className="text-sm font-medium">Spacing</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              {Object.entries(spacingScale).map(([token, value]) => (
-                <p key={token}>
-                  {token}: {value}
-                </p>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-2 rounded-lg border border-border p-3">
-            <p className="text-sm font-medium">Border Radius</p>
-            <div className="space-y-1 text-xs text-muted-foreground">
-              {Object.entries(radiusScale).map(([token, value]) => (
-                <p key={token}>
-                  {token}: {value}
-                </p>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Core Scales</CardTitle>
+              <CardDescription>
+                Typography, spacing, and border radius tokens are generated automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-sm font-medium">Typography</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {Object.entries(typographyScale).map(([token, value]) => (
+                    <p key={token}>
+                      {token}: {value}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-sm font-medium">Spacing</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {Object.entries(spacingScale).map(([token, value]) => (
+                    <p key={token}>
+                      {token}: {value}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-sm font-medium">Border Radius</p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  {Object.entries(radiusScale).map(([token, value]) => (
+                    <p key={token}>
+                      {token}: {value}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Export</CardTitle>
-          <CardDescription>
-            Copy your design tokens in your preferred format.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="css">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="css">CSS Variables</TabsTrigger>
-              <TabsTrigger value="tailwind">Tailwind</TabsTrigger>
-            </TabsList>
-            <TabsContent value="css" className="space-y-3">
-              <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
-                <code>{generateCSS()}</code>
-              </pre>
-              <Button
-                variant="outline"
-                onClick={() => copyToClipboard(generateCSS(), "css")}
-              >
-                {copiedKey === "css" ? (
-                  <Check className="mr-2 h-4 w-4" />
-                ) : (
-                  <Copy className="mr-2 h-4 w-4" />
-                )}
-                Copy CSS
-              </Button>
-            </TabsContent>
-            <TabsContent value="tailwind" className="space-y-3">
-              <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
-                <code>{generateTailwind()}</code>
-              </pre>
-              <Button
-                variant="outline"
-                onClick={() => copyToClipboard(generateTailwind(), "tailwind")}
-              >
-                {copiedKey === "tailwind" ? (
-                  <Check className="mr-2 h-4 w-4" />
-                ) : (
-                  <Copy className="mr-2 h-4 w-4" />
-                )}
-                Copy Config
-              </Button>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Export</CardTitle>
+              <CardDescription>
+                Copy your design tokens in your preferred format.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="css">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="css">CSS Variables</TabsTrigger>
+                  <TabsTrigger value="tailwind">Tailwind</TabsTrigger>
+                </TabsList>
+                <TabsContent value="css" className="space-y-3">
+                  <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
+                    <code>{generateCSS()}</code>
+                  </pre>
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(generateCSS(), "css")}
+                  >
+                    {copiedKey === "css" ? (
+                      <Check className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Copy className="mr-2 h-4 w-4" />
+                    )}
+                    Copy CSS
+                  </Button>
+                </TabsContent>
+                <TabsContent value="tailwind" className="space-y-3">
+                  <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
+                    <code>{generateTailwind()}</code>
+                  </pre>
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(generateTailwind(), "tailwind")}
+                  >
+                    {copiedKey === "tailwind" ? (
+                      <Check className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Copy className="mr-2 h-4 w-4" />
+                    )}
+                    Copy Config
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
