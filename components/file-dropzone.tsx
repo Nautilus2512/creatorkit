@@ -9,6 +9,7 @@ interface FileDropzoneProps {
   multiple?: boolean
   onFilesSelected: (files: File[]) => void
   maxFiles?: number
+  existingFiles?: File[]
 }
 
 export function FileDropzone({
@@ -16,9 +17,18 @@ export function FileDropzone({
   multiple = true,
   onFilesSelected,
   maxFiles = 10,
+  existingFiles,
 }: FileDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
+  const [internalFiles, setInternalFiles] = useState<File[]>([])
+
+  // Use existingFiles if provided (controlled), otherwise use internal state
+  const files = existingFiles ?? internalFiles
+
+  const updateFiles = useCallback((newFiles: File[]) => {
+    if (existingFiles === undefined) setInternalFiles(newFiles)
+    onFilesSelected(newFiles)
+  }, [existingFiles, onFilesSelected])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -34,38 +44,35 @@ export function FileDropzone({
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragging(false)
-
-      const droppedFiles = Array.from(e.dataTransfer.files).slice(0, maxFiles)
-      setFiles(droppedFiles)
-      onFilesSelected(droppedFiles)
+      const dropped = Array.from(e.dataTransfer.files)
+      const combined = dropped.slice(0, maxFiles)
+      updateFiles(combined)
     },
-    [maxFiles, onFilesSelected]
+    [files, maxFiles, updateFiles]
   )
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const selectedFiles = Array.from(e.target.files).slice(0, maxFiles)
-        setFiles(selectedFiles)
-        onFilesSelected(selectedFiles)
+        const selected = Array.from(e.target.files)
+        const combined = selected.slice(0, maxFiles)
+        updateFiles(combined)
+        e.target.value = ""
       }
     },
-    [maxFiles, onFilesSelected]
+    [files, maxFiles, updateFiles]
   )
 
   const removeFile = useCallback(
     (index: number) => {
-      const newFiles = files.filter((_, i) => i !== index)
-      setFiles(newFiles)
-      onFilesSelected(newFiles)
+      updateFiles(files.filter((_, i) => i !== index))
     },
-    [files, onFilesSelected]
+    [files, updateFiles]
   )
 
   const clearFiles = useCallback(() => {
-    setFiles([])
-    onFilesSelected([])
-  }, [onFilesSelected])
+    updateFiles([])
+  }, [updateFiles])
 
   return (
     <div className="space-y-3">

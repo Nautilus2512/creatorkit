@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import exifr from "exifr"
-import { Download, Shield, CheckCircle2, MapPin, Camera, Calendar } from "lucide-react"
+import JSZip from "jszip"
+import { Download, Shield, CheckCircle2, MapPin, Camera, Calendar, ArrowRight } from "lucide-react"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,6 +17,8 @@ type ParsedMetadata = {
 type ProcessedFile = {
   name: string
   url: string
+  blob: Blob
+  originalName: string
 }
 
 export function MetadataRemover() {
@@ -41,18 +44,11 @@ export function MetadataRemover() {
 
   const parseMetadata = async (selectedFiles: File[]) => {
     const nextMetadata: Record<string, ParsedMetadata> = {}
-
     for (const file of selectedFiles) {
       const key = keyForFile(file)
       try {
         const data = await exifr.parse(file, [
-          "Make",
-          "Model",
-          "DateTimeOriginal",
-          "CreateDate",
-          "ModifyDate",
-          "latitude",
-          "longitude",
+          "Make", "Model", "DateTimeOriginal", "CreateDate", "ModifyDate", "latitude", "longitude",
         ])
         const deviceParts = [data?.Make, data?.Model].filter(Boolean)
         nextMetadata[key] = {
@@ -64,7 +60,6 @@ export function MetadataRemover() {
         nextMetadata[key] = { gps: null, device: null, date: null }
       }
     }
-
     setMetadataByFile(nextMetadata)
   }
 
@@ -85,7 +80,6 @@ export function MetadataRemover() {
 
   const removeMetadata = async () => {
     if (files.length === 0) return
-
     setIsProcessing(true)
     setErrors([])
     const processed: ProcessedFile[] = []
@@ -93,43 +87,38 @@ export function MetadataRemover() {
 
     for (const file of files) {
       const sourceUrl = URL.createObjectURL(file)
-
       try {
         const bitmap = await createImageBitmap(file)
         const canvas = document.createElement("canvas")
         canvas.width = bitmap.width
         canvas.height = bitmap.height
         const ctx = canvas.getContext("2d")
-
         if (!ctx) {
           nextErrors.push(`Could not process ${file.name}: canvas context unavailable.`)
           bitmap.close()
           continue
         }
-
         ctx.drawImage(bitmap, 0, 0)
         bitmap.close()
 
         const outputMimeType = outputTypeFromInput(file)
         const blob = await new Promise<Blob | null>((resolve) => {
-          canvas.toBlob((nextBlob) => resolve(nextBlob), outputMimeType, 0.95)
+          canvas.toBlob((b) => resolve(b), outputMimeType, 0.95)
         })
-
         if (!blob) {
           nextErrors.push(`Could not process ${file.name}: failed to create output image.`)
           continue
         }
 
-        const cleanUrl = URL.createObjectURL(blob)
         const cleanExt = outputExtension(outputMimeType)
         processed.push({
           name: `${file.name.replace(/\.[^/.]+$/, "")}_clean.${cleanExt}`,
-          url: cleanUrl,
+          url: URL.createObjectURL(blob),
+          blob,
+          originalName: file.name,
         })
       } catch {
-        nextErrors.push(
-          `Could not process ${file.name}. This browser may not support decoding this format (common with HEIC).`
-        )
+        nextErrors.push(`Could not process ${file.name}. This browser may not support decoding this format (common with HEIC).`)
       } finally {
         URL.revokeObjectURL(sourceUrl)
       }
@@ -147,28 +136,35 @@ export function MetadataRemover() {
     a.click()
   }
 
-  const downloadAll = () => {
+  const downloadAllZip = async () => {
+    if (processedFiles.length === 0) return
+    const zip = new JSZip()
     processedFiles.forEach((file) => {
-      downloadFile(file.url, file.name)
+      zip.file(file.name, file.blob)
     })
+    const zipBlob = await zip.generateAsync({ type: "blob" })
+    const zipUrl = URL.createObjectURL(zipBlob)
+    downloadFile(zipUrl, "cleaned-images.zip")
+    URL.revokeObjectURL(zipUrl)
   }
 
   const selectedCountLabel = useMemo(() => {
     return `${files.length} file${files.length > 1 ? "s" : ""}`
   }, [files.length])
 
+  const hasAnyMetadata = (meta: ParsedMetadata) => meta.gps || meta.device || meta.date
+
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Metadata Remover
-        </h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Metadata Remover</h2>
         <p className="text-muted-foreground">
           Remove EXIF data and other metadata from your images for privacy.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:items-start">
+        {/* LEFT */}
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -177,8 +173,7 @@ export function MetadataRemover() {
                 Privacy Protection
               </CardTitle>
               <CardDescription>
-                Strips GPS coordinates, camera info, timestamps, and other embedded
-                data from your images.
+                Strips GPS coordinates, camera info, timestamps, and other embedded data. Supports batch upload — up to 20 files at once.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -186,14 +181,25 @@ export function MetadataRemover() {
                 accept=".jpg,.jpeg,.png,.heic,image/jpeg,image/png,image/heic"
                 onFilesSelected={handleFilesSelected}
                 maxFiles={20}
+                multiple
               />
 
+              {/* TAMBAHKAN DI SINI */}
               {files.length > 0 && (
-                <Button
-                  onClick={removeMetadata}
-                  disabled={isProcessing}
-                  className="w-full"
-                >
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{files.length} file{files.length > 1 ? "s" : ""} ready</span>
+                  <button
+                    type="button"
+                    onClick={() => { setFiles([]); setProcessedFiles([]); setErrors([]) }}
+                    className="hover:text-destructive"
+                  >
+                    Clear all files
+                  </button>
+                </div>
+              )}
+
+              {files.length > 0 && (
+                <Button onClick={removeMetadata} disabled={isProcessing} className="w-full">
                   {isProcessing ? "Processing..." : `Remove Metadata from ${selectedCountLabel}`}
                 </Button>
               )}
@@ -201,6 +207,7 @@ export function MetadataRemover() {
           </Card>
         </div>
 
+        {/* RIGHT */}
         <div className="space-y-4">
           {files.length > 0 && (
             <Card>
@@ -213,26 +220,66 @@ export function MetadataRemover() {
               <CardContent className="grid gap-3">
                 {files.map((file, index) => {
                   const metadata = metadataByFile[keyForFile(file)]
+                  const processed = processedFiles.find((p) => p.originalName === file.name)
+                  const hadMetadata = metadata && hasAnyMetadata(metadata)
+
                   return (
-                    <div
-                      key={`${file.name}-${index}`}
-                      className="space-y-2 rounded-lg border border-border p-3"
-                    >
-                      <p className="truncate text-sm font-medium">{file.name}</p>
+                    <div key={`${file.name}-${index}`} className="space-y-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{file.name}</p>
+                        {processed && (
+                          <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">
+                            Cleaned
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Before / After diff */}
                       <div className="grid gap-1 text-xs text-muted-foreground">
                         <p className="flex items-center gap-2">
-                          <MapPin className="h-3.5 w-3.5" />
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
                           GPS: {metadata?.gps ?? "Not found"}
+                          {processed && metadata?.gps && (
+                            <span className="flex items-center gap-1 text-green-500">
+                              <ArrowRight className="h-3 w-3" /> Removed
+                            </span>
+                          )}
                         </p>
                         <p className="flex items-center gap-2">
-                          <Camera className="h-3.5 w-3.5" />
+                          <Camera className="h-3.5 w-3.5 shrink-0" />
                           Device: {metadata?.device ?? "Not found"}
+                          {processed && metadata?.device && (
+                            <span className="flex items-center gap-1 text-green-500">
+                              <ArrowRight className="h-3 w-3" /> Removed
+                            </span>
+                          )}
                         </p>
                         <p className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5" />
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
                           Date: {metadata?.date ?? "Not found"}
+                          {processed && metadata?.date && (
+                            <span className="flex items-center gap-1 text-green-500">
+                              <ArrowRight className="h-3 w-3" /> Removed
+                            </span>
+                          )}
                         </p>
                       </div>
+
+                      {processed && !hadMetadata && (
+                        <p className="text-xs text-muted-foreground">No metadata detected — file still cleaned.</p>
+                      )}
+
+                      {processed && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => downloadFile(processed.url, processed.name)}
+                        >
+                          <Download className="mr-1 h-3.5 w-3.5" />
+                          Download {processed.name}
+                        </Button>
+                      )}
                     </div>
                   )
                 })}
@@ -240,41 +287,22 @@ export function MetadataRemover() {
             </Card>
           )}
 
-          {processedFiles.length > 0 && (
+          {processedFiles.length > 1 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  Processed Files
+                  {processedFiles.length} files processed
                 </CardTitle>
                 <CardDescription>
-                  Your files are ready to download. All metadata has been removed.
+                  All metadata removed. Download individually above or get all as ZIP.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid gap-2">
-                  {processedFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3"
-                    >
-                      <span className="truncate text-sm">{file.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => downloadFile(file.url, file.name)}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                {processedFiles.length > 1 && (
-                  <Button variant="outline" className="w-full" onClick={downloadAll}>
-                    Download All
-                  </Button>
-                )}
+              <CardContent>
+                <Button variant="outline" className="w-full" onClick={downloadAllZip}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download All as ZIP
+                </Button>
               </CardContent>
             </Card>
           )}
