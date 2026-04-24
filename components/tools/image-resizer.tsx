@@ -10,6 +10,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
+type OutputFormat = "jpeg" | "png" | "webp"
+
 type PlatformId =
   | "instagram" | "facebook" | "twitter" | "tiktok" | "linkedin"
   | "youtube" | "pinterest" | "threads" | "snapchat" | "bluesky"
@@ -239,6 +241,8 @@ function computeOverlay(
 }
 
 export function ImageResizer() {
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("jpeg")
+  const [quality, setQuality] = useState(92)
   const [files, setFiles] = useState<File[]>([])
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(
     new Set(["instagram-square-post", "instagram-story-reels"])
@@ -352,7 +356,9 @@ export function ImageResizer() {
     const r = getDrawRect(bmp.width, bmp.height, preset.width, preset.height, ox, oy)
     ctx.drawImage(bmp, r.drawX, r.drawY, r.drawWidth, r.drawHeight)
     bmp.close()
-    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.92))
+    const mimeType = `image/${outputFormat}`
+    const qualityValue = outputFormat === "png" ? undefined : quality / 100
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, mimeType, qualityValue))
     if (!blob) return null
     return { blob, url: URL.createObjectURL(blob) }
   }
@@ -371,7 +377,7 @@ export function ImageResizer() {
           id: `${file.name}-${file.lastModified}-${preset.id}`,
           presetId: preset.id, presetLabel: preset.label, platformLabel: preset.platformLabel,
           width: preset.width, height: preset.height, ratio: preset.ratio,
-          fileName: `${name}_${preset.id}.jpg`, sourceFile: file,
+          fileName: `${name}_${preset.id}.${outputFormat === "jpeg" ? "jpg" : outputFormat}`, sourceFile: file,
           url: rendered.url, blob: rendered.blob,
         })
       }
@@ -552,6 +558,44 @@ export function ImageResizer() {
               </Accordion>
 
               <p className="text-xs text-muted-foreground">Selected: {selectedPresetList.length} sizes - Files: {files.length}</p>
+
+              <div className="space-y-3 rounded-lg border border-border p-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Output Format</Label>
+                  <div className="flex gap-2">
+                    {(["jpeg", "png", "webp"] as OutputFormat[]).map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        onClick={() => setOutputFormat(fmt)}
+                        className={`flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+                          outputFormat === fmt
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {fmt === "jpeg" ? "JPG" : fmt.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {outputFormat !== "png" && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <Label className="text-xs">Quality</Label>
+                      <span className="text-xs text-muted-foreground">{quality}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={50}
+                      max={100}
+                      value={quality}
+                      onChange={(e) => setQuality(Number(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                  </div>
+                )}
+              </div>
 
               <Button
                 onClick={generateSelected}
