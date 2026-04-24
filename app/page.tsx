@@ -1,11 +1,29 @@
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Home() {
   return (
     <div id="top" className="min-h-screen bg-background">
+      {/* Top Navigation */}
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3 lg:px-8">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <Zap className="h-4 w-4 text-primary" />
+            CreatorKit
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
+            <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+          </nav>
+          <Button asChild size="sm">
+            <Link href="/tools">Try Free Tools</Link>
+          </Button>
+        </div>
+      </header>
+
       <main className="mx-auto max-w-5xl px-6 py-16 lg:px-8 lg:py-20">
         <section className="space-y-6 text-center">
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -46,7 +64,7 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
-                Create Instagram, LinkedIn, YouTube, and Facebook-ready assets from one upload.
+                Create Instagram, LinkedIn, YouTube, TikTok, and more — 40+ sizes from one upload.
               </CardContent>
             </Card>
           </Link>
@@ -78,18 +96,10 @@ export default function Home() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row lg:px-8">
           <p>© 2026 CreatorKit</p>
           <div className="flex items-center gap-4">
-            <Link href="#features" className="hover:text-foreground">
-              Features
-            </Link>
-            <Link href="/privacy" className="hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-foreground">
-              Terms
-            </Link>
-            <Link href="#top" className="hover:text-foreground">
-              Back to top
-            </Link>
+            <Link href="#features" className="hover:text-foreground">Features</Link>
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+            <Link href="#top" className="hover:text-foreground">Back to top</Link>
           </div>
         </div>
       </footer>
