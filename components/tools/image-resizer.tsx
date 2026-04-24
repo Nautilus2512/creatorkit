@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Download, CheckCircle2 } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Download, CheckCircle2, ChevronDown } from "lucide-react"
 import JSZip from "jszip"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
@@ -11,18 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
 type PlatformId =
-  | "instagram"
-  | "facebook"
-  | "twitter"
-  | "tiktok"
-  | "linkedin"
-  | "youtube"
-  | "pinterest"
-  | "threads"
-  | "snapchat"
-  | "bluesky"
-  | "whatsapp"
-  | "reddit"
+  | "instagram" | "facebook" | "twitter" | "tiktok" | "linkedin"
+  | "youtube" | "pinterest" | "threads" | "snapchat" | "bluesky"
+  | "whatsapp" | "reddit"
 
 type SizePreset = {
   id: string
@@ -36,8 +27,7 @@ type SizePreset = {
 
 const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[] }> = [
   {
-    id: "instagram",
-    label: "Instagram",
+    id: "instagram", label: "Instagram",
     sizes: [
       { id: "instagram-square-post", platform: "instagram", platformLabel: "Instagram", label: "Square Post", width: 1080, height: 1080, ratio: "1:1" },
       { id: "instagram-4x5-vertical", platform: "instagram", platformLabel: "Instagram", label: "4:5 Vertical", width: 1080, height: 1350, ratio: "4:5" },
@@ -48,8 +38,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "facebook",
-    label: "Facebook",
+    id: "facebook", label: "Facebook",
     sizes: [
       { id: "facebook-post", platform: "facebook", platformLabel: "Facebook", label: "Post", width: 1200, height: 630, ratio: "1.91:1" },
       { id: "facebook-story", platform: "facebook", platformLabel: "Facebook", label: "Story", width: 1080, height: 1920, ratio: "9:16" },
@@ -59,8 +48,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "twitter",
-    label: "Twitter/X",
+    id: "twitter", label: "Twitter/X",
     sizes: [
       { id: "twitter-post", platform: "twitter", platformLabel: "Twitter/X", label: "Post", width: 1200, height: 675, ratio: "16:9" },
       { id: "twitter-square-post", platform: "twitter", platformLabel: "Twitter/X", label: "Square Post", width: 1080, height: 1080, ratio: "1:1" },
@@ -69,8 +57,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "tiktok",
-    label: "TikTok",
+    id: "tiktok", label: "TikTok",
     sizes: [
       { id: "tiktok-vertical-cover", platform: "tiktok", platformLabel: "TikTok", label: "Vertical Cover", width: 1080, height: 1920, ratio: "9:16" },
       { id: "tiktok-feed-square", platform: "tiktok", platformLabel: "TikTok", label: "Feed Square", width: 1080, height: 1080, ratio: "1:1" },
@@ -78,8 +65,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "linkedin",
-    label: "LinkedIn",
+    id: "linkedin", label: "LinkedIn",
     sizes: [
       { id: "linkedin-post", platform: "linkedin", platformLabel: "LinkedIn", label: "Post", width: 1200, height: 627, ratio: "1.91:1" },
       { id: "linkedin-cover", platform: "linkedin", platformLabel: "LinkedIn", label: "Cover", width: 1584, height: 396, ratio: "4:1" },
@@ -87,8 +73,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "youtube",
-    label: "YouTube",
+    id: "youtube", label: "YouTube",
     sizes: [
       { id: "youtube-thumbnail", platform: "youtube", platformLabel: "YouTube", label: "Thumbnail", width: 1280, height: 720, ratio: "16:9" },
       { id: "youtube-channel-banner", platform: "youtube", platformLabel: "YouTube", label: "Channel Banner", width: 2560, height: 1440, ratio: "16:9" },
@@ -96,8 +81,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "pinterest",
-    label: "Pinterest",
+    id: "pinterest", label: "Pinterest",
     sizes: [
       { id: "pinterest-standard-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Standard Pin", width: 1000, height: 1500, ratio: "2:3" },
       { id: "pinterest-square-pin", platform: "pinterest", platformLabel: "Pinterest", label: "Square Pin", width: 1000, height: 1000, ratio: "1:1" },
@@ -105,24 +89,21 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "threads",
-    label: "Threads",
+    id: "threads", label: "Threads",
     sizes: [
       { id: "threads-post-square", platform: "threads", platformLabel: "Threads", label: "Post Square", width: 1080, height: 1080, ratio: "1:1" },
       { id: "threads-vertical", platform: "threads", platformLabel: "Threads", label: "Vertical", width: 1080, height: 1350, ratio: "4:5" },
     ],
   },
   {
-    id: "snapchat",
-    label: "Snapchat",
+    id: "snapchat", label: "Snapchat",
     sizes: [
       { id: "snapchat-story", platform: "snapchat", platformLabel: "Snapchat", label: "Story", width: 1080, height: 1920, ratio: "9:16" },
       { id: "snapchat-profile", platform: "snapchat", platformLabel: "Snapchat", label: "Profile", width: 320, height: 320, ratio: "1:1" },
     ],
   },
   {
-    id: "bluesky",
-    label: "Bluesky",
+    id: "bluesky", label: "Bluesky",
     sizes: [
       { id: "bluesky-post-square", platform: "bluesky", platformLabel: "Bluesky", label: "Post Square", width: 1200, height: 1200, ratio: "1:1" },
       { id: "bluesky-landscape", platform: "bluesky", platformLabel: "Bluesky", label: "Landscape", width: 1200, height: 675, ratio: "16:9" },
@@ -130,16 +111,14 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
     ],
   },
   {
-    id: "whatsapp",
-    label: "WhatsApp",
+    id: "whatsapp", label: "WhatsApp",
     sizes: [
       { id: "whatsapp-profile", platform: "whatsapp", platformLabel: "WhatsApp", label: "Profile", width: 640, height: 640, ratio: "1:1" },
       { id: "whatsapp-status", platform: "whatsapp", platformLabel: "WhatsApp", label: "Status", width: 1080, height: 1920, ratio: "9:16" },
     ],
   },
   {
-    id: "reddit",
-    label: "Reddit",
+    id: "reddit", label: "Reddit",
     sizes: [
       { id: "reddit-post", platform: "reddit", platformLabel: "Reddit", label: "Post", width: 1200, height: 628, ratio: "1.91:1" },
       { id: "reddit-banner", platform: "reddit", platformLabel: "Reddit", label: "Banner", width: 1920, height: 384, ratio: "5:1" },
@@ -148,7 +127,7 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
   },
 ]
 
-const PRESET_BY_ID = new Map(PLATFORM_GROUPS.flatMap((group) => group.sizes.map((size) => [size.id, size])))
+const PRESET_BY_ID = new Map(PLATFORM_GROUPS.flatMap((g) => g.sizes.map((s) => [s.id, s])))
 
 type GeneratedImage = {
   id: string
@@ -164,77 +143,169 @@ type GeneratedImage = {
   blob: Blob
 }
 
-type DragState = {
-  presetId: string
-  startX: number
-  startY: number
-  startOffsetX: number
-  startOffsetY: number
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
+
+function StyledSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = options.find((o) => o.value === value)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm text-foreground"
+      >
+        <span className="truncate">{selected?.label ?? "Select..."}</span>
+        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-popover shadow-md">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              className={`flex w-full items-center px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground ${opt.value === value ? "bg-accent/50 font-medium" : ""}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+function computeOverlay(
+  containerW: number,
+  containerH: number,
+  imgW: number,
+  imgH: number,
+  targetW: number,
+  targetH: number,
+  offsetX: number,
+  offsetY: number
+) {
+  const imgAspect = imgW / imgH
+  const containerAspect = containerW / containerH
+  const targetAspect = targetW / targetH
+
+  let rendW: number, rendH: number
+  if (imgAspect > containerAspect) {
+    rendW = containerW
+    rendH = containerW / imgAspect
+  } else {
+    rendH = containerH
+    rendW = containerH * imgAspect
+  }
+
+  const rendX = (containerW - rendW) / 2
+  const rendY = (containerH - rendH) / 2
+
+  let cropW: number, cropH: number
+  if (imgAspect > targetAspect) {
+    cropH = rendH
+    cropW = rendH * targetAspect
+  } else {
+    cropW = rendW
+    cropH = rendW / targetAspect
+  }
+
+  const extraX = rendW - cropW
+  const extraY = rendH - cropH
+
+  const cropX = rendX + extraX / 2 + (extraX / 2) * offsetX
+  const cropY = rendY + extraY / 2 + (extraY / 2) * offsetY
+
+  return { cropX, cropY, cropW, cropH }
+}
 
 export function ImageResizer() {
   const [files, setFiles] = useState<File[]>([])
-  const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set(["instagram-square-post", "instagram-story-reels"]))
+  const [selectedSizes, setSelectedSizes] = useState<Set<string>>(
+    new Set(["instagram-square-post", "instagram-story-reels"])
+  )
   const [cropOffsets, setCropOffsets] = useState<Record<string, { x: number; y: number }>>({})
   const [activePreviewPresetId, setActivePreviewPresetId] = useState<string>("instagram-square-post")
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
-  const [dragState, setDragState] = useState<DragState | null>(null)
   const [firstFileUrl, setFirstFileUrl] = useState<string | null>(null)
   const [firstFileSize, setFirstFileSize] = useState<{ width: number; height: number } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null)
 
-  const selectedPresetList = useMemo(() => {
-    return [...selectedSizes]
-      .map((id) => PRESET_BY_ID.get(id))
-      .filter((preset): preset is SizePreset => Boolean(preset))
-  }, [selectedSizes])
+  const dragRef = useRef<{
+    presetId: string
+    startX: number
+    startY: number
+    startOffsetX: number
+    startOffsetY: number
+  } | null>(null)
+  const cropContainerRef = useRef<HTMLDivElement>(null)
 
-  const activePreviewPreset = useMemo(() => {
-    return PRESET_BY_ID.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null
-  }, [activePreviewPresetId, selectedPresetList])
+  useEffect(() => {
+    const el = cropContainerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height })
+      }
+    })
+    observer.observe(el)
+    setContainerSize({ w: el.offsetWidth, h: el.offsetHeight })
+    return () => observer.disconnect()
+  }, [])
 
-  // Group selected presets by platform for chip display
-  const selectedChips = useMemo(() => {
-    return selectedPresetList.map((preset) => ({
-      id: preset.id,
-      label: `${preset.platformLabel} ${preset.label}`,
-    }))
-  }, [selectedPresetList])
+  const selectedPresetList = useMemo(
+    () => [...selectedSizes].map((id) => PRESET_BY_ID.get(id)).filter((p): p is SizePreset => Boolean(p)),
+    [selectedSizes]
+  )
+
+  const activePreviewPreset = useMemo(
+    () => PRESET_BY_ID.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null,
+    [activePreviewPresetId, selectedPresetList]
+  )
+
+  const selectedChips = useMemo(
+    () => selectedPresetList.map((p) => ({ id: p.id, label: `${p.platformLabel} ${p.label}` })),
+    [selectedPresetList]
+  )
 
   useEffect(() => {
     if (files.length === 0) {
-      setFirstFileUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev)
-        return null
-      })
+      setFirstFileUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null })
       setFirstFileSize(null)
       return
     }
-
     const url = URL.createObjectURL(files[0])
-    setFirstFileUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev)
-      return url
-    })
-
+    setFirstFileUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return url })
     let cancelled = false
-    createImageBitmap(files[0]).then((bitmap) => {
-      if (!cancelled) {
-        setFirstFileSize({ width: bitmap.width, height: bitmap.height })
-      }
-      bitmap.close()
+    createImageBitmap(files[0]).then((bmp) => {
+      if (!cancelled) setFirstFileSize({ width: bmp.width, height: bmp.height })
+      bmp.close()
     })
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [files])
 
   useEffect(() => {
-    if (selectedPresetList.length === 0) return
-    if (!selectedSizes.has(activePreviewPresetId)) {
+    if (selectedPresetList.length > 0 && !selectedSizes.has(activePreviewPresetId)) {
       setActivePreviewPresetId(selectedPresetList[0].id)
     }
   }, [selectedPresetList, selectedSizes, activePreviewPresetId])
@@ -246,195 +317,156 @@ export function ImageResizer() {
     }
   }, [firstFileUrl, generatedImages])
 
-  const handleFilesSelected = (selectedFiles: File[]) => {
-    setFiles(selectedFiles)
+  const handleFilesSelected = (f: File[]) => {
+    setFiles(f)
     setCropOffsets({})
-    setGeneratedImages((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.url))
-      return []
-    })
+    setGeneratedImages((prev) => { prev.forEach((i) => URL.revokeObjectURL(i.url)); return [] })
   }
 
-  const toggleSize = (presetId: string, checked: boolean) => {
-    setSelectedSizes((prev) => {
-      const next = new Set(prev)
-      if (checked) next.add(presetId)
-      else next.delete(presetId)
-      return next
-    })
+  const toggleSize = (id: string, checked: boolean) =>
+    setSelectedSizes((prev) => { const n = new Set(prev); checked ? n.add(id) : n.delete(id); return n })
+
+  const removeChip = (id: string) =>
+    setSelectedSizes((prev) => { const n = new Set(prev); n.delete(id); return n })
+
+  const selectAllForPlatform = (g: { sizes: SizePreset[] }) =>
+    setSelectedSizes((prev) => { const n = new Set(prev); g.sizes.forEach((s) => n.add(s.id)); return n })
+
+  const deselectAllForPlatform = (g: { sizes: SizePreset[] }) =>
+    setSelectedSizes((prev) => { const n = new Set(prev); g.sizes.forEach((s) => n.delete(s.id)); return n })
+
+  const getDrawRect = (bW: number, bH: number, tW: number, tH: number, ox: number, oy: number) => {
+    const sa = bW / bH, ta = tW / tH
+    let dW = tW, dH = tH
+    if (sa > ta) { dH = tH; dW = tH * sa } else { dW = tW; dH = tW / sa }
+    const ovX = Math.max(0, dW - tW), ovY = Math.max(0, dH - tH)
+    return { drawX: (tW - dW) / 2 + (ovX / 2) * ox, drawY: (tH - dH) / 2 + (ovY / 2) * oy, drawWidth: dW, drawHeight: dH }
   }
 
-  const removeChip = (presetId: string) => {
-    setSelectedSizes((prev) => {
-      const next = new Set(prev)
-      next.delete(presetId)
-      return next
-    })
-  }
-
-  const selectAllForPlatform = (group: { sizes: SizePreset[] }) => {
-    setSelectedSizes((prev) => {
-      const next = new Set(prev)
-      group.sizes.forEach((size) => next.add(size.id))
-      return next
-    })
-  }
-
-  const deselectAllForPlatform = (group: { sizes: SizePreset[] }) => {
-    setSelectedSizes((prev) => {
-      const next = new Set(prev)
-      group.sizes.forEach((size) => next.delete(size.id))
-      return next
-    })
-  }
-
-  const getDrawRect = (
-    bitmapWidth: number,
-    bitmapHeight: number,
-    targetWidth: number,
-    targetHeight: number,
-    offsetXRatio: number,
-    offsetYRatio: number
-  ) => {
-    const srcAspect = bitmapWidth / bitmapHeight
-    const targetAspect = targetWidth / targetHeight
-
-    let drawWidth = targetWidth
-    let drawHeight = targetHeight
-    let drawX = 0
-    let drawY = 0
-
-    if (srcAspect > targetAspect) {
-      drawHeight = targetHeight
-      drawWidth = targetHeight * srcAspect
-    } else {
-      drawWidth = targetWidth
-      drawHeight = targetWidth / srcAspect
-    }
-
-    const overflowX = Math.max(0, drawWidth - targetWidth)
-    const overflowY = Math.max(0, drawHeight - targetHeight)
-    drawX = (targetWidth - drawWidth) / 2 + (overflowX / 2) * offsetXRatio
-    drawY = (targetHeight - drawHeight) / 2 + (overflowY / 2) * offsetYRatio
-    return { drawX, drawY, drawWidth, drawHeight }
-  }
-
-  const renderVariant = async (file: File, preset: SizePreset, offsetX: number, offsetY: number) => {
-    const bitmap = await createImageBitmap(file)
+  const renderVariant = async (file: File, preset: SizePreset, ox: number, oy: number) => {
+    const bmp = await createImageBitmap(file)
     const canvas = document.createElement("canvas")
-    canvas.width = preset.width
-    canvas.height = preset.height
+    canvas.width = preset.width; canvas.height = preset.height
     const ctx = canvas.getContext("2d")
-    if (!ctx) {
-      bitmap.close()
-      return null
-    }
-    const rect = getDrawRect(bitmap.width, bitmap.height, preset.width, preset.height, offsetX, offsetY)
-    ctx.drawImage(bitmap, rect.drawX, rect.drawY, rect.drawWidth, rect.drawHeight)
-    bitmap.close()
-
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((nextBlob) => resolve(nextBlob), "image/jpeg", 0.92)
-    })
+    if (!ctx) { bmp.close(); return null }
+    const r = getDrawRect(bmp.width, bmp.height, preset.width, preset.height, ox, oy)
+    ctx.drawImage(bmp, r.drawX, r.drawY, r.drawWidth, r.drawHeight)
+    bmp.close()
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/jpeg", 0.92))
     if (!blob) return null
     return { blob, url: URL.createObjectURL(blob) }
   }
 
   const generateSelected = async () => {
-    if (files.length === 0 || selectedPresetList.length === 0) return
-
+    if (!files.length || !selectedPresetList.length) return
     setIsProcessing(true)
-    const nextGenerated: GeneratedImage[] = []
-
+    const next: GeneratedImage[] = []
     for (const file of files) {
-      const sourceName = file.name.replace(/\.[^/.]+$/, "")
+      const name = file.name.replace(/\.[^/.]+$/, "")
       for (const preset of selectedPresetList) {
         const offset = cropOffsets[preset.id] ?? { x: 0, y: 0 }
         const rendered = await renderVariant(file, preset, offset.x, offset.y)
         if (!rendered) continue
-        nextGenerated.push({
+        next.push({
           id: `${file.name}-${file.lastModified}-${preset.id}`,
-          presetId: preset.id,
-          presetLabel: preset.label,
-          platformLabel: preset.platformLabel,
-          width: preset.width,
-          height: preset.height,
-          ratio: preset.ratio,
-          fileName: `${sourceName}_${preset.id}.jpg`,
-          sourceFile: file,
-          url: rendered.url,
-          blob: rendered.blob,
+          presetId: preset.id, presetLabel: preset.label, platformLabel: preset.platformLabel,
+          width: preset.width, height: preset.height, ratio: preset.ratio,
+          fileName: `${name}_${preset.id}.jpg`, sourceFile: file,
+          url: rendered.url, blob: rendered.blob,
         })
       }
     }
-
-    setGeneratedImages((prev) => {
-      prev.forEach((item) => URL.revokeObjectURL(item.url))
-      return nextGenerated
-    })
+    setGeneratedImages((prev) => { prev.forEach((i) => URL.revokeObjectURL(i.url)); return next })
     setIsProcessing(false)
   }
 
-  const handleCropDragStart = (presetId: string, event: React.PointerEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const current = cropOffsets[presetId] ?? { x: 0, y: 0 }
-    setDragState({
-      presetId,
-      startX: event.clientX,
-      startY: event.clientY,
-      startOffsetX: current.x,
-      startOffsetY: current.y,
-    })
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!activePreviewPreset) return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const current = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
+    dragRef.current = {
+      presetId: activePreviewPreset.id,
+      startX: e.clientX, startY: e.clientY,
+      startOffsetX: current.x, startOffsetY: current.y,
+    }
   }
 
-  const handleCropDragMove = (preset: SizePreset, event: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragState || dragState.presetId !== preset.id || !firstFileSize) return
-    const rect = event.currentTarget.getBoundingClientRect()
-    const srcAspect = firstFileSize.width / firstFileSize.height
-    const targetAspect = preset.width / preset.height
-    const overlayWidth =
-      srcAspect > targetAspect ? rect.height * targetAspect : rect.width
-    const overlayHeight =
-      srcAspect > targetAspect ? rect.height : rect.width / targetAspect
-    const movableX = Math.max(1, rect.width - overlayWidth)
-    const movableY = Math.max(1, rect.height - overlayHeight)
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current || !activePreviewPreset || !firstFileSize) return
+    const cW = containerSize?.w ?? cropContainerRef.current?.offsetWidth ?? 0
+    const cH = containerSize?.h ?? cropContainerRef.current?.offsetHeight ?? 0
+    if (!cW || !cH) return
 
-    const deltaXRatio = (event.clientX - dragState.startX) / (movableX / 2)
-    const deltaYRatio = (event.clientY - dragState.startY) / (movableY / 2)
+    const imgAspect = firstFileSize.width / firstFileSize.height
+    const containerAspect = cW / cH
+    const targetAspect = activePreviewPreset.width / activePreviewPreset.height
 
+    let rendW: number, rendH: number
+    if (imgAspect > containerAspect) {
+      rendW = cW; rendH = cW / imgAspect
+    } else {
+      rendH = cH; rendW = cH * imgAspect
+    }
+
+    let cropW: number, cropH: number
+    if (imgAspect > targetAspect) {
+      cropH = rendH; cropW = rendH * targetAspect
+    } else {
+      cropW = rendW; cropH = rendW / targetAspect
+    }
+
+    const movX = Math.max(1, rendW - cropW)
+    const movY = Math.max(1, rendH - cropH)
+
+    const dx = (e.clientX - dragRef.current.startX) / (movX / 2)
+    const dy = (e.clientY - dragRef.current.startY) / (movY / 2)
+
+    const saved = dragRef.current
     setCropOffsets((prev) => ({
       ...prev,
-      [preset.id]: {
-        x: clamp(dragState.startOffsetX + deltaXRatio, -1, 1),
-        y: clamp(dragState.startOffsetY + deltaYRatio, -1, 1),
+      [activePreviewPreset.id]: {
+        x: clamp(saved.startOffsetX + dx, -1, 1),
+        y: clamp(saved.startOffsetY + dy, -1, 1),
       },
     }))
   }
 
-  const handleCropDragEnd = (presetId: string) => {
-    if (!dragState || dragState.presetId !== presetId) return
-    setDragState(null)
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    dragRef.current = null
   }
 
   const downloadFile = (url: string, name: string) => {
-    const a = document.createElement("a")
-    a.href = url
-    a.download = name
-    a.click()
+    const a = document.createElement("a"); a.href = url; a.download = name; a.click()
   }
 
   const downloadAll = async () => {
-    if (generatedImages.length === 0) return
+    if (!generatedImages.length) return
     const zip = new JSZip()
     generatedImages.forEach((item) => {
-      const folder = zip.folder(item.sourceFile.name.replace(/\.[^/.]+$/, ""))
-      folder?.file(item.fileName, item.blob)
+      zip.folder(item.sourceFile.name.replace(/\.[^/.]+$/, ""))?.file(item.fileName, item.blob)
     })
-    const zipBlob = await zip.generateAsync({ type: "blob" })
-    const zipUrl = URL.createObjectURL(zipBlob)
-    downloadFile(zipUrl, "resized-social-images.zip")
-    URL.revokeObjectURL(zipUrl)
+    const blob = await zip.generateAsync({ type: "blob" })
+    const url = URL.createObjectURL(blob)
+    downloadFile(url, "resized-social-images.zip")
+    URL.revokeObjectURL(url)
   }
+
+  const overlayRect = useMemo(() => {
+    if (!firstFileSize || !activePreviewPreset) return null
+    // Use containerSize from ResizeObserver, fallback to ref dimensions
+    const cW = containerSize?.w ?? cropContainerRef.current?.offsetWidth ?? 0
+    const cH = containerSize?.h ?? cropContainerRef.current?.offsetHeight ?? 0
+    if (!cW || !cH) return null
+    const offset = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
+    return computeOverlay(
+      cW, cH,
+      firstFileSize.width, firstFileSize.height,
+      activePreviewPreset.width, activePreviewPreset.height,
+      offset.x, offset.y
+    )
+  }, [containerSize, firstFileSize, activePreviewPreset, cropOffsets])
 
   return (
     <div className="space-y-4">
@@ -450,50 +482,29 @@ export function ImageResizer() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Upload Images</CardTitle>
-              <CardDescription>
-                Drag and drop one or more images. All processing happens in your browser.
-              </CardDescription>
+              <CardDescription>Drag and drop one or more images. All processing happens in your browser.</CardDescription>
             </CardHeader>
             <CardContent>
-              <FileDropzone
-                accept="image/*"
-                onFilesSelected={handleFilesSelected}
-                maxFiles={20}
-                multiple
-              />
+              <FileDropzone accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Size Selection</CardTitle>
-              <CardDescription>
-                Choose sizes by platform. Use Select All / Deselect All per group.
-              </CardDescription>
+              <CardDescription>Choose sizes by platform. Use Select All / Deselect All per group.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-
-              {/* Selected Sizes Chip Summary */}
               {selectedChips.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground font-medium">
+                  <p className="text-xs font-medium text-muted-foreground">
                     {selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedChips.map((chip) => (
-                      <span
-                        key={chip.id}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs"
-                      >
+                      <span key={chip.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs">
                         {chip.label}
-                        <button
-                          type="button"
-                          onClick={() => removeChip(chip.id)}
-                          className="ml-0.5 rounded-full hover:text-destructive"
-                          aria-label={`Remove ${chip.label}`}
-                        >
-                          ×
-                        </button>
+                        <button type="button" onClick={() => removeChip(chip.id)} className="ml-0.5 hover:text-destructive">x</button>
                       </span>
                     ))}
                   </div>
@@ -515,39 +526,22 @@ export function ImageResizer() {
                     </AccordionTrigger>
                     <AccordionContent className="space-y-3">
                       <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => selectAllForPlatform(group)}
-                        >
-                          Select All
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deselectAllForPlatform(group)}
-                        >
-                          Deselect All
-                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => selectAllForPlatform(group)}>Select All</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => deselectAllForPlatform(group)}>Deselect All</Button>
                       </div>
                       <div className="grid gap-2">
                         {group.sizes.map((preset) => (
-                          <label
-                            key={preset.id}
-                            className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-                          >
+                          <label key={preset.id} className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                             <div className="flex items-center gap-2">
                               <Checkbox
                                 checked={selectedSizes.has(preset.id)}
-                                onCheckedChange={(checked) => toggleSize(preset.id, Boolean(checked))}
+                                onCheckedChange={(c: boolean | "indeterminate") => toggleSize(preset.id, Boolean(c))}
                               />
                               <span>{preset.label}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
-                              <span>{preset.width}×{preset.height}</span>
+                              <span>{preset.width}x{preset.height}</span>
                             </div>
                           </label>
                         ))}
@@ -557,13 +551,11 @@ export function ImageResizer() {
                 ))}
               </Accordion>
 
-              <p className="text-xs text-muted-foreground">
-                Selected: {selectedPresetList.length} sizes • Files: {files.length}
-              </p>
+              <p className="text-xs text-muted-foreground">Selected: {selectedPresetList.length} sizes - Files: {files.length}</p>
 
               <Button
                 onClick={generateSelected}
-                disabled={isProcessing || files.length === 0 || selectedPresetList.length === 0}
+                disabled={isProcessing || !files.length || !selectedPresetList.length}
                 className="w-full"
               >
                 {isProcessing ? "Processing..." : `Generate ${selectedPresetList.length > 0 ? selectedPresetList.length : ""} Selected`}
@@ -577,86 +569,52 @@ export function ImageResizer() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Crop Preview</CardTitle>
-                <CardDescription>
-                  Drag the overlay to adjust crop position for each size.
-                </CardDescription>
+                <CardDescription>Drag the overlay to adjust crop position for each size.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1">
-                  <Label htmlFor="crop-size">Preview size</Label>
-                  <select
-                    id="crop-size"
-                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                  <Label>Preview size</Label>
+                  <StyledSelect
                     value={activePreviewPreset.id}
-                    onChange={(e) => setActivePreviewPresetId(e.target.value)}
-                  >
-                    {selectedPresetList.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.platformLabel} — {preset.label} ({preset.ratio}) {preset.width}×{preset.height}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setActivePreviewPresetId}
+                    options={selectedPresetList.map((p) => ({
+                      value: p.id,
+                      label: `${p.platformLabel} - ${p.label} (${p.ratio}) ${p.width}x${p.height}`,
+                    }))}
+                  />
                 </div>
 
                 <div
+                  ref={cropContainerRef}
                   className="relative h-72 overflow-hidden rounded-md border border-border bg-muted/40"
-                  onPointerDown={(event) => handleCropDragStart(activePreviewPreset.id, event)}
-                  onPointerMove={(event) => handleCropDragMove(activePreviewPreset, event)}
-                  onPointerUp={() => handleCropDragEnd(activePreviewPreset.id)}
-                  onPointerLeave={() => handleCropDragEnd(activePreviewPreset.id)}
-                  style={{ cursor: "grab" }}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerUp}
+                  style={{ cursor: "grab", touchAction: "none" }}
                 >
                   <img
                     src={firstFileUrl}
                     alt="Original preview"
-                    className="h-full w-full object-contain select-none"
+                    className="h-full w-full object-contain select-none pointer-events-none"
                     draggable={false}
                   />
-                  {(() => {
-                    const containerW = 100
-                    const containerH = 72
-                    const srcAspect = firstFileSize.width / firstFileSize.height
-                    const targetAspect = activePreviewPreset.width / activePreviewPreset.height
-                    const imgW = srcAspect > containerW / containerH ? containerW : containerH * srcAspect
-                    const imgH = srcAspect > containerW / containerH ? containerW / srcAspect : containerH
-                    const imgX = (containerW - imgW) / 2
-                    const imgY = (containerH - imgH) / 2
-                    const offset = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
-
-                    let rectW = imgW
-                    let rectH = imgH
-                    let rectX = imgX
-                    let rectY = imgY
-
-                    if (srcAspect > targetAspect) {
-                      rectH = imgH
-                      rectW = imgH * targetAspect
-                      const extra = imgW - rectW
-                      rectX = imgX + extra / 2 + (extra / 2) * offset.x
-                    } else {
-                      rectW = imgW
-                      rectH = imgW / targetAspect
-                      const extra = imgH - rectH
-                      rectY = imgY + extra / 2 + (extra / 2) * offset.y
-                    }
-
-                    return (
-                      <div
-                        className="pointer-events-none absolute border-2 border-primary"
-                        style={{
-                          left: `${rectX}%`,
-                          top: `${rectY}%`,
-                          width: `${rectW}%`,
-                          height: `${rectH}%`,
-                          boxShadow: "0 0 0 9999px rgba(0,0,0,0.25)",
-                        }}
-                      />
-                    )
-                  })()}
+                  {overlayRect && (
+                    <div
+                      className="pointer-events-none absolute border-2 border-primary"
+                      style={{
+                        left: overlayRect.cropX,
+                        top: overlayRect.cropY,
+                        width: overlayRect.cropW,
+                        height: overlayRect.cropH,
+                        boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)",
+                      }}
+                    />
+                  )}
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  {activePreviewPreset.platformLabel} — {activePreviewPreset.label} • {activePreviewPreset.ratio} • {activePreviewPreset.width}×{activePreviewPreset.height}px
+                  {activePreviewPreset.platformLabel} - {activePreviewPreset.label} - {activePreviewPreset.ratio} - {activePreviewPreset.width}x{activePreviewPreset.height}px
                 </p>
               </CardContent>
             </Card>
@@ -676,52 +634,28 @@ export function ImageResizer() {
               <CardContent className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {generatedImages.map((item) => (
-                    <div
-                      key={item.id}
-                      className="space-y-3 rounded-lg border border-border bg-muted/50 p-3"
-                    >
+                    <div key={item.id} className="space-y-3 rounded-lg border border-border bg-muted/50 p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {item.platformLabel} {item.presetLabel}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.ratio} • {item.width}×{item.height} • {item.sourceFile.name}
-                          </p>
+                          <p className="truncate text-sm font-medium">{item.platformLabel} {item.presetLabel}</p>
+                          <p className="text-xs text-muted-foreground">{item.ratio} - {item.width}x{item.height} - {item.sourceFile.name}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => downloadFile(item.url, item.fileName)}
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
+                        <Button variant="ghost" size="sm" onClick={() => downloadFile(item.url, item.fileName)}>
+                          <Download className="mr-2 h-4 w-4" />Download
                         </Button>
                       </div>
-                      <img
-                        src={item.url}
-                        alt={`${item.platformLabel} ${item.presetLabel} preview`}
-                        className="w-full rounded-md border border-border"
-                      />
+                      <img src={item.url} alt={`${item.platformLabel} ${item.presetLabel} preview`} className="w-full rounded-md border border-border" />
                     </div>
                   ))}
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={downloadAll}
-                >
-                  Download All as ZIP
-                </Button>
+                <Button variant="outline" className="w-full" onClick={downloadAll}>Download All as ZIP</Button>
               </CardContent>
             </Card>
           ) : (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Results</CardTitle>
-                <CardDescription>
-                  Select sizes, adjust crop preview, then click Generate Selected.
-                </CardDescription>
+                <CardDescription>Select sizes, adjust crop preview, then click Generate Selected.</CardDescription>
               </CardHeader>
             </Card>
           )}
