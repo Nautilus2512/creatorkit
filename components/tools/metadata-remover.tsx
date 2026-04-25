@@ -305,7 +305,13 @@ export function MetadataRemover() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4" />Privacy Protection</CardTitle>
-              <CardDescription>Images: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF · PDF · Office: DOCX, XLSX, PPTX · Audio: MP3, FLAC, WAV, OGG, M4A and more.</CardDescription>
+              <CardDescription>
+                <span className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs">
+                  <span>Image: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF</span>
+                  <span>Document: PDF, DOCX, XLSX, PPTX, ODT</span>
+                  <span>Audio: MP3, COMING SOON: FLAC, WAV, OGG, M4A</span>
+                </span>
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FileDropzone accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
@@ -367,7 +373,7 @@ export function MetadataRemover() {
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><Music className="h-3.5 w-3.5" /> Audio Tag Fields</p>
                   <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground space-y-1">
-                    <p>🔄 Audio metadata preview only — actual tag removal coming soon</p>
+                    <p>🔄 <strong>FLAC, WAV, OGG, M4A, AAC, WMA, AIFF</strong> — metadata preview only, actual removal coming soon</p>
                   </div>
                   <div className="grid gap-1.5">
                     <CheckRow checked={audioOpts.title} onChange={() => toggleAudio("title")} label="Title" />
