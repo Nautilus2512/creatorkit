@@ -1,12 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
 import { Copy, Check, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useEffect, useMemo, useState } from "react"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
   let r = 0, g = 0, b = 0
@@ -207,7 +208,21 @@ export function DesignTokenGenerator() {
     </div>
   )
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (!ctrl) return
+      if (e.key === "c" || e.key === "C") {
+        e.preventDefault()
+        copyToClipboard(generateCSS(), "css")
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [primaryColor, secondaryColor, accentColor])
+
   return (
+    <>
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Design Token Generator</h2>
@@ -393,5 +408,13 @@ export function DesignTokenGenerator() {
         </div>
       </div>
     </div>
+    <ShortcutsModal
+      pageName="Design Token Generator"
+      shortcuts={[
+        { keys: ["Ctrl", "C"], description: "Copy CSS tokens" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+      ]}
+    />
+    </>
   )
 }

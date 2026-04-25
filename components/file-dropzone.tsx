@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState, forwardRef } from "react"
 import { Upload, X, FileImage } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -12,13 +12,13 @@ interface FileDropzoneProps {
   existingFiles?: File[]
 }
 
-export function FileDropzone({
+export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(function FileDropzone({
   accept = "image/*",
   multiple = true,
   onFilesSelected,
   maxFiles = 10,
   existingFiles,
-}: FileDropzoneProps) {
+}, ref) {
   const [isDragging, setIsDragging] = useState(false)
   const [internalFiles, setInternalFiles] = useState<File[]>([])
 
@@ -87,6 +87,7 @@ export function FileDropzone({
         }`}
       >
         <input
+          ref={ref}
           type="file"
           accept={accept}
           multiple={multiple}
@@ -102,7 +103,7 @@ export function FileDropzone({
               Drag and drop your files here
             </p>
             <p className="text-xs text-muted-foreground">
-              or click to browse • Max {maxFiles} files
+              or click to browse • Max {maxFiles} files • <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd>
             </p>
           </div>
         </div>
@@ -148,4 +149,4 @@ export function FileDropzone({
       )}
     </div>
   )
-}
+})

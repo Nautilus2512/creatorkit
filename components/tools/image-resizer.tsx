@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 type OutputFormat = "jpeg" | "png" | "webp"
 
@@ -243,6 +244,8 @@ export function ImageResizer() {
   const dragRef = useRef<{ presetId: string; startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
   const cropContainerRef = useRef<HTMLDivElement>(null)
 
+  const uploadRef = useRef<HTMLInputElement>(null)
+
   // Merge preset map with custom sizes
   const allPresetById = useMemo(() => {
     const map = new Map(PRESET_BY_ID)
@@ -456,7 +459,33 @@ export function ImageResizer() {
     return computeOverlay(cW, cH, firstFileSize.width, firstFileSize.height, activePreviewPreset.width, activePreviewPreset.height, offset.x, offset.y)
   }, [containerSize, firstFileSize, activePreviewPreset, cropOffsets])
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (!ctrl) return
+      if (e.key === "Enter") { e.preventDefault(); if (!isProcessing && files.length > 0) generateSelected() }
+      if (e.key === "d" || e.key === "D") { e.preventDefault(); if (generatedImages.length > 0) downloadAll() }
+      if (e.key === "Backspace") { e.preventDefault(); if (files.length > 0) { setFiles([]); setGeneratedImages([]) } }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [isProcessing, files, generatedImages])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (!ctrl) return
+      if (e.key === "o" || e.key === "O") { e.preventDefault(); uploadRef.current?.click() }
+      if (e.key === "Enter") { e.preventDefault(); if (!isProcessing && files.length > 0) generateSelected() }
+      if (e.key === "d" || e.key === "D") { e.preventDefault(); if (generatedImages.length > 0) downloadAll() }
+      if (e.key === "Backspace") { e.preventDefault(); if (files.length > 0) { setFiles([]); setGeneratedImages([]) } }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [isProcessing, files, generatedImages])
+
   return (
+    <>
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Image Resizer</h2>
@@ -471,7 +500,7 @@ export function ImageResizer() {
               <CardDescription>Drag and drop one or more images. All processing happens in your browser.</CardDescription>
             </CardHeader>
             <CardContent>
-              <FileDropzone accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
+              <FileDropzone ref={uploadRef} accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
             </CardContent>
           </Card>
 
@@ -700,5 +729,17 @@ export function ImageResizer() {
         </div>
       </div>
     </div>
+
+    <ShortcutsModal
+      pageName="Image Resizer"
+      shortcuts={[
+        { keys: ["Ctrl", "O"], description: "Open file upload" },
+        { keys: ["Ctrl", "Enter"], description: "Generate selected sizes" },
+        { keys: ["Ctrl", "D"], description: "Download all as ZIP" },
+        { keys: ["Ctrl", "Backspace"], description: "Clear all files" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+      ]}
+    />
+    </>
   )
 }

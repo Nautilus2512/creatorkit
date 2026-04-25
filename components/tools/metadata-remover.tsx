@@ -290,6 +290,7 @@ export function MetadataRemover() {
         e.preventDefault()
         if (Object.keys(metaByFile).length > 0) exportReport()
       }
+      if (e.key === "o" || e.key === "O") { e.preventDefault(); uploadRef.current?.click() }
       if (e.key === "Backspace") {
         e.preventDefault()
         if (files.length > 0) { setFiles([]); setProcessedFiles([]); setErrors([]) }
@@ -342,7 +343,7 @@ export function MetadataRemover() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <FileDropzone accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
+                <FileDropzone ref={uploadRef} accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
 
                 {files.length > 0 && (
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -542,6 +543,7 @@ export function MetadataRemover() {
       <ShortcutsModal
         pageName="Metadata Remover"
         shortcuts={[
+          { keys: ["Ctrl", "O"], description: "Open file upload" },
           { keys: ["Ctrl", "Enter"], description: "Clean all files" },
           { keys: ["Ctrl", "D"], description: "Download all as ZIP" },
           { keys: ["Ctrl", "E"], description: "Export metadata as CSV" },
