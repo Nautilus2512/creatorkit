@@ -13,116 +13,23 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type FileCategory = "image" | "pdf" | "office" | "audio"
-
-type ImageMeta = {
-  gps: string | null
-  device: string | null
-  date: string | null
-  software: string | null
-  lens: string | null
-  exposure: string | null
-  iso: string | null
-}
-
-type PdfMeta = {
-  author: string | null
-  title: string | null
-  creator: string | null
-  producer: string | null
-  subject: string | null
-  keywords: string | null
-}
-
-type OfficeMeta = {
-  creator: string | null
-  lastModifiedBy: string | null
-  created: string | null
-  modified: string | null
-  company: string | null
-  description: string | null
-}
-
-type AudioMeta = {
-  title: string | null
-  artist: string | null
-  album: string | null
-  year: string | null
-  genre: string | null
-  comment: string | null
-  composer: string | null
-  coverArt: boolean
-}
-
-type FileMeta = {
-  category: FileCategory
-  image?: ImageMeta
-  pdf?: PdfMeta
-  office?: OfficeMeta
-  audio?: AudioMeta
-}
-
-type ImageRemoveOptions = {
-  gps: boolean
-  device: boolean
-  date: boolean
-  software: boolean
-  lens: boolean
-  exposure: boolean
-}
-
-type PdfRemoveOptions = {
-  author: boolean
-  title: boolean
-  creator: boolean
-  producer: boolean
-  subject: boolean
-  keywords: boolean
-}
-
-type OfficeRemoveOptions = {
-  creator: boolean
-  lastModifiedBy: boolean
-  dates: boolean
-  company: boolean
-  description: boolean
-}
-
-type AudioRemoveOptions = {
-  title: boolean
-  artist: boolean
-  album: boolean
-  year: boolean
-  genre: boolean
-  comment: boolean
-  composer: boolean
-  coverArt: boolean
-}
-
-type ProcessedFile = {
-  name: string
-  url: string
-  blob: Blob
-  originalName: string
-  category: FileCategory
-  removedFields: string[]
-}
-
-// ─── Constants ────────────────────────────────────────────────────────────────
+type ImageMeta = { gps: string | null; device: string | null; date: string | null; software: string | null; lens: string | null; exposure: string | null; iso: string | null }
+type PdfMeta = { author: string | null; title: string | null; creator: string | null; producer: string | null; subject: string | null; keywords: string | null }
+type OfficeMeta = { creator: string | null; lastModifiedBy: string | null; created: string | null; modified: string | null; company: string | null; description: string | null }
+type AudioMeta = { title: string | null; artist: string | null; album: string | null; year: string | null; genre: string | null; comment: string | null; composer: string | null; coverArt: boolean }
+type FileMeta = { category: FileCategory; image?: ImageMeta; pdf?: PdfMeta; office?: OfficeMeta; audio?: AudioMeta }
+type ImageRemoveOptions = { gps: boolean; device: boolean; date: boolean; software: boolean; lens: boolean; exposure: boolean }
+type PdfRemoveOptions = { author: boolean; title: boolean; creator: boolean; producer: boolean; subject: boolean; keywords: boolean }
+type OfficeRemoveOptions = { creator: boolean; lastModifiedBy: boolean; dates: boolean; company: boolean; description: boolean }
+type AudioRemoveOptions = { title: boolean; artist: boolean; album: boolean; year: boolean; genre: boolean; comment: boolean; composer: boolean; coverArt: boolean }
+type ProcessedFile = { name: string; url: string; blob: Blob; originalName: string; category: FileCategory; removedFields: string[] }
 
 const IMAGE_EXTS = ["jpg","jpeg","png","webp","tiff","tif","heic","bmp","gif"]
-const PDF_EXTS   = ["pdf"]
+const PDF_EXTS = ["pdf"]
 const OFFICE_EXTS = ["docx","xlsx","pptx","odt","ods","odp"]
 const AUDIO_EXTS = ["mp3","flac","wav","ogg","m4a","aac","wma","aiff","aif"]
-
-const ACCEPT_STRING = [
-  ...IMAGE_EXTS.map(e => `.${e}`),
-  ...PDF_EXTS.map(e => `.${e}`),
-  ...OFFICE_EXTS.map(e => `.${e}`),
-  ...AUDIO_EXTS.map(e => `.${e}`),
-].join(",")
+const ACCEPT_STRING = [...IMAGE_EXTS, ...PDF_EXTS, ...OFFICE_EXTS, ...AUDIO_EXTS].map(e => `.${e}`).join(",")
 
 function getCategory(file: File): FileCategory {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
@@ -132,49 +39,26 @@ function getCategory(file: File): FileCategory {
   return "audio"
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function MetadataRemover() {
   const [files, setFiles] = useState<File[]>([])
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([])
   const [metaByFile, setMetaByFile] = useState<Record<string, FileMeta>>({})
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
-
-  const [imgOpts, setImgOpts] = useState<ImageRemoveOptions>({
-    gps: true, device: true, date: true, software: true, lens: true, exposure: false,
-  })
-  const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({
-    author: true, title: true, creator: true, producer: true, subject: true, keywords: true,
-  })
-  const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({
-    creator: true, lastModifiedBy: true, dates: true, company: true, description: true,
-  })
-  const [audioOpts, setAudioOpts] = useState<AudioRemoveOptions>({
-    title: false, artist: false, album: false, year: false,
-    genre: false, comment: true, composer: false, coverArt: true,
-  })
+  const [imgOpts, setImgOpts] = useState<ImageRemoveOptions>({ gps: true, device: true, date: true, software: true, lens: true, exposure: false })
+  const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({ author: true, title: true, creator: true, producer: true, subject: true, keywords: true })
+  const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({ creator: true, lastModifiedBy: true, dates: true, company: true, description: true })
+  const [audioOpts, setAudioOpts] = useState<AudioRemoveOptions>({ title: false, artist: false, album: false, year: false, genre: false, comment: true, composer: false, coverArt: true })
 
   const keyForFile = (file: File) => `${file.name}-${file.lastModified}-${file.size}`
 
-  // ─── Parsers ─────────────────────────────────────────────────────────────
-
   const parseImageMeta = async (file: File): Promise<ImageMeta> => {
     try {
-      const data = await exifr.parse(file, {
-        pick: ["Make","Model","DateTimeOriginal","CreateDate","ModifyDate",
-               "latitude","longitude","Software","LensModel","LensMake",
-               "ExposureTime","FNumber","ISO","ISOSpeedRatings"],
-      })
+      const data = await exifr.parse(file, { pick: ["Make","Model","DateTimeOriginal","CreateDate","ModifyDate","latitude","longitude","Software","LensModel","LensMake","ExposureTime","FNumber","ISO","ISOSpeedRatings"] })
       const deviceParts = [data?.Make, data?.Model].filter(Boolean)
       const lensParts = [data?.LensMake, data?.LensModel].filter(Boolean)
-      const formatGps = (lat?: number, lon?: number) =>
-        typeof lat === "number" && typeof lon === "number" ? `${lat.toFixed(6)}, ${lon.toFixed(6)}` : null
-      const formatDate = (v?: Date | string) => {
-        if (!v) return null
-        const d = v instanceof Date ? v : new Date(v)
-        return isNaN(d.getTime()) ? null : d.toLocaleString()
-      }
+      const formatGps = (lat?: number, lon?: number) => typeof lat === "number" && typeof lon === "number" ? `${lat.toFixed(6)}, ${lon.toFixed(6)}` : null
+      const formatDate = (v?: Date | string) => { if (!v) return null; const d = v instanceof Date ? v : new Date(v); return isNaN(d.getTime()) ? null : d.toLocaleString() }
       return {
         gps: formatGps(data?.latitude, data?.longitude),
         device: deviceParts.length > 0 ? deviceParts.join(" ") : null,
@@ -184,26 +68,15 @@ export function MetadataRemover() {
         exposure: data?.ExposureTime ? `${data.ExposureTime}s f/${data.FNumber ?? "?"}` : null,
         iso: data?.ISO ? `ISO ${data.ISO}` : (data?.ISOSpeedRatings ? `ISO ${data.ISOSpeedRatings}` : null),
       }
-    } catch {
-      return { gps:null, device:null, date:null, software:null, lens:null, exposure:null, iso:null }
-    }
+    } catch { return { gps:null, device:null, date:null, software:null, lens:null, exposure:null, iso:null } }
   }
 
   const parsePdfMeta = async (file: File): Promise<PdfMeta> => {
     try {
       const buf = await file.arrayBuffer()
       const pdf = await PDFDocument.load(buf, { ignoreEncryption: true })
-      return {
-        author: pdf.getAuthor() ?? null,
-        title: pdf.getTitle() ?? null,
-        creator: pdf.getCreator() ?? null,
-        producer: pdf.getProducer() ?? null,
-        subject: pdf.getSubject() ?? null,
-        keywords: pdf.getKeywords() ?? null,
-      }
-    } catch {
-      return { author:null, title:null, creator:null, producer:null, subject:null, keywords:null }
-    }
+      return { author: pdf.getAuthor() ?? null, title: pdf.getTitle() ?? null, creator: pdf.getCreator() ?? null, producer: pdf.getProducer() ?? null, subject: pdf.getSubject() ?? null, keywords: pdf.getKeywords() ?? null }
+    } catch { return { author:null, title:null, creator:null, producer:null, subject:null, keywords:null } }
   }
 
   const parseOfficeMeta = async (file: File): Promise<OfficeMeta> => {
@@ -215,17 +88,8 @@ export function MetadataRemover() {
       const get = (tag: string) => coreXml.match(new RegExp(`<[^>]*:?${tag}[^>]*>([^<]*)<`))?.[1] ?? null
       const appXml = await zip.file("docProps/app.xml")?.async("string")
       const company = appXml?.match(/<Company>([^<]*)</)?.[1] ?? null
-      return {
-        creator: get("creator"),
-        lastModifiedBy: get("lastModifiedBy"),
-        created: get("created"),
-        modified: get("modified"),
-        company,
-        description: get("description"),
-      }
-    } catch {
-      return { creator:null, lastModifiedBy:null, created:null, modified:null, company:null, description:null }
-    }
+      return { creator: get("creator"), lastModifiedBy: get("lastModifiedBy"), created: get("created"), modified: get("modified"), company, description: get("description") }
+    } catch { return { creator:null, lastModifiedBy:null, created:null, modified:null, company:null, description:null } }
   }
 
   const parseAudioMeta = async (file: File): Promise<AudioMeta> => {
@@ -234,18 +98,12 @@ export function MetadataRemover() {
       const meta = await parseBlob(file)
       const t = meta.common
       return {
-        title: t.title ?? null,
-        artist: t.artist ?? null,
-        album: t.album ?? null,
-        year: t.year ? String(t.year) : null,
-        genre: t.genre?.join(", ") ?? null,
+        title: t.title ?? null, artist: t.artist ?? null, album: t.album ?? null,
+        year: t.year ? String(t.year) : null, genre: t.genre?.join(", ") ?? null,
         comment: (t.comment as string[] | undefined)?.[0] ?? null,
-        composer: t.composer?.join(", ") ?? null,
-        coverArt: (t.picture?.length ?? 0) > 0,
+        composer: t.composer?.join(", ") ?? null, coverArt: (t.picture?.length ?? 0) > 0,
       }
-    } catch {
-      return { title:null, artist:null, album:null, year:null, genre:null, comment:null, composer:null, coverArt:false }
-    }
+    } catch { return { title:null, artist:null, album:null, year:null, genre:null, comment:null, composer:null, coverArt:false } }
   }
 
   const parseMetadata = async (selectedFiles: File[]) => {
@@ -260,8 +118,6 @@ export function MetadataRemover() {
     }
     setMetaByFile(next)
   }
-
-  // ─── Processors ──────────────────────────────────────────────────────────
 
   const processImage = async (file: File): Promise<{ blob: Blob; removed: string[] } | null> => {
     const bmp = await createImageBitmap(file)
@@ -304,7 +160,6 @@ export function MetadataRemover() {
     const buf = await file.arrayBuffer()
     const zip = await JSZip.loadAsync(buf)
     const removed: string[] = []
-
     const stripCore = (xml: string) => {
       let out = xml
       const strip = (tag: string, label: string, enabled: boolean) => {
@@ -320,13 +175,8 @@ export function MetadataRemover() {
       strip("description", "Description", officeOpts.description)
       return out
     }
-
     const coreFile = zip.file("docProps/core.xml")
-    if (coreFile) {
-      const xml = await coreFile.async("string")
-      zip.file("docProps/core.xml", stripCore(xml))
-    }
-
+    if (coreFile) { const xml = await coreFile.async("string"); zip.file("docProps/core.xml", stripCore(xml)) }
     if (officeOpts.company) {
       const appFile = zip.file("docProps/app.xml")
       if (appFile) {
@@ -336,15 +186,11 @@ export function MetadataRemover() {
         zip.file("docProps/app.xml", stripped)
       }
     }
-
     const blob = await zip.generateAsync({ type: "blob" })
     return { blob, removed }
   }
 
   const processAudio = async (file: File): Promise<{ blob: Blob; removed: string[] } | null> => {
-    // Audio: we strip ID3 tags by reading and re-writing without selected tags
-    // For simplicity, we use a basic approach - return file as-is with note
-    // Full ID3 stripping requires a dedicated library; we note what would be removed
     const m = metaByFile[keyForFile(file)]?.audio
     const removed: string[] = []
     if (audioOpts.title && m?.title) removed.push("Title")
@@ -355,28 +201,20 @@ export function MetadataRemover() {
     if (audioOpts.comment && m?.comment) removed.push("Comment")
     if (audioOpts.composer && m?.composer) removed.push("Composer")
     if (audioOpts.coverArt && m?.coverArt) removed.push("Cover Art")
-
-    // Basic approach: return original blob (full ID3 stripping needs ffmpeg.wasm)
     const blob = new Blob([await file.arrayBuffer()], { type: file.type })
     return { blob, removed }
   }
 
-  // ─── Main handler ────────────────────────────────────────────────────────
-
   const handleFilesSelected = async (selectedFiles: File[]) => {
-    setFiles(selectedFiles)
-    setProcessedFiles([])
-    setErrors([])
+    setFiles(selectedFiles); setProcessedFiles([]); setErrors([])
     await parseMetadata(selectedFiles)
   }
 
   const removeMetadata = async () => {
     if (!files.length) return
-    setIsProcessing(true)
-    setErrors([])
+    setIsProcessing(true); setErrors([])
     const processed: ProcessedFile[] = []
     const nextErrors: string[] = []
-
     for (const file of files) {
       try {
         const cat = getCategory(file)
@@ -384,40 +222,18 @@ export function MetadataRemover() {
         const baseName = file.name.replace(/\.[^/.]+$/, "")
         let result: { blob: Blob; removed: string[] } | null = null
         let outExt = ext
-
-        if (cat === "image") {
-          result = await processImage(file)
-          outExt = ext === "png" ? "png" : ext === "webp" ? "webp" : "jpg"
-        } else if (cat === "pdf") {
-          result = await processPdf(file)
-        } else if (cat === "office") {
-          result = await processOffice(file)
-        } else {
-          result = await processAudio(file)
-        }
-
+        if (cat === "image") { result = await processImage(file); outExt = ext === "png" ? "png" : ext === "webp" ? "webp" : "jpg" }
+        else if (cat === "pdf") result = await processPdf(file)
+        else if (cat === "office") result = await processOffice(file)
+        else result = await processAudio(file)
         if (!result) { nextErrors.push(`Could not process ${file.name}.`); continue }
-        processed.push({
-          name: `${baseName}_clean.${outExt}`,
-          url: URL.createObjectURL(result.blob),
-          blob: result.blob,
-          originalName: file.name,
-          category: cat,
-          removedFields: result.removed,
-        })
-      } catch (e) {
-        nextErrors.push(`Could not process ${file.name}: ${e instanceof Error ? e.message : "unknown error"}`)
-      }
+        processed.push({ name: `${baseName}_clean.${outExt}`, url: URL.createObjectURL(result.blob), blob: result.blob, originalName: file.name, category: cat, removedFields: result.removed })
+      } catch (e) { nextErrors.push(`Could not process ${file.name}: ${e instanceof Error ? e.message : "unknown error"}`) }
     }
-
-    setProcessedFiles(processed)
-    setErrors(nextErrors)
-    setIsProcessing(false)
+    setProcessedFiles(processed); setErrors(nextErrors); setIsProcessing(false)
   }
 
-  const downloadFile = (url: string, name: string) => {
-    const a = document.createElement("a"); a.href = url; a.download = name; a.click()
-  }
+  const downloadFile = (url: string, name: string) => { const a = document.createElement("a"); a.href = url; a.download = name; a.click() }
 
   const downloadAllZip = async () => {
     const zip = new JSZip()
@@ -432,37 +248,16 @@ export function MetadataRemover() {
       const m = metaByFile[keyForFile(file)]
       if (!m) return
       const add = (field: string, value: string | null | boolean) => {
-        if (value !== null && value !== false && value !== "") {
-          rows.push(`"${file.name}","${m.category}","${field}","${String(value).replace(/"/g,'""')}"`)
-        }
+        if (value !== null && value !== false && value !== "") rows.push(`"${file.name}","${m.category}","${field}","${String(value).replace(/"/g,'""')}"`)
       }
-      if (m.image) {
-        add("GPS", m.image.gps); add("Device", m.image.device)
-        add("Date", m.image.date); add("Software", m.image.software)
-        add("Lens", m.image.lens); add("Exposure", m.image.exposure); add("ISO", m.image.iso)
-      }
-      if (m.pdf) {
-        add("Author", m.pdf.author); add("Title", m.pdf.title)
-        add("Creator", m.pdf.creator); add("Producer", m.pdf.producer)
-        add("Subject", m.pdf.subject); add("Keywords", m.pdf.keywords)
-      }
-      if (m.office) {
-        add("Creator", m.office.creator); add("Last Modified By", m.office.lastModifiedBy)
-        add("Created", m.office.created); add("Modified", m.office.modified)
-        add("Company", m.office.company); add("Description", m.office.description)
-      }
-      if (m.audio) {
-        add("Title", m.audio.title); add("Artist", m.audio.artist)
-        add("Album", m.audio.album); add("Year", m.audio.year)
-        add("Genre", m.audio.genre); add("Comment", m.audio.comment)
-        add("Composer", m.audio.composer); add("Cover Art", m.audio.coverArt ? "Yes" : null)
-      }
+      if (m.image) { add("GPS", m.image.gps); add("Device", m.image.device); add("Date", m.image.date); add("Software", m.image.software); add("Lens", m.image.lens); add("Exposure", m.image.exposure); add("ISO", m.image.iso) }
+      if (m.pdf) { add("Author", m.pdf.author); add("Title", m.pdf.title); add("Creator", m.pdf.creator); add("Producer", m.pdf.producer); add("Subject", m.pdf.subject); add("Keywords", m.pdf.keywords) }
+      if (m.office) { add("Creator", m.office.creator); add("Last Modified By", m.office.lastModifiedBy); add("Created", m.office.created); add("Modified", m.office.modified); add("Company", m.office.company); add("Description", m.office.description) }
+      if (m.audio) { add("Title", m.audio.title); add("Artist", m.audio.artist); add("Album", m.audio.album); add("Year", m.audio.year); add("Genre", m.audio.genre); add("Comment", m.audio.comment); add("Composer", m.audio.composer); add("Cover Art", m.audio.coverArt ? "Yes" : null) }
     })
     const blob = new Blob([rows.join("\n")], { type: "text/csv" })
     downloadFile(URL.createObjectURL(blob), "metadata-report.csv")
   }
-
-  // ─── Derived ─────────────────────────────────────────────────────────────
 
   const byCategory = useMemo(() => ({
     image: files.filter(f => getCategory(f) === "image"),
@@ -472,7 +267,6 @@ export function MetadataRemover() {
   }), [files])
 
   const selectedCountLabel = `${files.length} file${files.length !== 1 ? "s" : ""}`
-
   const toggleImg = (k: keyof ImageRemoveOptions) => setImgOpts(p => ({ ...p, [k]: !p[k] }))
   const togglePdf = (k: keyof PdfRemoveOptions) => setPdfOpts(p => ({ ...p, [k]: !p[k] }))
   const toggleOffice = (k: keyof OfficeRemoveOptions) => setOfficeOpts(p => ({ ...p, [k]: !p[k] }))
@@ -480,9 +274,7 @@ export function MetadataRemover() {
 
   const CheckRow = ({ checked, onChange, icon, label }: { checked: boolean; onChange: () => void; icon?: React.ReactNode; label: string }) => (
     <label className="flex cursor-pointer items-center gap-2 text-sm">
-      <Checkbox checked={checked} onCheckedChange={onChange} />
-      {icon}
-      {label}
+      <Checkbox checked={checked} onCheckedChange={onChange} />{icon}{label}
     </label>
   )
 
@@ -496,38 +288,24 @@ export function MetadataRemover() {
     <p className="flex items-start gap-2 text-xs text-muted-foreground">
       <span className="w-24 shrink-0">{label}:</span>
       <span className="truncate flex-1">{metaVal(value)}</span>
-      {removed && !!value && (
-        <span className="flex shrink-0 items-center gap-1 text-green-500"><ArrowRight className="h-3 w-3" />Removed</span>
-      )}
-      {kept && !!value && (
-        <span className="shrink-0 text-yellow-500">Kept</span>
-      )}
+      {removed && !!value && <span className="flex shrink-0 items-center gap-1 text-green-500"><ArrowRight className="h-3 w-3" />Removed</span>}
+      {kept && !!value && <span className="shrink-0 text-yellow-500">Kept</span>}
     </p>
   )
-
-  // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Metadata Remover</h2>
-        <p className="text-muted-foreground">
-          Remove metadata from images, PDFs, Office documents, and audio files. 100% client-side.
-        </p>
+        <p className="text-muted-foreground">Remove metadata from images, PDFs, Office documents, and audio files. 100% client-side.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:items-start">
-        {/* LEFT */}
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Shield className="h-4 w-4" />
-                Privacy Protection
-              </CardTitle>
-              <CardDescription>
-                Images: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF · PDF · Office: DOCX, XLSX, PPTX · Audio: MP3, FLAC, WAV, OGG, M4A and more.
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4" />Privacy Protection</CardTitle>
+              <CardDescription>Images: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF · PDF · Office: DOCX, XLSX, PPTX · Audio: MP3, FLAC, WAV, OGG, M4A and more.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FileDropzone accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
@@ -544,7 +322,6 @@ export function MetadataRemover() {
                 </div>
               )}
 
-              {/* ── Image options ── */}
               {byCategory.image.length > 0 && (
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Image EXIF Fields</p>
@@ -559,7 +336,6 @@ export function MetadataRemover() {
                 </div>
               )}
 
-              {/* ── PDF options ── */}
               {byCategory.pdf.length > 0 && (
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> PDF Metadata Fields</p>
@@ -574,7 +350,6 @@ export function MetadataRemover() {
                 </div>
               )}
 
-              {/* ── Office options ── */}
               {byCategory.office.length > 0 && (
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><File className="h-3.5 w-3.5" /> Office Document Fields</p>
@@ -588,11 +363,12 @@ export function MetadataRemover() {
                 </div>
               )}
 
-              {/* ── Audio options ── */}
               {byCategory.audio.length > 0 && (
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><Music className="h-3.5 w-3.5" /> Audio Tag Fields</p>
-                  <p className="text-xs text-muted-foreground">Note: Audio tag removal is read-only preview — full stripping requires server-side processing.</p>
+                  <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground space-y-1">
+                    <p>🔄 Audio metadata preview only — actual tag removal coming soon</p>
+                  </div>
                   <div className="grid gap-1.5">
                     <CheckRow checked={audioOpts.title} onChange={() => toggleAudio("title")} label="Title" />
                     <CheckRow checked={audioOpts.artist} onChange={() => toggleAudio("artist")} label="Artist" />
@@ -620,7 +396,6 @@ export function MetadataRemover() {
           </Card>
         </div>
 
-        {/* RIGHT */}
         <div className="space-y-4">
           {files.length > 0 && (
             <Card>
@@ -633,14 +408,12 @@ export function MetadataRemover() {
                   const m = metaByFile[keyForFile(file)]
                   const p = processedFiles.find(x => x.originalName === file.name)
                   const cat = getCategory(file)
-
                   return (
                     <div key={`${file.name}-${idx}`} className="space-y-2 rounded-lg border border-border p-3">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-medium">{file.name}</p>
                         {p && <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">Cleaned</span>}
                       </div>
-
                       {cat === "image" && m?.image && (
                         <div className="grid gap-0.5">
                           <DiffRow label="GPS" value={m.image.gps} removed={!!p && imgOpts.gps} kept={!!p && !imgOpts.gps} />
@@ -652,7 +425,6 @@ export function MetadataRemover() {
                           <DiffRow label="ISO" value={m.image.iso} removed={!!p && imgOpts.exposure} kept={!!p && !imgOpts.exposure} />
                         </div>
                       )}
-
                       {cat === "pdf" && m?.pdf && (
                         <div className="grid gap-0.5">
                           <DiffRow label="Author" value={m.pdf.author} removed={!!p && pdfOpts.author} kept={!!p && !pdfOpts.author} />
@@ -663,7 +435,6 @@ export function MetadataRemover() {
                           <DiffRow label="Keywords" value={m.pdf.keywords} removed={!!p && pdfOpts.keywords} kept={!!p && !pdfOpts.keywords} />
                         </div>
                       )}
-
                       {cat === "office" && m?.office && (
                         <div className="grid gap-0.5">
                           <DiffRow label="Creator" value={m.office.creator} removed={!!p && officeOpts.creator} kept={!!p && !officeOpts.creator} />
@@ -674,7 +445,6 @@ export function MetadataRemover() {
                           <DiffRow label="Description" value={m.office.description} removed={!!p && officeOpts.description} kept={!!p && !officeOpts.description} />
                         </div>
                       )}
-
                       {cat === "audio" && m?.audio && (
                         <div className="grid gap-0.5">
                           <DiffRow label="Title" value={m.audio.title} removed={!!p && audioOpts.title} kept={!!p && !audioOpts.title} />
@@ -687,7 +457,6 @@ export function MetadataRemover() {
                           <DiffRow label="Cover Art" value={m.audio.coverArt} removed={!!p && audioOpts.coverArt} kept={!!p && !audioOpts.coverArt} />
                         </div>
                       )}
-
                       {p && (
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadFile(p.url, p.name)}>
                           <Download className="mr-1 h-3.5 w-3.5" /> Download {p.name}
@@ -703,10 +472,7 @@ export function MetadataRemover() {
           {processedFiles.length > 1 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  {processedFiles.length} files processed
-                </CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base"><CheckCircle2 className="h-4 w-4 text-green-500" />{processedFiles.length} files processed</CardTitle>
                 <CardDescription>Download individually above or get all as ZIP.</CardDescription>
               </CardHeader>
               <CardContent>
@@ -719,9 +485,7 @@ export function MetadataRemover() {
 
           {errors.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Processing Issues</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-base">Processing Issues</CardTitle></CardHeader>
               <CardContent>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   {errors.map((e, i) => <li key={i}>{e}</li>)}
