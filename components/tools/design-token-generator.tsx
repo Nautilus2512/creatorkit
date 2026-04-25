@@ -386,6 +386,7 @@ export function DesignTokenGenerator() {
                   <Button variant="outline" onClick={() => copyToClipboard(generateCSS(), "css")}>
                     {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
                     Copy CSS
+                    <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+C</kbd>
                   </Button>
                 </TabsContent>
                 <TabsContent value="tailwind" className="space-y-3">
