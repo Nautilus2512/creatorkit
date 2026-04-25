@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Zap } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,56 +10,99 @@ const toolCards = [
     title: "Metadata Remover",
     description: "Detect EXIF data and remove sensitive metadata from images.",
     href: "/tools/metadata-remover",
+    stat: "Batch up to 20 files",
   },
   {
     icon: Crop,
     title: "Image Resizer",
     description: "Generate social media-ready image sizes from a single upload.",
     href: "/tools/image-resizer",
+    stat: "40+ sizes across 12 platforms",
   },
   {
     icon: Palette,
     title: "Design Token Generator",
     description: "Create color, typography, spacing, and radius design tokens.",
     href: "/tools/design-tokens",
+    stat: "CSS, Tailwind & JSON export",
   },
 ]
 
 export default function ToolsPage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Nav */}
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 lg:px-8">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <Zap className="h-4 w-4 text-primary" />
+            CreatorKit
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
+            <Link href="/#features" className="hover:text-foreground transition-colors">Features</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          </nav>
+          <Badge variant="outline" className="text-xs">All tools free</Badge>
+        </div>
+      </header>
+
       <main className="mx-auto max-w-6xl px-6 py-12 lg:px-8 lg:py-14">
+        {/* Header */}
         <div className="mb-8 rounded-2xl border border-border bg-muted/20 p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            CreatorKit Dashboard
+            CreatorKit Tools
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Welcome back. Choose a tool to start.
+            Pick a tool to get started.
           </h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Privacy-first utilities built for quick workflows. Every tool runs in-browser with no file uploads.
+            Privacy-first utilities for creators. Every tool runs 100% in your browser — no uploads, no tracking.
           </p>
+
+          {/* Stats */}
+          <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
+            <div>
+              <p className="font-semibold">3</p>
+              <p className="text-xs text-muted-foreground">Tools available</p>
+            </div>
+            <div>
+              <p className="font-semibold">40+</p>
+              <p className="text-xs text-muted-foreground">Image size presets</p>
+            </div>
+            <div>
+              <p className="font-semibold">12</p>
+              <p className="text-xs text-muted-foreground">Social platforms</p>
+            </div>
+            <div>
+              <p className="font-semibold">100%</p>
+              <p className="text-xs text-muted-foreground">Client-side processing</p>
+            </div>
+          </div>
         </div>
 
+        {/* Tool Cards */}
         <section className="grid gap-5 md:grid-cols-3">
           {toolCards.map((tool) => (
             <Card
               key={tool.href}
-              className="h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
+              className="group h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
             >
               <CardHeader className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="rounded-lg border border-border bg-muted/50 p-2">
+                  <div className="rounded-lg border border-border bg-muted/50 p-2 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
                     <tool.icon className="h-5 w-5 text-primary" />
                   </div>
                   <Badge variant="secondary">Free</Badge>
                 </div>
                 <div>
                   <CardTitle className="text-xl">{tool.title}</CardTitle>
-                  <CardDescription>{tool.description}</CardDescription>
+                  <CardDescription className="mt-1">{tool.description}</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground border-t border-border pt-3">
+                  {tool.stat}
+                </p>
                 <Button asChild className="w-full justify-between">
                   <Link href={tool.href}>
                     Open Tool
