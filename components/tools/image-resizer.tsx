@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Download, CheckCircle2, ChevronDown } from "lucide-react"
+import { Download, CheckCircle2, ChevronDown, Plus, X } from "lucide-react"
 import JSZip from "jszip"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 type OutputFormat = "jpeg" | "png" | "webp"
@@ -15,7 +16,7 @@ type OutputFormat = "jpeg" | "png" | "webp"
 type PlatformId =
   | "instagram" | "facebook" | "twitter" | "tiktok" | "linkedin"
   | "youtube" | "pinterest" | "threads" | "snapchat" | "bluesky"
-  | "whatsapp" | "reddit"
+  | "whatsapp" | "reddit" | "custom"
 
 type SizePreset = {
   id: string
@@ -131,6 +132,12 @@ const PLATFORM_GROUPS: Array<{ id: PlatformId; label: string; sizes: SizePreset[
 
 const PRESET_BY_ID = new Map(PLATFORM_GROUPS.flatMap((g) => g.sizes.map((s) => [s.id, s])))
 
+function getSimpleRatio(w: number, h: number): string {
+  const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b)
+  const d = gcd(w, h)
+  return `${w / d}:${h / d}`
+}
+
 type GeneratedImage = {
   id: string
   presetId: string
@@ -148,9 +155,7 @@ type GeneratedImage = {
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 function StyledSelect({
-  value,
-  onChange,
-  options,
+  value, onChange, options,
 }: {
   value: string
   onChange: (v: string) => void
@@ -170,23 +175,17 @@ function StyledSelect({
 
   return (
     <div ref={ref} className="relative w-full">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm text-foreground"
-      >
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm text-foreground">
         <span className="truncate">{selected?.label ?? "Select..."}</span>
         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </button>
       {open && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-popover shadow-md">
           {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
+            <button key={opt.value} type="button"
               onClick={() => { onChange(opt.value); setOpen(false) }}
-              className={`flex w-full items-center px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground ${opt.value === value ? "bg-accent/50 font-medium" : ""}`}
-            >
+              className={`flex w-full items-center px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground ${opt.value === value ? "bg-accent/50 font-medium" : ""}`}>
               {opt.label}
             </button>
           ))}
@@ -197,47 +196,29 @@ function StyledSelect({
 }
 
 function computeOverlay(
-  containerW: number,
-  containerH: number,
-  imgW: number,
-  imgH: number,
-  targetW: number,
-  targetH: number,
-  offsetX: number,
-  offsetY: number
+  containerW: number, containerH: number,
+  imgW: number, imgH: number,
+  targetW: number, targetH: number,
+  offsetX: number, offsetY: number
 ) {
   const imgAspect = imgW / imgH
   const containerAspect = containerW / containerH
   const targetAspect = targetW / targetH
-
   let rendW: number, rendH: number
-  if (imgAspect > containerAspect) {
-    rendW = containerW
-    rendH = containerW / imgAspect
-  } else {
-    rendH = containerH
-    rendW = containerH * imgAspect
-  }
-
+  if (imgAspect > containerAspect) { rendW = containerW; rendH = containerW / imgAspect }
+  else { rendH = containerH; rendW = containerH * imgAspect }
   const rendX = (containerW - rendW) / 2
   const rendY = (containerH - rendH) / 2
-
   let cropW: number, cropH: number
-  if (imgAspect > targetAspect) {
-    cropH = rendH
-    cropW = rendH * targetAspect
-  } else {
-    cropW = rendW
-    cropH = rendW / targetAspect
-  }
-
+  if (imgAspect > targetAspect) { cropH = rendH; cropW = rendH * targetAspect }
+  else { cropW = rendW; cropH = rendW / targetAspect }
   const extraX = rendW - cropW
   const extraY = rendH - cropH
-
-  const cropX = rendX + extraX / 2 + (extraX / 2) * offsetX
-  const cropY = rendY + extraY / 2 + (extraY / 2) * offsetY
-
-  return { cropX, cropY, cropW, cropH }
+  return {
+    cropX: rendX + extraX / 2 + (extraX / 2) * offsetX,
+    cropY: rendY + extraY / 2 + (extraY / 2) * offsetY,
+    cropW, cropH,
+  }
 }
 
 export function ImageResizer() {
@@ -247,6 +228,10 @@ export function ImageResizer() {
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(
     new Set(["instagram-square-post", "instagram-story-reels"])
   )
+  const [customSizes, setCustomSizes] = useState<SizePreset[]>([])
+  const [customWidth, setCustomWidth] = useState("1200")
+  const [customHeight, setCustomHeight] = useState("800")
+  const [customLabel, setCustomLabel] = useState("")
   const [cropOffsets, setCropOffsets] = useState<Record<string, { x: number; y: number }>>({})
   const [activePreviewPresetId, setActivePreviewPresetId] = useState<string>("instagram-square-post")
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
@@ -255,22 +240,21 @@ export function ImageResizer() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null)
 
-  const dragRef = useRef<{
-    presetId: string
-    startX: number
-    startY: number
-    startOffsetX: number
-    startOffsetY: number
-  } | null>(null)
+  const dragRef = useRef<{ presetId: string; startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
   const cropContainerRef = useRef<HTMLDivElement>(null)
+
+  // Merge preset map with custom sizes
+  const allPresetById = useMemo(() => {
+    const map = new Map(PRESET_BY_ID)
+    customSizes.forEach((s) => map.set(s.id, s))
+    return map
+  }, [customSizes])
 
   useEffect(() => {
     const el = cropContainerRef.current
     if (!el) return
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height })
-      }
+      for (const entry of entries) setContainerSize({ w: entry.contentRect.width, h: entry.contentRect.height })
     })
     observer.observe(el)
     setContainerSize({ w: el.offsetWidth, h: el.offsetHeight })
@@ -278,13 +262,13 @@ export function ImageResizer() {
   }, [])
 
   const selectedPresetList = useMemo(
-    () => [...selectedSizes].map((id) => PRESET_BY_ID.get(id)).filter((p): p is SizePreset => Boolean(p)),
-    [selectedSizes]
+    () => [...selectedSizes].map((id) => allPresetById.get(id)).filter((p): p is SizePreset => Boolean(p)),
+    [selectedSizes, allPresetById]
   )
 
   const activePreviewPreset = useMemo(
-    () => PRESET_BY_ID.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null,
-    [activePreviewPresetId, selectedPresetList]
+    () => allPresetById.get(activePreviewPresetId) ?? selectedPresetList[0] ?? null,
+    [activePreviewPresetId, selectedPresetList, allPresetById]
   )
 
   const selectedChips = useMemo(
@@ -339,6 +323,26 @@ export function ImageResizer() {
   const deselectAllForPlatform = (g: { sizes: SizePreset[] }) =>
     setSelectedSizes((prev) => { const n = new Set(prev); g.sizes.forEach((s) => n.delete(s.id)); return n })
 
+  const addCustomSize = () => {
+    const w = parseInt(customWidth)
+    const h = parseInt(customHeight)
+    if (!w || !h || w < 1 || h < 1) return
+    const label = customLabel.trim() || `${w}x${h}`
+    const id = `custom-${Date.now()}`
+    const preset: SizePreset = {
+      id, platform: "custom", platformLabel: "Custom",
+      label, width: w, height: h, ratio: getSimpleRatio(w, h),
+    }
+    setCustomSizes((prev) => [...prev, preset])
+    setSelectedSizes((prev) => { const n = new Set(prev); n.add(id); return n })
+    setCustomLabel("")
+  }
+
+  const removeCustomSize = (id: string) => {
+    setCustomSizes((prev) => prev.filter((s) => s.id !== id))
+    setSelectedSizes((prev) => { const n = new Set(prev); n.delete(id); return n })
+  }
+
   const getDrawRect = (bW: number, bH: number, tW: number, tH: number, ox: number, oy: number) => {
     const sa = bW / bH, ta = tW / tH
     let dW = tW, dH = tH
@@ -377,8 +381,8 @@ export function ImageResizer() {
           id: `${file.name}-${file.lastModified}-${preset.id}`,
           presetId: preset.id, presetLabel: preset.label, platformLabel: preset.platformLabel,
           width: preset.width, height: preset.height, ratio: preset.ratio,
-          fileName: `${name}_${preset.id}.${outputFormat === "jpeg" ? "jpg" : outputFormat}`, sourceFile: file,
-          url: rendered.url, blob: rendered.blob,
+          fileName: `${name}_${preset.id}.${outputFormat === "jpeg" ? "jpg" : outputFormat}`,
+          sourceFile: file, url: rendered.url, blob: rendered.blob,
         })
       }
     }
@@ -391,11 +395,7 @@ export function ImageResizer() {
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
     const current = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
-    dragRef.current = {
-      presetId: activePreviewPreset.id,
-      startX: e.clientX, startY: e.clientY,
-      startOffsetX: current.x, startOffsetY: current.y,
-    }
+    dragRef.current = { presetId: activePreviewPreset.id, startX: e.clientX, startY: e.clientY, startOffsetX: current.x, startOffsetY: current.y }
   }
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -403,31 +403,19 @@ export function ImageResizer() {
     const cW = containerSize?.w ?? cropContainerRef.current?.offsetWidth ?? 0
     const cH = containerSize?.h ?? cropContainerRef.current?.offsetHeight ?? 0
     if (!cW || !cH) return
-
     const imgAspect = firstFileSize.width / firstFileSize.height
     const containerAspect = cW / cH
     const targetAspect = activePreviewPreset.width / activePreviewPreset.height
-
     let rendW: number, rendH: number
-    if (imgAspect > containerAspect) {
-      rendW = cW; rendH = cW / imgAspect
-    } else {
-      rendH = cH; rendW = cH * imgAspect
-    }
-
+    if (imgAspect > containerAspect) { rendW = cW; rendH = cW / imgAspect }
+    else { rendH = cH; rendW = cH * imgAspect }
     let cropW: number, cropH: number
-    if (imgAspect > targetAspect) {
-      cropH = rendH; cropW = rendH * targetAspect
-    } else {
-      cropW = rendW; cropH = rendW / targetAspect
-    }
-
+    if (imgAspect > targetAspect) { cropH = rendH; cropW = rendH * targetAspect }
+    else { cropW = rendW; cropH = rendW / targetAspect }
     const movX = Math.max(1, rendW - cropW)
     const movY = Math.max(1, rendH - cropH)
-
     const dx = (e.clientX - dragRef.current.startX) / (movX / 2)
     const dy = (e.clientY - dragRef.current.startY) / (movY / 2)
-
     const saved = dragRef.current
     setCropOffsets((prev) => ({
       ...prev,
@@ -461,26 +449,18 @@ export function ImageResizer() {
 
   const overlayRect = useMemo(() => {
     if (!firstFileSize || !activePreviewPreset) return null
-    // Use containerSize from ResizeObserver, fallback to ref dimensions
     const cW = containerSize?.w ?? cropContainerRef.current?.offsetWidth ?? 0
     const cH = containerSize?.h ?? cropContainerRef.current?.offsetHeight ?? 0
     if (!cW || !cH) return null
     const offset = cropOffsets[activePreviewPreset.id] ?? { x: 0, y: 0 }
-    return computeOverlay(
-      cW, cH,
-      firstFileSize.width, firstFileSize.height,
-      activePreviewPreset.width, activePreviewPreset.height,
-      offset.x, offset.y
-    )
+    return computeOverlay(cW, cH, firstFileSize.width, firstFileSize.height, activePreviewPreset.width, activePreviewPreset.height, offset.x, offset.y)
   }, [containerSize, firstFileSize, activePreviewPreset, cropOffsets])
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Image Resizer</h2>
-        <p className="text-muted-foreground">
-          Select platform sizes, adjust crop previews, and batch export ready-to-post assets.
-        </p>
+        <p className="text-muted-foreground">Select platform sizes, adjust crop previews, and batch export ready-to-post assets.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:items-start">
@@ -498,14 +478,12 @@ export function ImageResizer() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Size Selection</CardTitle>
-              <CardDescription>Choose sizes by platform. Use Select All / Deselect All per group.</CardDescription>
+              <CardDescription>Choose platform sizes or add custom dimensions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedChips.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected
-                  </p>
+                  <p className="text-xs font-medium text-muted-foreground">{selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected</p>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedChips.map((chip) => (
                       <span key={chip.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs">
@@ -539,10 +517,7 @@ export function ImageResizer() {
                         {group.sizes.map((preset) => (
                           <label key={preset.id} className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                             <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={selectedSizes.has(preset.id)}
-                                onCheckedChange={(c: boolean | "indeterminate") => toggleSize(preset.id, Boolean(c))}
-                              />
+                              <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => toggleSize(preset.id, Boolean(c))} />
                               <span>{preset.label}</span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -555,7 +530,60 @@ export function ImageResizer() {
                     </AccordionContent>
                   </AccordionItem>
                 ))}
+
+                {/* Custom Size */}
+
+                    <span className="flex items-center gap-2">
+                     
+                      {customSizes.length > 0 && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">{customSizes.length}</span>
+                      )}
+                    </span>
+
+                    {customSizes.length > 0 && (
+                      <div className="grid gap-2">
+                        {customSizes.map((preset) => (
+                          <div key={preset.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => toggleSize(preset.id, Boolean(c))} />
+                              <span>{preset.label}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
+                              <span>{preset.width}x{preset.height}</span>
+                              <button type="button" onClick={() => removeCustomSize(preset.id)} className="hover:text-destructive">
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
               </Accordion>
+
+              {/* Custom Size Form - outside accordion */}
+              <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
+                <p className="text-xs font-medium text-muted-foreground">Add Custom Size</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Width (px)</Label>
+                    <Input type="number" min="1" max="9999" value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Height (px)</Label>
+                    <Input type="number" min="1" max="9999" value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} className="h-8 text-sm" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Label (optional)</Label>
+                  <Input placeholder={`${customWidth}x${customHeight}`} value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} className="h-8 text-sm" />
+                </div>
+                <Button type="button" variant="outline" size="sm" className="w-full" onClick={addCustomSize}>
+                  <Plus className="mr-2 h-3.5 w-3.5" />
+                  Add Custom Size
+                </Button>
+              </div>
 
               <p className="text-xs text-muted-foreground">Selected: {selectedPresetList.length} sizes - Files: {files.length}</p>
 
@@ -564,16 +592,8 @@ export function ImageResizer() {
                   <Label className="text-xs">Output Format</Label>
                   <div className="flex gap-2">
                     {(["jpeg", "png", "webp"] as OutputFormat[]).map((fmt) => (
-                      <button
-                        key={fmt}
-                        type="button"
-                        onClick={() => setOutputFormat(fmt)}
-                        className={`flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
-                          outputFormat === fmt
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
+                      <button key={fmt} type="button" onClick={() => setOutputFormat(fmt)}
+                        className={`flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${outputFormat === fmt ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>
                         {fmt === "jpeg" ? "JPG" : fmt.toUpperCase()}
                       </button>
                     ))}
@@ -585,23 +605,12 @@ export function ImageResizer() {
                       <Label className="text-xs">Quality</Label>
                       <span className="text-xs text-muted-foreground">{quality}%</span>
                     </div>
-                    <input
-                      type="range"
-                      min={50}
-                      max={100}
-                      value={quality}
-                      onChange={(e) => setQuality(Number(e.target.value))}
-                      className="w-full accent-primary"
-                    />
+                    <input type="range" min={50} max={100} value={quality} onChange={(e) => setQuality(Number(e.target.value))} className="w-full accent-primary" />
                   </div>
                 )}
               </div>
 
-              <Button
-                onClick={generateSelected}
-                disabled={isProcessing || !files.length || !selectedPresetList.length}
-                className="w-full"
-              >
+              <Button onClick={generateSelected} disabled={isProcessing || !files.length || !selectedPresetList.length} className="w-full">
                 {isProcessing ? "Processing..." : `Generate ${selectedPresetList.length > 0 ? selectedPresetList.length : ""} Selected`}
               </Button>
             </CardContent>
@@ -627,7 +636,6 @@ export function ImageResizer() {
                     }))}
                   />
                 </div>
-
                 <div
                   ref={cropContainerRef}
                   className="relative h-72 overflow-hidden rounded-md border border-border bg-muted/40"
@@ -637,26 +645,12 @@ export function ImageResizer() {
                   onPointerCancel={handlePointerUp}
                   style={{ cursor: "grab", touchAction: "none" }}
                 >
-                  <img
-                    src={firstFileUrl}
-                    alt="Original preview"
-                    className="h-full w-full object-contain select-none pointer-events-none"
-                    draggable={false}
-                  />
+                  <img src={firstFileUrl} alt="Original preview" className="h-full w-full object-contain select-none pointer-events-none" draggable={false} />
                   {overlayRect && (
-                    <div
-                      className="pointer-events-none absolute border-2 border-primary"
-                      style={{
-                        left: overlayRect.cropX,
-                        top: overlayRect.cropY,
-                        width: overlayRect.cropW,
-                        height: overlayRect.cropH,
-                        boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)",
-                      }}
-                    />
+                    <div className="pointer-events-none absolute border-2 border-primary"
+                      style={{ left: overlayRect.cropX, top: overlayRect.cropY, width: overlayRect.cropW, height: overlayRect.cropH, boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)" }} />
                   )}
                 </div>
-
                 <p className="text-xs text-muted-foreground">
                   {activePreviewPreset.platformLabel} - {activePreviewPreset.label} - {activePreviewPreset.ratio} - {activePreviewPreset.width}x{activePreviewPreset.height}px
                 </p>
