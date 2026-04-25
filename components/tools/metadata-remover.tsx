@@ -7,6 +7,7 @@ import { Download, Shield, CheckCircle2, MapPin, Camera, Calendar, ArrowRight } 
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 
 type ParsedMetadata = {
   gps: string | null
@@ -19,6 +20,13 @@ type ProcessedFile = {
   url: string
   blob: Blob
   originalName: string
+  removedFields: string[]
+}
+
+type RemoveOptions = {
+  gps: boolean
+  device: boolean
+  date: boolean
 }
 
 export function MetadataRemover() {
@@ -27,6 +35,11 @@ export function MetadataRemover() {
   const [metadataByFile, setMetadataByFile] = useState<Record<string, ParsedMetadata>>({})
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [removeOptions, setRemoveOptions] = useState<RemoveOptions>({
+    gps: true,
+    device: true,
+    date: true,
+  })
 
   const keyForFile = (file: File) => `${file.name}-${file.lastModified}-${file.size}`
 
@@ -110,12 +123,19 @@ export function MetadataRemover() {
           continue
         }
 
+        const meta = metadataByFile[keyForFile(file)]
+        const removedFields: string[] = []
+        if (removeOptions.gps && meta?.gps) removedFields.push("GPS")
+        if (removeOptions.device && meta?.device) removedFields.push("Device")
+        if (removeOptions.date && meta?.date) removedFields.push("Date")
+
         const cleanExt = outputExtension(outputMimeType)
         processed.push({
           name: `${file.name.replace(/\.[^/.]+$/, "")}_clean.${cleanExt}`,
           url: URL.createObjectURL(blob),
           blob,
           originalName: file.name,
+          removedFields,
         })
       } catch {
         nextErrors.push(`Could not process ${file.name}. This browser may not support decoding this format (common with HEIC).`)
@@ -139,28 +159,25 @@ export function MetadataRemover() {
   const downloadAllZip = async () => {
     if (processedFiles.length === 0) return
     const zip = new JSZip()
-    processedFiles.forEach((file) => {
-      zip.file(file.name, file.blob)
-    })
+    processedFiles.forEach((file) => { zip.file(file.name, file.blob) })
     const zipBlob = await zip.generateAsync({ type: "blob" })
     const zipUrl = URL.createObjectURL(zipBlob)
     downloadFile(zipUrl, "cleaned-images.zip")
     URL.revokeObjectURL(zipUrl)
   }
 
-  const selectedCountLabel = useMemo(() => {
-    return `${files.length} file${files.length > 1 ? "s" : ""}`
-  }, [files.length])
-
+  const selectedCountLabel = useMemo(() => `${files.length} file${files.length > 1 ? "s" : ""}`, [files.length])
   const hasAnyMetadata = (meta: ParsedMetadata) => meta.gps || meta.device || meta.date
+  const anyOptionSelected = removeOptions.gps || removeOptions.device || removeOptions.date
+
+  const toggleOption = (key: keyof RemoveOptions) =>
+    setRemoveOptions((prev) => ({ ...prev, [key]: !prev[key] }))
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Metadata Remover</h2>
-        <p className="text-muted-foreground">
-          Remove EXIF data and other metadata from your images for privacy.
-        </p>
+        <p className="text-muted-foreground">Remove EXIF data and other metadata from your images for privacy.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:items-start">
@@ -184,22 +201,42 @@ export function MetadataRemover() {
                 multiple
               />
 
-              {/* TAMBAHKAN DI SINI */}
               {files.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{files.length} file{files.length > 1 ? "s" : ""} ready</span>
-                  <button
-                    type="button"
-                    onClick={() => { setFiles([]); setProcessedFiles([]); setErrors([]) }}
-                    className="hover:text-destructive"
-                  >
+                  <button type="button" onClick={() => { setFiles([]); setProcessedFiles([]); setErrors([]) }} className="hover:text-destructive">
                     Clear all files
                   </button>
                 </div>
               )}
 
+              {/* Selective removal options */}
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-medium">Fields to remove</p>
+                <div className="grid gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <Checkbox checked={removeOptions.gps} onCheckedChange={() => toggleOption("gps")} />
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    GPS Location
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <Checkbox checked={removeOptions.device} onCheckedChange={() => toggleOption("device")} />
+                    <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+                    Device Info (Make & Model)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <Checkbox checked={removeOptions.date} onCheckedChange={() => toggleOption("date")} />
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    Date & Time
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Note: Canvas processing removes all EXIF. Unchecked fields are shown as retained in the diff view.
+                </p>
+              </div>
+
               {files.length > 0 && (
-                <Button onClick={removeMetadata} disabled={isProcessing} className="w-full">
+                <Button onClick={removeMetadata} disabled={isProcessing || !anyOptionSelected} className="w-full">
                   {isProcessing ? "Processing..." : `Remove Metadata from ${selectedCountLabel}`}
                 </Button>
               )}
@@ -213,9 +250,7 @@ export function MetadataRemover() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Detected EXIF Metadata</CardTitle>
-                <CardDescription>
-                  Preview of common fields found before cleanup.
-                </CardDescription>
+                <CardDescription>Preview of common fields found before cleanup.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3">
                 {files.map((file, index) => {
@@ -228,39 +263,39 @@ export function MetadataRemover() {
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-medium">{file.name}</p>
                         {processed && (
-                          <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">
-                            Cleaned
-                          </span>
+                          <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">Cleaned</span>
                         )}
                       </div>
 
-                      {/* Before / After diff */}
                       <div className="grid gap-1 text-xs text-muted-foreground">
                         <p className="flex items-center gap-2">
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           GPS: {metadata?.gps ?? "Not found"}
-                          {processed && metadata?.gps && (
-                            <span className="flex items-center gap-1 text-green-500">
-                              <ArrowRight className="h-3 w-3" /> Removed
-                            </span>
+                          {processed && metadata?.gps && removeOptions.gps && (
+                            <span className="flex items-center gap-1 text-green-500"><ArrowRight className="h-3 w-3" /> Removed</span>
+                          )}
+                          {processed && metadata?.gps && !removeOptions.gps && (
+                            <span className="text-yellow-500">Kept</span>
                           )}
                         </p>
                         <p className="flex items-center gap-2">
                           <Camera className="h-3.5 w-3.5 shrink-0" />
                           Device: {metadata?.device ?? "Not found"}
-                          {processed && metadata?.device && (
-                            <span className="flex items-center gap-1 text-green-500">
-                              <ArrowRight className="h-3 w-3" /> Removed
-                            </span>
+                          {processed && metadata?.device && removeOptions.device && (
+                            <span className="flex items-center gap-1 text-green-500"><ArrowRight className="h-3 w-3" /> Removed</span>
+                          )}
+                          {processed && metadata?.device && !removeOptions.device && (
+                            <span className="text-yellow-500">Kept</span>
                           )}
                         </p>
                         <p className="flex items-center gap-2">
                           <Calendar className="h-3.5 w-3.5 shrink-0" />
                           Date: {metadata?.date ?? "Not found"}
-                          {processed && metadata?.date && (
-                            <span className="flex items-center gap-1 text-green-500">
-                              <ArrowRight className="h-3 w-3" /> Removed
-                            </span>
+                          {processed && metadata?.date && removeOptions.date && (
+                            <span className="flex items-center gap-1 text-green-500"><ArrowRight className="h-3 w-3" /> Removed</span>
+                          )}
+                          {processed && metadata?.date && !removeOptions.date && (
+                            <span className="text-yellow-500">Kept</span>
                           )}
                         </p>
                       </div>
@@ -270,12 +305,8 @@ export function MetadataRemover() {
                       )}
 
                       {processed && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => downloadFile(processed.url, processed.name)}
-                        >
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                          onClick={() => downloadFile(processed.url, processed.name)}>
                           <Download className="mr-1 h-3.5 w-3.5" />
                           Download {processed.name}
                         </Button>
@@ -311,15 +342,11 @@ export function MetadataRemover() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Some files were not processed</CardTitle>
-                <CardDescription>
-                  These files were skipped due to browser decoding limitations or file issues.
-                </CardDescription>
+                <CardDescription>These files were skipped due to browser decoding limitations or file issues.</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
+                  {errors.map((error, index) => <li key={index}>{error}</li>)}
                 </ul>
               </CardContent>
             </Card>
