@@ -185,6 +185,14 @@ export default function ToolsPage() {
               ))}
             </div>
           </section>
+
+          {/* Feedback link — tambahkan di sini */}
+          <div className="mt-8 text-center text-xs text-muted-foreground">
+            Have feedback or a tool suggestion?{" "}
+            <a href="mailto:creatorkit.hello@gmail.com?subject=CreatorKit Feedback" className="underline hover:text-foreground">
+              Send us a message
+            </a>
+          </div>
         </main>
       </div>
 
