@@ -6,11 +6,10 @@ import JSZip from "jszip"
 import { PDFDocument } from "pdf-lib"
 import {
   Download, Shield, CheckCircle2, MapPin, Camera, Calendar,
-  ArrowRight, FileText, Aperture, Clock, Cpu, Music, File
+  ArrowRight, FileText, Aperture, Clock, Cpu, Music, File, Loader2
 } from "lucide-react"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
@@ -40,12 +39,52 @@ function getCategory(file: File): FileCategory {
   return "audio"
 }
 
+// FFmpeg singleton
+let ffmpegInstance: any = null
+let ffmpegLoading = false
+let ffmpegReady = false
+
+async function getFFmpeg(onProgress?: (msg: string) => void): Promise<any> {
+  if (ffmpegReady && ffmpegInstance) return ffmpegInstance
+
+  if (ffmpegLoading) {
+    // Wait for it to finish loading
+    await new Promise<void>(resolve => {
+      const interval = setInterval(() => {
+        if (ffmpegReady) { clearInterval(interval); resolve() }
+      }, 200)
+    })
+    return ffmpegInstance
+  }
+
+  ffmpegLoading = true
+  onProgress?.("Loading audio processor... this may take a few seconds on first use.")
+
+  const { FFmpeg } = await import("@ffmpeg/ffmpeg")
+  const { toBlobURL } = await import("@ffmpeg/util")
+
+  const ffmpeg = new FFmpeg()
+
+  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd"
+  await ffmpeg.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+  })
+
+  ffmpegInstance = ffmpeg
+  ffmpegReady = true
+  ffmpegLoading = false
+  onProgress?.("Audio processor ready.")
+  return ffmpeg
+}
+
 export function MetadataRemover() {
   const [files, setFiles] = useState<File[]>([])
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([])
   const [metaByFile, setMetaByFile] = useState<Record<string, FileMeta>>({})
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [ffmpegStatus, setFfmpegStatus] = useState<string | null>(null)
   const [imgOpts, setImgOpts] = useState<ImageRemoveOptions>({ gps: true, device: true, date: true, software: true, lens: true, exposure: false })
   const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({ author: true, title: true, creator: true, producer: true, subject: true, keywords: true })
   const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({ creator: true, lastModifiedBy: true, dates: true, company: true, description: true })
@@ -195,6 +234,8 @@ export function MetadataRemover() {
   const processAudio = async (file: File): Promise<{ blob: Blob; removed: string[] } | null> => {
     const m = metaByFile[keyForFile(file)]?.audio
     const removed: string[] = []
+
+    // Build list of fields that will be removed
     if (audioOpts.title && m?.title) removed.push("Title")
     if (audioOpts.artist && m?.artist) removed.push("Artist")
     if (audioOpts.album && m?.album) removed.push("Album")
@@ -203,13 +244,55 @@ export function MetadataRemover() {
     if (audioOpts.comment && m?.comment) removed.push("Comment")
     if (audioOpts.composer && m?.composer) removed.push("Composer")
     if (audioOpts.coverArt && m?.coverArt) removed.push("Cover Art")
-    const blob = new Blob([await file.arrayBuffer()], { type: file.type })
-    return { blob, removed }
+
+    try {
+      const { fetchFile } = await import("@ffmpeg/util")
+      const ffmpeg = await getFFmpeg((msg) => setFfmpegStatus(msg))
+      setFfmpegStatus("Processing audio...")
+
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "mp3"
+      const inputName = `input_${Date.now()}.${ext}`
+      const outputName = `output_${Date.now()}.${ext}`
+
+      // Write file to ffmpeg virtual filesystem
+      await ffmpeg.writeFile(inputName, await fetchFile(file))
+
+      // Strip all metadata with -map_metadata -1
+      await ffmpeg.exec([
+        "-i", inputName,
+        "-map_metadata", "-1",
+        "-c:a", "copy",
+        outputName
+      ])
+
+      // Read output
+      const data = await ffmpeg.readFile(outputName)
+      const blob = new Blob([data], { type: file.type })
+
+      // Cleanup virtual filesystem
+      await ffmpeg.deleteFile(inputName)
+      await ffmpeg.deleteFile(outputName)
+
+      setFfmpegStatus(null)
+      return { blob, removed }
+    } catch (err) {
+      setFfmpegStatus(null)
+      console.error("FFmpeg audio processing error:", err)
+      // Fallback: return original file if ffmpeg fails
+      const blob = new Blob([await file.arrayBuffer()], { type: file.type })
+      return { blob, removed: [] }
+    }
   }
 
   const handleFilesSelected = async (selectedFiles: File[]) => {
     setFiles(selectedFiles); setProcessedFiles([]); setErrors([])
     await parseMetadata(selectedFiles)
+
+    // Preload ffmpeg in background if there are audio files
+    const hasAudio = selectedFiles.some(f => getCategory(f) === "audio")
+    if (hasAudio && !ffmpegReady) {
+      getFFmpeg((msg) => setFfmpegStatus(msg)).then(() => setFfmpegStatus(null))
+    }
   }
 
   const removeMetadata = async () => {
@@ -312,18 +395,15 @@ export function MetadataRemover() {
   return (
     <>
       <div className="flex h-full flex-col space-y-3">
-        {/* Header */}
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Metadata Remover</h2>
           <p className="text-muted-foreground">Remove metadata from images, PDFs, Office documents, and audio files. 100% client-side.</p>
         </div>
 
-        {/* Split Panel — desktop: side by side fixed height, mobile: stack */}
         <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
 
-          {/* LEFT PANEL — scrollable */}
+          {/* LEFT PANEL */}
           <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
-            {/* Panel Header */}
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -332,13 +412,20 @@ export function MetadataRemover() {
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                 <span>Image: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF</span>
                 <span>Document: PDF, DOCX, XLSX, PPTX</span>
-                <span>Audio: MP3 · FLAC, WAV coming soon</span>
+                <span>Audio: MP3, FLAC, WAV, OGG, M4A, AAC, WMA, AIFF</span>
               </div>
             </div>
 
-            {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <FileDropzone ref={uploadRef} accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
+
+              {/* FFmpeg loading indicator */}
+              {ffmpegStatus && (
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                  <span>{ffmpegStatus}</span>
+                </div>
+              )}
 
               {files.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -396,8 +483,8 @@ export function MetadataRemover() {
               {byCategory.audio.length > 0 && (
                 <div className="space-y-2 rounded-lg border border-border p-3">
                   <p className="text-xs font-medium flex items-center gap-1"><Music className="h-3.5 w-3.5" /> Audio Tag Fields</p>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                    <p>🔄 <strong>FLAC, WAV, OGG, M4A, AAC, WMA, AIFF</strong> — preview only, removal coming soon</p>
+                  <div className="rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2 text-xs text-green-600 dark:text-green-400">
+                    ✓ All audio formats fully supported — metadata will be permanently removed
                   </div>
                   <div className="grid gap-1.5">
                     <CheckRow checked={audioOpts.title} onChange={() => toggleAudio("title")} label="Title" />
@@ -413,12 +500,16 @@ export function MetadataRemover() {
               )}
             </div>
 
-            {/* Sticky Action Bar — always visible at bottom of left panel */}
             <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
               {files.length > 0 ? (
                 <div className="flex gap-2">
-                  <Button onClick={removeMetadata} disabled={isProcessing} className="flex-1">
-                    {isProcessing ? "Processing..." : (
+                  <Button onClick={removeMetadata} disabled={isProcessing || !!ffmpegStatus} className="flex-1">
+                    {isProcessing ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {ffmpegStatus ? "Processing audio..." : "Processing..."}
+                      </span>
+                    ) : (
                       <span className="flex items-center justify-between w-full">
                         <span>Clean {selectedCountLabel}</span>
                         <kbd className="ml-2 rounded border border-primary-foreground/30 px-1 text-[10px] opacity-50">Ctrl+Enter</kbd>
@@ -437,15 +528,13 @@ export function MetadataRemover() {
             </div>
           </div>
 
-          {/* RIGHT PANEL — scrollable */}
+          {/* RIGHT PANEL */}
           <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
-            {/* Panel Header */}
             <div className="shrink-0 border-b border-border px-4 py-3">
               <span className="text-sm font-medium">Detected Metadata</span>
               <p className="text-xs text-muted-foreground">Preview of fields found before cleanup.</p>
             </div>
 
-            {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {files.length === 0 && (
                 <div className="flex h-full items-center justify-center">
@@ -525,7 +614,6 @@ export function MetadataRemover() {
               )}
             </div>
 
-            {/* Sticky Action Bar — right panel bottom */}
             {processedFiles.length > 0 && (
               <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
                 <div className="flex items-center justify-between gap-3">

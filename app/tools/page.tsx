@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Zap } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,7 +54,12 @@ export default function ToolsPage() {
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 lg:px-8">
             <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-              <Zap className="h-4 w-4 text-primary" />
+              <svg width="24" height="26" viewBox="0 0 48 54" fill="none">
+                <path d="M24 0 L48 9 L48 28 C48 41 37 50 24 54 C11 50 0 41 0 28 L0 9 Z" fill="#0f172a"/>
+                <circle cx="11" cy="28" r="7" fill="#3b82f6"/>
+                <circle cx="24" cy="28" r="7" fill="#8b5cf6"/>
+                <circle cx="37" cy="28" r="7" fill="#f59e0b"/>
+              </svg>
               CreatorKit
             </Link>
             <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
