@@ -76,6 +76,7 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
 
   const handleSLPointer = useCallback((e: React.PointerEvent) => {
     if (!slRef.current) return
+    e.preventDefault()
     const rect = slRef.current.getBoundingClientRect()
     const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
@@ -91,6 +92,7 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
 
   const handleHuePointer = useCallback((e: React.PointerEvent) => {
     if (!hueRef.current) return
+    e.preventDefault()
     const rect = hueRef.current.getBoundingClientRect()
     const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
     const nh = Math.round(nx * 360)
@@ -136,6 +138,7 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
             className="relative h-36 w-full rounded-lg cursor-crosshair select-none"
             style={{
               background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
+              touchAction: "none",
             }}
             onPointerDown={(e) => { draggingSL.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleSLPointer(e) }}
             onPointerMove={(e) => { if (draggingSL.current) handleSLPointer(e) }}
@@ -153,7 +156,7 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
           <div
             ref={hueRef}
             className="relative h-4 w-full rounded-full cursor-pointer select-none"
-            style={{ background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)" }}
+            style={{ background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)", touchAction: "none" }}
             onPointerDown={(e) => { draggingH.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleHuePointer(e) }}
             onPointerMove={(e) => { if (draggingH.current) handleHuePointer(e) }}
             onPointerUp={(e) => { draggingH.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
