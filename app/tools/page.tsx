@@ -132,29 +132,29 @@ export default function ToolsPage() {
           {/* Active tools */}
           <section className="grid gap-5 md:grid-cols-3">
             {toolCards.map((tool) => (
-              <Card key={tool.href} className="group h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
-                <CardHeader className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="rounded-lg border border-border bg-muted/50 p-2 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
-                      <tool.icon className="h-5 w-5 text-primary" />
+              <Link key={tool.href} href={tool.href} className="group block">
+                <Card className="h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
+                  <CardHeader className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="rounded-lg border border-border bg-muted/50 p-2 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
+                        <tool.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <Badge variant="secondary">Free</Badge>
                     </div>
-                    <Badge variant="secondary">Free</Badge>
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">{tool.title}</CardTitle>
-                    <CardDescription className="mt-1">{tool.description}</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground border-t border-border pt-3">{tool.stat}</p>
-                  <Button asChild className="w-full justify-between">
-                    <Link href={tool.href}>
+                    <div>
+                      <CardTitle className="text-xl">{tool.title}</CardTitle>
+                      <CardDescription className="mt-1">{tool.description}</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground border-t border-border pt-3">{tool.stat}</p>
+                    <div className="flex items-center justify-between rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
                       Open Tool
                       <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </section>
 
