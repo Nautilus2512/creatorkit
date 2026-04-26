@@ -20,7 +20,7 @@ const sections = [
   },
   {
     title: "Contact information",
-    body: "Questions about privacy can be sent to privacy@creatorkit.app.",
+    body: "Questions about privacy can be sent to creatorkit.hello@gmail.com.",
   },
 ]
 
