@@ -112,8 +112,12 @@ export default function Home() {
               <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
               <Link href="/terms" className="hover:text-foreground">Terms</Link>
               <Link href="#top" className="hover:text-foreground">Back to top</Link>
-              <a href="mailto:creatorkit.hello@gmail.com?subject=CreatorKit Feedback" className="hover:text-foreground">Send Feedback</a>
             </div>
+          </div>
+          <div className="mx-auto max-w-5xl px-6 pb-6 text-center text-xs text-muted-foreground lg:px-8">
+            <a href="mailto:creatorkit.hello@gmail.com?subject=CreatorKit Feedback" className="hover:text-foreground underline">
+              Send Feedback
+            </a>
           </div>
         </footer>
       </div>
