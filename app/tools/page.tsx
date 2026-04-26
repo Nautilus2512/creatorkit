@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, FileText, Lock, QrCode, Wand2, Minimize2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +30,45 @@ const toolCards = [
     description: "Create color, typography, spacing, and radius design tokens.",
     href: "/tools/design-tokens",
     stat: "CSS, Tailwind & JSON export",
+  },
+]
+
+const comingSoonCards = [
+  {
+    icon: Minimize2,
+    title: "Image Compressor",
+    description: "Reduce image file size without quality loss — entirely in your browser.",
+    category: "Image & Visual",
+  },
+  {
+    icon: Wand2,
+    title: "Background Remover",
+    description: "Remove image backgrounds using an AI model that runs locally — no upload needed.",
+    category: "Image & Visual",
+  },
+  {
+    icon: Image,
+    title: "Image Format Converter",
+    description: "Convert between JPG, PNG, WebP, and more — instantly client-side.",
+    category: "Image & Visual",
+  },
+  {
+    icon: Lock,
+    title: "Password Generator",
+    description: "Generate strong, random passwords. Nothing is sent anywhere.",
+    category: "Privacy & Security",
+  },
+  {
+    icon: QrCode,
+    title: "QR Code Generator",
+    description: "Create QR codes for URLs, text, and contact info — all offline.",
+    category: "Privacy & Security",
+  },
+  {
+    icon: FileText,
+    title: "Favicon Generator",
+    description: "Generate favicons from text or image for your website — no server required.",
+    category: "Design & Branding",
   },
 ]
 
@@ -70,8 +109,9 @@ export default function ToolsPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-6 py-12 lg:px-8 lg:py-14">
-          <div className="mb-8 rounded-2xl border border-border bg-muted/20 p-6 sm:p-8">
+        <main className="mx-auto max-w-6xl px-6 py-12 lg:px-8 lg:py-14 space-y-12">
+          {/* Header banner */}
+          <div className="rounded-2xl border border-border bg-muted/20 p-6 sm:p-8">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
               CreatorKit Tools
             </p>
@@ -79,16 +119,17 @@ export default function ToolsPage() {
               Pick a tool to get started.
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Privacy-first utilities for creators. Every tool runs 100% in your browser, with no uploads to server anywhere, and no tracking.
+              Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
               <div><p className="font-semibold">3</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
-              <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">Client-side processing</p></div>
+              <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
             </div>
           </div>
 
+          {/* Active tools */}
           <section className="grid gap-5 md:grid-cols-3">
             {toolCards.map((tool) => (
               <Card key={tool.href} className="group h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
@@ -115,6 +156,34 @@ export default function ToolsPage() {
                 </CardContent>
               </Card>
             ))}
+          </section>
+
+          {/* Coming Soon section */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Coming Soon</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              More privacy-first tools are on the way — all client-side, all free.
+            </p>
+            <div className="grid gap-4 md:grid-cols-3">
+              {comingSoonCards.map((tool) => (
+                <div key={tool.title} className="rounded-xl border border-border/50 bg-muted/10 p-4 opacity-60">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="rounded-lg border border-border bg-muted/50 p-2">
+                      <tool.icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      {tool.category}
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-medium">{tool.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{tool.description}</p>
+                </div>
+              ))}
+            </div>
           </section>
         </main>
       </div>
