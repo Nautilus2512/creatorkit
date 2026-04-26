@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Copy, Check, Moon, Sun, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
+
+// ── Color conversion helpers ──────────────────────────────────────────────────
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
   let r = 0, g = 0, b = 0
@@ -28,6 +30,163 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
   return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) }
 }
 
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100; l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  const toHex = (x: number) => Math.round(x * 255).toString(16).padStart(2, "0")
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`
+}
+
+function hslToRgb(h: number, s: number, l: number) {
+  s /= 100; l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  return { r: Math.round(f(0)*255), g: Math.round(f(8)*255), b: Math.round(f(4)*255) }
+}
+
+// ── Custom Color Picker ───────────────────────────────────────────────────────
+
+function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (hex: string) => void }) {
+  const hsl = useMemo(() => hexToHSL(value), [value])
+  const [h, setH] = useState(hsl.h)
+  const [s, setS] = useState(hsl.s)
+  const [l, setL] = useState(hsl.l)
+  const [hexInput, setHexInput] = useState(value)
+  const [open, setOpen] = useState(false)
+
+  // Sync when value changes externally
+  useEffect(() => {
+    const parsed = hexToHSL(value)
+    setH(parsed.h); setS(parsed.s); setL(parsed.l)
+    setHexInput(value)
+  }, [value])
+
+  const commit = useCallback((nh: number, ns: number, nl: number) => {
+    const hex = hslToHex(nh, ns, nl)
+    setHexInput(hex)
+    onChange(hex)
+  }, [onChange])
+
+  // SL picker (2D gradient area)
+  const slRef = useRef<HTMLDivElement>(null)
+  const draggingSL = useRef(false)
+
+  const handleSLPointer = useCallback((e: React.PointerEvent) => {
+    if (!slRef.current) return
+    const rect = slRef.current.getBoundingClientRect()
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+    const ns = Math.round(nx * 100)
+    const nl = Math.round((1 - ny) * 100)
+    setS(ns); setL(nl)
+    commit(h, ns, nl)
+  }, [h, commit])
+
+  // Hue slider
+  const hueRef = useRef<HTMLDivElement>(null)
+  const draggingH = useRef(false)
+
+  const handleHuePointer = useCallback((e: React.PointerEvent) => {
+    if (!hueRef.current) return
+    const rect = hueRef.current.getBoundingClientRect()
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const nh = Math.round(nx * 360)
+    setH(nh)
+    commit(nh, s, l)
+  }, [s, l, commit])
+
+  // Hex input
+  const handleHexInput = (raw: string) => {
+    setHexInput(raw)
+    const clean = raw.startsWith("#") ? raw : `#${raw}`
+    if (/^#[0-9a-fA-F]{6}$/.test(clean)) {
+      onChange(clean)
+    }
+  }
+
+  const rgb = hslToRgb(h, s, l)
+  const thumbX = `${s}%`
+  const thumbY = `${100 - l}%`
+  const hueX = `${(h / 360) * 100}%`
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm">{label}</Label>
+
+      {/* Color swatch trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-2 w-full rounded-lg border border-border bg-muted/30 px-3 py-2 hover:border-primary/50 transition-colors"
+      >
+        <span className="h-6 w-6 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} />
+        <span className="font-mono text-sm flex-1 text-left">{hexInput}</span>
+        <span className="text-xs text-muted-foreground">Click to edit</span>
+      </button>
+
+      {/* Picker panel */}
+      {open && (
+        <div className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3">
+          {/* SL gradient area */}
+          <div
+            ref={slRef}
+            className="relative h-36 w-full rounded-lg cursor-crosshair select-none"
+            style={{
+              background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
+            }}
+            onPointerDown={(e) => { draggingSL.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleSLPointer(e) }}
+            onPointerMove={(e) => { if (draggingSL.current) handleSLPointer(e) }}
+            onPointerUp={(e) => { draggingSL.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
+            onPointerCancel={() => { draggingSL.current = false }}
+          >
+            {/* Thumb */}
+            <div
+              className="absolute h-4 w-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: thumbX, top: thumbY, backgroundColor: value }}
+            />
+          </div>
+
+          {/* Hue slider */}
+          <div
+            ref={hueRef}
+            className="relative h-4 w-full rounded-full cursor-pointer select-none"
+            style={{ background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)" }}
+            onPointerDown={(e) => { draggingH.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleHuePointer(e) }}
+            onPointerMove={(e) => { if (draggingH.current) handleHuePointer(e) }}
+            onPointerUp={(e) => { draggingH.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
+            onPointerCancel={() => { draggingH.current = false }}
+          >
+            {/* Hue thumb */}
+            <div
+              className="absolute h-5 w-5 rounded-full border-2 border-white shadow-md top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: hueX, backgroundColor: `hsl(${h}, 100%, 50%)` }}
+            />
+          </div>
+
+          {/* Hex + RGB display */}
+          <div className="flex gap-2 items-center">
+            <span className="h-8 w-8 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} />
+            <Input
+              value={hexInput}
+              onChange={(e) => handleHexInput(e.target.value)}
+              className="flex-1 font-mono text-sm h-8"
+              placeholder="#000000"
+            />
+            <span className="text-xs text-muted-foreground shrink-0">
+              {rgb.r}, {rgb.g}, {rgb.b}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Token generation ──────────────────────────────────────────────────────────
+
 function generateShades(hex: string): Record<string, string> {
   const { h, s } = hexToHSL(hex)
   return {
@@ -40,6 +199,8 @@ function generateShades(hex: string): Record<string, string> {
 const typographyScale = { xs: "0.75rem", sm: "0.875rem", base: "1rem", lg: "1.125rem", xl: "1.25rem", "2xl": "1.5rem", "3xl": "1.875rem", "4xl": "2.25rem", "5xl": "3rem" }
 const spacingScale = { 0: "0rem", 1: "0.25rem", 2: "0.5rem", 3: "0.75rem", 4: "1rem", 5: "1.25rem", 6: "1.5rem", 8: "2rem", 10: "2.5rem", 12: "3rem", 16: "4rem", 20: "5rem", 24: "6rem" }
 const radiusScale = { none: "0px", sm: "0.125rem", md: "0.375rem", lg: "0.5rem", xl: "0.75rem", "2xl": "1rem", full: "9999px" }
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function DesignTokenGenerator() {
   const [primaryColor, setPrimaryColor] = useState("#3b82f6")
@@ -104,16 +265,6 @@ export function DesignTokenGenerator() {
     return () => window.removeEventListener("keydown", handler)
   }, [primaryColor, secondaryColor, accentColor])
 
-  const ColorInput = ({ label, id, value, onChange }: { label: string; id: string; value: string; onChange: (v: string) => void }) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-sm">{label}</Label>
-      <div className="flex gap-2">
-        <Input id={id} type="color" value={value} onChange={(e) => onChange(e.target.value)} className="h-9 w-12 cursor-pointer p-1 shrink-0" />
-        <Input value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 font-mono text-sm" />
-      </div>
-    </div>
-  )
-
   const ColorPalette = ({ shades, name }: { shades: Record<string, string>; name: string }) => (
     <div className="space-y-1.5">
       <p className="text-xs font-medium capitalize text-muted-foreground">{name}</p>
@@ -133,31 +284,29 @@ export function DesignTokenGenerator() {
   return (
     <>
       <div className="flex h-full flex-col space-y-3">
-        {/* Header */}
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Design Token Generator</h2>
           <p className="text-muted-foreground">Generate a complete design system from your brand colors.</p>
         </div>
 
-        {/* Split Panel */}
         <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
 
-          {/* LEFT PANEL — Brand Colors + Palette + Core Scales */}
+          {/* LEFT PANEL */}
           <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Brand Colors & Palette</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Set colors to generate your full design system</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Click a color to open the picker — drag to adjust hue and tone</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
-              {/* Color Inputs */}
-              <div className="space-y-3">
-                <ColorInput label="Primary" id="primary" value={primaryColor} onChange={setPrimaryColor} />
-                <ColorInput label="Secondary" id="secondary" value={secondaryColor} onChange={setSecondaryColor} />
-                <ColorInput label="Accent" id="accent" value={accentColor} onChange={setAccentColor} />
+              {/* Custom Color Pickers */}
+              <div className="space-y-4">
+                <ColorPicker label="Primary" value={primaryColor} onChange={setPrimaryColor} />
+                <ColorPicker label="Secondary" value={secondaryColor} onChange={setSecondaryColor} />
+                <ColorPicker label="Accent" value={accentColor} onChange={setAccentColor} />
               </div>
 
               {/* Generated Palette */}
@@ -204,14 +353,13 @@ export function DesignTokenGenerator() {
             </div>
           </div>
 
-          {/* RIGHT PANEL — Live Preview + Export */}
+          {/* RIGHT PANEL */}
           <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium">Live Preview & Export</span>
                 <p className="text-xs text-muted-foreground">See tokens in action and export in your preferred format</p>
               </div>
-              {/* Mode toggle */}
               <div className="flex items-center gap-1 rounded-lg border border-border p-1">
                 <button type="button" onClick={() => setPreviewMode("light")}
                   className={`rounded-md p-1.5 transition-colors ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`} title="Light mode">
@@ -225,7 +373,6 @@ export function DesignTokenGenerator() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Live Preview */}
               <div className="rounded-lg border border-border overflow-hidden" style={{ backgroundColor: previewBg }}>
                 <div className="p-4 space-y-4">
                   <div className="space-y-1.5">
@@ -265,7 +412,6 @@ export function DesignTokenGenerator() {
                 </div>
               </div>
 
-              {/* Export */}
               <div>
                 <p className="text-xs font-medium mb-2">Export <span className="text-muted-foreground font-normal">— includes light & dark semantic tokens</span></p>
                 <Tabs defaultValue="css">

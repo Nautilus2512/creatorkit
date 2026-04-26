@@ -76,7 +76,7 @@ export default function Home() {
                   <CardDescription>Generate optimized dimensions for major social platforms instantly.</CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  Create Instagram, LinkedIn, YouTube, TikTok, and more — 40+ sizes from one upload.
+                  Create Instagram, LinkedIn, YouTube, TikTok, and more with over 40+ sizes from one upload.
                 </CardContent>
               </Card>
             </Link>

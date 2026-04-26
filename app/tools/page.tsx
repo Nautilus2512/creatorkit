@@ -74,7 +74,7 @@ export default function ToolsPage() {
               Pick a tool to get started.
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Privacy-first utilities for creators. Every tool runs 100% in your browser — no uploads, no tracking.
+              Privacy-first utilities for creators. Every tool runs 100% in your browser, with no uploads to server anywhere, and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
               <div><p className="font-semibold">3</p><p className="text-xs text-muted-foreground">Tools available</p></div>
