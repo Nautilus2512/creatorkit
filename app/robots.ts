@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://creatorkit-murex.vercel.app/sitemap.xml',
+    sitemap: 'https://creatorkit-tools.vercel.app/sitemap.xml',
   }
 }

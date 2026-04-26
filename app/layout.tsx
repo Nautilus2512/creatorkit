@@ -16,11 +16,11 @@ export const metadata: Metadata = {
   keywords: ['metadata remover', 'image resizer', 'design token generator', 'privacy tools', 'client-side tools', 'EXIF remover', 'social media image resize'],
   authors: [{ name: 'CreatorKit' }],
   creator: 'CreatorKit',
-  metadataBase: new URL('https://creatorkit-murex.vercel.app'),
+  metadataBase: new URL('https://creatorkit-tools.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://creatorkit-murex.vercel.app',
+    url: 'https://creatorkit-tools.vercel.app',
     title: 'CreatorKit — Privacy-First Browser Tools for Creators',
     description: 'Remove image metadata, resize photos for social media, and generate design tokens — all 100% in your browser. No uploads, no tracking.',
     siteName: 'CreatorKit',
