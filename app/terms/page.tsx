@@ -26,6 +26,18 @@ const sections = [
     body: "To the fullest extent permitted by law, CreatorKit and its operators are not liable for indirect, incidental, special, consequential, or punitive damages arising from use of the service.",
   },
   {
+    title: "User responsibility for content",
+    body: "You are solely responsible for the files and content you process using CreatorKit. By using our tools, you confirm that you have the right to process, modify, or transform the files you upload. CreatorKit does not claim ownership over any files processed through our tools. We are not responsible for any infringement of third-party intellectual property rights resulting from your use of the service.",
+  },
+  {
+    title: "No data collection or storage",
+    body: "CreatorKit processes all files entirely within your browser. We do not access, store, transmit, or retain any files or content you process. Once you close your browser tab, all processed data is permanently gone from your device's memory. We have no technical ability to access your files.",
+  },
+  {
+    title: "Intellectual property",
+    body: "CreatorKit and its source code, design, branding, and content are the proprietary property of CreatorKit. All rights are reserved. You may not copy, reproduce, distribute, or create derivative works from any part of CreatorKit without prior written permission. For licensing inquiries, contact creatorkit.hello@gmail.com.",
+  },
+  {
     title: "Contact information",
     body: "Questions about these terms can be sent to creatorkit.hello@gmail.com.",
   },
