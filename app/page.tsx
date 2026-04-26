@@ -54,8 +54,7 @@ export default function Home() {
               Fast, privacy-first tools for creatives and teams
             </h1>
             <p className="mx-auto max-w-2xl text-muted-foreground sm:text-lg">
-              Clean up image metadata, generate social-ready image sizes, and build
-              consistent design tokens in seconds.
+              Clean metadata from your images, resize photos for any social platform, and build a complete design system from your brand colors. Everything runs locally in your browser with no uploads and no tracking.
             </p>
             <Button asChild size="lg">
               <Link href="/tools">Try Free Tools</Link>
@@ -100,7 +99,7 @@ export default function Home() {
 
           <section id="privacy" className="mt-10 flex items-center justify-center rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
             <ShieldCheck className="mr-2 h-4 w-4 text-green-600" />
-            Your files never leave your browser
+            Client-side. No server. No tracking.
           </section>
         </main>
 
