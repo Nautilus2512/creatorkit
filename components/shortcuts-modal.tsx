@@ -34,7 +34,7 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur-sm transition-colors hover:border-primary/50 hover:text-foreground"
+        className="fixed bottom-5 right-5 z-50 hidden md:flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur-sm transition-colors hover:border-primary/50 hover:text-foreground"
       >
         <Keyboard className="h-3.5 w-3.5" />
         <span>Shortcuts · {pageName}</span>
