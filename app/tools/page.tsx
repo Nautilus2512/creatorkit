@@ -3,9 +3,8 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, FileText, Lock, QrCode, Wand2, Minimize2 } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
@@ -52,26 +51,12 @@ const toolCards = [
     href: "/tools/image-compressor",
     stat: "JPEG, WebP, PNG · Batch up to 20",
   },
-]
-
-const comingSoonCards = [
-  {
-    icon: Wand2,
-    title: "Background Remover",
-    description: "Remove image backgrounds using an AI model that runs locally — no upload needed.",
-    category: "Image & Visual",
-  },
   {
     icon: Image,
     title: "Image Format Converter",
     description: "Convert between JPG, PNG, WebP, and more — instantly client-side.",
-    category: "Image & Visual",
-  },
-  {
-    icon: FileText,
-    title: "Favicon Generator",
-    description: "Generate favicons from text or image for your website — no server required.",
-    category: "Design & Branding",
+    href: "/tools/image-format-converter",
+    stat: "JPEG, PNG, WebP, AVIF · Batch up to 20",
   },
 ]
 
@@ -87,6 +72,7 @@ export default function ToolsPage() {
       if (e.key === "4") router.push("/tools/password-generator")
       if (e.key === "5") router.push("/tools/qr-code-generator")
       if (e.key === "6") router.push("/tools/image-compressor")
+      if (e.key === "7") router.push("/tools/image-format-converter")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -128,7 +114,7 @@ export default function ToolsPage() {
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">6</p><p className="text-xs text-muted-foreground">Tools available</p></div>
+              <div><p className="font-semibold">7</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
               <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
@@ -162,34 +148,6 @@ export default function ToolsPage() {
                 </Card>
               </Link>
             ))}
-          </section>
-
-          {/* Coming Soon section */}
-          <section className="space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Coming Soon</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              More privacy-first tools are on the way — all client-side, all free.
-            </p>
-            <div className="grid gap-4 md:grid-cols-3">
-              {comingSoonCards.map((tool) => (
-                <div key={tool.title} className="rounded-xl border border-border/50 bg-muted/10 p-4 opacity-60">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="rounded-lg border border-border bg-muted/50 p-2">
-                      <tool.icon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                      {tool.category}
-                    </Badge>
-                  </div>
-                  <p className="text-sm font-medium">{tool.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{tool.description}</p>
-                </div>
-              ))}
-            </div>
           </section>
 
           {/* Feedback link — tambahkan di sini */}
