@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe } from "lucide-react"
@@ -15,6 +15,7 @@ const toolCards = [
     description: "Strip location, device info, and timestamps from your images, PDFs, and audio files locally.",
     href: "/tools/metadata-remover",
     stat: "Batch up to 20 files",
+    category: "Privacy & Security",
   },
   {
     icon: Crop,
@@ -22,6 +23,7 @@ const toolCards = [
     description: "Resize one image into 40 platform sizes instantly without uploading to any server.",
     href: "/tools/image-resizer",
     stat: "40+ sizes across 12 platforms",
+    category: "Image & Visual",
   },
   {
     icon: Palette,
@@ -29,6 +31,7 @@ const toolCards = [
     description: "Turn your brand colors into a complete CSS design system in seconds.",
     href: "/tools/design-tokens",
     stat: "CSS, Tailwind & JSON export",
+    category: "Design & Branding",
   },
   {
     icon: Lock,
@@ -36,6 +39,7 @@ const toolCards = [
     description: "Generate strong, random passwords. Nothing is sent anywhere.",
     href: "/tools/password-generator",
     stat: "Cryptographically secure",
+    category: "Privacy & Security",
   },
   {
     icon: QrCode,
@@ -43,6 +47,7 @@ const toolCards = [
     description: "Create QR codes for URLs, text, and contact info — all offline.",
     href: "/tools/qr-code-generator",
     stat: "URL, text, email, phone, Wi-Fi",
+    category: "Privacy & Security",
   },
   {
     icon: Minimize2,
@@ -50,6 +55,7 @@ const toolCards = [
     description: "Reduce image file size without quality loss — entirely in your browser.",
     href: "/tools/image-compressor",
     stat: "JPEG, WebP, PNG · Batch up to 20",
+    category: "Image & Visual",
   },
   {
     icon: Image,
@@ -57,6 +63,7 @@ const toolCards = [
     description: "Convert between JPG, PNG, WebP, and more — instantly client-side.",
     href: "/tools/image-format-converter",
     stat: "JPEG, PNG, WebP, AVIF · Batch up to 20",
+    category: "Image & Visual",
   },
   {
     icon: Globe,
@@ -64,11 +71,16 @@ const toolCards = [
     description: "Generate favicons from text or image for your website — no server required.",
     href: "/tools/favicon-generator",
     stat: "6 sizes + site.webmanifest",
+    category: "Design & Branding",
   },
 ]
 
+
 export default function ToolsPage() {
   const router = useRouter()
+  const [activeCategory, setActiveCategory] = useState("All")
+  const categories = ["All", "Image & Visual", "Privacy & Security", "Design & Branding"]
+  const filtered = activeCategory === "All" ? toolCards : toolCards.filter(t => t.category === activeCategory)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -129,9 +141,31 @@ export default function ToolsPage() {
             </div>
           </div>
 
+          {/* Category filter */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                  activeCategory === cat
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                {cat}
+                {cat !== "All" && (
+                  <span className="ml-1.5 text-xs opacity-60">
+                    {toolCards.filter(t => t.category === cat).length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
           {/* Active tools */}
           <section className="grid gap-5 md:grid-cols-3">
-            {toolCards.map((tool) => (
+            {filtered.map((tool) => (
               <Link key={tool.href} href={tool.href} className="group block">
                 <Card className="h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
                   <CardHeader className="space-y-4">
