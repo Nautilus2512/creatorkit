@@ -343,6 +343,12 @@ export function MetadataRemover() {
           <p className="text-muted-foreground">Remove metadata from images, PDFs, Office documents, and audio files. 100% client-side.</p>
         </div>
 
+        {/* Mobile warning — hidden on desktop */}
+        <div className="md:hidden rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+          <p className="font-medium">Best experienced on desktop</p>
+          <p className="mt-0.5 text-xs opacity-80">This tool loads multiple processing libraries that may crash on mobile devices with limited RAM. You can still try, but a desktop browser is recommended.</p>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
 
           {/* LEFT PANEL */}
