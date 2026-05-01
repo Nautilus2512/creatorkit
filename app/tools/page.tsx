@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2 } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -58,6 +58,13 @@ const toolCards = [
     href: "/tools/image-format-converter",
     stat: "JPEG, PNG, WebP, AVIF · Batch up to 20",
   },
+  {
+    icon: Globe,
+    title: "Favicon Generator",
+    description: "Generate favicons from text or image for your website — no server required.",
+    href: "/tools/favicon-generator",
+    stat: "6 sizes + site.webmanifest",
+  },
 ]
 
 export default function ToolsPage() {
@@ -73,6 +80,7 @@ export default function ToolsPage() {
       if (e.key === "5") router.push("/tools/qr-code-generator")
       if (e.key === "6") router.push("/tools/image-compressor")
       if (e.key === "7") router.push("/tools/image-format-converter")
+      if (e.key === "8") router.push("/tools/favicon-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -114,7 +122,7 @@ export default function ToolsPage() {
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">7</p><p className="text-xs text-muted-foreground">Tools available</p></div>
+              <div><p className="font-semibold">8</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
               <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
@@ -169,6 +177,8 @@ export default function ToolsPage() {
           { keys: ["4"], description: "Open Password Generator" },
           { keys: ["5"], description: "Open QR Code Generator" },
           { keys: ["6"], description: "Open Image Compressor" },
+          { keys: ["7"], description: "Open Favicon Generator" },
+          { keys: ["8"], description: "Open Favicon Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
