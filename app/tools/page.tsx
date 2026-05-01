@@ -45,16 +45,16 @@ const toolCards = [
     href: "/tools/qr-code-generator",
     stat: "URL, text, email, phone, Wi-Fi",
   },
-
-]
-
-const comingSoonCards = [
   {
     icon: Minimize2,
     title: "Image Compressor",
     description: "Reduce image file size without quality loss — entirely in your browser.",
-    category: "Image & Visual",
+    href: "/tools/image-compressor",
+    stat: "JPEG, WebP, PNG · Batch up to 20",
   },
+]
+
+const comingSoonCards = [
   {
     icon: Wand2,
     title: "Background Remover",
@@ -86,6 +86,7 @@ export default function ToolsPage() {
       if (e.key === "3") router.push("/tools/design-tokens")
       if (e.key === "4") router.push("/tools/password-generator")
       if (e.key === "5") router.push("/tools/qr-code-generator")
+      if (e.key === "6") router.push("/tools/image-compressor")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -127,7 +128,7 @@ export default function ToolsPage() {
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">5</p><p className="text-xs text-muted-foreground">Tools available</p></div>
+              <div><p className="font-semibold">6</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
               <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
@@ -209,6 +210,7 @@ export default function ToolsPage() {
           { keys: ["3"], description: "Open Design Token Generator" },
           { keys: ["4"], description: "Open Password Generator" },
           { keys: ["5"], description: "Open QR Code Generator" },
+          { keys: ["6"], description: "Open Image Compressor" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
