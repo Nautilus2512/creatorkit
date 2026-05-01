@@ -31,6 +31,13 @@ const toolCards = [
     href: "/tools/design-tokens",
     stat: "CSS, Tailwind & JSON export",
   },
+  {
+    icon: Lock,
+    title: "Password Generator",
+    description: "Generate strong, random passwords. Nothing is sent anywhere.",
+    href: "/tools/password-generator",
+    stat: "Cryptographically secure",
+  },
 ]
 
 const comingSoonCards = [
@@ -51,12 +58,6 @@ const comingSoonCards = [
     title: "Image Format Converter",
     description: "Convert between JPG, PNG, WebP, and more — instantly client-side.",
     category: "Image & Visual",
-  },
-  {
-    icon: Lock,
-    title: "Password Generator",
-    description: "Generate strong, random passwords. Nothing is sent anywhere.",
-    category: "Privacy & Security",
   },
   {
     icon: QrCode,
@@ -81,6 +82,7 @@ export default function ToolsPage() {
       if (e.key === "1") router.push("/tools/metadata-remover")
       if (e.key === "2") router.push("/tools/image-resizer")
       if (e.key === "3") router.push("/tools/design-tokens")
+      if (e.key === "4") router.push("/tools/password-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -122,7 +124,7 @@ export default function ToolsPage() {
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">3</p><p className="text-xs text-muted-foreground">Tools available</p></div>
+              <div><p className="font-semibold">4</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
               <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
@@ -202,6 +204,7 @@ export default function ToolsPage() {
           { keys: ["1"], description: "Open Metadata Remover" },
           { keys: ["2"], description: "Open Image Resizer" },
           { keys: ["3"], description: "Open Design Token Generator" },
+          { keys: ["4"], description: "Open Password Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
