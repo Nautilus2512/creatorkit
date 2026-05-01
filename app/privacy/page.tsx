@@ -12,11 +12,19 @@ const sections = [
   },
   {
     title: "Cookies",
-    body: "No cookies are required to use the core CreatorKit tools.",
+    body: "CreatorKit does not use cookies. Your theme preference (light or dark mode) is saved in your browser's local storage on your device only — this data never leaves your device.",
+  },
+  {
+    title: "Analytics opt-out",
+    body: "Vercel Web Analytics respects your browser's Do Not Track (DNT) setting. You can enable DNT in your browser settings to opt out of anonymous analytics collection.",
+  },
+  {
+    title: "Age",
+    body: "CreatorKit is intended for users aged 13 and older. Users under 18 should have parental permission to use this service.",
   },
   {
     title: "Third party services",
-    body: "CreatorKit is hosted on Vercel for reliable static delivery. No third-party file processing services are used.",
+    body: "CreatorKit is hosted on Vercel. We use Vercel Web Analytics to monitor site performance. This service collects anonymized data only — page views, browser type, device type, and country. No personal files or identifiable information are collected. No third-party services process your files.",
   },
   {
     title: "Contact information",

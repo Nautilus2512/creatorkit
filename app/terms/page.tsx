@@ -38,6 +38,18 @@ const sections = [
     body: "CreatorKit and its source code, design, branding, and content are the proprietary property of CreatorKit. All rights are reserved. You may not copy, reproduce, distribute, or create derivative works from any part of CreatorKit without prior written permission. For licensing inquiries, contact creatorkit.hello@gmail.com.",
   },
   {
+    title: "Age requirement",
+    body: "CreatorKit is intended for users aged 13 and older. By using this service, you confirm you meet this requirement. Users under 18 should have parental permission.",
+  },
+  {
+    title: "Copyright compliance",
+    body: "You confirm that you own or have the necessary rights to process any files you upload. Do not use CreatorKit to strip metadata or watermarks from files you do not own. If you believe CreatorKit has been used in connection with copyright infringement, contact us at creatorkit.hello@gmail.com with details of the claimed infringement.",
+  },
+  {
+    title: "Governing law",
+    body: "These Terms are governed by the laws of Indonesia. Any disputes arising from use of CreatorKit are subject to the jurisdiction of the courts of Indonesia. If you are a consumer in the European Union or United Kingdom, local consumer protection laws may also apply.",
+  },
+  {
     title: "Contact information",
     body: "Questions about these terms can be sent to creatorkit.hello@gmail.com.",
   },
