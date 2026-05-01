@@ -7,7 +7,7 @@ const sections = [
   },
   {
     title: "Description of service",
-    body: "CreatorKit provides browser-based creative utilities, including metadata removal, image resizing, design token generation, and password generation.",
+    body: "CreatorKit provides browser-based creative utilities, including metadata removal, image resizing, design token generation, password generation, QR code generation, image compression, image format conversion, and favicon generation.",
   },
   {
     title: "Free vs Pro tier usage",
