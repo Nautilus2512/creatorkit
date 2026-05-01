@@ -28,7 +28,7 @@ type ProcessedFile = { name: string; url: string; blob: Blob; originalName: stri
 const IMAGE_EXTS = ["jpg","jpeg","png","webp","tiff","tif","heic","bmp","gif"]
 const PDF_EXTS = ["pdf"]
 const OFFICE_EXTS = ["docx","xlsx","pptx","odt","ods","odp"]
-const AUDIO_EXTS = ["mp3","flac","wav","ogg","m4a","aac","wma","aiff","aif"]
+const AUDIO_EXTS = ["mp3"]
 const ACCEPT_STRING = [...IMAGE_EXTS, ...PDF_EXTS, ...OFFICE_EXTS, ...AUDIO_EXTS].map(e => `.${e}`).join(",")
 
 function getCategory(file: File): FileCategory {
@@ -39,44 +39,31 @@ function getCategory(file: File): FileCategory {
   return "audio"
 }
 
-// FFmpeg singleton
-let ffmpegInstance: any = null
-let ffmpegLoading = false
-let ffmpegReady = false
+function stripMp3Id3(buffer: ArrayBuffer): ArrayBuffer {
+  const bytes = new Uint8Array(buffer)
+  let start = 0
+  let end = bytes.length
 
-async function getFFmpeg(onProgress?: (msg: string) => void): Promise<any> {
-  if (ffmpegReady && ffmpegInstance) return ffmpegInstance
-
-  if (ffmpegLoading) {
-    // Wait for it to finish loading
-    await new Promise<void>(resolve => {
-      const interval = setInterval(() => {
-        if (ffmpegReady) { clearInterval(interval); resolve() }
-      }, 200)
-    })
-    return ffmpegInstance
+  if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+    const size =
+      ((bytes[6] & 0x7f) << 21) |
+      ((bytes[7] & 0x7f) << 14) |
+      ((bytes[8] & 0x7f) << 7) |
+      (bytes[9] & 0x7f)
+    start = 10 + size
+    if (bytes[5] & 0x10) start += 10
   }
 
-  ffmpegLoading = true
-  onProgress?.("Loading audio processor… first load takes 1–2 minutes while the browser compiles the audio engine.")
+  if (end - start >= 128) {
+    const tagOffset = end - 128
+    if (bytes[tagOffset] === 0x54 && bytes[tagOffset + 1] === 0x41 && bytes[tagOffset + 2] === 0x47) {
+      end = tagOffset
+    }
+  }
 
-  const { FFmpeg } = await import("@ffmpeg/ffmpeg")
-  const { toBlobURL } = await import("@ffmpeg/util")
-
-  const ffmpeg = new FFmpeg()
-
-  const baseURL = "/ffmpeg"
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-  })
-
-  ffmpegInstance = ffmpeg
-  ffmpegReady = true
-  ffmpegLoading = false
-  onProgress?.("Audio processor ready.")
-  return ffmpeg
+  return buffer.slice(start, end)
 }
+
 
 export function MetadataRemover() {
   const [files, setFiles] = useState<File[]>([])
@@ -84,8 +71,6 @@ export function MetadataRemover() {
   const [metaByFile, setMetaByFile] = useState<Record<string, FileMeta>>({})
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
-  const [ffmpegStatus, setFfmpegStatus] = useState<string | null>(null)
-  const [ffmpegLoadPercent, setFfmpegLoadPercent] = useState<number>(0)
   const [imgOpts, setImgOpts] = useState<ImageRemoveOptions>({ gps: true, device: true, date: true, software: true, lens: true, exposure: false })
   const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({ author: true, title: true, creator: true, producer: true, subject: true, keywords: true })
   const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({ creator: true, lastModifiedBy: true, dates: true, company: true, description: true })
@@ -235,8 +220,6 @@ export function MetadataRemover() {
   const processAudio = async (file: File): Promise<{ blob: Blob; removed: string[] } | null> => {
     const m = metaByFile[keyForFile(file)]?.audio
     const removed: string[] = []
-
-    // Build list of fields that will be removed
     if (audioOpts.title && m?.title) removed.push("Title")
     if (audioOpts.artist && m?.artist) removed.push("Artist")
     if (audioOpts.album && m?.album) removed.push("Album")
@@ -245,56 +228,14 @@ export function MetadataRemover() {
     if (audioOpts.comment && m?.comment) removed.push("Comment")
     if (audioOpts.composer && m?.composer) removed.push("Composer")
     if (audioOpts.coverArt && m?.coverArt) removed.push("Cover Art")
-
-    try {
-      const { fetchFile } = await import("@ffmpeg/util")
-      const ffmpeg = await getFFmpeg((msg) => setFfmpegStatus(msg))
-
-      setFfmpegStatus("Processing audio...")
-
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "mp3"
-      const inputName = `input_${Date.now()}.${ext}`
-      const outputName = `output_${Date.now()}.${ext}`
-
-      // Write file to ffmpeg virtual filesystem
-      await ffmpeg.writeFile(inputName, await fetchFile(file))
-
-      // Strip all metadata with -map_metadata -1
-      await ffmpeg.exec([
-        "-i", inputName,
-        "-map_metadata", "-1",
-        "-c:a", "copy",
-        outputName
-      ])
-
-      // Read output
-      const data = await ffmpeg.readFile(outputName)
-      const blob = new Blob([data], { type: file.type })
-
-      // Cleanup virtual filesystem
-      await ffmpeg.deleteFile(inputName)
-      await ffmpeg.deleteFile(outputName)
-
-      setFfmpegStatus(null)
-      return { blob, removed }
-    } catch (err) {
-      setFfmpegStatus(null)
-      console.error("FFmpeg audio processing error:", err)
-      // Fallback: return original file if ffmpeg fails
-      const blob = new Blob([await file.arrayBuffer()], { type: file.type })
-      return { blob, removed: [] }
-    }
+    const buffer = await file.arrayBuffer()
+    const blob = new Blob([stripMp3Id3(buffer)], { type: "audio/mpeg" })
+    return { blob, removed }
   }
 
   const handleFilesSelected = async (selectedFiles: File[]) => {
     setFiles(selectedFiles); setProcessedFiles([]); setErrors([])
     await parseMetadata(selectedFiles)
-
-    // Preload ffmpeg in background if there are audio files
-    const hasAudio = selectedFiles.some(f => getCategory(f) === "audio")
-    if (hasAudio && !ffmpegReady) {
-      getFFmpeg((msg) => setFfmpegStatus(msg))
-    }
   }
 
   const removeMetadata = async () => {
@@ -414,39 +355,12 @@ export function MetadataRemover() {
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                 <span>Image: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF</span>
                 <span>Document: PDF, DOCX, XLSX, PPTX</span>
-                <span>Audio: MP3, FLAC, WAV, OGG, M4A, AAC, WMA, AIFF</span>
+                <span>Audio: MP3</span>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <FileDropzone ref={uploadRef} accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
-
-              {/* FFmpeg loading indicator */}
-              {ffmpegStatus && (
-                <div className="rounded-lg border border-border bg-muted/50 px-3 py-3 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                    <span>
-                      {ffmpegLoadPercent > 0 && ffmpegLoadPercent < 100
-                        ? `Loading audio processor… ${ffmpegLoadPercent}%`
-                        : "Loading audio processor…"}
-                    </span>
-                  </div>
-                  {ffmpegStatus !== "Audio processor ready." && (
-                    <>
-                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={`h-full rounded-full bg-primary transition-all duration-300 ${ffmpegLoadPercent === 0 ? "animate-pulse" : ""}`}
-                          style={{ width: ffmpegLoadPercent > 0 ? `${ffmpegLoadPercent}%` : "25%" }}
-                        />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/60">
-                        First load only — the browser compiles the audio engine locally. Subsequent audio files process instantly.
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
 
               {files.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -524,11 +438,11 @@ export function MetadataRemover() {
             <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
               {files.length > 0 ? (
                 <div className="flex gap-2">
-                  <Button onClick={removeMetadata} disabled={isProcessing || !!ffmpegStatus} className="flex-1">
+                  <Button onClick={removeMetadata} disabled={isProcessing} className="flex-1">
                     {isProcessing ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {ffmpegStatus ? "Processing audio..." : "Processing..."}
+                        {"Processing..."}
                       </span>
                     ) : (
                       <span className="flex items-center justify-between w-full">
