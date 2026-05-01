@@ -38,6 +38,14 @@ const toolCards = [
     href: "/tools/password-generator",
     stat: "Cryptographically secure",
   },
+  {
+    icon: QrCode,
+    title: "QR Code Generator",
+    description: "Create QR codes for URLs, text, and contact info — all offline.",
+    href: "/tools/qr-code-generator",
+    stat: "URL, text, email, phone, Wi-Fi",
+  },
+
 ]
 
 const comingSoonCards = [
@@ -60,12 +68,6 @@ const comingSoonCards = [
     category: "Image & Visual",
   },
   {
-    icon: QrCode,
-    title: "QR Code Generator",
-    description: "Create QR codes for URLs, text, and contact info — all offline.",
-    category: "Privacy & Security",
-  },
-  {
     icon: FileText,
     title: "Favicon Generator",
     description: "Generate favicons from text or image for your website — no server required.",
@@ -83,6 +85,7 @@ export default function ToolsPage() {
       if (e.key === "2") router.push("/tools/image-resizer")
       if (e.key === "3") router.push("/tools/design-tokens")
       if (e.key === "4") router.push("/tools/password-generator")
+      if (e.key === "5") router.push("/tools/qr-code-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -124,7 +127,7 @@ export default function ToolsPage() {
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
             <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">4</p><p className="text-xs text-muted-foreground">Tools available</p></div>
+              <div><p className="font-semibold">5</p><p className="text-xs text-muted-foreground">Tools available</p></div>
               <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
               <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
               <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
@@ -205,6 +208,7 @@ export default function ToolsPage() {
           { keys: ["2"], description: "Open Image Resizer" },
           { keys: ["3"], description: "Open Design Token Generator" },
           { keys: ["4"], description: "Open Password Generator" },
+          { keys: ["5"], description: "Open QR Code Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
