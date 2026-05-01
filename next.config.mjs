@@ -24,7 +24,7 @@ const nextConfig = {
               "img-src 'self' data: blob:",
               "font-src 'self'",
               "worker-src blob:",
-              "connect-src 'self' https://unpkg.com https://vitals.vercel-insights.com",
+              "connect-src 'self' https://vitals.vercel-insights.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

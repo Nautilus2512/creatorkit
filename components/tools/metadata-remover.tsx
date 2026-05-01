@@ -58,14 +58,14 @@ async function getFFmpeg(onProgress?: (msg: string) => void): Promise<any> {
   }
 
   ffmpegLoading = true
-  onProgress?.("Loading audio processor... this may take a few seconds on first use.")
+  onProgress?.("Loading audio processor… first load takes 1–2 minutes while the browser compiles the audio engine.")
 
   const { FFmpeg } = await import("@ffmpeg/ffmpeg")
   const { toBlobURL } = await import("@ffmpeg/util")
 
   const ffmpeg = new FFmpeg()
 
-  const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd"
+  const baseURL = "/ffmpeg"
   await ffmpeg.load({
     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
@@ -85,6 +85,7 @@ export function MetadataRemover() {
   const [errors, setErrors] = useState<string[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [ffmpegStatus, setFfmpegStatus] = useState<string | null>(null)
+  const [ffmpegLoadPercent, setFfmpegLoadPercent] = useState<number>(0)
   const [imgOpts, setImgOpts] = useState<ImageRemoveOptions>({ gps: true, device: true, date: true, software: true, lens: true, exposure: false })
   const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({ author: true, title: true, creator: true, producer: true, subject: true, keywords: true })
   const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({ creator: true, lastModifiedBy: true, dates: true, company: true, description: true })
@@ -248,6 +249,7 @@ export function MetadataRemover() {
     try {
       const { fetchFile } = await import("@ffmpeg/util")
       const ffmpeg = await getFFmpeg((msg) => setFfmpegStatus(msg))
+
       setFfmpegStatus("Processing audio...")
 
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "mp3"
@@ -291,7 +293,7 @@ export function MetadataRemover() {
     // Preload ffmpeg in background if there are audio files
     const hasAudio = selectedFiles.some(f => getCategory(f) === "audio")
     if (hasAudio && !ffmpegReady) {
-      getFFmpeg((msg) => setFfmpegStatus(msg)).then(() => setFfmpegStatus(null))
+      getFFmpeg((msg) => setFfmpegStatus(msg))
     }
   }
 
@@ -421,9 +423,28 @@ export function MetadataRemover() {
 
               {/* FFmpeg loading indicator */}
               {ffmpegStatus && (
-                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                  <span>{ffmpegStatus}</span>
+                <div className="rounded-lg border border-border bg-muted/50 px-3 py-3 space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                    <span>
+                      {ffmpegLoadPercent > 0 && ffmpegLoadPercent < 100
+                        ? `Loading audio processor… ${ffmpegLoadPercent}%`
+                        : "Loading audio processor…"}
+                    </span>
+                  </div>
+                  {ffmpegStatus !== "Audio processor ready." && (
+                    <>
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full bg-primary transition-all duration-300 ${ffmpegLoadPercent === 0 ? "animate-pulse" : ""}`}
+                          style={{ width: ffmpegLoadPercent > 0 ? `${ffmpegLoadPercent}%` : "25%" }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/60">
+                        First load only — the browser compiles the audio engine locally. Subsequent audio files process instantly.
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
 
