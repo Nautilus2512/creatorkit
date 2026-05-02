@@ -21,6 +21,16 @@ const SIZE_NAMES: Record<number, string> = {
   512: "android-chrome-512x512.png",
 }
 
+const SIZE_LABELS: Record<number, string> = {
+  16:  "16×16 — browser tab",
+  32:  "32×32 — browser tab HD",
+  48:  "48×48 — favicon.ico",
+  180: "180×180 — Apple touch icon",
+  192: "192×192 — Android chrome",
+  512: "512×512 — PWA splash screen",
+}
+
+
 const MANIFEST = (name: string) => JSON.stringify({
   name,
   short_name: name,
@@ -61,6 +71,8 @@ export function FaviconGenerator() {
   const [siteName, setSiteName] = useState("My App")
   const [downloaded, setDownloaded] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [selectedSizes, setSelectedSizes] = useState<Set<number>>(new Set(SIZES))
+  const [includeManifest, setIncludeManifest] = useState(true)
   const uploadRef = useRef<HTMLInputElement>(null)
 
   const buildFromCanvas = useCallback((canvas: HTMLCanvasElement) => {
@@ -108,6 +120,19 @@ export function FaviconGenerator() {
     buildFromCanvas(canvas)
   }, [text, bgColor, textColor, fontSize, buildFromCanvas])
 
+  const toggleSize = (size: number) => {
+    setSelectedSizes(prev => {
+      const next = new Set(prev)
+      if (next.has(size)) {
+        if (next.size === 1) return prev
+        next.delete(size)
+      } else {
+        next.add(size)
+      }
+      return next
+    })
+  }
+
   useEffect(() => {
     if (mode === "text" && text.trim()) buildFromText()
   }, [text, bgColor, textColor, fontSize, mode, buildFromText])
@@ -117,11 +142,12 @@ export function FaviconGenerator() {
     setIsProcessing(true)
     const zip = new JSZip()
     for (const size of SIZES) {
+      if (!selectedSizes.has(size)) continue
       const canvas = resizeCanvas(sourceCanvas, size)
       const blob = await canvasToBlob(canvas)
       zip.file(SIZE_NAMES[size], blob)
     }
-    zip.file("site.webmanifest", MANIFEST(siteName))
+    if (includeManifest) zip.file("site.webmanifest", MANIFEST(siteName))
     const blob = await zip.generateAsync({ type: "blob" })
     const a = document.createElement("a")
     a.href = URL.createObjectURL(blob)
@@ -130,7 +156,7 @@ export function FaviconGenerator() {
     setIsProcessing(false)
     setDownloaded(true)
     setTimeout(() => setDownloaded(false), 2000)
-  }, [sourceCanvas, siteName])
+  }, [sourceCanvas, siteName, selectedSizes, includeManifest])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -237,11 +263,57 @@ export function FaviconGenerator() {
               </div>
             </div>
           )}
-
           <div className="space-y-2">
             <Label className="text-sm font-medium">Site name</Label>
             <Input placeholder="My App" value={siteName} onChange={e => setSiteName(e.target.value)} />
             <p className="text-xs text-muted-foreground">Used in site.webmanifest</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Sizes to export</Label>
+              <button
+                onClick={() => setSelectedSizes(selectedSizes.size === SIZES.length ? new Set([16]) : new Set(SIZES))}
+                className="text-xs text-primary hover:underline"
+              >
+                {selectedSizes.size === SIZES.length ? "Deselect all" : "Select all"}
+              </button>
+            </div>
+            <div className="space-y-1.5">
+              {SIZES.map(size => (
+                <button
+                  key={size}
+                  onClick={() => toggleSize(size)}
+                  className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left ${
+                    selectedSizes.has(size)
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-muted/20 text-muted-foreground hover:border-primary/30"
+                  }`}
+                >
+                  <div className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
+                    selectedSizes.has(size) ? "border-primary bg-primary" : "border-muted-foreground"
+                  }`}>
+                    {selectedSizes.has(size) && <Check className="h-2 w-2 text-primary-foreground" />}
+                  </div>
+                  {SIZE_LABELS[size]}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => setIncludeManifest(v => !v)}
+                className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  includeManifest ? "border-primary bg-primary" : "border-muted-foreground"
+                }`}
+              >
+                {includeManifest && <Check className="h-2 w-2 text-primary-foreground" />}
+              </button>
+              <span
+                className="text-sm text-muted-foreground cursor-pointer select-none"
+                onClick={() => setIncludeManifest(v => !v)}
+              >
+                Include site.webmanifest
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -263,9 +335,12 @@ export function FaviconGenerator() {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Preview — {SIZES.length} sizes + site.webmanifest</p>
+              <p className="text-xs text-muted-foreground">
+                Preview — {selectedSizes.size} size{selectedSizes.size !== 1 ? "s" : ""}
+                {includeManifest ? " + site.webmanifest" : ""}
+              </p>
               <div className="grid grid-cols-3 gap-3">
-                {SIZES.map(size => (
+                {SIZES.filter(s => selectedSizes.has(s)).map(size => (
                   <div key={size} className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-muted/20 p-3">
                     <div className="rounded border border-border/50 bg-white" style={{ width: Math.min(size, 64), height: Math.min(size, 64) }}>
                       <img src={previews[size]} alt={`${size}x${size}`} width={Math.min(size, 64)} height={Math.min(size, 64)} />
@@ -274,10 +349,12 @@ export function FaviconGenerator() {
                     <p className="text-[10px] text-muted-foreground/60">{size === 48 ? "32×32" : `${size}×${size}`}</p>
                   </div>
                 ))}
-                <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/10 p-3">
-                  <p className="text-[10px] text-muted-foreground text-center leading-tight">site.webmanifest</p>
-                  <p className="text-[10px] text-muted-foreground/60">JSON config</p>
-                </div>
+                {includeManifest && (
+                  <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/10 p-3">
+                    <p className="text-[10px] text-muted-foreground text-center leading-tight">site.webmanifest</p>
+                    <p className="text-[10px] text-muted-foreground/60">JSON config</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

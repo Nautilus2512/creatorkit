@@ -49,6 +49,32 @@ function saveDecks(decks: Deck[]): void {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(decks)) } catch {}
 }
 
+const LOG_KEY = "creatorkit-anki-log"
+type StudyLog = Record<string, number>
+
+function loadLog(): StudyLog {
+  try { const r = localStorage.getItem(LOG_KEY); return r ? JSON.parse(r) : {} }
+  catch { return {} }
+}
+function saveLog(log: StudyLog): void {
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)) } catch {}
+}
+function calcStreak(log: StudyLog): number {
+  const today = new Date()
+  const todayStr2 = today.toISOString().split("T")[0]
+  const startOffset = (log[todayStr2] ?? 0) > 0 ? 0 : 1
+  let streak = 0
+  for (let i = startOffset; i < 365; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const s = d.toISOString().split("T")[0]
+    if ((log[s] ?? 0) > 0) streak++
+    else break
+  }
+  return streak
+}
+
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const todayStr = () => new Date().toISOString().split("T")[0]
 const isDue = (c: Card) => c.dueDate <= todayStr()
@@ -85,12 +111,14 @@ export function AnkiCard() {
   const [isFlipped, setIsFlipped]       = useState(false)
   const [studiedCount, setStudiedCount] = useState(0)
   const [mounted, setMounted]           = useState(false)
+  const [studyLog, setStudyLog] = useState<StudyLog>({})
 
   useEffect(() => {
     setMounted(true)
     const loaded = loadDecks()
     setDecks(loaded)
     if (loaded.length > 0) setActiveDeckId(loaded[0].id)
+    setStudyLog(loadLog())   // ← add this line
   }, [])
 
   const activeDeck = decks.find(d => d.id === activeDeckId) ?? null
@@ -116,9 +144,12 @@ export function AnkiCard() {
       d.id === activeDeckId ? { ...d, cards: d.cards.map(c => c.id === card.id ? updated : c) } : d
     )
     setDecks(newDecks); saveDecks(newDecks); setStudiedCount(prev => prev + 1)
+    const today2 = todayStr()
+    const newLog = { ...studyLog, [today2]: (studyLog[today2] ?? 0) + 1 }
+    setStudyLog(newLog); saveLog(newLog)
     if (currentIdx + 1 >= queue.length) { setView("done") }
     else { setCurrentIdx(currentIdx + 1); setIsFlipped(false) }
-  }, [activeDeck, activeDeckId, decks, queue, currentIdx])
+  }, [activeDeck, activeDeckId, decks, queue, currentIdx, studyLog])
 
   const addCard = useCallback(() => {
     if (!front.trim() || !back.trim() || !activeDeckId) return
@@ -267,6 +298,53 @@ export function AnkiCard() {
               </div>
             </div>
           )}
+
+          {Object.keys(studyLog).length > 0 && (() => {
+            const today = new Date()
+            const last7 = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(today)
+              d.setDate(today.getDate() - (6 - i))
+              const ds = d.toISOString().split("T")[0]
+              return {
+                label: d.toLocaleDateString("en-US", { weekday: "short" }).slice(0, 1),
+                count: studyLog[ds] ?? 0,
+                isToday: i === 6,
+              }
+            })
+            const maxCount = Math.max(...last7.map(d => d.count), 1)
+            const totalAll = Object.values(studyLog).reduce((a, b) => a + b, 0)
+            const streak = calcStreak(studyLog)
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Study History</Label>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {streak > 0 && <span className="text-amber-500 font-medium">{streak}d streak</span>}
+                    <span>{totalAll} total</span>
+                  </div>
+                </div>
+                <div className="flex items-end gap-1 h-14 pt-1">
+                  {last7.map(({ label, count, isToday }, i) => {
+                    const barH = count === 0 ? 2 : Math.max(6, Math.round((count / maxCount) * 36))
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1">
+                        <div
+                          className={`w-full rounded-sm transition-all ${
+                            isToday ? "bg-primary" : count > 0 ? "bg-primary/40" : "bg-muted"
+                          }`}
+                          style={{ height: `${barH}px` }}
+                          title={`${count} card${count !== 1 ? "s" : ""}`}
+                        />
+                        <span className={`text-[9px] ${isToday ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Actions */}
           {activeDeck && (

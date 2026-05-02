@@ -332,6 +332,7 @@ export function ScreenshotToMockup() {
             <Button className="w-full" onClick={download}>
               <Download className="mr-2 h-4 w-4" />
               Download PNG
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+S</kbd>
             </Button>
           </div>
         )}

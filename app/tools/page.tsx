@@ -44,7 +44,7 @@ const toolCards = [
   {
     icon: QrCode,
     title: "QR Code Generator",
-    description: "Create QR codes for URLs, text, and contact info — all offline.",
+    description: "Create QR codes for URLs, text, and contact info. Fully offline, nothing is sent.",
     href: "/tools/qr-code-generator",
     stat: "URL, text, email, phone, Wi-Fi",
     category: "Privacy & Security",
@@ -52,7 +52,7 @@ const toolCards = [
   {
     icon: Minimize2,
     title: "Image Compressor",
-    description: "Reduce image file size without quality loss — entirely in your browser.",
+    description: "Compress images and reduce file size without quality loss. Runs entirely in your browser.",
     href: "/tools/image-compressor",
     stat: "JPEG, WebP, PNG · Batch up to 20",
     category: "Image & Visual",
@@ -60,7 +60,7 @@ const toolCards = [
   {
     icon: Image,
     title: "Image Format Converter",
-    description: "Convert between JPG, PNG, WebP, and more — instantly client-side.",
+    description: "Convert between JPG, PNG, WebP, AVIF, and more. Instant conversion with no uploads.",
     href: "/tools/image-format-converter",
     stat: "JPEG, PNG, WebP, AVIF · Batch up to 20",
     category: "Image & Visual",
@@ -68,7 +68,7 @@ const toolCards = [
   {
     icon: Globe,
     title: "Favicon Generator",
-    description: "Generate favicons from text or image for your website — no server required.",
+    description: "Generate favicons in all sizes from text or an image. No server required.",
     href: "/tools/favicon-generator",
     stat: "6 sizes + site.webmanifest",
     category: "Design & Branding",
@@ -84,7 +84,7 @@ const toolCards = [
   {
     icon: Layers,
     title: "Image Watermark Adder",
-    description: "Add custom text watermarks to your images. Set position, size, opacity, and font — all locally.",
+    description: "Add custom text watermarks to your images. Choose position, size, opacity, and font. Fully local.",
     href: "/tools/image-watermark-adder",
     stat: "JPG, PNG, WebP · Live preview",
     category: "Image & Visual",

@@ -154,8 +154,7 @@ export function BackgroundRemover() {
       setPhase("processing")
       const result = await removeBackgroundAI(imageEl, objectUrl)
       setResultUrl(result); setPhase("done")
-    } catch (e) {
-      console.error("BG Remover error:", e)
+    } catch {
       setError("Something went wrong. Check your internet connection and try again.")
       setPhase("idle")
     }
@@ -187,6 +186,7 @@ export function BackgroundRemover() {
     const h = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); download() }
       if ((e.ctrlKey || e.metaKey) && e.key === "o") { e.preventDefault(); inputRef.current?.click() }
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); if (isMobile) processMobile(); else processDesktop() }
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
@@ -347,7 +347,8 @@ export function BackgroundRemover() {
                 {phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}
               </>
             ) : (
-              <><Wand2 className="mr-2 h-4 w-4" />Remove Background</>
+              <><Wand2 className="mr-2 h-4 w-4" />Remove Background
+                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+Enter</kbd>}</>
             )}
           </Button>
         </div>
@@ -402,6 +403,7 @@ export function BackgroundRemover() {
             <Button className="w-full" onClick={download}>
               <Download className="mr-2 h-4 w-4" />
               Download PNG (transparent)
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+S</kbd>
             </Button>
           </div>
         )}
