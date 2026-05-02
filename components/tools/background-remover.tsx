@@ -14,7 +14,7 @@ let _model: any = null
 async function loadModel(onProgress: (p: number) => void) {
   if (_processor && _model) return
   const { AutoProcessor, AutoModel, env } = await import("@huggingface/transformers")
-  env.backends.onnx.wasm.numThreads = 1
+  if (env.backends?.onnx?.wasm) env.backends.onnx.wasm.numThreads = 1
   if (!_processor) _processor = await AutoProcessor.from_pretrained("briaai/RMBG-1.4")
   if (!_model) {
     _model = await AutoModel.from_pretrained("briaai/RMBG-1.4", {
