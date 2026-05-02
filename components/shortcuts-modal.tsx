@@ -18,7 +18,8 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
+      const tag = (document.activeElement as HTMLElement)?.tagName
+      if (e.key === "?" && !e.ctrlKey && !e.metaKey && tag !== "INPUT" && tag !== "TEXTAREA") {
         e.preventDefault()
         setOpen(prev => !prev)
       }

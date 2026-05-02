@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -73,13 +73,53 @@ const toolCards = [
     stat: "6 sizes + site.webmanifest",
     category: "Design & Branding",
   },
+  {
+    icon: Hash,
+    title: "File Checksum Verifier",
+    description: "Compute MD5, SHA-1, SHA-256, and SHA-512 hashes for any file. Paste an expected hash to verify integrity.",
+    href: "/tools/file-checksum-verifier",
+    stat: "MD5 · SHA-1 · SHA-256 · SHA-512",
+    category: "Privacy & Security",
+  },
+  {
+    icon: Layers,
+    title: "Image Watermark Adder",
+    description: "Add custom text watermarks to your images. Set position, size, opacity, and font — all locally.",
+    href: "/tools/image-watermark-adder",
+    stat: "JPG, PNG, WebP · Live preview",
+    category: "Image & Visual",
+  },
+  {
+    icon: Monitor,
+    title: "Screenshot to Mockup",
+    description: "Wrap any screenshot inside a browser, phone, laptop, or tablet frame with a custom background.",
+    href: "/tools/screenshot-to-mockup",
+    stat: "4 device frames · 10 backgrounds",
+    category: "Design & Branding",
+  },
+  {
+    icon: Brain,
+    title: "Anki Flashcards",
+    description: "Spaced repetition flashcards powered by the SM-2 algorithm. Your decks live in your browser, never on a server.",
+    href: "/tools/anki-card",
+    stat: "SM-2 algorithm · localStorage · offline",
+    category: "Productivity",
+  },
+  {
+    icon: Wand2,
+    title: "Background Remover",
+    description: "Remove image backgrounds automatically with AI on desktop, or by color on mobile. Outputs transparent PNG.",
+    href: "/tools/background-remover",
+    stat: "AI model on desktop · color removal on mobile",
+    category: "Image & Visual",
+  },
 ]
 
 
 export default function ToolsPage() {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState("All")
-  const categories = ["All", "Image & Visual", "Privacy & Security", "Design & Branding"]
+  const categories = ["All", "Image & Visual", "Privacy & Security", "Design & Branding", "Productivity"]
   const filtered = activeCategory === "All" ? toolCards : toolCards.filter(t => t.category === activeCategory)
 
   useEffect(() => {
@@ -93,6 +133,11 @@ export default function ToolsPage() {
       if (e.key === "6") router.push("/tools/image-compressor")
       if (e.key === "7") router.push("/tools/image-format-converter")
       if (e.key === "8") router.push("/tools/favicon-generator")
+      if (e.key === "9") router.push("/tools/file-checksum-verifier")
+      if (e.key === "0") router.push("/tools/image-watermark-adder")
+      if (e.key === "m") router.push("/tools/screenshot-to-mockup")
+      if (e.key === "a") router.push("/tools/anki-card")
+      if (e.key === "b") router.push("/tools/background-remover")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -133,12 +178,6 @@ export default function ToolsPage() {
             <p className="mt-3 max-w-2xl text-muted-foreground">
               Privacy-first utilities for creators. Every tool runs 100% in your browser, no uploads to server anywhere and no tracking.
             </p>
-            <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-6 text-sm">
-              <div><p className="font-semibold">8</p><p className="text-xs text-muted-foreground">Tools available</p></div>
-              <div><p className="font-semibold">40+</p><p className="text-xs text-muted-foreground">Image size presets</p></div>
-              <div><p className="font-semibold">12</p><p className="text-xs text-muted-foreground">Social platforms</p></div>
-              <div><p className="font-semibold">100%</p><p className="text-xs text-muted-foreground">In-browser only</p></div>
-            </div>
           </div>
 
           {/* Category filter */}
@@ -211,8 +250,13 @@ export default function ToolsPage() {
           { keys: ["4"], description: "Open Password Generator" },
           { keys: ["5"], description: "Open QR Code Generator" },
           { keys: ["6"], description: "Open Image Compressor" },
-          { keys: ["7"], description: "Open Favicon Generator" },
+          { keys: ["7"], description: "Image Format Converter" },
           { keys: ["8"], description: "Open Favicon Generator" },
+          { keys: ["9"], description: "Open File Checksum Verifier" },
+          { keys: ["0"], description: "Open Image Watermark Adder" },
+          { keys: ["M"], description: "Open Screenshot to Mockup" },
+          { keys: ["A"], description: "Open Anki Flashcards" },
+          { keys: ["B"], description: "Open Background Remover" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
