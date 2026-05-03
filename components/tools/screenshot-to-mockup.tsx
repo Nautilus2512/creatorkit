@@ -246,7 +246,7 @@ export function ScreenshotToMockup() {
                     <p className="truncate text-sm font-medium">{fileName}</p>
                     <p className="text-xs text-muted-foreground">{imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null) }} className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground">
+                  <button onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null) }} aria-label="Remove image" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -290,6 +290,7 @@ export function ScreenshotToMockup() {
                   key={i}
                   onClick={() => setBgIndex(i)}
                   title={bg.label}
+                  aria-label={`Background: ${bg.label}`}
                   className={`h-9 rounded-lg border-2 transition-all ${bgIndex === i ? "border-primary scale-110" : "border-transparent hover:border-primary/50"}`}
                   style={{ background: bg.type === "solid" ? bg.c1 : `linear-gradient(135deg, ${bg.c1}, ${bg.c2})` }}
                 />

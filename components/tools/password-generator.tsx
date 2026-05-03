@@ -228,6 +228,7 @@ export function PasswordGenerator() {
                   <span className="flex-1 font-mono text-sm break-all select-all">{pw}</span>
                   <button
                     onClick={() => copyOne(i)}
+                    aria-label="Copy password"
                     className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                   >
                     {copiedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}

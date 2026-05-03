@@ -274,7 +274,7 @@ export function DesignTokenGenerator() {
       <div className="flex gap-0.5 overflow-hidden rounded-lg">
         {Object.entries(shades).map(([shade, color]) => (
           <button key={shade} className="group relative h-8 flex-1 transition-transform hover:scale-110 hover:z-10"
-            style={{ backgroundColor: color }} onClick={() => copyToClipboard(color, `${name}-${shade}`)} title={`${name}-${shade}: ${color}`}>
+            style={{ backgroundColor: color }} onClick={() => copyToClipboard(color, `${name}-${shade}`)} title={`${name}-${shade}: ${color}`} aria-label={`Copy ${name}-${shade}: ${color}`}>
             <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100">
               {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" /> : shade}
             </span>
@@ -365,10 +365,12 @@ export function DesignTokenGenerator() {
               </div>
               <div className="flex items-center gap-1 rounded-lg border border-border p-1">
                 <button type="button" onClick={() => setPreviewMode("light")}
+                  aria-label="Switch to light preview"
                   className={`rounded-md p-1.5 transition-colors ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`} title="Light mode">
                   <Sun className="h-4 w-4" />
                 </button>
                 <button type="button" onClick={() => setPreviewMode("dark")}
+                  aria-label="Switch to dark preview"
                   className={`rounded-md p-1.5 transition-colors ${previewMode === "dark" ? "bg-muted" : "hover:bg-muted/50"}`} title="Dark mode">
                   <Moon className="h-4 w-4" />
                 </button>

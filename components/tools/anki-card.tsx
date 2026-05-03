@@ -267,6 +267,7 @@ export function AnkiCard() {
                       {due > 0 && <Badge className="text-xs shrink-0">{due} due</Badge>}
                       <button
                         onClick={e => { e.stopPropagation(); deleteDeck(d.id) }}
+                        aria-label="Delete deck"
                         className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -459,6 +460,7 @@ export function AnkiCard() {
                       </div>
                       <button
                         onClick={() => deleteCard(c.id)}
+                        aria-label="Delete card"
                         className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

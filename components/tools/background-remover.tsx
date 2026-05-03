@@ -257,7 +257,7 @@ export function BackgroundRemover() {
                     <p className="truncate text-sm font-medium">{fileName}</p>
                     <p className="text-xs text-muted-foreground">{imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
                   </div>
-                  <button onClick={clearImage} disabled={isProcessing} className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
+                  <button onClick={clearImage} disabled={isProcessing} aria-label="Remove image" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
                     <X className="h-4 w-4" />
                   </button>
                 </div>

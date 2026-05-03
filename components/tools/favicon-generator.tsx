@@ -283,6 +283,8 @@ export function FaviconGenerator() {
                 <button
                   key={size}
                   onClick={() => toggleSize(size)}
+                  aria-label={`${selectedSizes.has(size) ? "Deselect" : "Select"} ${SIZE_LABELS[size]}`}
+                  aria-pressed={selectedSizes.has(size)}
                   className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left ${
                     selectedSizes.has(size)
                       ? "border-primary bg-primary/10 text-primary"
@@ -301,6 +303,8 @@ export function FaviconGenerator() {
             <div className="flex items-center gap-2 pt-1">
               <button
                 onClick={() => setIncludeManifest(v => !v)}
+                aria-label={`${includeManifest ? "Exclude" : "Include"} site.webmanifest`}
+                aria-pressed={includeManifest}
                 className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                   includeManifest ? "border-primary bg-primary" : "border-muted-foreground"
                 }`}

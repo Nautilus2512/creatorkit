@@ -176,6 +176,7 @@ export function ImageWatermarkAdder() {
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null) }}
+                    aria-label="Remove image"
                     className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="h-4 w-4" />
@@ -271,6 +272,7 @@ export function ImageWatermarkAdder() {
                   <button
                     key={pos}
                     onClick={() => setPosition(pos as Position)}
+                    aria-label={`Position: ${pos.replace(/-/g, " ")}`}
                     style={{
                       display: "flex",
                       alignItems: vp === "top" ? "flex-start" : vp === "middle" ? "center" : "flex-end",

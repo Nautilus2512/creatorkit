@@ -137,6 +137,7 @@ export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(func
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={`Remove ${file.name}`}
                   className="h-8 w-8 shrink-0"
                   onClick={() => removeFile(index)}
                 >

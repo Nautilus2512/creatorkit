@@ -264,6 +264,7 @@ export function ImageCompressor() {
                   </div>
                   <button
                     onClick={() => downloadOne(r, i)}
+                    aria-label="Download compressed image"
                     className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                   >
                     {downloadedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Download className="h-3.5 w-3.5" />}

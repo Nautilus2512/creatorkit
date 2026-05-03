@@ -104,7 +104,7 @@ function StyledSelect({ value, onChange, options }: { value: string; onChange: (
   }, [])
   return (
     <div ref={ref} className="relative w-full">
-      <button type="button" onClick={() => setOpen((v) => !v)} className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm text-foreground">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-label="Select platform" aria-expanded={open} className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm text-foreground">
         <span className="truncate">{selected?.label ?? "Select..."}</span>
         <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </button>
@@ -348,7 +348,7 @@ export function ImageResizer() {
                     {selectedChips.map((chip) => (
                       <span key={chip.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs">
                         {chip.label}
-                        <button type="button" onClick={() => removeChip(chip.id)} className="ml-0.5 hover:text-destructive">x</button>
+                        <button type="button" onClick={() => removeChip(chip.id)} aria-label={`Remove ${chip.label}`} className="ml-0.5 hover:text-destructive">x</button>
                       </span>
                     ))}
                   </div>
@@ -402,7 +402,7 @@ export function ImageResizer() {
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
                         <span>{preset.width}x{preset.height}</span>
-                        <button type="button" onClick={() => removeCustomSize(preset.id)} className="hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => removeCustomSize(preset.id)} aria-label="Remove custom size" className="hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
                       </div>
                     </div>
                   ))}
@@ -522,7 +522,7 @@ export function ImageResizer() {
                             <p className="truncate text-xs font-medium">{item.platformLabel} {item.presetLabel}</p>
                             <p className="text-xs text-muted-foreground">{item.ratio} · {item.width}x{item.height}</p>
                           </div>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs shrink-0" onClick={() => downloadFile(item.url, item.fileName)}>
+                          <Button variant="ghost" size="sm" aria-label={`Download ${item.fileName}`} className="h-7 px-2 text-xs shrink-0" onClick={() => downloadFile(item.url, item.fileName)}>
                             <Download className="h-3.5 w-3.5" />
                           </Button>
                         </div>
