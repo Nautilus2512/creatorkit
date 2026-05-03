@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2 } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -113,6 +113,14 @@ const toolCards = [
     stat: "AI model on desktop · color removal on mobile",
     category: "Image & Visual",
   },
+  {
+    icon: Music2,
+    title: "BPM Detector",
+    description: "Detect the tempo of any audio file in beats per minute. Works entirely in your browser.",
+    href: "/tools/bpm-detector",
+    stat: "MP3, WAV, OGG, M4A · First 60s analyzed",
+    category: "Productivity",
+  },
 ]
 
 
@@ -138,6 +146,7 @@ export default function ToolsPage() {
       if (e.key === "m") router.push("/tools/screenshot-to-mockup")
       if (e.key === "a") router.push("/tools/anki-card")
       if (e.key === "b") router.push("/tools/background-remover")
+      if (e.key === "t") router.push("/tools/bpm-detector")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -257,6 +266,7 @@ export default function ToolsPage() {
           { keys: ["M"], description: "Open Screenshot to Mockup" },
           { keys: ["A"], description: "Open Anki Flashcards" },
           { keys: ["B"], description: "Open Background Remover" },
+          { keys: ["T"], description: "Open BPM Detector" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
