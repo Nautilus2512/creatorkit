@@ -67,7 +67,7 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
               </button>
             </div>
 
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border max-h-[60vh] overflow-y-auto">
               {shortcuts.map((shortcut, i) => (
                 <div key={i} className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-sm text-muted-foreground">{shortcut.description}</span>

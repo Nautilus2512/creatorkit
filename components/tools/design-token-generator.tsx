@@ -47,6 +47,24 @@ function hslToRgb(h: number, s: number, l: number) {
   return { r: Math.round(f(0)*255), g: Math.round(f(8)*255), b: Math.round(f(4)*255) }
 }
 
+type CBMode = "none" | "deuteranopia" | "protanopia" | "tritanopia"
+
+function simulateColorBlindness(hex: string, mode: CBMode): string {
+  if (mode === "none" || !hex.startsWith("#") || hex.length !== 7) return hex
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  let sr: number, sg: number, sb: number
+  switch (mode) {
+    case "deuteranopia": sr = 0.625*r + 0.375*g; sg = 0.7*r + 0.3*g; sb = 0.3*g + 0.7*b; break
+    case "protanopia":   sr = 0.567*r + 0.433*g; sg = 0.558*r + 0.442*g; sb = 0.242*g + 0.758*b; break
+    case "tritanopia":   sr = 0.95*r + 0.05*g; sg = 0.433*g + 0.567*b; sb = 0.475*g + 0.525*b; break
+    default: return hex
+  }
+  const toH = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")
+  return `#${toH(sr)}${toH(sg)}${toH(sb)}`
+}
+
 // ── Custom Color Picker ───────────────────────────────────────────────────────
 
 function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (hex: string) => void }) {
@@ -211,6 +229,7 @@ export function DesignTokenGenerator() {
   const [accentColor, setAccentColor] = useState("#f59e0b")
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [previewMode, setPreviewMode] = useState<"light" | "dark">("dark")
+  const [cbMode, setCbMode] = useState<CBMode>("none")
 
   const primaryShades = useMemo(() => generateShades(primaryColor), [primaryColor])
   const secondaryShades = useMemo(() => generateShades(secondaryColor), [secondaryColor])
@@ -272,14 +291,18 @@ export function DesignTokenGenerator() {
     <div className="space-y-1.5">
       <p className="text-xs font-medium capitalize text-muted-foreground">{name}</p>
       <div className="flex gap-0.5 overflow-hidden rounded-lg">
-        {Object.entries(shades).map(([shade, color]) => (
-          <button key={shade} className="group relative h-8 flex-1 transition-transform hover:scale-110 hover:z-10"
-            style={{ backgroundColor: color }} onClick={() => copyToClipboard(color, `${name}-${shade}`)} title={`${name}-${shade}: ${color}`} aria-label={`Copy ${name}-${shade}: ${color}`}>
-            <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-              {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" /> : shade}
-            </span>
-          </button>
-        ))}
+        {Object.entries(shades).map(([shade, color]) => {
+          const displayColor = simulateColorBlindness(color, cbMode)
+          return (
+            <button key={shade} className="group relative h-8 flex-1 transition-transform hover:scale-110 hover:z-10"
+              style={{ backgroundColor: displayColor }} onClick={() => copyToClipboard(color, `${name}-${shade}`)}
+              title={`${name}-${shade}: ${color}`} aria-label={`Copy ${name}-${shade}: ${color}`}>
+              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" /> : shade}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -314,7 +337,24 @@ export function DesignTokenGenerator() {
 
               {/* Generated Palette */}
               <div className="space-y-3 rounded-lg border border-border p-3">
-                <p className="text-xs font-medium">Generated Palette <span className="text-muted-foreground font-normal">— click any shade to copy</span></p>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-xs font-medium">Generated Palette <span className="text-muted-foreground font-normal">— click any shade to copy</span></p>
+                  <div className="flex items-center gap-0.5">
+                    {([ ["none", "Normal"], ["deuteranopia", "Deuter."], ["protanopia", "Protan."], ["tritanopia", "Tritan."] ] as [CBMode, string][]).map(([mode, label]) => (
+                      <button
+                        key={mode}
+                        onClick={() => setCbMode(mode)}
+                        aria-pressed={cbMode === mode}
+                        aria-label={`${label} color vision simulation`}
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                          cbMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <ColorPalette shades={primaryShades} name="primary" />
                 <ColorPalette shades={secondaryShades} name="secondary" />
                 <ColorPalette shades={accentShades} name="accent" />
