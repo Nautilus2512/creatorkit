@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2 } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -121,6 +121,14 @@ const toolCards = [
     stat: "MP3, WAV, OGG, M4A · First 60s analyzed",
     category: "Productivity",
   },
+  {
+    icon: FileDown,
+    title: "PDF Compressor",
+    description: "Compress PDFs by removing metadata and optimizing structure. All processing happens locally in your browser.",
+    href: "/tools/pdf-compress",
+    stat: "Metadata removal · Object streams",
+    category: "Privacy & Security",
+  },
 ]
 
 
@@ -147,6 +155,7 @@ export default function ToolsPage() {
       if (e.key === "a") router.push("/tools/anki-card")
       if (e.key === "b") router.push("/tools/background-remover")
       if (e.key === "t") router.push("/tools/bpm-detector")
+      if (e.key === "p") router.push("/tools/pdf-compress")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -267,6 +276,7 @@ export default function ToolsPage() {
           { keys: ["A"], description: "Open Anki Flashcards" },
           { keys: ["B"], description: "Open Background Remover" },
           { keys: ["T"], description: "Open BPM Detector" },
+          { keys: ["p"], description: "Open PDF Compressor" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
