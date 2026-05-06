@@ -209,6 +209,14 @@ const toolCards = [
     stat: "5 cases · Real-time",
     category: "Productivity",
   },
+  {
+    icon: Hash,
+    title: "UUID Generator",
+    description: "Generate cryptographically secure UUID v4s with bulk generation options.",
+    href: "/tools/uuid-generator",
+    stat: "v4 UUIDs · Bulk generation",
+    category: "Productivity",
+  },
 ]
 
 
@@ -246,6 +254,7 @@ export default function ToolsPage() {
       if (e.key === "j") router.push("/tools/json-formatter")
       if (e.key === "c") router.push("/tools/csv-json-converter")
       if (e.key === "t") router.push("/tools/text-case-converter")
+      if (e.key === "u") router.push("/tools/uuid-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -377,6 +386,7 @@ export default function ToolsPage() {
           { keys: ["j"], description: "Open JSON Formatter" },
           { keys: ["c"], description: "Open CSV ↔ JSON Converter" },
           { keys: ["t"], description: "Open Text Case Converter" },
+          { keys: ["u"], description: "Open UUID Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

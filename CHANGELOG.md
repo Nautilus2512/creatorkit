@@ -1,6 +1,14 @@
 # CreatorKit Changelog
 
 
+## v1.14.0 — May 2026
+### New Tools
+- **UUID Generator** — Generate cryptographically secure UUID v4s with bulk generation options.
+
+### Improvements
+- Added UUID Generator with single and bulk generation
+- 26 total tools now available
+
 ## v1.13.0 — May 2026
 ### New Tools
 - **Text Case Converter** — Convert text between upper, lower, title, camel, snake, and kebab cases with real-time preview.
