@@ -1,6 +1,14 @@
 # CreatorKit Changelog
 
 
+## v1.6.0 — May 2026
+### New Tools
+- **Audio Converter** — Convert between MP3, WAV, OGG, FLAC, AAC, M4A, WMA, and OPUS formats. Powered by ffmpeg.wasm, runs entirely in browser.
+ 
+### Improvements
+- Added Audio Converter with 8 format support and quality settings
+- All tools remain client-side and privacy-focused
+
 ## v1.5.0 — May 2026
 ### New Tools
 - **PDF Merger & Splitter** — Merge multiple PDFs or split by page ranges, all client-side

@@ -145,6 +145,14 @@ const toolCards = [
     stat: "Live preview · Download as ZIP",
     category: "Productivity",
   },
+    {
+    icon: Music2,
+    title: "Audio Converter",
+    description: "Convert between MP3, WAV, OGG, FLAC, AAC, M4A, WMA, and OPUS formats. Powered by ffmpeg.wasm, runs entirely in your browser.",
+    href: "/tools/audio-converter",
+    stat: "8 formats · Quality settings",
+    category: "Productivity",
+  },
 ]
 
 
@@ -174,6 +182,7 @@ export default function ToolsPage() {
       if (e.key === "p") router.push("/tools/pdf-compress")
       if (e.key === "x") router.push("/tools/pdf-merger")
       if (e.key === "c") router.push("/tools/code-playground")
+      if (e.key === "a") router.push("/tools/audio-converter")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -297,6 +306,7 @@ export default function ToolsPage() {
           { keys: ["p"], description: "Open PDF Compressor" },
           { keys: ["x"], description: "Open PDF Merger" },
           { keys: ["c"], description: "Open Code Playground" },
+          { keys: ["a"], description: "Open Audio Converter" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
