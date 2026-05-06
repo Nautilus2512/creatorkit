@@ -1,6 +1,38 @@
 # CreatorKit Changelog
 
 
+## v1.24.0 — May 2026
+### New Tools
+- **Cron Expression Generator** — Build cron expressions with presets, human-readable descriptions, and next 5 run times.
+
+### Improvements
+- Added Cron Generator with 12 presets and quick reference guide
+- 36 total tools now available
+
+## v1.23.0 — May 2026
+### New Tools
+- **CSS Minifier** — Remove whitespace and comments from CSS with exact byte savings shown. Upload or paste.
+
+### Improvements
+- Added CSS Minifier with file upload and .min.css download
+- 35 total tools now available
+
+## v1.22.0 — May 2026
+### New Tools
+- **HTML Entity Encoder / Decoder** — Encode special characters to HTML entities or decode them back with quick-insert reference.
+
+### Improvements
+- Added HTML Entity Encoder with common entity reference bar and swap mode
+- 34 total tools now available
+
+## v1.21.0 — May 2026
+### New Tools
+- **JWT Decoder** — Decode JSON Web Tokens and inspect header, payload, expiry, and issued-at time.
+
+### Improvements
+- Added JWT Decoder with expiry status indicator and per-section copy
+- 33 total tools now available
+
 ## v1.20.0 — May 2026
 ### New Tools
 - **Timestamp Converter** — Convert between Unix timestamps and human-readable date formats (ISO 8601, UTC, local, relative).

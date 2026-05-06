@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -265,6 +265,38 @@ const toolCards = [
     stat: "Unix · ISO 8601 · UTC · Local",
     category: "Productivity",
   },
+  {
+    icon: KeyRound,
+    title: "JWT Decoder",
+    description: "Decode and inspect JSON Web Tokens — view header, payload, expiry, and issued-at time. Nothing leaves your browser.",
+    href: "/tools/jwt-decoder",
+    stat: "Header · Payload · Expiry check",
+    category: "Privacy & Security",
+  },
+  {
+    icon: Braces,
+    title: "HTML Entity Encoder / Decoder",
+    description: "Encode special characters to HTML entities or decode them back. Includes a quick-insert reference bar.",
+    href: "/tools/html-entity-encoder",
+    stat: "Encode · Decode · Swap",
+    category: "Productivity",
+  },
+  {
+    icon: Minimize,
+    title: "CSS Minifier",
+    description: "Remove whitespace and comments from CSS. See exact byte savings. Upload a .css file or paste directly.",
+    href: "/tools/css-minifier",
+    stat: "Comments · Whitespace · Download .min.css",
+    category: "Productivity",
+  },
+  {
+    icon: CalendarClock,
+    title: "Cron Expression Generator",
+    description: "Build cron expressions with presets, human-readable descriptions, and next 5 scheduled run times.",
+    href: "/tools/cron-generator",
+    stat: "Presets · Description · Next runs",
+    category: "Productivity",
+  },
 ]
 
 
@@ -309,6 +341,10 @@ export default function ToolsPage() {
       if (e.key === "o") router.push("/tools/color-converter")
       if (e.key === "n") router.push("/tools/word-counter")
       if (e.key === "s") router.push("/tools/timestamp-converter")
+      if (e.key === "k") router.push("/tools/jwt-decoder")
+      if (e.key === "h") router.push("/tools/html-entity-encoder")
+      if (e.key === "f") router.push("/tools/css-minifier")
+      if (e.key === "g") router.push("/tools/cron-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -447,6 +483,10 @@ export default function ToolsPage() {
           { keys: ["o"], description: "Open Color Converter" },
           { keys: ["n"], description: "Open Word & Character Counter" },
           { keys: ["s"], description: "Open Timestamp Converter" },
+          { keys: ["k"], description: "Open JWT Decoder" },
+          { keys: ["h"], description: "Open HTML Entity Encoder" },
+          { keys: ["f"], description: "Open CSS Minifier" },
+          { keys: ["g"], description: "Open Cron Expression Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
