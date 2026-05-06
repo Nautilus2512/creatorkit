@@ -1,6 +1,30 @@
 # CreatorKit Changelog
 
 
+## v1.20.0 — May 2026
+### New Tools
+- **Timestamp Converter** — Convert between Unix timestamps and human-readable date formats (ISO 8601, UTC, local, relative).
+
+### Improvements
+- Added Timestamp Converter with current-time shortcut and 8 output formats
+- 32 total tools now available
+
+## v1.19.0 — May 2026
+### New Tools
+- **Word & Character Counter** — Count words, characters, sentences, paragraphs, and estimate reading and speaking time.
+
+### Improvements
+- Added Word & Character Counter with live real-time statistics
+- 31 total tools now available
+
+## v1.18.0 — May 2026
+### New Tools
+- **Color Converter** — Convert colors between HEX, RGB, HSL, and OKLCH with a visual color picker and live preview.
+
+### Improvements
+- Added Color Converter with color picker, swatch preview, and one-click copy per format
+- 30 total tools now available
+
 ## v1.17.0 — May 2026
 ### New Tools
 - **Lorem Ipsum Generator** — Generate placeholder text by paragraphs, sentences, or words with "Lorem ipsum..." start option.

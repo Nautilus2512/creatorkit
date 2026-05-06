@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -241,6 +241,30 @@ const toolCards = [
     stat: "Paragraphs · Sentences · Words",
     category: "Productivity",
   },
+  {
+    icon: Pipette,
+    title: "Color Converter",
+    description: "Convert colors between HEX, RGB, HSL, and OKLCH formats. Use the color picker or type any format.",
+    href: "/tools/color-converter",
+    stat: "HEX · RGB · HSL · OKLCH",
+    category: "Design & Branding",
+  },
+  {
+    icon: BookType,
+    title: "Word & Character Counter",
+    description: "Count words, characters, sentences, paragraphs, and estimate reading and speaking time instantly.",
+    href: "/tools/word-counter",
+    stat: "Words · Chars · Reading time",
+    category: "Productivity",
+  },
+  {
+    icon: Timer,
+    title: "Timestamp Converter",
+    description: "Convert between Unix timestamps and human-readable dates. Supports ISO 8601, UTC, and local time.",
+    href: "/tools/timestamp-converter",
+    stat: "Unix · ISO 8601 · UTC · Local",
+    category: "Productivity",
+  },
 ]
 
 
@@ -282,6 +306,9 @@ export default function ToolsPage() {
       if (e.key === "e") router.push("/tools/base64-encoder")
       if (e.key === "l") router.push("/tools/url-encoder")
       if (e.key === "i") router.push("/tools/lorem-ipsum")
+      if (e.key === "o") router.push("/tools/color-converter")
+      if (e.key === "n") router.push("/tools/word-counter")
+      if (e.key === "s") router.push("/tools/timestamp-converter")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -417,6 +444,9 @@ export default function ToolsPage() {
           { keys: ["e"], description: "Open Base64 Encoder / Decoder" },
           { keys: ["l"], description: "Open URL Encoder / Decoder" },
           { keys: ["i"], description: "Open Lorem Ipsum Generator" },
+          { keys: ["o"], description: "Open Color Converter" },
+          { keys: ["n"], description: "Open Word & Character Counter" },
+          { keys: ["s"], description: "Open Timestamp Converter" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

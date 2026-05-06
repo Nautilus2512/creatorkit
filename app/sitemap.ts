@@ -189,6 +189,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: 'https://creatorkit-tools.vercel.app/tools/color-converter',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/word-counter',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/timestamp-converter',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
       url: 'https://creatorkit-tools.vercel.app/privacy',
       lastModified: new Date(),
       changeFrequency: 'yearly',
