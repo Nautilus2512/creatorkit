@@ -141,12 +141,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: 'https://creatorkit-tools.vercel.app/tools/text-compare',
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
       url: 'https://creatorkit-tools.vercel.app/tools/regex-tester',
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
@@ -172,6 +166,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: 'https://creatorkit-tools.vercel.app/tools/uuid-generator',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/base64-encoder',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/url-encoder',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/lorem-ipsum',
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.8,

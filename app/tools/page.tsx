@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -171,7 +171,7 @@ const toolCards = [
   },
   {
     icon: GitCompare,
-    title: "text-compare",
+    title: "Text Compare",
     description: "Compare text and files with visual diff highlighting, line-by-line analysis, and export options.",
     href: "/tools/text-compare",
     stat: "Visual diff · File support",
@@ -217,6 +217,30 @@ const toolCards = [
     stat: "v4 UUIDs · Bulk generation",
     category: "Productivity",
   },
+  {
+    icon: Binary,
+    title: "Base64 Encoder / Decoder",
+    description: "Encode text or files to Base64, or decode Base64 back to plain text. Everything runs in your browser.",
+    href: "/tools/base64-encoder",
+    stat: "Encode · Decode · File upload",
+    category: "Productivity",
+  },
+  {
+    icon: Link2,
+    title: "URL Encoder / Decoder",
+    description: "Encode or decode URL components and full URLs with encodeURIComponent and encodeURI.",
+    href: "/tools/url-encoder",
+    stat: "encodeURIComponent · encodeURI",
+    category: "Productivity",
+  },
+  {
+    icon: AlignLeft,
+    title: "Lorem Ipsum Generator",
+    description: "Generate placeholder text by paragraphs, sentences, or words for your designs and mockups.",
+    href: "/tools/lorem-ipsum",
+    stat: "Paragraphs · Sentences · Words",
+    category: "Productivity",
+  },
 ]
 
 
@@ -255,6 +279,9 @@ export default function ToolsPage() {
       if (e.key === "c") router.push("/tools/csv-json-converter")
       if (e.key === "t") router.push("/tools/text-case-converter")
       if (e.key === "u") router.push("/tools/uuid-generator")
+      if (e.key === "e") router.push("/tools/base64-encoder")
+      if (e.key === "l") router.push("/tools/url-encoder")
+      if (e.key === "i") router.push("/tools/lorem-ipsum")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -387,6 +414,9 @@ export default function ToolsPage() {
           { keys: ["c"], description: "Open CSV ↔ JSON Converter" },
           { keys: ["t"], description: "Open Text Case Converter" },
           { keys: ["u"], description: "Open UUID Generator" },
+          { keys: ["e"], description: "Open Base64 Encoder / Decoder" },
+          { keys: ["l"], description: "Open URL Encoder / Decoder" },
+          { keys: ["i"], description: "Open Lorem Ipsum Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

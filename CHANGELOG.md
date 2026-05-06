@@ -1,6 +1,32 @@
 # CreatorKit Changelog
 
 
+## v1.17.0 — May 2026
+### New Tools
+- **Lorem Ipsum Generator** — Generate placeholder text by paragraphs, sentences, or words with "Lorem ipsum..." start option.
+
+### Improvements
+- Added Lorem Ipsum Generator with paragraph/sentence/word modes and download support
+- 29 total tools now available
+
+## v1.16.0 — May 2026
+### New Tools
+- **URL Encoder / Decoder** — Encode or decode URL components and full URLs using encodeURIComponent and encodeURI.
+
+### Improvements
+- Added URL Encoder / Decoder with component and full-URL modes
+- 28 total tools now available
+
+## v1.15.0 — May 2026
+### New Tools
+- **Base64 Encoder / Decoder** — Encode text or files to Base64, or decode Base64 back to plain text.
+
+### Improvements
+- Added Base64 Encoder / Decoder with file upload support and swap mode
+- Fixed "text-compare" display name on tools grid (now "Text Compare")
+- Removed duplicate text-compare entry in sitemap
+- 27 total tools now available
+
 ## v1.14.0 — May 2026
 ### New Tools
 - **UUID Generator** — Generate cryptographically secure UUID v4s with bulk generation options.
