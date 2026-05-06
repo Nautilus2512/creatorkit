@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -129,6 +129,22 @@ const toolCards = [
     stat: "Metadata removal · Object streams",
     category: "Privacy & Security",
   },
+  {
+    icon: Combine,
+    title: "PDF Merger & Splitter",
+    description: "Merge multiple PDFs into one or split a PDF by page ranges. All processing happens locally in your browser.",
+    href: "/tools/pdf-merger",
+    stat: "Merge unlimited · Split by ranges",
+    category: "Privacy & Security",
+  },
+  {
+    icon: Code,
+    title: "Code Playground",
+    description: "Live HTML/CSS/JS editor with instant preview. Write, test, and download your code. Runs entirely in your browser.",
+    href: "/tools/code-playground",
+    stat: "Live preview · Download as ZIP",
+    category: "Productivity",
+  },
 ]
 
 
@@ -156,6 +172,8 @@ export default function ToolsPage() {
       if (e.key === "b") router.push("/tools/background-remover")
       if (e.key === "t") router.push("/tools/bpm-detector")
       if (e.key === "p") router.push("/tools/pdf-compress")
+      if (e.key === "x") router.push("/tools/pdf-merger")
+      if (e.key === "c") router.push("/tools/code-playground")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -277,6 +295,8 @@ export default function ToolsPage() {
           { keys: ["B"], description: "Open Background Remover" },
           { keys: ["T"], description: "Open BPM Detector" },
           { keys: ["p"], description: "Open PDF Compressor" },
+          { keys: ["x"], description: "Open PDF Merger" },
+          { keys: ["c"], description: "Open Code Playground" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

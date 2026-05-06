@@ -15,6 +15,16 @@ const nextConfig = {
       "sharp$": false,
       "onnxruntime-node$": false,
     }
+    
+    // pdf.js worker support
+    config.module.rules.push({
+      test: /pdf\.worker\.(min\.)?js$/,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/worker/[name].[contenthash][ext]',
+      },
+    })
+    
     return config
   },
   async headers() {

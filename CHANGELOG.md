@@ -1,5 +1,30 @@
 # CreatorKit Changelog
 
+
+## v1.5.0 — May 2026
+### New Tools
+- **PDF Merger & Splitter** — Merge multiple PDFs or split by page ranges, all client-side
+- **Code Playground** — Live HTML/CSS/JS editor with instant preview and ZIP download
+ 
+### Improvements
+- Added 2 new productivity tools (17 total tools)
+- All tools follow privacy-first, client-side architecture
+
+## v1.4.0 — May 2026
+### New Tools
+- **PDF Compressor** — Compress PDFs with quality settings, size targets, and metadata removal
+- **File Checksum Verifier** — Compute MD5, SHA-1, SHA-256, SHA-512 hashes locally
+- **Image Watermark Adder** — Add text watermarks to images with position/size controls
+- **Screenshot to Mockup** — Wrap screenshots in device frames with custom backgrounds
+- **Anki Flashcards** — Spaced repetition cards with SM-2 algorithm, local storage
+- **Background Remover** — AI-powered background removal (desktop) and color removal (mobile)
+- **BPM Detector** — Detect audio tempo in beats per minute
+
+### Improvements
+- Enhanced PDF compression with quality levels and size targets
+- Added keyboard shortcuts for all new tools
+- Updated sitemap with all 15 tools
+
 ## v1.3.0 — May 2026
 ### New Tools
 - **Image Compressor** — Compress JPEG, WebP, PNG images locally with quality control

@@ -104,6 +104,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
+        {
+      url: 'https://creatorkit-tools.vercel.app/tools/pdf-merger',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/code-playground',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     {
       url: 'https://creatorkit-tools.vercel.app/privacy',
       lastModified: new Date(),
