@@ -27564,7 +27564,7 @@ Banyak sekali yang bisa dilakukan client-side! Berikut yang relevan untuk kreato
 - JSON Formatter & Validator
 - Base64 Encoder/Decoder
 - CSV to JSON Converter
-- Text Diff Checker
+- Text text-compare
 
 ---
 
@@ -28512,7 +28512,7 @@ Text & Document
 * JSON Formatter & Validator
 * Base64 Encoder/Decoder
 * CSV to JSON Converter
-* Text Diff Checker
+* Text text-compare
 Design & Branding
 
 * Font Pairer
@@ -32120,7 +32120,7 @@ Text & Document
 * JSON Formatter & Validator
 * Base64 Encoder/Decoder
 * CSV to JSON Converter
-* Text Diff Checker
+* Text text-compare
 Design & Branding
 
 * Font Pairer
@@ -32240,7 +32240,7 @@ Text & Document
 * JSON Formatter & Validator
 * Base64 Encoder/Decoder
 * CSV to JSON Converter
-* Text Diff Checker
+* Text text-compare
 Design & Branding
 
 * Font Pairer
@@ -32276,7 +32276,7 @@ Menambahkan semua tools ini akan menjadikan CreatorKit sebagai toolkit privasi p
 
 Tidak semua tools memiliki tingkat kesulitan yang sama. Saya bagi menjadi tiga kelompok berdasarkan kemudahan build:
 
-Kelompok mudah yang bisa selesai dalam 1-2 jam per tool antara lain Lorem Ipsum Generator, Word Counter, Base64 Encoder/Decoder, URL Encoder/Decoder, Password Generator, Hash Generator, QR Code Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text Diff Checker, Gradient Generator, Shadow Generator, Border Radius Visualizer, dan Image Format Converter. Semua ini murni JavaScript tanpa library tambahan.
+Kelompok mudah yang bisa selesai dalam 1-2 jam per tool antara lain Lorem Ipsum Generator, Word Counter, Base64 Encoder/Decoder, URL Encoder/Decoder, Password Generator, Hash Generator, QR Code Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text text-compare, Gradient Generator, Shadow Generator, Border Radius Visualizer, dan Image Format Converter. Semua ini murni JavaScript tanpa library tambahan.
 
 Kelompok sedang yang butuh 1-2 hari per tool antara lain Image Compressor, Color Palette Extractor, Favicon Generator, OG Image Generator, Audio Waveform Visualizer, BPM Detector, dan Video Thumbnail Extractor. Butuh library tambahan tapi tidak kompleks.
 
@@ -32903,7 +32903,7 @@ Image & Visual
 * JSON Formatter & Validator
 * Base64 Encoder/Decoder
 * CSV to JSON Converter
-* Text Diff Checker Design & Branding
+* Text text-compare Design & Branding
 * Font Pairer
 * Gradient Generator
 * Shadow Generator (CSS box-shadow)
@@ -32957,7 +32957,7 @@ Base64 Encoder/Decoder — base64encode.org dan base64decode.org
 
 CSV to JSON Converter — csvjson.com dan convertcsv.com
 
-Text Diff Checker — diffchecker.com dan text-compare.com
+Text text-compare — diffchecker.com dan text-compare.com
 
 ---
 
@@ -33091,7 +33091,7 @@ Pricing page Pro plan. Setup Lemon Squeezy Pro $5/bulan dan Lifetime $19.
 Pantau Google Search Console dalam 3-7 hari untuk cek halaman yang sudah terindex.
 
 **Tools baru — jangka panjang:**
-Kelompok mudah: Password Generator, QR Code Generator, Base64 Encoder/Decoder, URL Encoder/Decoder, Hash Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text Diff Checker, Gradient Generator, Shadow Generator, Border Radius Visualizer, Image Format Converter, Word Counter, Lorem Ipsum Generator. Kelompok sedang: Image Compressor, Color Palette Extractor, Favicon Generator, OG Image Generator, Audio Waveform Visualizer, BPM Detector, Video Thumbnail Extractor. Kelompok kompleks: Background Remover, Image Watermark Adder, PDF to Image Converter, Screenshot to Mockup, Font Pairer, File Checksum Verifier.
+Kelompok mudah: Password Generator, QR Code Generator, Base64 Encoder/Decoder, URL Encoder/Decoder, Hash Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text text-compare, Gradient Generator, Shadow Generator, Border Radius Visualizer, Image Format Converter, Word Counter, Lorem Ipsum Generator. Kelompok sedang: Image Compressor, Color Palette Extractor, Favicon Generator, OG Image Generator, Audio Waveform Visualizer, BPM Detector, Video Thumbnail Extractor. Kelompok kompleks: Background Remover, Image Watermark Adder, PDF to Image Converter, Screenshot to Mockup, Font Pairer, File Checksum Verifier.
 
 **Accessibility — dicatat untuk nanti:**
 Screen reader support dengan aria-labels di semua tools. Keyboard navigation dan tab order yang logis. High contrast mode sebagai opsi tambahan selain light dan dark. Focus indicators yang jelas untuk navigasi keyboard. Alt text pada semua gambar preview di Image Resizer. Error messages yang tidak hanya mengandalkan warna. Color Blind Preview mode di Design Token Generator — simulasi Deuteranopia, Protanopia, Tritanopia — fitur unik yang belum ada di kompetitor.
@@ -33273,7 +33273,7 @@ Pricing page Pro plan. Setup Lemon Squeezy Pro $5/bulan dan Lifetime $19.
 Pantau Google Search Console dalam 3-7 hari untuk cek halaman yang sudah terindex.
 
 **Tools baru — jangka panjang:**
-Kelompok mudah: Password Generator, QR Code Generator, Base64 Encoder/Decoder, URL Encoder/Decoder, Hash Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text Diff Checker, Gradient Generator, Shadow Generator, Border Radius Visualizer, Image Format Converter, Word Counter, Lorem Ipsum Generator. Kelompok sedang: Image Compressor, Color Palette Extractor, Favicon Generator, OG Image Generator, Audio Waveform Visualizer, BPM Detector, Video Thumbnail Extractor. Kelompok kompleks: Background Remover, Image Watermark Adder, PDF to Image Converter, Screenshot to Mockup, Font Pairer, File Checksum Verifier. Tools teknis developer: CSS Minifier, JS Formatter, Regex Tester, JWT Decoder, UUID Generator, Timestamp Converter, YAML to JSON, XML Formatter, Color Picker multi-format, Pixel to REM Converter, dan lainnya.
+Kelompok mudah: Password Generator, QR Code Generator, Base64 Encoder/Decoder, URL Encoder/Decoder, Hash Generator, JSON Formatter, Markdown to HTML, CSV to JSON, Text text-compare, Gradient Generator, Shadow Generator, Border Radius Visualizer, Image Format Converter, Word Counter, Lorem Ipsum Generator. Kelompok sedang: Image Compressor, Color Palette Extractor, Favicon Generator, OG Image Generator, Audio Waveform Visualizer, BPM Detector, Video Thumbnail Extractor. Kelompok kompleks: Background Remover, Image Watermark Adder, PDF to Image Converter, Screenshot to Mockup, Font Pairer, File Checksum Verifier. Tools teknis developer: CSS Minifier, JS Formatter, Regex Tester, JWT Decoder, UUID Generator, Timestamp Converter, YAML to JSON, XML Formatter, Color Picker multi-format, Pixel to REM Converter, dan lainnya.
 
 **Desain & UX — dicatat:**
 Pertahankan desain hitam putih sebagai keputusan jangka panjang — elegan, tidak overwhelming, dan cocok untuk banyak tools. Warna aksen subtle hanya untuk status seperti hijau sukses dan merah error sudah cukup. Tambahkan filter kategori di halaman tools saat jumlah tools mencapai 8-10. Navigasi antar tools tetap intuitif dengan deep linking per tool untuk keperluan promosi dan SEO. Saat promosi selalu share URL spesifik per tool bukan URL utama.

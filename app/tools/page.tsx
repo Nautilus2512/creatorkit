@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -169,6 +169,14 @@ const toolCards = [
     stat: "Live preview · GitHub-style",
     category: "Productivity",
   },
+  {
+    icon: GitCompare,
+    title: "text-compare",
+    description: "Compare text and files with visual diff highlighting, line-by-line analysis, and export options.",
+    href: "/tools/text-compare",
+    stat: "Visual diff · File support",
+    category: "Productivity",
+  },
 ]
 
 
@@ -201,6 +209,7 @@ export default function ToolsPage() {
       if (e.key === "a") router.push("/tools/audio-converter")
       if (e.key === "w") router.push("/tools/whiteboard-drawing")
       if (e.key === "m") router.push("/tools/markdown-editor")
+      if (e.key === "d") router.push("/tools/text-compare")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -327,6 +336,7 @@ export default function ToolsPage() {
           { keys: ["a"], description: "Open Audio Converter" },
           { keys: ["w"], description: "Open Whiteboard Drawing" },
           { keys: ["m"], description: "Open Markdown Editor" },
+          { keys: ["d"], description: "Open text-compare" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
