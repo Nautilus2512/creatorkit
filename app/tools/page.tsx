@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -201,6 +201,14 @@ const toolCards = [
     stat: "CSV ↔ JSON · File upload",
     category: "Productivity",
   },
+  {
+    icon: Type,
+    title: "Text Case Converter",
+    description: "Convert text between upper, lower, title, camel, snake, and kebab cases with real-time preview.",
+    href: "/tools/text-case-converter",
+    stat: "5 cases · Real-time",
+    category: "Productivity",
+  },
 ]
 
 
@@ -237,6 +245,7 @@ export default function ToolsPage() {
       if (e.key === "r") router.push("/tools/regex-tester")
       if (e.key === "j") router.push("/tools/json-formatter")
       if (e.key === "c") router.push("/tools/csv-json-converter")
+      if (e.key === "t") router.push("/tools/text-case-converter")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -367,6 +376,7 @@ export default function ToolsPage() {
           { keys: ["r"], description: "Open Regex Tester" },
           { keys: ["j"], description: "Open JSON Formatter" },
           { keys: ["c"], description: "Open CSV ↔ JSON Converter" },
+          { keys: ["t"], description: "Open Text Case Converter" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

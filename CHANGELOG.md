@@ -1,6 +1,14 @@
 # CreatorKit Changelog
 
 
+## v1.13.0 — May 2026
+### New Tools
+- **Text Case Converter** — Convert text between upper, lower, title, camel, snake, and kebab cases with real-time preview.
+
+### Improvements
+- Added Text Case Converter with 5 case conversions
+- 25 total tools now available
+
 ## v1.12.0 — May 2026
 ### New Tools
 - **CSV ↔ JSON Converter** — Convert between CSV and JSON formats with table preview and file upload support.
