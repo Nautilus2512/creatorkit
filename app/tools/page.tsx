@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -177,6 +177,14 @@ const toolCards = [
     stat: "Visual diff · File support",
     category: "Productivity",
   },
+  {
+    icon: Search,
+    title: "Regex Tester",
+    description: "Test and debug regular expressions with real-time matching, highlighting, and common pattern library.",
+    href: "/tools/regex-tester",
+    stat: "Real-time matching · Common patterns",
+    category: "Productivity",
+  },
 ]
 
 
@@ -210,6 +218,7 @@ export default function ToolsPage() {
       if (e.key === "w") router.push("/tools/whiteboard-drawing")
       if (e.key === "m") router.push("/tools/markdown-editor")
       if (e.key === "d") router.push("/tools/text-compare")
+      if (e.key === "r") router.push("/tools/regex-tester")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -337,6 +346,7 @@ export default function ToolsPage() {
           { keys: ["w"], description: "Open Whiteboard Drawing" },
           { keys: ["m"], description: "Open Markdown Editor" },
           { keys: ["d"], description: "Open text-compare" },
+          { keys: ["r"], description: "Open Regex Tester" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

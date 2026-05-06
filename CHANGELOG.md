@@ -1,6 +1,22 @@
 # CreatorKit Changelog
 
 
+## v1.10.0 — May 2026
+### New Tools
+- **Regex Tester** — Test and debug regular expressions with real-time matching, highlighting, and common pattern library.
+
+### Improvements
+- Added Regex Tester with comprehensive flag support
+- 22 total tools now available
+
+## v1.9.0 — May 2026
+### New Tools
+- **Text Compare** — Compare two text blocks side-by-side with highlighted differences, character/word/line counts, and export options.
+
+### Improvements
+- Added Text Compare tool for diff analysis
+- 21 total tools now available
+
 ## v1.8.0 — May 2026
 ### New Tools
 - **Markdown Editor** — Write and preview markdown with live rendering, scroll sync, GitHub-style formatting, and file upload/download.
