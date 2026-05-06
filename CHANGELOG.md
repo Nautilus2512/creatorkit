@@ -1,6 +1,15 @@
 # CreatorKit Changelog
 
 
+## v1.8.0 — May 2026
+### New Tools
+- **Markdown Editor** — Write and preview markdown with live rendering, scroll sync, GitHub-style formatting, and file upload/download.
+
+### Improvements
+- Added Markdown Editor with two-column layout and formatting toolbar
+- 20 total tools now available
+- First medium complexity tool implemented
+
 ## v1.7.0 — May 2026
 ### New Tools
 - **Whiteboard Drawing** — Draw with pen, shapes, and text. Export as PNG. All client-side with undo/redo functionality.
