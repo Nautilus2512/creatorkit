@@ -1,6 +1,22 @@
 # CreatorKit Changelog
 
 
+## v1.12.0 — May 2026
+### New Tools
+- **CSV ↔ JSON Converter** — Convert between CSV and JSON formats with table preview and file upload support.
+
+### Improvements
+- Added CSV ↔ JSON Converter with bidirectional conversion
+- 24 total tools now available
+
+## v1.11.0 — May 2026
+### New Tools
+- **JSON Formatter** — Format, validate, and minify JSON with real-time error highlighting and syntax checking.
+
+### Improvements
+- Added JSON Formatter with validation and formatting options
+- 23 total tools now availables
+
 ## v1.10.0 — May 2026
 ### New Tools
 - **Regex Tester** — Test and debug regular expressions with real-time matching, highlighting, and common pattern library.
