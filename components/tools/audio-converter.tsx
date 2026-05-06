@@ -45,34 +45,88 @@ export function AudioConverter() {
   const [ffmpegLoaded, setFfmpegLoaded] = useState(false)
   const [isLoadingFFmpeg, setIsLoadingFFmpeg] = useState(false)
   const ffmpegRef = useRef<FFmpeg | null>(null)
+  const [testMode, setTestMode] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const loadFFmpeg = async () => {
-    if (ffmpegRef.current) return ffmpegRef.current
+const loadFFmpeg = async () => {
+  if (ffmpegRef.current) return ffmpegRef.current
+  
+  setIsLoadingFFmpeg(true)
+  setError(null)
+  
+  try {
+    const ffmpeg = new FFmpeg()
     
-    setIsLoadingFFmpeg(true)
-    setError(null)
+    // Try multiple CDNs with longer timeout
+    const baseURLs = [
+    "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd",
+    "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd",
+    "https://gitcdn.xyz/repo/@ffmpeg/core@0.12.6/dist/umd",
+    "https://cdn.skypack.dev/@ffmpeg/core@0.12.6/dist/umd"
+    ]
     
-    try {
-      const ffmpeg = new FFmpeg()
-      
-      // Load ffmpeg.wasm from CDN
-      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd"
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      })
-      
-      ffmpegRef.current = ffmpeg
-      setFfmpegLoaded(true)
-      return ffmpeg
-    } catch (err) {
-      setError("Failed to load audio converter. Please check your internet connection.")
-      throw err
-    } finally {
-      setIsLoadingFFmpeg(false)
+    let loaded = false
+    let lastError: any = null
+    let progressInterval: NodeJS.Timeout | null = null
+    
+    for (const baseURL of baseURLs) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+            console.log(`Trying to load ffmpeg from: ${baseURL} (attempt ${attempt})`)
+            
+            progressInterval = setInterval(() => {
+                setProgress(prev => Math.min(prev + 5, 90))
+            }, 1000)
+            
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => {
+                if (progressInterval) clearInterval(progressInterval)
+                reject(new Error("Load timeout"))
+                }, 60000)
+            )
+            
+            await Promise.race([
+                ffmpeg.load({
+                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+                }),
+                timeoutPromise
+            ])
+            
+            if (progressInterval) clearInterval(progressInterval)
+            setProgress(100)
+            console.log(`Successfully loaded ffmpeg from: ${baseURL}`)
+            loaded = true
+            break
+            } catch (err) {
+            if (progressInterval) clearInterval(progressInterval)
+            console.warn(`Attempt ${attempt} failed for ${baseURL}:`, err)
+            if (attempt === 3) {
+                lastError = err
+                continue // Try next CDN
+            }
+            // Wait 2 seconds before retry
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            }
+        }
+        }
+    
+    if (!loaded) {
+      throw lastError || new Error("All CDN sources failed. Please check your internet connection.")
     }
+    
+    ffmpegRef.current = ffmpeg
+    setFfmpegLoaded(true)
+    setProgress(0) // Reset progress after successful load
+    return ffmpeg
+  } catch (err) {
+    console.error("FFmpeg init error:", err)
+    setError("Failed to load audio converter. The ffmpeg.wasm files are large (~25MB) and may take time to load. Please ensure good internet connection.")
+    throw err
+  } finally {
+    setIsLoadingFFmpeg(false)
   }
+}
 
   const getQualityParams = (fmt: Format, q: "high" | "medium" | "low"): string[] => {
     const bitrate = q === "high" ? "320k" : q === "medium" ? "192k" : "128k"
@@ -133,16 +187,35 @@ export function AudioConverter() {
     }
   }
 
-  const convert = async () => {
-    if (!file) return
+const convert = async () => {
+  if (!file) return
 
-    setIsConverting(true)
-    setProgress(0)
-    setError(null)
-    setResult(null)
+  setIsConverting(true)
+  setProgress(0)
+  setError(null)
+  setResult(null)
 
-    try {
-      // Ensure FFmpeg is loaded
+  try {
+    if (testMode) {
+      // Test mode - simulate conversion without ffmpeg
+      console.log("Test mode: simulating conversion")
+      for (let i = 0; i <= 100; i += 10) {
+        setProgress(i)
+        await new Promise(resolve => setTimeout(resolve, 200))
+      }
+      
+      // Simulate result
+      const mockBlob = new Blob(["mock audio data"], { type: `audio/${targetFormat}` })
+      const url = URL.createObjectURL(mockBlob)
+      
+      setResult({
+        blob: mockBlob,
+        url,
+        name: `${file.name.replace(/\.[^/.]+$/, '')}_converted.${targetFormat}`,
+        size: file.size * 0.8 // Simulate size reduction
+      })
+    } else {
+      // Normal mode - use ffmpeg
       let ffmpeg = ffmpegRef.current
       if (!ffmpeg) {
         ffmpeg = await loadFFmpeg()
@@ -188,14 +261,15 @@ export function AudioConverter() {
       // Cleanup
       await ffmpeg.deleteFile(inputName)
       await ffmpeg.deleteFile(outputName)
-    } catch (err) {
-      console.error(err)
-      setError("Conversion failed. The file may be corrupted or in an unsupported format.")
-    } finally {
-      setIsConverting(false)
-      setProgress(0)
     }
+  } catch (err) {
+    console.error(err)
+    setError("Conversion failed. The file may be corrupted or in an unsupported format.")
+  } finally {
+    setIsConverting(false)
+    setProgress(0)
   }
+}
 
   const download = () => {
     if (!result) return
@@ -229,6 +303,24 @@ export function AudioConverter() {
             </div>
           </div>
 
+          {/* Development Warning */}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  ⚠️ Under Development - Known Issues
+                </p>
+                <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1 list-disc list-inside">
+                  <li>CDN loading issues: ffmpeg.wasm files may fail to load due to network restrictions</li>
+                  <li>Use "Test mode" checkbox to simulate conversion without downloading ffmpeg</li>
+                  <li>Real conversion requires ~25MB download and may timeout on slow connections</li>
+                  <li>This tool is experimental and may not work in all environments</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* File upload */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Audio File</Label>
@@ -259,6 +351,7 @@ export function AudioConverter() {
                   </button>
                 </div>
               ) : (
+                
                 <div className="flex flex-col items-center gap-2 text-center px-4">
                   <Upload className="h-5 w-5 text-muted-foreground" />
                   <p className="text-sm font-medium">Drop audio file here or click to browse</p>
@@ -266,6 +359,13 @@ export function AudioConverter() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Warning about large download */}
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 text-xs">
+            <p className="text-blue-700 dark:text-blue-300">
+              <strong>Note:</strong> Audio converter requires downloading ~25MB of ffmpeg.wasm files on first use. This may take 30-60 seconds depending on your internet connection.
+            </p>
           </div>
 
           {/* Conversion settings */}
@@ -288,6 +388,18 @@ export function AudioConverter() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                <input
+                type="checkbox"
+                checked={testMode}
+                onChange={(e) => setTestMode(e.target.checked)}
+                className="rounded border-border"
+                />
+                <span className="text-xs">Test mode (skip ffmpeg loading)</span>
+            </label>
             </div>
 
             <div className="space-y-2">

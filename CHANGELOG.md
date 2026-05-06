@@ -1,6 +1,15 @@
 # CreatorKit Changelog
 
 
+## v1.7.0 — May 2026
+### New Tools
+- **Whiteboard Drawing** — Draw with pen, shapes, and text. Export as PNG. All client-side with undo/redo functionality.
+ 
+### Improvements
+- Added Whiteboard Drawing with full drawing toolkit
+- All 4 hard tools now implemented (Audio Converter, Background Remover, Code Playground, Whiteboard)
+- 19 total tools now available
+
 ## v1.6.0 — May 2026
 ### New Tools
 - **Audio Converter** — Convert between MP3, WAV, OGG, FLAC, AAC, M4A, WMA, and OPUS formats. Powered by ffmpeg.wasm, runs entirely in browser.

@@ -43,7 +43,8 @@ const nextConfig = {
               "img-src 'self' data: blob:",
               "font-src 'self'",
               "worker-src blob:",
-              "connect-src 'self' blob: https://vitals.vercel-insights.com https://huggingface.co https://*.huggingface.co https://hf.co https://*.hf.co https://cdn.jsdelivr.net",
+              // Line 46, update connect-src:
+              "connect-src 'self' blob: https://vitals.vercel-insights.com https://huggingface.co https://*.huggingface.co https://hf.co https://*.hf.co https://cdn.jsdelivr.net https://unpkg.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

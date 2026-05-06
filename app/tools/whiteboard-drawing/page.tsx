@@ -1,8 +1,8 @@
 import Link from "next/link"
-import { CodePlayground } from "@/components/tools/code-playground"
+import { WhiteboardDrawing } from "@/components/tools/whiteboard-drawing"
 import { ArrowLeft } from "lucide-react"
 
-export default function CodePlaygroundPage() {
+export default function WhiteboardDrawingPage() {
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto w-full max-w-none px-3 py-4 md:px-4">
@@ -13,7 +13,7 @@ export default function CodePlaygroundPage() {
             <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px] opacity-50">Alt+Left Arrow</kbd>
           </Link>
         </div>
-        <CodePlayground />
+        <WhiteboardDrawing />
       </main>
     </div>
   )

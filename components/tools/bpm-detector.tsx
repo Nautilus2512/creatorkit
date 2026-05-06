@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Music2, Upload, X } from "lucide-react"
+import { Music2, Upload, X, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -139,6 +139,21 @@ export function BPMDetector() {
             <div>
               <h1 className="text-base font-semibold">BPM Detector</h1>
               <p className="text-xs text-muted-foreground">Detect audio tempo · 100% in-browser</p>
+            </div>
+          </div>
+
+          {/* Limitations Warning */}
+          <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30 p-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
+                  Works best for electronic music with clear beats
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  May be less accurate for acoustic, jazz, or complex rhythms
+                </p>
+              </div>
             </div>
           </div>
 

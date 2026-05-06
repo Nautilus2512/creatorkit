@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -153,6 +153,14 @@ const toolCards = [
     stat: "8 formats · Quality settings",
     category: "Productivity",
   },
+  {
+    icon: Pen,
+    title: "Whiteboard Drawing",
+    description: "Draw, sketch, and create diagrams with shapes, colors, and text. Export as PNG. All client-side, no server required.",
+    href: "/tools/whiteboard-drawing",
+    stat: "Drawing tools · Export PNG",
+    category: "Productivity",
+  },
 ]
 
 
@@ -183,6 +191,7 @@ export default function ToolsPage() {
       if (e.key === "x") router.push("/tools/pdf-merger")
       if (e.key === "c") router.push("/tools/code-playground")
       if (e.key === "a") router.push("/tools/audio-converter")
+      if (e.key === "w") router.push("/tools/whiteboard-drawing")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -307,6 +316,7 @@ export default function ToolsPage() {
           { keys: ["x"], description: "Open PDF Merger" },
           { keys: ["c"], description: "Open Code Playground" },
           { keys: ["a"], description: "Open Audio Converter" },
+          { keys: ["w"], description: "Open Whiteboard Drawing" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
