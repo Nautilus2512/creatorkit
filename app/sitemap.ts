@@ -63,11 +63,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: 'https://creatorkit-tools.vercel.app/tools/file-checksum-verifier',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
       url: 'https://creatorkit-tools.vercel.app/tools/bpm-detector',
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.8,
-    },    
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/image-watermark-adder',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/screenshot-to-mockup',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/anki-card',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/background-remover',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     {
       url: 'https://creatorkit-tools.vercel.app/tools/pdf-compress',
       lastModified: new Date(),
