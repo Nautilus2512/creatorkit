@@ -202,13 +202,18 @@ export default function CvMaker() {
   const [cv, setCv] = useState<CVData>(BLANK)
   const [template, setTemplate] = useState<"classic" | "modern">("modern")
   const [skillInput, setSkillInput] = useState("")
+  const [confirmingClear, setConfirmingClear] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setCv(load())
     const t = localStorage.getItem("creatorkit-cv-template")
     if (t === "classic" || t === "modern") setTemplate(t)
   }, [])
+
+  // Cleanup confirm timer on unmount
+  useEffect(() => () => { clearTimeout(confirmTimerRef.current!) }, [])
 
   const update = (patch: Partial<CVData>) => {
     setCv(prev => { const next = { ...prev, ...patch }; persist(next); return next })
@@ -251,18 +256,35 @@ export default function CvMaker() {
     localStorage.setItem("creatorkit-cv-template", t)
   }
 
-  // Print
+  // Clear all CV data (two-step confirm to avoid accidents)
+  const handleClear = () => {
+    if (!confirmingClear) {
+      setConfirmingClear(true)
+      confirmTimerRef.current = setTimeout(() => setConfirmingClear(false), 3000)
+    } else {
+      clearTimeout(confirmTimerRef.current!)
+      setCv(BLANK)
+      persist(BLANK)
+      setSkillInput("")
+      setConfirmingClear(false)
+    }
+  }
+
+  // Print — uses blob URL instead of deprecated document.write
   const handlePrint = () => {
     const el = previewRef.current
     if (!el) return
-    const w = window.open("", "_blank", "width=900,height=700")
-    if (!w) return
-    w.document.write(`<!DOCTYPE html><html><head><title>${cv.personal.name || "CV"}</title>
+    const html = `<!DOCTYPE html><html><head><title>${cv.personal.name || "CV"}</title>
       <style>*{margin:0;padding:0;box-sizing:border-box}body{background:white}@page{margin:0;size:A4}</style>
-      </head><body>${el.innerHTML}</body></html>`)
-    w.document.close()
-    w.focus()
-    setTimeout(() => { w.print(); w.close() }, 400)
+      </head><body>${el.innerHTML}</body></html>`
+    const blob = new Blob([html], { type: "text/html" })
+    const url = URL.createObjectURL(blob)
+    const w = window.open(url, "_blank")
+    if (!w) return
+    w.addEventListener("load", () => {
+      w.focus()
+      setTimeout(() => { w.print(); URL.revokeObjectURL(url) }, 300)
+    })
   }
 
   return (
@@ -272,7 +294,19 @@ export default function CvMaker() {
         <div className="flex items-center justify-between px-6 py-4">
           <div>
             <h1 className="text-xl font-semibold">CV Maker</h1>
-            <p className="text-sm text-muted-foreground">Build a professional CV with live preview. Auto-saved to your browser.</p>
+            <p className="text-sm text-muted-foreground">
+              Saved locally in your browser only — never uploaded.{" "}
+              <button
+                onClick={handleClear}
+                className={`underline underline-offset-2 transition-colors ${
+                  confirmingClear
+                    ? "text-destructive font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {confirmingClear ? "Click again to confirm clear" : "Clear all data"}
+              </button>
+            </p>
           </div>
           <div className="flex items-center gap-3">
             {/* Template selector */}
