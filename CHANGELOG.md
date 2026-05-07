@@ -1,6 +1,24 @@
 # CreatorKit Changelog
 
 
+## v1.54.0 — May 2026
+### New Tools
+- **Doc Scanner** — Scan documents with your camera or an uploaded photo. Drag 4 corner handles to align with document edges, apply perspective correction via homography, adjust brightness/contrast/grayscale, download as JPEG.
+
+### Improvements
+- Implemented full perspective warp (bilinear interpolation + inverse homography) in pure JavaScript — no dependencies
+- Handles images up to 2MP; auto-downsamples larger sources
+- 66 total tools now available
+
+## v1.53.0 — May 2026
+### New Tools
+- **OG Image Generator** — Generate Open Graph images for social media. 4 templates (Minimal, Dark, Gradient, Split), custom colors with presets, 5 font choices. Download as 1200×630 PNG.
+
+### Improvements
+- All rendering done on HTML canvas — no server, no uploads
+- Live preview updates on every keystroke
+- 65 total tools now available
+
 ## v1.52.0 — May 2026
 ### New Tools
 - **Engineering Calculator** — Scientific calculator with DEG/RAD trig, logarithms, physical constants (c, G, ℏ, kB, Nₐ), memory, and history. Powered by mathjs.

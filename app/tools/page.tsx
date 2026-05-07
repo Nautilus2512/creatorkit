@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -521,6 +521,22 @@ const toolCards = [
     stat: "DEG/RAD · 7 constants · sin/cos/tan · Memory",
     category: "Productivity",
   },
+  {
+    icon: Share2,
+    title: "OG Image Generator",
+    description: "Generate Open Graph images for social media. 4 templates, custom colors and fonts. Download as 1200×630 PNG.",
+    href: "/tools/og-image-generator",
+    stat: "Minimal · Dark · Gradient · Split · PNG export",
+    category: "Design & Branding",
+  },
+  {
+    icon: ScanLine,
+    title: "Doc Scanner",
+    description: "Scan documents with your camera. Drag 4 corner handles to align, hit Scan — perspective-corrected output in seconds.",
+    href: "/tools/doc-scanner",
+    stat: "Camera + upload · Perspective warp · B&W mode",
+    category: "Productivity",
+  },
 ]
 
 
@@ -583,6 +599,8 @@ export default function ToolsPage() {
       if (e.key === "=") router.push("/tools/js-formatter")
       if (e.key === "\\") router.push("/tools/math-evaluator")
       if (e.key === "`") router.push("/tools/engineering-calculator")
+      if (e.key === "/") router.push("/tools/og-image-generator")
+      if (e.key === "~") router.push("/tools/doc-scanner")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -739,6 +757,8 @@ export default function ToolsPage() {
           { keys: ["="], description: "Open JS Formatter" },
           { keys: ["\\"], description: "Open Math Calculator" },
           { keys: ["`"], description: "Open Engineering Calculator" },
+          { keys: ["/"], description: "Open OG Image Generator" },
+          { keys: ["~"], description: "Open Doc Scanner" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
