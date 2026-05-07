@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -481,6 +481,14 @@ const toolCards = [
     stat: "Resize · Format · Filters · ZIP download",
     category: "Image & Visual",
   },
+  {
+    icon: Contact,
+    title: "CV Maker",
+    description: "Build a professional CV with live preview, Classic and Modern templates, and PDF export. Auto-saved locally.",
+    href: "/tools/cv-maker",
+    stat: "Live preview · 2 templates · PDF export",
+    category: "Productivity",
+  },
 ]
 
 
@@ -538,6 +546,7 @@ export default function ToolsPage() {
       if (e.key === ";") router.push("/tools/rubiks-timer")
       if (e.key === "'") router.push("/tools/voice-recorder")
       if (e.key === "[") router.push("/tools/notes")
+      if (e.key === "]") router.push("/tools/cv-maker")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -689,6 +698,7 @@ export default function ToolsPage() {
           { keys: [";"], description: "Open Rubik's Cube Timer" },
           { keys: ["'"], description: "Open Voice Recorder" },
           { keys: ["["], description: "Open Notes" },
+          { keys: ["]"], description: "Open CV Maker" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

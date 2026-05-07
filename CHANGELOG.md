@@ -1,6 +1,16 @@
 # CreatorKit Changelog
 
 
+## v1.48.0 — May 2026
+### New Tools
+- **CV Maker** — Build a professional CV with live preview, Classic and Modern templates, and one-click PDF export. Auto-saves to localStorage.
+
+### Improvements
+- Added CV Maker with Personal Info, Experience, Education, Skills, and Projects sections
+- Collapsible form sections for better UX
+- Two templates: Classic (black) and Modern (indigo)
+- 60 total tools now available
+
 ## v1.47.0 — May 2026
 ### New Tools
 - **Batch Image Editor** — Apply resize, format conversion, brightness/contrast to multiple images at once. Download as ZIP.
