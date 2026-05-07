@@ -1,6 +1,31 @@
 # CreatorKit Changelog
 
 
+## v1.52.0 — May 2026
+### New Tools
+- **Engineering Calculator** — Scientific calculator with DEG/RAD trig, logarithms, physical constants (c, G, ℏ, kB, Nₐ), memory, and history. Powered by mathjs.
+
+### Improvements
+- Added Engineering Calculator with button grid and constants panel
+- 64 total tools now available
+
+## v1.51.0 — May 2026
+### New Tools
+- **Math Calculator** — REPL-style expression evaluator. Assign variables, convert units, evaluate matrices and complex numbers. Powered by mathjs.
+
+### Improvements
+- Added Math Calculator with persistent scope, variables panel, and 10 examples
+- 63 total tools now available
+
+## v1.50.0 — May 2026
+### New Tools
+- **JS Formatter** — Format JavaScript, TypeScript, CSS, HTML, JSON, and Markdown with Prettier 2.8.8. Loaded via CDN — no bundle impact.
+
+### Improvements
+- Added JS Formatter with 8 language parsers, auto-format toggle, file upload/download
+- Installed mathjs@15.2.0 for Math and Engineering Calculator tools
+- 62 total tools now available
+
 ## v1.49.0 — May 2026
 ### New Tools
 - **Font Pairer** — Browse and pair Google Fonts for headings and body text. 70 curated fonts, 14 suggested pairings, light/dark/sepia preview themes, weight specimens, and CSS import code output.

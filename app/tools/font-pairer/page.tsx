@@ -1,4 +1,4 @@
-import { FontPairer } from "@/components/tools/font-pairer"
+import FontPairer from "@/components/tools/font-pairer"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {

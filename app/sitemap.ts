@@ -375,6 +375,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: 'https://creatorkit-tools.vercel.app/tools/js-formatter',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/math-evaluator',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: 'https://creatorkit-tools.vercel.app/tools/engineering-calculator',
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
       url: 'https://creatorkit-tools.vercel.app/tools/font-pairer',
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,

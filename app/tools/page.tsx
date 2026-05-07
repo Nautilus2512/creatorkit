@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -497,6 +497,30 @@ const toolCards = [
     stat: "70 fonts · 14 pairings · Light · Dark · Sepia",
     category: "Design & Branding",
   },
+  {
+    icon: Code2,
+    title: "JS Formatter",
+    description: "Format JavaScript, TypeScript, CSS, HTML, JSON, and Markdown with Prettier. Adjust quotes, semicolons, and indent style.",
+    href: "/tools/js-formatter",
+    stat: "Prettier 2.8.8 · 8 languages · File upload",
+    category: "Productivity",
+  },
+  {
+    icon: Calculator,
+    title: "Math Calculator",
+    description: "Evaluate math expressions, assign variables, and convert units in a REPL-style interface. Powered by mathjs.",
+    href: "/tools/math-evaluator",
+    stat: "Variables · Units · Matrices · Complex numbers",
+    category: "Productivity",
+  },
+  {
+    icon: Sigma,
+    title: "Engineering Calculator",
+    description: "Scientific calculator with trig (DEG/RAD), logarithms, physical constants, and memory. Button-based UI powered by mathjs.",
+    href: "/tools/engineering-calculator",
+    stat: "DEG/RAD · 7 constants · sin/cos/tan · Memory",
+    category: "Productivity",
+  },
 ]
 
 
@@ -556,6 +580,9 @@ export default function ToolsPage() {
       if (e.key === "[") router.push("/tools/notes")
       if (e.key === "]") router.push("/tools/cv-maker")
       if (e.key === "-") router.push("/tools/font-pairer")
+      if (e.key === "=") router.push("/tools/js-formatter")
+      if (e.key === "\\") router.push("/tools/math-evaluator")
+      if (e.key === "`") router.push("/tools/engineering-calculator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -709,6 +736,9 @@ export default function ToolsPage() {
           { keys: ["["], description: "Open Notes" },
           { keys: ["]"], description: "Open CV Maker" },
           { keys: ["-"], description: "Open Font Pairer" },
+          { keys: ["="], description: "Open JS Formatter" },
+          { keys: ["\\"], description: "Open Math Calculator" },
+          { keys: ["`"], description: "Open Engineering Calculator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
