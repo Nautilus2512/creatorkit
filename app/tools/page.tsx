@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -361,6 +361,46 @@ const toolCards = [
     stat: "Multi-layer · Inset · Live preview",
     category: "Design & Branding",
   },
+  {
+    icon: SquareDashedBottom,
+    title: "Border Radius Visualizer",
+    description: "Build CSS border-radius values visually. Control each corner independently with presets and sliders.",
+    href: "/tools/border-radius-visualizer",
+    stat: "Per-corner · Presets · px or %",
+    category: "Design & Branding",
+  },
+  {
+    icon: FileCode2,
+    title: "Markdown → HTML",
+    description: "Convert Markdown to HTML with live preview and raw HTML output. File upload and download supported.",
+    href: "/tools/markdown-to-html",
+    stat: "Live preview · Raw HTML · Download",
+    category: "Productivity",
+  },
+  {
+    icon: Clock4,
+    title: "Rubik's Cube Timer",
+    description: "Speedcubing timer with random scrambles, 15s inspection countdown, and session statistics.",
+    href: "/tools/rubiks-timer",
+    stat: "Scrambles · Ao5 · Ao12 · Best",
+    category: "Productivity",
+  },
+  {
+    icon: Mic,
+    title: "Voice Recorder",
+    description: "Record audio directly in your browser. Play back and download recordings. Nothing is uploaded.",
+    href: "/tools/voice-recorder",
+    stat: "Record · Playback · Download",
+    category: "Productivity",
+  },
+  {
+    icon: NotebookPen,
+    title: "Notes",
+    description: "Quick notes saved to your browser's localStorage. Multiple notes with titles and auto-save.",
+    href: "/tools/notes",
+    stat: "localStorage · Auto-save · Multi-note",
+    category: "Productivity",
+  },
 ]
 
 
@@ -413,6 +453,11 @@ export default function ToolsPage() {
       if (e.key === "z") router.push("/tools/aes-encryptor")
       if (e.key === "q") router.push("/tools/rsa-key-generator")
       if (e.key === "y") router.push("/tools/totp-generator")
+      if (e.key === ",") router.push("/tools/border-radius-visualizer")
+      if (e.key === ".") router.push("/tools/markdown-to-html")
+      if (e.key === ";") router.push("/tools/rubiks-timer")
+      if (e.key === "'") router.push("/tools/voice-recorder")
+      if (e.key === "[") router.push("/tools/notes")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -559,6 +604,11 @@ export default function ToolsPage() {
           { keys: ["z"], description: "Open AES Encrypt / Decrypt" },
           { keys: ["q"], description: "Open RSA Key Generator" },
           { keys: ["y"], description: "Open TOTP / 2FA Generator" },
+          { keys: [","], description: "Open Border Radius Visualizer" },
+          { keys: ["."], description: "Open Markdown → HTML" },
+          { keys: [";"], description: "Open Rubik's Cube Timer" },
+          { keys: ["'"], description: "Open Voice Recorder" },
+          { keys: ["["], description: "Open Notes" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

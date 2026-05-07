@@ -1,6 +1,47 @@
 # CreatorKit Changelog
 
 
+## v1.37.0 — May 2026
+### New Tools
+- **Notes** — Quick notes saved to localStorage. Multiple notes with titles, auto-save, and word count.
+
+### Improvements
+- Added Notes with sidebar note list and auto-save on blur
+- 49 total tools now available
+
+## v1.36.0 — May 2026
+### New Tools
+- **Voice Recorder** — Record audio in the browser using MediaRecorder API. Play back and download as WebM.
+
+### Improvements
+- Added Voice Recorder — no uploads, recordings stay in memory until downloaded
+- 48 total tools now available
+
+## v1.35.0 — May 2026
+### New Tools
+- **Rubik's Cube Timer** — Speedcubing timer with random WCA scrambles, 15s inspection, Ao5, Ao12, and session history.
+
+### Improvements
+- Added Rubik's Cube Timer with Space-key control and session statistics
+- 47 total tools now available
+
+## v1.34.0 — May 2026
+### New Tools
+- **Markdown → HTML** — Convert Markdown to HTML with live preview and raw HTML output. File upload and download supported.
+
+### Improvements
+- Added Markdown to HTML converter powered by marked
+- 46 total tools now available
+
+## v1.33.0 — May 2026
+### New Tools
+- **Border Radius Visualizer** — Build CSS border-radius values with per-corner sliders, presets, and live preview.
+
+### Improvements
+- Added Border Radius Visualizer with linked/unlinked corner mode and px/% toggle
+- Added symbol key shortcuts: , . ; ' [ for the 5 new tools
+- 45 total tools now available
+
 ## v1.32.0 — May 2026
 ### New Tools
 - **Box Shadow Generator** — Build CSS box-shadows visually with multiple layers, inset support, and live preview.
