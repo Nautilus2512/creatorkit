@@ -1,6 +1,86 @@
 # CreatorKit Changelog
 
 
+## v1.47.0 — May 2026
+### New Tools
+- **Batch Image Editor** — Apply resize, format conversion, brightness/contrast to multiple images at once. Download as ZIP.
+
+### Improvements
+- Added Batch Image Editor with format, quality, resize, and filter controls
+- 59 total tools now available
+
+## v1.46.0 — May 2026
+### New Tools
+- **Video Compressor** — Compress videos using ffmpeg.wasm with high/balanced/small quality presets. Outputs MP4.
+
+### Improvements
+- Added Video Compressor with lazy-loaded ffmpeg and progress tracking
+- 58 total tools now available
+
+## v1.45.0 — May 2026
+### New Tools
+- **Image Grid / Collage** — Arrange multiple images in 2×2, 3×3, 1×3, or 3×1 grid layouts. Export as PNG.
+
+### Improvements
+- Added Image Grid with gap control, background color picker, and size options
+- 57 total tools now available
+
+## v1.44.0 — May 2026
+### New Tools
+- **Screen Recorder** — Record your screen with optional audio using getDisplayMedia. Download as WebM.
+
+### Improvements
+- Added Screen Recorder with mic mixing and in-memory playback
+- 56 total tools now available
+
+## v1.43.0 — May 2026
+### New Tools
+- **Audio Waveform Visualizer** — Visualize audio waveforms using Web Audio API. Clickable seek and playback controls.
+
+### Improvements
+- Added Audio Waveform Visualizer with downsampled waveform rendering and seek
+- 55 total tools now available
+
+## v1.42.0 — May 2026
+### New Tools
+- **Video Thumbnail Extractor** — Extract frames from any video as JPG. Grid or interval mode. Download as ZIP.
+
+### Improvements
+- Added Video Thumbnail Extractor using canvas + HTMLVideoElement
+- 54 total tools now available
+
+## v1.41.0 — May 2026
+### New Tools
+- **Color Palette Extractor** — Extract dominant colors from images with frequency percentages. Copy HEX, RGB, or HSL.
+
+### Improvements
+- Added Color Palette Extractor with canvas pixel quantization
+- 53 total tools now available
+
+## v1.40.0 — May 2026
+### New Tools
+- **PDF to Image** — Convert PDF pages to PNG images with adjustable resolution. Download all as ZIP.
+
+### Improvements
+- Added PDF to Image using pdfjs-dist with CDN worker
+- 52 total tools now available
+
+## v1.39.0 — May 2026
+### New Tools
+- **PDF Organizer** — Reorder and delete PDF pages with visual thumbnails. Powered by pdfjs-dist + pdf-lib.
+
+### Improvements
+- Added PDF Organizer with thumbnail previews and page reordering
+- 51 total tools now available
+
+## v1.38.0 — May 2026
+### New Tools
+- **Image to PDF** — Combine images into a PDF with page size options (A4, Letter, fit). Supports JPG, PNG, WebP.
+
+### Improvements
+- Added Image to PDF using pdf-lib with portrait/landscape and ordering controls
+- 50 total tools now available
+
 ## v1.37.0 — May 2026
 ### New Tools
 - **Notes** — Quick notes saved to localStorage. Multiple notes with titles, auto-save, and word count.

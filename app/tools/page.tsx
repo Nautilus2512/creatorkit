@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -400,6 +400,86 @@ const toolCards = [
     href: "/tools/notes",
     stat: "localStorage · Auto-save · Multi-note",
     category: "Productivity",
+  },
+  {
+    icon: Images,
+    title: "Image to PDF",
+    description: "Combine multiple images into a PDF. Arrange order, choose page size (A4, Letter, or fit). All in your browser.",
+    href: "/tools/image-to-pdf",
+    stat: "JPG · PNG · WebP · Page size options",
+    category: "Privacy & Security",
+  },
+  {
+    icon: FileStack,
+    title: "PDF Organizer",
+    description: "Reorder and delete PDF pages using visual thumbnails. Download the reorganized PDF instantly.",
+    href: "/tools/pdf-organizer",
+    stat: "Visual thumbnails · Reorder · Delete pages",
+    category: "Privacy & Security",
+  },
+  {
+    icon: FileImage,
+    title: "PDF to Image",
+    description: "Convert PDF pages to PNG images. Adjust export resolution and download all pages as a ZIP.",
+    href: "/tools/pdf-to-image",
+    stat: "PNG export · Resolution control · ZIP download",
+    category: "Privacy & Security",
+  },
+  {
+    icon: Paintbrush2,
+    title: "Color Palette Extractor",
+    description: "Extract dominant colors from any image. Copy as HEX, RGB, or HSL with frequency percentages.",
+    href: "/tools/color-palette-extractor",
+    stat: "HEX · RGB · HSL · Up to 12 colors",
+    category: "Design & Branding",
+  },
+  {
+    icon: Film,
+    title: "Video Thumbnail Extractor",
+    description: "Extract frames from any video as JPG images. Choose grid mode or time interval. Download as ZIP.",
+    href: "/tools/video-thumbnail-extractor",
+    stat: "Grid or interval · JPG · ZIP download",
+    category: "Productivity",
+  },
+  {
+    icon: Music,
+    title: "Audio Waveform Visualizer",
+    description: "Visualize audio waveforms and play back any audio file. Click the waveform to seek.",
+    href: "/tools/audio-waveform-visualizer",
+    stat: "MP3 · WAV · OGG · FLAC · Clickable seek",
+    category: "Productivity",
+  },
+  {
+    icon: ScreenShare,
+    title: "Screen Recorder",
+    description: "Record your screen directly in the browser with optional microphone audio. Download as WebM.",
+    href: "/tools/screen-recorder",
+    stat: "Screen + audio · WebM · Nothing uploaded",
+    category: "Productivity",
+  },
+  {
+    icon: LayoutGrid,
+    title: "Image Grid / Collage",
+    description: "Arrange multiple images in a grid layout and export as a single PNG. Choose gap, background, and size.",
+    href: "/tools/image-grid",
+    stat: "2×2 · 3×3 · 1×3 · Export PNG",
+    category: "Image & Visual",
+  },
+  {
+    icon: Video,
+    title: "Video Compressor",
+    description: "Compress videos using ffmpeg.wasm with quality presets. No uploads — runs entirely in your browser.",
+    href: "/tools/video-compressor",
+    stat: "High · Balanced · Small · MP4 output",
+    category: "Productivity",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Batch Image Editor",
+    description: "Resize, convert format, and adjust brightness/contrast on multiple images at once. Download as ZIP.",
+    href: "/tools/batch-image-editor",
+    stat: "Resize · Format · Filters · ZIP download",
+    category: "Image & Visual",
   },
 ]
 
