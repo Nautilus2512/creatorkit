@@ -1,6 +1,28 @@
 # CreatorKit Changelog
 
 
+## Improvements — May 2026
+### Responsive Layout & Category Reorganisation
+
+**Category reorganisation** — Tools page split from 4 broad categories into 7 focused ones:
+- **Image & Visual** (9) — image manipulation and processing tools
+- **Design** (9) — CSS generators, colors, fonts, OG images
+- **PDF** (5) — all PDF tools extracted from Security
+- **Developer** (17) — formatters, encoders, converters, code tools
+- **Media** (7) — audio and video tools
+- **Security** (8) — encryption, privacy, and authentication tools
+- **Productivity** (11) — notes, timers, calculators, doc scanner, CV maker
+- Added back-to-top button (appears after 400px scroll, smooth scroll)
+
+**Mobile / vertical screen support** — 46 tool components updated:
+- On mobile: panels stack vertically, page scrolls naturally
+- On desktop: original side-by-side dual-scroll layout preserved
+- Fixed-width sidebars become full-width on mobile
+- Border direction adapts (bottom on mobile → right on desktop)
+- Textarea and output panels have minimum height on mobile
+
+**CSP fix** — Added `unpkg.com` to script-src (JS Formatter Prettier CDN), `fonts.googleapis.com` to style-src, and `fonts.gstatic.com` to font-src (Font Pairer).
+
 ## v1.54.0 — May 2026
 ### New Tools
 - **Doc Scanner** — Scan documents with your camera or an uploaded photo. Drag 4 corner handles to align with document edges, apply perspective correction via homography, adjust brightness/contrast/grayscale, download as JPEG.
