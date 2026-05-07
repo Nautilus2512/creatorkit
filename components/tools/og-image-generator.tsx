@@ -208,7 +208,7 @@ export default function OgImageGenerator() {
   }
 
   return (
-    <div className="flex flex-col bg-background md:h-screen">
+    <div className="h-full flex flex-col bg-background">
       <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold">OG Image Generator</h1>

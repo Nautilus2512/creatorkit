@@ -43,7 +43,7 @@ export default function PixelToRem() {
   }
 
   return (
-    <div className="flex flex-col bg-background md:h-screen">
+    <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="px-6 py-4">
