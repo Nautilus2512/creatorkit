@@ -1,6 +1,38 @@
 # CreatorKit Changelog
 
 
+## v1.28.0 — May 2026
+### New Tools
+- **TOTP / 2FA Generator** — Generate time-based OTP codes from a base32 secret. Compatible with Google Authenticator and RFC 6238.
+
+### Improvements
+- Added TOTP Generator with live countdown, next-code preview, and demo secret
+- 40 total tools now available
+
+## v1.27.0 — May 2026
+### New Tools
+- **RSA Key Generator** — Generate RSA-OAEP key pairs (2048 or 4096-bit) in PEM format with download support.
+
+### Improvements
+- Added RSA Key Generator using Web Crypto API — nothing leaves the browser
+- 39 total tools now available
+
+## v1.26.0 — May 2026
+### New Tools
+- **AES Encrypt / Decrypt** — AES-256-GCM encryption with PBKDF2-SHA256 key derivation (100k iterations).
+
+### Improvements
+- Added AES Encryptor with random salt + IV per encryption and swap mode
+- 38 total tools now available
+
+## v1.25.0 — May 2026
+### New Tools
+- **XML Formatter** — Format or minify XML with structure validation. Supports indentation options and file upload.
+
+### Improvements
+- Added XML Formatter using browser's built-in DOMParser — no dependencies needed
+- 37 total tools now available
+
 ## v1.24.0 — May 2026
 ### New Tools
 - **Cron Expression Generator** — Build cron expressions with presets, human-readable descriptions, and next 5 run times.

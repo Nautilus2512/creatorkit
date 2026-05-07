@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -297,6 +297,38 @@ const toolCards = [
     stat: "Presets · Description · Next runs",
     category: "Productivity",
   },
+  {
+    icon: FileCode,
+    title: "XML Formatter",
+    description: "Format or minify XML with structure validation. Adjust indentation, upload files, or paste directly.",
+    href: "/tools/xml-formatter",
+    stat: "Format · Minify · Validate",
+    category: "Productivity",
+  },
+  {
+    icon: ShieldCheck,
+    title: "AES Encrypt / Decrypt",
+    description: "Encrypt and decrypt text with AES-256-GCM and PBKDF2 key derivation. Nothing leaves your browser.",
+    href: "/tools/aes-encryptor",
+    stat: "AES-256-GCM · PBKDF2 · 100k iterations",
+    category: "Privacy & Security",
+  },
+  {
+    icon: KeySquare,
+    title: "RSA Key Generator",
+    description: "Generate RSA-OAEP key pairs in PEM format. Choose 2048 or 4096-bit. Download public and private keys.",
+    href: "/tools/rsa-key-generator",
+    stat: "2048 / 4096-bit · PKCS#8 · SPKI",
+    category: "Privacy & Security",
+  },
+  {
+    icon: Smartphone,
+    title: "TOTP / 2FA Generator",
+    description: "Generate time-based OTP codes from a base32 secret. Compatible with Google Authenticator.",
+    href: "/tools/totp-generator",
+    stat: "HMAC-SHA1 · RFC 6238 · 30s · 6 digits",
+    category: "Privacy & Security",
+  },
 ]
 
 
@@ -345,6 +377,10 @@ export default function ToolsPage() {
       if (e.key === "h") router.push("/tools/html-entity-encoder")
       if (e.key === "f") router.push("/tools/css-minifier")
       if (e.key === "g") router.push("/tools/cron-generator")
+      if (e.key === "v") router.push("/tools/xml-formatter")
+      if (e.key === "z") router.push("/tools/aes-encryptor")
+      if (e.key === "q") router.push("/tools/rsa-key-generator")
+      if (e.key === "y") router.push("/tools/totp-generator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -487,6 +523,10 @@ export default function ToolsPage() {
           { keys: ["h"], description: "Open HTML Entity Encoder" },
           { keys: ["f"], description: "Open CSS Minifier" },
           { keys: ["g"], description: "Open Cron Expression Generator" },
+          { keys: ["v"], description: "Open XML Formatter" },
+          { keys: ["z"], description: "Open AES Encrypt / Decrypt" },
+          { keys: ["q"], description: "Open RSA Key Generator" },
+          { keys: ["y"], description: "Open TOTP / 2FA Generator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />
