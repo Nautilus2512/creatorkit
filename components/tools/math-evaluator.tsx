@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Copy, Check, Trash2, RotateCcw } from "lucide-react"
@@ -97,7 +97,7 @@ export default function MathEvaluator() {
   }, [history])
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background px-6 py-4 flex items-center justify-between">
         <div>
@@ -111,7 +111,7 @@ export default function MathEvaluator() {
         </Button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Left: history + input */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* History */}
@@ -173,7 +173,7 @@ export default function MathEvaluator() {
         </div>
 
         {/* Right: variables + examples */}
-        <div className="w-56 shrink-0 border-l border-border flex flex-col overflow-hidden">
+        <div className="border-t md:border-t-0 md:border-l border-border flex flex-col overflow-hidden md:w-56 md:shrink-0">
           {/* Variables */}
           <div className="p-4 border-b border-border">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Variables</p>

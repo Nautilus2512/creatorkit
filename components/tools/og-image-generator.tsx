@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Download } from "lucide-react"
@@ -208,7 +208,7 @@ export default function OgImageGenerator() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold">OG Image Generator</h1>
@@ -217,9 +217,9 @@ export default function OgImageGenerator() {
         <Button onClick={download}><Download className="h-4 w-4 mr-1.5" />Download PNG</Button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Controls */}
-        <div className="w-64 shrink-0 border-r border-border overflow-y-auto p-4 space-y-5">
+        <div className="border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-5 md:w-64 md:shrink-0">
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Template</Label>

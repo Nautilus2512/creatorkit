@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef } from "react"
 import { PDFDocument } from "pdf-lib"
@@ -81,7 +81,7 @@ export default function PdfOrganizer() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
           <div>

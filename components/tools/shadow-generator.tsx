@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { Copy, Check, Plus, Trash2 } from "lucide-react"
@@ -79,7 +79,7 @@ export default function ShadowGenerator() {
   const copy = () => { navigator.clipboard.writeText(css); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
@@ -94,9 +94,9 @@ export default function ShadowGenerator() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Left — Controls */}
-        <div className="w-1/2 flex flex-col border-r border-border">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
           {/* Layer tabs */}
           <div className="shrink-0 flex items-center gap-1 p-2 border-b border-border overflow-x-auto">
             {shadows.map((s, i) => (
@@ -160,7 +160,7 @@ export default function ShadowGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="w-1/2 flex flex-col">
+        <div className="flex flex-col md:w-1/2 md:flex-1">
           <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
             <h3 className="text-sm font-medium">Preview</h3>
             <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Camera, Upload, RotateCcw, Download, RefreshCw } from "lucide-react"
@@ -234,7 +234,7 @@ export default function DocScanner() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold">Doc Scanner</h1>
@@ -355,7 +355,7 @@ export default function DocScanner() {
 
         {/* ── Done ── */}
         {phase === "done" && resultUrl && (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
             {/* Result */}
             <div className="flex-1 overflow-auto bg-muted/20 p-6 flex items-center justify-center">
               <img
@@ -366,7 +366,7 @@ export default function DocScanner() {
               />
             </div>
             {/* Controls */}
-            <div className="w-60 shrink-0 border-l border-border p-4 space-y-5 overflow-y-auto">
+            <div className="border-t md:border-t-0 md:border-l border-border p-4 space-y-5 overflow-y-auto md:w-60 md:shrink-0">
               <div className="space-y-4">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Adjustments</Label>
                 <div className="space-y-1.5">

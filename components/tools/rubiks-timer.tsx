@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { RefreshCw, Trash2 } from "lucide-react"
@@ -308,7 +308,7 @@ export default function RubiksTimer() {
   const lastSolve = lastSolveId ? solves.find(s => s.id === lastSolveId) : null
 
   return (
-    <div className="h-screen flex flex-col bg-background select-none" tabIndex={-1}>
+    <div className="flex flex-col bg-background md:h-screen select-none" tabIndex={-1}>
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
@@ -351,7 +351,7 @@ export default function RubiksTimer() {
         </p>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Timer */}
         <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
           {/* Big display */}
@@ -413,7 +413,7 @@ export default function RubiksTimer() {
 
         {/* Solve history sidebar */}
         {solves.length > 0 && (
-          <div className="w-52 flex flex-col border-l border-border shrink-0">
+          <div className="flex flex-col border-t md:border-t-0 md:border-l border-border md:w-52 md:shrink-0">
             <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Session ({solves.length})

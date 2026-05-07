@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback } from "react"
 import { Copy, Check, Upload, Download, ArrowLeftRight } from "lucide-react"
@@ -80,7 +80,7 @@ export default function Base64Encoder() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
@@ -104,9 +104,9 @@ export default function Base64Encoder() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Left Panel */}
-        <div className="w-1/2 flex flex-col border-r border-border">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
           <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
             <h3 className="text-sm font-medium">{mode === "encode" ? "Plain Text Input" : "Base64 Input"}</h3>
             {mode === "encode" && (
@@ -127,7 +127,7 @@ export default function Base64Encoder() {
         </div>
 
         {/* Right Panel */}
-        <div className="w-1/2 flex flex-col">
+        <div className="flex flex-col md:w-1/2 md:flex-1">
           <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
             <h3 className="text-sm font-medium">{mode === "encode" ? "Base64 Output" : "Decoded Text"}</h3>
             <div className="flex gap-1">

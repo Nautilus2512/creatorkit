@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { PDFDocument } from "pdf-lib"
@@ -93,7 +93,7 @@ export default function ImageToPdf() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
@@ -130,9 +130,9 @@ export default function ImageToPdf() {
         )}
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Upload zone */}
-        <div className="w-56 shrink-0 flex flex-col border-r border-border">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-56 md:shrink-0">
           <div className="p-3 border-b border-border bg-muted/30">
             <h3 className="text-sm font-medium">Images</h3>
           </div>

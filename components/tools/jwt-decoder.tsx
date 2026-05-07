@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { Copy, Check, Shield, AlertCircle } from "lucide-react"
@@ -59,7 +59,7 @@ export default function JwtDecoder() {
     : []
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
@@ -75,9 +75,9 @@ export default function JwtDecoder() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Left — Input */}
-        <div className="w-1/2 flex flex-col border-r border-border">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
           <div className="p-3 border-b border-border bg-muted/30">
             <h3 className="text-sm font-medium">JWT Token</h3>
           </div>
@@ -117,7 +117,7 @@ export default function JwtDecoder() {
         </div>
 
         {/* Right — Decoded */}
-        <div className="w-1/2 flex flex-col">
+        <div className="flex flex-col md:w-1/2 md:flex-1">
           <div className="p-3 border-b border-border bg-muted/30">
             <h3 className="text-sm font-medium">Decoded</h3>
           </div>

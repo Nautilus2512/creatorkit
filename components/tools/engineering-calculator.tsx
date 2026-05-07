@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Delete, RotateCcw } from "lucide-react"
@@ -152,7 +152,7 @@ export default function EngineeringCalculator() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between">
         <div>
@@ -162,9 +162,9 @@ export default function EngineeringCalculator() {
         {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Calculator column */}
-        <div className="w-80 shrink-0 flex flex-col border-r border-border overflow-hidden">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border overflow-hidden md:w-80 md:shrink-0">
           {/* Display */}
           <div className="p-4 bg-muted/20 border-b border-border">
             <div className="flex items-center justify-between mb-1">

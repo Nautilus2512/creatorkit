@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { Plus, Trash2, Save } from "lucide-react"
@@ -98,7 +98,7 @@ export default function Notes() {
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="px-6 py-4 flex items-center justify-between">
@@ -119,9 +119,9 @@ export default function Notes() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Sidebar */}
-        <div className="w-56 flex flex-col border-r border-border shrink-0">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-56 md:shrink-0">
           <div className="p-3 border-b border-border bg-muted/30">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{notes.length} Note{notes.length !== 1 ? "s" : ""}</p>
           </div>

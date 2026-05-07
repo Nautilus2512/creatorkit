@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Copy, Check, Download, Upload, Code2, Loader2 } from "lucide-react"
@@ -139,7 +139,7 @@ export default function JsFormatter() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background px-6 py-4 flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -153,9 +153,9 @@ export default function JsFormatter() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Options panel */}
-        <div className="w-60 shrink-0 border-r border-border overflow-y-auto p-4 space-y-5">
+        <div className="border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-5 md:w-60 md:shrink-0">
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Language</Label>
@@ -241,7 +241,7 @@ export default function JsFormatter() {
         </div>
 
         {/* Code panels */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
           {/* Input */}
           <div className="flex-1 flex flex-col overflow-hidden border-r border-border">
             <div className="shrink-0 px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-between">
@@ -252,7 +252,7 @@ export default function JsFormatter() {
             </div>
             <Textarea
               value={code} onChange={e => setCode(e.target.value)}
-              className="flex-1 font-mono text-sm resize-none rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="flex-1 min-h-[200px] md:min-h-0 font-mono text-sm resize-none rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               placeholder="Paste your code here…" spellCheck={false}
             />
           </div>
@@ -275,7 +275,7 @@ export default function JsFormatter() {
               ? <div className="flex-1 p-4 overflow-auto">
                   <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3 text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap">{fmtErr}</div>
                 </div>
-              : <pre className="flex-1 overflow-auto p-4 text-sm font-mono whitespace-pre leading-relaxed">
+              : <pre className="flex-1 min-h-[200px] md:min-h-0 overflow-auto p-4 text-sm font-mono whitespace-pre leading-relaxed">
                   {formatted || <span className="text-muted-foreground italic">Formatted output will appear here…</span>}
                 </pre>
             }

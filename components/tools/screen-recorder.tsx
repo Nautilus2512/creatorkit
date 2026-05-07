@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef } from "react"
 import { Monitor, Square, Download, Trash2, Play, Pause } from "lucide-react"
@@ -103,7 +103,7 @@ export default function ScreenRecorder() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       <div className="shrink-0 border-b border-border bg-background">
         <div className="px-6 py-4">
           <h1 className="text-xl font-semibold">Screen Recorder</h1>

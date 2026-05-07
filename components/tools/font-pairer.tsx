@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { Copy, Check, Shuffle } from "lucide-react"
@@ -236,7 +236,7 @@ body, p { font-family: var(--font-body); }`
   const t = THEMES[theme]
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="flex flex-col bg-background md:h-screen">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-background">
         <div className="flex items-center justify-between px-6 py-4">
@@ -250,9 +250,9 @@ body, p { font-family: var(--font-body); }`
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
         {/* Left — controls */}
-        <div className="w-72 shrink-0 flex flex-col border-r border-border overflow-y-auto">
+        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-72 md:shrink-0 overflow-y-auto">
           <div className="p-4 space-y-5">
 
             <FontSelector
