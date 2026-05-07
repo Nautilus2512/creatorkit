@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp, X } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp, X, Receipt, AlarmClock, Gamepad2, Zap } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -537,6 +537,38 @@ const toolCards = [
     stat: "Camera + upload · Perspective warp · B&W mode",
     category: "Productivity",
   },
+  {
+    icon: Receipt,
+    title: "Invoice Generator",
+    description: "Create professional invoices with line items, tax, and live preview. Export as PDF. Auto-saved locally — never uploaded.",
+    href: "/tools/invoice-generator",
+    stat: "Live preview · PDF export · localStorage · Multi-currency",
+    category: "Productivity",
+  },
+  {
+    icon: AlarmClock,
+    title: "Pomodoro Timer",
+    description: "Focus timer with 25/5/15 minute work and break cycles. Bell chime, browser notifications, and session tracking.",
+    href: "/tools/pomodoro-timer",
+    stat: "25/5/15 min · Bell · Notifications · Session history",
+    category: "Productivity",
+  },
+  {
+    icon: Gamepad2,
+    title: "Game Controller Tester",
+    description: "Test any gamepad in the browser. Real-time button states, analog axis values, and visual controller layout.",
+    href: "/tools/gamepad-tester",
+    stat: "All buttons · Axes · Visual layout · Chrome/Firefox/Edge",
+    category: "Productivity",
+  },
+  {
+    icon: Zap,
+    title: "Electrical Calculator",
+    description: "Ohm's Law, AC reactance, power, three-phase, resistor color codes, and RC/RL time constants. IEC/IEEE standards.",
+    href: "/tools/electrical-calculator",
+    stat: "Ohm · AC · 3-Phase · Color Code · RC/RL · IEC/IEEE",
+    category: "Developer",
+  },
 ]
 
 
@@ -655,6 +687,10 @@ export default function ToolsPage() {
       if (e.key === "`") router.push("/tools/engineering-calculator")
       if (e.key === "/") router.push("/tools/og-image-generator")
       if (e.key === "~") router.push("/tools/doc-scanner")
+      if (e.key === "!") router.push("/tools/invoice-generator")
+      if (e.key === "@") router.push("/tools/pomodoro-timer")
+      if (e.key === "#") router.push("/tools/gamepad-tester")
+      if (e.key === "$") router.push("/tools/electrical-calculator")
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -863,6 +899,10 @@ export default function ToolsPage() {
           { keys: ["`"], description: "Open Engineering Calculator" },
           { keys: ["/"], description: "Open OG Image Generator" },
           { keys: ["~"], description: "Open Doc Scanner" },
+          { keys: ["!"], description: "Open Invoice Generator" },
+          { keys: ["@"], description: "Open Pomodoro Timer" },
+          { keys: ["#"], description: "Open Game Controller Tester" },
+          { keys: ["$"], description: "Open Electrical Calculator" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
         ]}
       />

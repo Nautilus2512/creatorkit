@@ -1,6 +1,36 @@
 # CreatorKit Changelog
 
 
+## v1.58.0 — May 2026
+### New Tools
+- **Electrical Calculator** — Ohm's Law (auto-solve any 2 of V/I/R/P), AC reactance (XL/XC/Z/PF), single-phase power, three-phase Star/Delta, resistor color codes (4/5-band), and RC/RL time constants. IEC/IEEE standards with SI units.
+
+### Improvements
+- 6 calculator tabs: Ohm's Law · AC Reactance · Power · Three-Phase · Resistor Colors · RC/RL τ
+- 70 total tools now available
+
+## v1.57.0 — May 2026
+### New Tools
+- **Game Controller Tester** — Test any gamepad in the browser. Real-time button states, analog axis values, D-pad/face/trigger visual layout. Uses the Gamepad API — no software needed. Safari warning included.
+
+### Improvements
+- 69 total tools now available
+
+## v1.56.0 — May 2026
+### New Tools
+- **Pomodoro Timer** — 25/5/15 minute work/break cycles. Web Audio API bell chime (no audio file), browser notifications, session dot tracking, and configurable durations. Updates document title while running.
+
+### Improvements
+- Settings + session count persisted to localStorage
+- 68 total tools now available
+
+## v1.55.0 — May 2026
+### New Tools
+- **Invoice Generator** — Professional invoice creator with live preview, multi-currency support, line items, tax rate, and PDF export via browser print. Auto-saved to localStorage.
+
+### Improvements
+- 67 total tools now available
+
 ## Improvements — May 2026
 ### Responsive Layout & Category Reorganisation
 
