@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -15,7 +15,7 @@ const toolCards = [
     description: "Strip location, device info, and timestamps from your images, PDFs, and audio files locally.",
     href: "/tools/metadata-remover",
     stat: "Batch up to 20 files",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: Crop,
@@ -31,7 +31,7 @@ const toolCards = [
     description: "Turn your brand colors into a complete CSS design system in seconds.",
     href: "/tools/design-tokens",
     stat: "CSS, Tailwind & JSON export",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: Lock,
@@ -39,7 +39,7 @@ const toolCards = [
     description: "Generate strong, random passwords. Nothing is sent anywhere.",
     href: "/tools/password-generator",
     stat: "Cryptographically secure",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: QrCode,
@@ -47,7 +47,7 @@ const toolCards = [
     description: "Create QR codes for URLs, text, and contact info. Fully offline, nothing is sent.",
     href: "/tools/qr-code-generator",
     stat: "URL, text, email, phone, Wi-Fi",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: Minimize2,
@@ -71,7 +71,7 @@ const toolCards = [
     description: "Generate favicons in all sizes from text or an image. No server required.",
     href: "/tools/favicon-generator",
     stat: "6 sizes + site.webmanifest",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: Hash,
@@ -79,7 +79,7 @@ const toolCards = [
     description: "Compute MD5, SHA-1, SHA-256, and SHA-512 hashes for any file. Paste an expected hash to verify integrity.",
     href: "/tools/file-checksum-verifier",
     stat: "MD5 · SHA-1 · SHA-256 · SHA-512",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: Layers,
@@ -95,7 +95,7 @@ const toolCards = [
     description: "Wrap any screenshot inside a browser, phone, laptop, or tablet frame with a custom background.",
     href: "/tools/screenshot-to-mockup",
     stat: "4 device frames · 10 backgrounds",
-    category: "Design & Branding",
+    category: "Image & Visual",
   },
   {
     icon: Brain,
@@ -119,7 +119,7 @@ const toolCards = [
     description: "Detect the tempo of any audio file in beats per minute. Works entirely in your browser.",
     href: "/tools/bpm-detector",
     stat: "MP3, WAV, OGG, M4A · First 60s analyzed",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: FileDown,
@@ -127,7 +127,7 @@ const toolCards = [
     description: "Compress PDFs by removing metadata and optimizing structure. All processing happens locally in your browser.",
     href: "/tools/pdf-compress",
     stat: "Metadata removal · Object streams",
-    category: "Privacy & Security",
+    category: "PDF",
   },
   {
     icon: Combine,
@@ -135,7 +135,7 @@ const toolCards = [
     description: "Merge multiple PDFs into one or split a PDF by page ranges. All processing happens locally in your browser.",
     href: "/tools/pdf-merger",
     stat: "Merge unlimited · Split by ranges",
-    category: "Privacy & Security",
+    category: "PDF",
   },
   {
     icon: Code,
@@ -143,7 +143,7 @@ const toolCards = [
     description: "Live HTML/CSS/JS editor with instant preview. Write, test, and download your code. Runs entirely in your browser.",
     href: "/tools/code-playground",
     stat: "Live preview · Download as ZIP",
-    category: "Productivity",
+    category: "Developer",
   },
     {
     icon: Music2,
@@ -151,7 +151,7 @@ const toolCards = [
     description: "Convert between MP3, WAV, OGG, FLAC, AAC, M4A, WMA, and OPUS formats. Powered by ffmpeg.wasm, runs entirely in your browser.",
     href: "/tools/audio-converter",
     stat: "8 formats · Quality settings",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: Pen,
@@ -175,7 +175,7 @@ const toolCards = [
     description: "Compare text and files with visual diff highlighting, line-by-line analysis, and export options.",
     href: "/tools/text-compare",
     stat: "Visual diff · File support",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Search,
@@ -183,7 +183,7 @@ const toolCards = [
     description: "Test and debug regular expressions with real-time matching, highlighting, and common pattern library.",
     href: "/tools/regex-tester",
     stat: "Real-time matching · Common patterns",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: FileJson,
@@ -191,7 +191,7 @@ const toolCards = [
     description: "Format, validate, and minify JSON with real-time error highlighting and syntax checking.",
     href: "/tools/json-formatter",
     stat: "Format · Validate · Minify",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: FileSpreadsheet,
@@ -199,7 +199,7 @@ const toolCards = [
     description: "Convert between CSV and JSON formats with table preview and file upload support.",
     href: "/tools/csv-json-converter",
     stat: "CSV ↔ JSON · File upload",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Type,
@@ -207,7 +207,7 @@ const toolCards = [
     description: "Convert text between upper, lower, title, camel, snake, and kebab cases with real-time preview.",
     href: "/tools/text-case-converter",
     stat: "5 cases · Real-time",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Hash,
@@ -215,7 +215,7 @@ const toolCards = [
     description: "Generate cryptographically secure UUID v4s with bulk generation options.",
     href: "/tools/uuid-generator",
     stat: "v4 UUIDs · Bulk generation",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Binary,
@@ -223,7 +223,7 @@ const toolCards = [
     description: "Encode text or files to Base64, or decode Base64 back to plain text. Everything runs in your browser.",
     href: "/tools/base64-encoder",
     stat: "Encode · Decode · File upload",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Link2,
@@ -231,7 +231,7 @@ const toolCards = [
     description: "Encode or decode URL components and full URLs with encodeURIComponent and encodeURI.",
     href: "/tools/url-encoder",
     stat: "encodeURIComponent · encodeURI",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: AlignLeft,
@@ -247,7 +247,7 @@ const toolCards = [
     description: "Convert colors between HEX, RGB, HSL, and OKLCH formats. Use the color picker or type any format.",
     href: "/tools/color-converter",
     stat: "HEX · RGB · HSL · OKLCH",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: BookType,
@@ -263,7 +263,7 @@ const toolCards = [
     description: "Convert between Unix timestamps and human-readable dates. Supports ISO 8601, UTC, and local time.",
     href: "/tools/timestamp-converter",
     stat: "Unix · ISO 8601 · UTC · Local",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: KeyRound,
@@ -271,7 +271,7 @@ const toolCards = [
     description: "Decode and inspect JSON Web Tokens — view header, payload, expiry, and issued-at time. Nothing leaves your browser.",
     href: "/tools/jwt-decoder",
     stat: "Header · Payload · Expiry check",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: Braces,
@@ -279,7 +279,7 @@ const toolCards = [
     description: "Encode special characters to HTML entities or decode them back. Includes a quick-insert reference bar.",
     href: "/tools/html-entity-encoder",
     stat: "Encode · Decode · Swap",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Minimize,
@@ -287,7 +287,7 @@ const toolCards = [
     description: "Remove whitespace and comments from CSS. See exact byte savings. Upload a .css file or paste directly.",
     href: "/tools/css-minifier",
     stat: "Comments · Whitespace · Download .min.css",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: CalendarClock,
@@ -295,7 +295,7 @@ const toolCards = [
     description: "Build cron expressions with presets, human-readable descriptions, and next 5 scheduled run times.",
     href: "/tools/cron-generator",
     stat: "Presets · Description · Next runs",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: FileCode,
@@ -303,7 +303,7 @@ const toolCards = [
     description: "Format or minify XML with structure validation. Adjust indentation, upload files, or paste directly.",
     href: "/tools/xml-formatter",
     stat: "Format · Minify · Validate",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: ShieldCheck,
@@ -311,7 +311,7 @@ const toolCards = [
     description: "Encrypt and decrypt text with AES-256-GCM and PBKDF2 key derivation. Nothing leaves your browser.",
     href: "/tools/aes-encryptor",
     stat: "AES-256-GCM · PBKDF2 · 100k iterations",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: KeySquare,
@@ -319,7 +319,7 @@ const toolCards = [
     description: "Generate RSA-OAEP key pairs in PEM format. Choose 2048 or 4096-bit. Download public and private keys.",
     href: "/tools/rsa-key-generator",
     stat: "2048 / 4096-bit · PKCS#8 · SPKI",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: Smartphone,
@@ -327,7 +327,7 @@ const toolCards = [
     description: "Generate time-based OTP codes from a base32 secret. Compatible with Google Authenticator.",
     href: "/tools/totp-generator",
     stat: "HMAC-SHA1 · RFC 6238 · 30s · 6 digits",
-    category: "Privacy & Security",
+    category: "Security",
   },
   {
     icon: ArrowRightLeft,
@@ -335,7 +335,7 @@ const toolCards = [
     description: "Convert between YAML and JSON formats with file upload, download, and indent control.",
     href: "/tools/yaml-converter",
     stat: "YAML → JSON · JSON → YAML · Swap",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Ruler,
@@ -343,7 +343,7 @@ const toolCards = [
     description: "Convert between px and rem units with a configurable root font size and clickable reference table.",
     href: "/tools/pixel-to-rem",
     stat: "px ↔ rem · Reference table · Custom base",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: Blend,
@@ -351,7 +351,7 @@ const toolCards = [
     description: "Build CSS linear, radial, and conic gradients visually. Add color stops and copy the CSS instantly.",
     href: "/tools/gradient-generator",
     stat: "Linear · Radial · Conic · Copy CSS",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: BoxSelect,
@@ -359,7 +359,7 @@ const toolCards = [
     description: "Build CSS box-shadows visually with multiple layers. Adjust offsets, blur, spread, color, and opacity.",
     href: "/tools/shadow-generator",
     stat: "Multi-layer · Inset · Live preview",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: SquareDashedBottom,
@@ -367,7 +367,7 @@ const toolCards = [
     description: "Build CSS border-radius values visually. Control each corner independently with presets and sliders.",
     href: "/tools/border-radius-visualizer",
     stat: "Per-corner · Presets · px or %",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: FileCode2,
@@ -375,7 +375,7 @@ const toolCards = [
     description: "Convert Markdown to HTML with live preview and raw HTML output. File upload and download supported.",
     href: "/tools/markdown-to-html",
     stat: "Live preview · Raw HTML · Download",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Clock4,
@@ -391,7 +391,7 @@ const toolCards = [
     description: "Record audio directly in your browser. Play back and download recordings. Nothing is uploaded.",
     href: "/tools/voice-recorder",
     stat: "Record · Playback · Download",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: NotebookPen,
@@ -407,7 +407,7 @@ const toolCards = [
     description: "Combine multiple images into a PDF. Arrange order, choose page size (A4, Letter, or fit). All in your browser.",
     href: "/tools/image-to-pdf",
     stat: "JPG · PNG · WebP · Page size options",
-    category: "Privacy & Security",
+    category: "PDF",
   },
   {
     icon: FileStack,
@@ -415,7 +415,7 @@ const toolCards = [
     description: "Reorder and delete PDF pages using visual thumbnails. Download the reorganized PDF instantly.",
     href: "/tools/pdf-organizer",
     stat: "Visual thumbnails · Reorder · Delete pages",
-    category: "Privacy & Security",
+    category: "PDF",
   },
   {
     icon: FileImage,
@@ -423,7 +423,7 @@ const toolCards = [
     description: "Convert PDF pages to PNG images. Adjust export resolution and download all pages as a ZIP.",
     href: "/tools/pdf-to-image",
     stat: "PNG export · Resolution control · ZIP download",
-    category: "Privacy & Security",
+    category: "PDF",
   },
   {
     icon: Paintbrush2,
@@ -431,7 +431,7 @@ const toolCards = [
     description: "Extract dominant colors from any image. Copy as HEX, RGB, or HSL with frequency percentages.",
     href: "/tools/color-palette-extractor",
     stat: "HEX · RGB · HSL · Up to 12 colors",
-    category: "Design & Branding",
+    category: "Image & Visual",
   },
   {
     icon: Film,
@@ -439,7 +439,7 @@ const toolCards = [
     description: "Extract frames from any video as JPG images. Choose grid mode or time interval. Download as ZIP.",
     href: "/tools/video-thumbnail-extractor",
     stat: "Grid or interval · JPG · ZIP download",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: Music,
@@ -447,7 +447,7 @@ const toolCards = [
     description: "Visualize audio waveforms and play back any audio file. Click the waveform to seek.",
     href: "/tools/audio-waveform-visualizer",
     stat: "MP3 · WAV · OGG · FLAC · Clickable seek",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: ScreenShare,
@@ -455,7 +455,7 @@ const toolCards = [
     description: "Record your screen directly in the browser with optional microphone audio. Download as WebM.",
     href: "/tools/screen-recorder",
     stat: "Screen + audio · WebM · Nothing uploaded",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: LayoutGrid,
@@ -471,7 +471,7 @@ const toolCards = [
     description: "Compress videos using ffmpeg.wasm with quality presets. No uploads — runs entirely in your browser.",
     href: "/tools/video-compressor",
     stat: "High · Balanced · Small · MP4 output",
-    category: "Productivity",
+    category: "Media",
   },
   {
     icon: SlidersHorizontal,
@@ -495,7 +495,7 @@ const toolCards = [
     description: "Browse and pair Google Fonts visually. Preview heading + body combos in light, dark, or sepia. Copy the CSS import instantly.",
     href: "/tools/font-pairer",
     stat: "70 fonts · 14 pairings · Light · Dark · Sepia",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: Code2,
@@ -503,7 +503,7 @@ const toolCards = [
     description: "Format JavaScript, TypeScript, CSS, HTML, JSON, and Markdown with Prettier. Adjust quotes, semicolons, and indent style.",
     href: "/tools/js-formatter",
     stat: "Prettier 2.8.8 · 8 languages · File upload",
-    category: "Productivity",
+    category: "Developer",
   },
   {
     icon: Calculator,
@@ -527,7 +527,7 @@ const toolCards = [
     description: "Generate Open Graph images for social media. 4 templates, custom colors and fonts. Download as 1200×630 PNG.",
     href: "/tools/og-image-generator",
     stat: "Minimal · Dark · Gradient · Split · PNG export",
-    category: "Design & Branding",
+    category: "Design",
   },
   {
     icon: ScanLine,
@@ -543,8 +543,15 @@ const toolCards = [
 export default function ToolsPage() {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState("All")
-  const categories = ["All", "Image & Visual", "Privacy & Security", "Design & Branding", "Productivity"]
+  const [showTop, setShowTop] = useState(false)
+  const categories = ["All", "Image & Visual", "Design", "PDF", "Developer", "Media", "Security", "Productivity"]
   const filtered = activeCategory === "All" ? toolCards : toolCards.filter(t => t.category === activeCategory)
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -703,6 +710,17 @@ export default function ToolsPage() {
           </div>
         </main>
       </div>
+
+      {/* Back to top */}
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-50 rounded-full bg-primary p-3 shadow-lg text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </button>
+      )}
 
       <ShortcutsModal
         pageName="Tools Dashboard"
