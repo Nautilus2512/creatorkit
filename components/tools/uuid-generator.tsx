@@ -1,75 +1,47 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { 
-  Hash, Copy, Download, Check, RefreshCw
-} from "lucide-react"
+import { useState } from "react"
+import { Hash, Copy, Download, Check, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 export default function UuidGenerator() {
-  const [uuids, setUuids] = useState<string[]>([])
   const [singleUuid, setSingleUuid] = useState("")
+  const [uuids, setUuids] = useState<string[]>([])
+  const [bulkCount, setBulkCount] = useState(10)
+  const [includeHyphens, setIncludeHyphens] = useState(true)
   const [copied, setCopied] = useState<string | null>(null)
-  const [bulkCount, setBulkCount] = useState(1)
-  const [includeHyphens, setIncludeHyphens] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
 
-  const generateUuid = () => {
+  const makeUuid = () => {
     const uuid = crypto.randomUUID()
-    setSingleUuid(uuid)
-    setCopied('single')
-    setTimeout(() => setCopied(null), 2000)
+    return includeHyphens ? uuid : uuid.replace(/-/g, "")
   }
 
-  const generateBulkUuids = () => {
-    setIsGenerating(true)
-    const newUuids = Array.from({ length: bulkCount }, () => {
-      let uuid = crypto.randomUUID()
-      if (!includeHyphens) {
-        uuid = uuid.replace(/-/g, '')
-      }
-      return uuid
-    })
-
-    setTimeout(() => {
-      setUuids(newUuids)
-      setIsGenerating(false)
-      setCopied('bulk')
-      setTimeout(() => setCopied(null), 2000)
-    }, 500)
+  const generateSingle = () => {
+    setSingleUuid(makeUuid())
   }
 
-  const copyToClipboard = (text: string, type: 'single' | 'bulk' | 'all') => {
+  const generateBulk = () => {
+    setUuids(Array.from({ length: bulkCount }, makeUuid))
+  }
+
+  const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
-    setCopied(type)
+    setCopied(key)
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const downloadAsFile = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/plain' })
+  const download = () => {
+    const content = uuids.join("\n")
+    const blob = new Blob([content], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = filename
-    document.body.appendChild(a)
+    a.download = "uuids.txt"
     a.click()
-    document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }
-
-  const copyAllToClipboard = () => {
-    const allUuids = uuids.join('\n')
-    copyToClipboard(allUuids, 'all')
-  }
-
-  const downloadAllAsFile = () => {
-    const allUuids = uuids.join('\n')
-    downloadAsFile(allUuids, 'uuids.txt')
   }
 
   return (
@@ -81,187 +53,110 @@ export default function UuidGenerator() {
             <h1 className="text-xl font-semibold">UUID Generator</h1>
             <p className="text-sm text-muted-foreground">Generate cryptographically secure UUID v4s</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={generateUuid}
-            >
-              <Hash className="h-4 w-4 mr-1" />
-              Generate Single
+          <Button variant="outline" size="sm" onClick={generateSingle}>
+            <Hash className="h-4 w-4 mr-1" />Generate Single
+          </Button>
+        </div>
+      </div>
+
+      {/* Options */}
+      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3 flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Switch id="hyphens" checked={includeHyphens} onCheckedChange={setIncludeHyphens} />
+          <Label htmlFor="hyphens" className="text-sm">Include hyphens</Label>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left — Single */}
+        <div className="w-1/2 flex flex-col border-r border-border">
+          <div className="p-3 border-b border-border bg-muted/30">
+            <h3 className="text-sm font-medium">Single UUID</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            <Textarea
+              value={singleUuid}
+              readOnly
+              placeholder="Click Generate Single to create a UUID..."
+              className="font-mono text-sm resize-none"
+              rows={3}
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={generateSingle} className="flex-1">
+                <RefreshCw className="h-4 w-4 mr-1" />Generate New
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => copy(singleUuid, "single")} disabled={!singleUuid}>
+                {copied === "single" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {copied === "single" ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right — Bulk */}
+        <div className="w-1/2 flex flex-col">
+          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <h3 className="text-sm font-medium">Bulk Generation</h3>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Count:</Label>
+              <input
+                type="number"
+                min={1}
+                max={1000}
+                value={bulkCount}
+                onChange={(e) => setBulkCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 px-2 py-1 border border-border rounded text-xs font-mono bg-background"
+              />
+            </div>
+          </div>
+
+          <div className="p-4 flex gap-2 border-b border-border">
+            <Button size="sm" onClick={generateBulk} className="flex-1">
+              <Hash className="h-4 w-4 mr-1" />Generate {bulkCount} UUIDs
             </Button>
+            {uuids.length > 0 && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => copy(uuids.join("\n"), "all")}>
+                  {copied === "all" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                  Copy All
+                </Button>
+                <Button variant="outline" size="sm" onClick={download}>
+                  <Download className="h-4 w-4 mr-1" />Download
+                </Button>
+              </>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {uuids.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                Click Generate to create bulk UUIDs
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {uuids.map((uuid, i) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-2 hover:bg-muted/30 group">
+                    <span className="text-xs text-muted-foreground w-8 shrink-0">#{i + 1}</span>
+                    <span className="font-mono text-xs flex-1 truncate">{uuid}</span>
+                    <Button
+                      variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                      onClick={() => copy(uuid, `row-${i}`)}
+                    >
+                      {copied === `row-${i}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="shrink-0 border-b border-border bg-muted/30">
-        <div className="max-w-4xl mx-auto px-6 py-4 space-y-4">
-          {/* Single UUID */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Hash className="h-5 w-5" />
-                Single UUID
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-        <div className="space-y-2">
-                <Textarea
-                  value={singleUuid}
-                  onChange={(e) => setSingleUuid(e.target.value)}
-                  placeholder="Generated UUID will appear here..."
-                  className="font-mono text-sm"
-                  readOnly
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(singleUuid, 'single')}
-                  disabled={!singleUuid}
-                  className="w-full"
-                >
-                  {copied === 'single' ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  Copy
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={generateUuid}
-                >
-                  <RefreshCw className="h-4 w-4 mr-1" />
-                  Generate New
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-          {/* Bulk Generation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Hash className="h-5 w-5" />
-                Bulk Generation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-4">
-                  <Label htmlFor="bulk-count" className="text-sm font-medium">
-                    Number of UUIDs
-                  </Label>
-                  <input
-                    id="bulk-count"
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={bulkCount}
-                    onChange={(e) => setBulkCount(parseInt(e.target.value) || 1)}
-                    className="w-24 px-3 py-2 border border rounded-md font-mono text-sm"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="include-hyphens"
-                      checked={includeHyphens}
-                      onCheckedChange={setIncludeHyphens}
-                    />
-                    <Label htmlFor="include-hyphens" className="text-sm">
-                      Include hyphens
-                    </Label>
-                  </div>
-                </div>
-
-                </div>
-
-              {uuids.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Generated UUIDs ({uuids.length})</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={copyAllToClipboard}
-                        disabled={uuids.length === 0}
-                      >
-                        {copied === 'all' ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                        Copy All
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={downloadAllAsFile}
-                        disabled={uuids.length === 0}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download All
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto border rounded-md bg-muted/20 p-3">
-                    <div className="font-mono text-sm space-y-1">
-                      {uuids.map((uuid, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-background rounded">
-                          <span className="text-muted-foreground">#{index + 1}</span>
-                          <span>{uuid}</span>
-            </div>
-
-            {uuids.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Generated UUIDs ({uuids.length})</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyAllToClipboard}
-                      disabled={uuids.length === 0}
-                    >
-                      {copied === 'all' ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                      Copy All
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={downloadAllAsFile}
-                      disabled={uuids.length === 0}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download All
-                    </Button>
-                  </div>
-                </div>
-                <div className="max-h-60 overflow-y-auto border rounded-md bg-muted/20 p-3">
-                  <div className="font-mono text-sm space-y-1">
-                    {uuids.map((uuid, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-background rounded">
-                        <span className="text-muted-foreground">#{index + 1}</span>
-                        <span>{uuid}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-
-    {/* Status Bar */}
-    {copied && (
-      <div className="shrink-0 border-b border-border bg-muted/30">
-        <div className="px-6 py-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <Check className="h-4 w-4 mr-1" />
-          {copied === 'single' ? 'Single UUID copied!' : 
-           copied === 'bulk' ? `${uuids.length} UUIDs copied!` : 
-           copied === 'all' ? 'All UUIDs copied!' : 'Copied!'}
+      {uuids.length > 0 && (
+        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground">
+          {uuids.length} UUIDs generated · {includeHyphens ? "with hyphens" : "no hyphens"}
         </div>
-      </div>
-    )}
-  </div>
-)
+      )}
+    </div>
+  )
+}
