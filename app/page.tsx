@@ -1,19 +1,22 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 export default function Home() {
   const router = useRouter()
+  const [search, setSearch] = useState("")
+  const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return
+      if ((e.target as HTMLElement).tagName === "INPUT") return
       if (e.key === "1") router.push("/tools/metadata-remover")
       if (e.key === "2") router.push("/tools/image-resizer")
       if (e.key === "3") router.push("/tools/design-tokens")
@@ -21,6 +24,12 @@ export default function Home() {
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [router])
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const q = search.trim()
+    router.push(q ? `/tools?q=${encodeURIComponent(q)}` : "/tools")
+  }
 
   return (
     <>
@@ -54,11 +63,32 @@ export default function Home() {
               Fast, privacy-first tools for creatives and teams
             </h1>
             <p className="mx-auto max-w-2xl text-muted-foreground sm:text-lg">
-              Clean metadata from your images, resize photos for any social platform, and build a complete design system from your brand colors. Everything runs locally in your browser with no uploads and no tracking.
+              66+ browser-based utilities for creators. No uploads, no tracking — everything runs locally.
             </p>
-            <Button asChild size="lg">
-              <Link href="/tools">Try Free Tools</Link>
-            </Button>
+
+            {/* Search bar */}
+            <form onSubmit={handleSearch} className="mx-auto flex max-w-lg gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search 66+ tools…"
+                  className="w-full rounded-xl border border-border bg-muted/30 pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                />
+              </div>
+              <Button type="submit" size="lg">
+                {search.trim() ? "Search" : "Browse All"}
+              </Button>
+            </form>
+            <p className="text-xs text-muted-foreground">
+              or{" "}
+              <Link href="/tools" className="underline hover:text-foreground transition-colors">
+                browse all 66 tools →
+              </Link>
+            </p>
           </section>
 
           <section id="features" className="mt-14 grid gap-4 md:mt-16 md:grid-cols-3">

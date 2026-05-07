@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -546,15 +546,30 @@ const SCROLL_KEY   = "ck-tools-scroll"
 export default function ToolsPage() {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState("All")
+  const [search, setSearch] = useState("")
   const [showTop, setShowTop] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
   const categories = ["All", "Image & Visual", "Design", "PDF", "Developer", "Media", "Security", "Productivity"]
-  const filtered = activeCategory === "All" ? toolCards : toolCards.filter(t => t.category === activeCategory)
 
-  // Restore category + queue scroll restore
+  const q = search.trim().toLowerCase()
+  const filtered = toolCards.filter(t => {
+    const matchesCat = activeCategory === "All" || t.category === activeCategory
+    const matchesSearch = !q ||
+      t.title.toLowerCase().includes(q) ||
+      t.description.toLowerCase().includes(q) ||
+      t.category.toLowerCase().includes(q) ||
+      t.stat.toLowerCase().includes(q)
+    return matchesCat && matchesSearch
+  })
+
+  // Restore category + read ?q= from URL + queue scroll restore
   useEffect(() => {
     const savedCat = sessionStorage.getItem(CATEGORY_KEY)
     if (savedCat && categories.includes(savedCat)) setActiveCategory(savedCat)
+    // Pre-fill search from URL param (?q=…) — used by landing page search
+    const urlQ = new URLSearchParams(window.location.search).get("q")
+    if (urlQ) { setSearch(urlQ); setTimeout(() => searchRef.current?.focus(), 100) }
     setMounted(true)
   }, [])
 
@@ -581,7 +596,13 @@ export default function ToolsPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Ctrl/Cmd+K → focus search bar
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault(); searchRef.current?.focus(); return
+      }
       if (e.ctrlKey || e.metaKey || e.altKey) return
+      // Don't trigger navigation shortcuts while typing in search
+      if ((e.target as HTMLElement).tagName === "INPUT") return
       if (e.key === "1") router.push("/tools/metadata-remover")
       if (e.key === "2") router.push("/tools/image-resizer")
       if (e.key === "3") router.push("/tools/design-tokens")
@@ -676,6 +697,38 @@ export default function ToolsPage() {
             </p>
           </div>
 
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === "Escape") { setSearch(""); searchRef.current?.blur() } }}
+              placeholder="Search tools by name, category, or keyword…"
+              className="w-full rounded-xl border border-border bg-background pl-10 pr-24 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+            />
+            {search
+              ? <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 hover:bg-muted/50 transition-colors">
+                  <X className="h-3.5 w-3.5" />Clear
+                </button>
+              : <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-0.5 text-xs text-muted-foreground border border-border rounded-md px-1.5 py-0.5 bg-muted/30 pointer-events-none">
+                  <span className="text-[10px]">⌘</span>K
+                </kbd>
+            }
+          </div>
+
+          {/* Search results count */}
+          {q && (
+            <p className="text-sm text-muted-foreground -mt-8">
+              {filtered.length === 0
+                ? `No tools match "${search}"`
+                : `${filtered.length} tool${filtered.length === 1 ? "" : "s"} found`}
+              {activeCategory !== "All" && ` in ${activeCategory}`}
+            </p>
+          )}
+
           {/* Category filter */}
           <div className="flex flex-wrap gap-2">
             {categories.map(cat => (
@@ -756,6 +809,8 @@ export default function ToolsPage() {
       <ShortcutsModal
         pageName="Tools Dashboard"
         shortcuts={[
+          { keys: ["⌘", "K"], description: "Focus search bar" },
+          { keys: ["Esc"], description: "Clear search" },
           { keys: ["1"], description: "Open Metadata Remover" },
           { keys: ["2"], description: "Open Image Resizer" },
           { keys: ["3"], description: "Open Design Token Generator" },
