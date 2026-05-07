@@ -41,7 +41,11 @@ function trimmedAvg(times: number[], n: number) {
 type Phase = "idle" | "inspecting" | "running" | "stopped"
 
 export default function RubiksTimer() {
-  const [currentScramble, setCurrentScramble] = useState(() => scramble())
+  const [currentScramble, setCurrentScramble] = useState("")
+
+  useEffect(() => {
+    setCurrentScramble(scramble())
+  }, [])
   const [phase, setPhase] = useState<Phase>("idle")
   const [displayMs, setDisplayMs] = useState(0)
   const [inspection, setInspection] = useState(15)
