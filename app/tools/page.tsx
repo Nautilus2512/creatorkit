@@ -540,12 +540,38 @@ const toolCards = [
 ]
 
 
+const CATEGORY_KEY = "ck-tools-category"
+const SCROLL_KEY   = "ck-tools-scroll"
+
 export default function ToolsPage() {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState("All")
   const [showTop, setShowTop] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const categories = ["All", "Image & Visual", "Design", "PDF", "Developer", "Media", "Security", "Productivity"]
   const filtered = activeCategory === "All" ? toolCards : toolCards.filter(t => t.category === activeCategory)
+
+  // Restore category + queue scroll restore
+  useEffect(() => {
+    const savedCat = sessionStorage.getItem(CATEGORY_KEY)
+    if (savedCat && categories.includes(savedCat)) setActiveCategory(savedCat)
+    setMounted(true)
+  }, [])
+
+  // After first render with restored category, restore scroll position
+  useEffect(() => {
+    if (!mounted) return
+    const savedY = sessionStorage.getItem(SCROLL_KEY)
+    if (!savedY) return
+    sessionStorage.removeItem(SCROLL_KEY)
+    const y = parseInt(savedY, 10)
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)))
+  }, [mounted])
+
+  // Persist active category whenever it changes
+  useEffect(() => {
+    if (mounted) sessionStorage.setItem(CATEGORY_KEY, activeCategory)
+  }, [activeCategory, mounted])
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 400)
@@ -675,7 +701,12 @@ export default function ToolsPage() {
           {/* Active tools */}
           <section className="grid gap-5 md:grid-cols-3">
             {filtered.map((tool) => (
-              <Link key={tool.href} href={tool.href} className="group block">
+              <Link
+                key={tool.href}
+                href={tool.href}
+                className="group block"
+                onClick={() => sessionStorage.setItem(SCROLL_KEY, window.scrollY.toString())}
+              >
                 <Card className="h-full border-border/80 bg-card/60 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
                   <CardHeader className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -715,7 +746,7 @@ export default function ToolsPage() {
       {showTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 z-50 rounded-full bg-primary p-3 shadow-lg text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105"
+          className="fixed bottom-20 right-6 z-40 rounded-full bg-primary p-3 shadow-lg text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-105"
           aria-label="Back to top"
         >
           <ArrowUp className="h-4 w-4" />
