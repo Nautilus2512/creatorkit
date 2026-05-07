@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -328,6 +328,38 @@ const toolCards = [
     href: "/tools/totp-generator",
     stat: "HMAC-SHA1 · RFC 6238 · 30s · 6 digits",
     category: "Privacy & Security",
+  },
+  {
+    icon: ArrowRightLeft,
+    title: "YAML ↔ JSON Converter",
+    description: "Convert between YAML and JSON formats with file upload, download, and indent control.",
+    href: "/tools/yaml-converter",
+    stat: "YAML → JSON · JSON → YAML · Swap",
+    category: "Productivity",
+  },
+  {
+    icon: Ruler,
+    title: "Pixel → REM Converter",
+    description: "Convert between px and rem units with a configurable root font size and clickable reference table.",
+    href: "/tools/pixel-to-rem",
+    stat: "px ↔ rem · Reference table · Custom base",
+    category: "Design & Branding",
+  },
+  {
+    icon: Blend,
+    title: "Gradient Generator",
+    description: "Build CSS linear, radial, and conic gradients visually. Add color stops and copy the CSS instantly.",
+    href: "/tools/gradient-generator",
+    stat: "Linear · Radial · Conic · Copy CSS",
+    category: "Design & Branding",
+  },
+  {
+    icon: BoxSelect,
+    title: "Box Shadow Generator",
+    description: "Build CSS box-shadows visually with multiple layers. Adjust offsets, blur, spread, color, and opacity.",
+    href: "/tools/shadow-generator",
+    stat: "Multi-layer · Inset · Live preview",
+    category: "Design & Branding",
   },
 ]
 

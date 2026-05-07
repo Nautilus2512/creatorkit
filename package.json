@@ -50,6 +50,7 @@
     "embla-carousel-react": "8.6.0",
     "exifr": "^7.1.3",
     "input-otp": "1.4.2",
+    "js-yaml": "^4.1.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.564.0",
     "music-metadata": "^11.12.3",
@@ -71,6 +72,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22",
     "@types/pdfjs-dist": "^2.10.377",
     "@types/qrcode": "^1.5.6",

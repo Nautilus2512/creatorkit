@@ -1,6 +1,38 @@
 # CreatorKit Changelog
 
 
+## v1.32.0 — May 2026
+### New Tools
+- **Box Shadow Generator** — Build CSS box-shadows visually with multiple layers, inset support, and live preview.
+
+### Improvements
+- Added Box Shadow Generator with layered shadow system and background/box color pickers
+- 44 total tools now available
+
+## v1.31.0 — May 2026
+### New Tools
+- **Gradient Generator** — Build CSS linear, radial, and conic gradients visually with adjustable color stops.
+
+### Improvements
+- Added Gradient Generator with stop editor, direction presets, and angle control
+- 43 total tools now available
+
+## v1.30.0 — May 2026
+### New Tools
+- **Pixel → REM Converter** — Convert between px and rem with a configurable root font size and reference table.
+
+### Improvements
+- Added Pixel to REM Converter with clickable reference table and quick presets
+- 42 total tools now available
+
+## v1.29.0 — May 2026
+### New Tools
+- **YAML ↔ JSON Converter** — Convert between YAML and JSON formats with file upload, download, and indent control.
+
+### Improvements
+- Added YAML ↔ JSON Converter powered by js-yaml
+- 41 total tools now available
+
 ## v1.28.0 — May 2026
 ### New Tools
 - **TOTP / 2FA Generator** — Generate time-based OTP codes from a base32 secret. Compatible with Google Authenticator and RFC 6238.
