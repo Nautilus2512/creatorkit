@@ -1,6 +1,15 @@
 # CreatorKit Changelog
 
 
+## v1.49.0 — May 2026
+### New Tools
+- **Font Pairer** — Browse and pair Google Fonts for headings and body text. 70 curated fonts, 14 suggested pairings, light/dark/sepia preview themes, weight specimens, and CSS import code output.
+
+### Improvements
+- Added Font Pairer with FontSelector (search + category filter), heading/body size sliders, random pairing button, and copy-ready CSS @import output
+- Fonts loaded via injected `<link>` tags — no API key required
+- 61 total tools now available
+
 ## v1.48.0 — May 2026
 ### New Tools
 - **CV Maker** — Build a professional CV with live preview, Classic and Modern templates, and one-click PDF export. Auto-saves to localStorage.
