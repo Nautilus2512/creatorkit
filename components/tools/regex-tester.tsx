@@ -141,176 +141,92 @@ export default function RegexTester() {
     setPattern(commonPattern.pattern)
   }
 
-    return (
-    <div className="h-full flex flex-col bg-background">
-        {/* Header */}
-        <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
+  return (
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Regex Tester</h2>
+          <p className="text-muted-foreground">Test and debug regular expressions</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={copyPattern} disabled={!pattern}>
+          {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy Pattern
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <span className="text-xs text-muted-foreground self-center">Patterns:</span>
+        {commonPatterns.map((p) => (
+          <Button key={p.name} variant="outline" size="sm" onClick={() => useCommonPattern(p)} className="text-xs h-7">{p.name}</Button>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left — Regex */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
+            <Code className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Regular Expression</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <Input placeholder="Enter your regex pattern (e.g., \\d+)" value={pattern} onChange={(e) => setPattern(e.target.value)} className="font-mono" />
             <div>
-            <h1 className="text-xl font-semibold">Regex Tester</h1>
-            <p className="text-sm text-muted-foreground">Test and debug regular expressions</p>
+              <h4 className="text-sm font-medium mb-3">Flags</h4>
+              <div className="grid grid-cols-3 gap-3">
+                {Object.entries(flags).map(([flag, enabled]) => (
+                  <div key={flag} className="flex items-center gap-2">
+                    <Switch id={flag} checked={enabled} onCheckedChange={(c) => setFlags(prev => ({ ...prev, [flag]: c }))} />
+                    <Label htmlFor={flag} className="text-sm font-mono">{flag}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={copyPattern}
-                disabled={!pattern}
-            >
-                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                Copy Pattern
-            </Button>
-            </div>
-        </div>
-        </div>
-
-        {/* Common Patterns */}
-        <div className="shrink-0 border-b border-border bg-muted/30">
-        <div className="px-6 py-3">
-            <h3 className="text-sm font-medium mb-2">Common Patterns</h3>
-            <div className="flex flex-wrap gap-2">
-            {commonPatterns.map((commonPattern) => (
-                <Button
-                key={commonPattern.name}
-                variant="outline"
-                size="sm"
-                onClick={() => useCommonPattern(commonPattern)}
-                className="text-xs"
-                >
-                {commonPattern.name}
-                </Button>
-            ))}
-            </div>
-        </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Left Panel - Regex Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-            <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                Regular Expression
-            </h3>
-            </div>
-            
-            <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Pattern Input */}
-                <div>
-                <Input
-                    placeholder="Enter your regex pattern (e.g., \\d+)"
-                    value={pattern}
-                    onChange={(e) => setPattern(e.target.value)}
-                    className="font-mono"
-                />
-                </div>
-
-                {/* Flags */}
-                <div>
-                <h4 className="text-sm font-medium mb-3">Flags</h4>
-                <div className="grid grid-cols-3 gap-3">
-                    {Object.entries(flags).map(([flag, enabled]) => (
-                    <div key={flag} className="flex items-center space-x-2">
-                        <Switch
-                        id={flag}
-                        checked={enabled}
-                        onCheckedChange={(checked) => 
-                            setFlags(prev => ({ ...prev, [flag]: checked }))
-                        }
-                        />
-                        <Label htmlFor={flag} className="text-sm font-mono">
-                        {flag}
-                        </Label>
-                    </div>
-                    ))}
-                </div>
-                </div>
-
-                {error && (
-                <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-md">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                </div>
-                )}
-
-                {/* Match Details */}
-                {matches.length > 0 && (
-                <div className="flex-1 flex flex-col">
-                    <h4 className="text-sm font-medium mb-3">
-                    Match Details ({matches.length})
-                    </h4>
-                    <div className="flex-1 overflow-y-auto space-y-2">
-                    {matches.map((match, index) => (
-                        <div key={index} className="p-3 border rounded-md bg-muted/20">
-                        <div className="font-mono text-sm">
-                            <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs">
-                                {index + 1}
-                            </Badge>
-                            <span className="text-muted-foreground text-xs">
-                                Pos: {match.index}
-                            </span>
-                            </div>
-                            <div className="bg-background p-2 rounded border text-xs">
-                            {match.match}
-                            </div>
-                            {match.groups.length > 0 && (
-                            <div className="mt-2">
-                                <div className="text-xs text-muted-foreground mb-1">Groups:</div>
-                                {match.groups.map((group, groupIndex) => (
-                                <div key={groupIndex} className="text-xs bg-background p-1 rounded border mt-1">
-                                    {groupIndex + 1}: {group || '(empty)'}
-                                </div>
-                                ))}
-                            </div>
-                            )}
-                        </div>
-                        </div>
-                    ))}
-                    </div>
-                </div>
-                )}
-            </div>
-            </div>
-        </div>
-
-        {/* Right Panel - Test Text */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-            <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                Test Text
-            </h3>
+            {error && (
+              <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-md">
+                <AlertCircle className="h-4 w-4" />{error}
+              </div>
+            )}
             {matches.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                {matches.length} match{matches.length !== 1 ? 'es' : ''}
-                </Badge>
-            )}
-            </div>
-            
-            <div className="flex-1 flex flex-col overflow-hidden">
-            {matches.length > 0 ? (
-                <div className="flex-1 overflow-y-auto p-4">
-                <div 
-                    className="font-mono text-sm whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }}
-                />
+              <div>
+                <h4 className="text-sm font-medium mb-3">Match Details ({matches.length})</h4>
+                <div className="space-y-2">
+                  {matches.map((match, index) => (
+                    <div key={index} className="p-3 border rounded-md bg-muted/20 font-mono text-sm">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">{index + 1}</Badge>
+                        <span className="text-muted-foreground text-xs">Pos: {match.index}</span>
+                      </div>
+                      <div className="bg-background p-2 rounded border text-xs">{match.match}</div>
+                      {match.groups.length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-xs text-muted-foreground mb-1">Groups:</div>
+                          {match.groups.map((group, gi) => (
+                            <div key={gi} className="text-xs bg-background p-1 rounded border mt-1">{gi + 1}: {group || '(empty)'}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-            ) : (
-                <div className="flex-1 overflow-hidden">
-                <Textarea
-                    value={testText}
-                    onChange={(e) => setTestText(e.target.value)}
-                    placeholder="Enter text to test against your regex..."
-                    className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-                />
-                </div>
+              </div>
             )}
+          </div>
+        </div>
+
+        {/* Right — Test Text */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium flex items-center gap-2"><Search className="h-4 w-4 text-muted-foreground" />Test Text</span>
+            {matches.length > 0 && <Badge variant="secondary" className="text-xs">{matches.length} match{matches.length !== 1 ? 'es' : ''}</Badge>}
+          </div>
+          {matches.length > 0 ? (
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="font-mono text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }} />
             </div>
+          ) : (
+            <Textarea value={testText} onChange={(e) => setTestText(e.target.value)} placeholder="Enter text to test against your regex..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
+          )}
         </div>
-        </div>
+      </div>
     </div>
-    )
+  )
 }

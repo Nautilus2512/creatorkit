@@ -128,198 +128,86 @@ export default function CsvJsonConverter() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">CSV ↔ JSON Converter</h1>
-            <p className="text-sm text-muted-foreground">Convert between CSV and JSON formats</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <label className="cursor-pointer">
-                <Upload className="h-4 w-4 mr-1" />
-                Upload File
-                <input
-                  type="file"
-                  accept=".csv,.json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              disabled={!csvOutput && !jsonOutput}
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              Copy
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadFile}
-              disabled={!csvOutput && !jsonOutput}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              Download
-            </Button>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">CSV ↔ JSON Converter</h2>
+          <p className="text-muted-foreground">Convert between CSV and JSON formats</p>
         </div>
-      </div>
-
-      {/* Mode Toggle */}
-      <div className="shrink-0 border-b border-border bg-muted/30">
-        <div className="px-6 py-3 flex items-center justify-center gap-4">
-          <Button
-            variant={mode === 'csv-to-json' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setMode('csv-to-json')}
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-1" />
-            CSV to JSON
+        <div className="flex items-center gap-2">
+          <Button variant={mode === 'csv-to-json' ? 'default' : 'outline'} size="sm" onClick={() => setMode('csv-to-json')}>
+            <FileSpreadsheet className="h-4 w-4 mr-1" />CSV to JSON
           </Button>
-          <Button
-            variant={mode === 'json-to-csv' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setMode('json-to-csv')}
-          >
-            <FileJson className="h-4 w-4 mr-1" />
-            JSON to CSV
+          <Button variant={mode === 'json-to-csv' ? 'default' : 'outline'} size="sm" onClick={() => setMode('json-to-csv')}>
+            <FileJson className="h-4 w-4 mr-1" />JSON to CSV
+          </Button>
+          <div className="h-4 w-px bg-border" />
+          <Button variant="outline" size="sm" asChild>
+            <label className="cursor-pointer">
+              <Upload className="h-4 w-4 mr-1" />Upload
+              <input type="file" accept=".csv,.json" onChange={handleFileUpload} className="hidden" />
+            </label>
+          </Button>
+          <Button variant="outline" size="sm" onClick={copyToClipboard} disabled={!csvOutput && !jsonOutput}>
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy
+          </Button>
+          <Button variant="outline" size="sm" onClick={downloadFile} disabled={!csvOutput && !jsonOutput}>
+            <Download className="h-4 w-4 mr-1" />Download
           </Button>
         </div>
       </div>
 
-      {/* Error Display */}
       {error && (
-        <div className="shrink-0 border-b border-border bg-destructive/10">
-          <div className="px-6 py-2 flex items-center gap-2 text-destructive text-sm">
-            <AlertCircle className="h-4 w-4" />
-            {error}
-          </div>
+        <div className="flex items-center gap-2 text-destructive text-sm rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />{error}
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {mode === 'csv-to-json' ? (
-          <>
-            {/* Left Panel - CSV Input */}
-            <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-              <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  CSV Input
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  {csvInput.split('\n').filter(line => line.trim()).length} rows
-                </Badge>
-              </div>
-              
-              <div className="flex-1 overflow-hidden">
-                <Textarea
-                  value={csvInput}
-                  onChange={(e) => setCsvInput(e.target.value)}
-                  placeholder="Enter CSV data (comma-separated values)..."
-                  className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-                  spellCheck={false}
-                />
-              </div>
-            </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left Panel */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium flex items-center gap-2">
+              {mode === 'csv-to-json' ? <FileSpreadsheet className="h-4 w-4" /> : <FileJson className="h-4 w-4" />}
+              {mode === 'csv-to-json' ? 'CSV Input' : 'JSON Input'}
+            </span>
+            <Badge variant="outline" className="text-xs">
+              {mode === 'csv-to-json'
+                ? `${csvInput.split('\n').filter(l => l.trim()).length} rows`
+                : jsonInput ? `${(() => { try { return JSON.parse(jsonInput || '[]').length } catch { return 0 } })()} objects` : ''}
+            </Badge>
+          </div>
+          <Textarea
+            value={mode === 'csv-to-json' ? csvInput : jsonInput}
+            onChange={(e) => mode === 'csv-to-json' ? setCsvInput(e.target.value) : setJsonInput(e.target.value)}
+            placeholder={mode === 'csv-to-json' ? "Enter CSV data (comma-separated values)..." : "Enter JSON array..."}
+            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+            spellCheck={false}
+          />
+        </div>
 
-            {/* Right Panel - JSON Output */}
-            <div className="flex flex-col md:w-1/2 md:flex-1">
-              <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <FileJson className="h-4 w-4" />
-                  JSON Output
-                </h3>
-                {jsonOutput && (
-                  <Badge variant="outline" className="text-xs">
-                    {JSON.parse(jsonOutput || '[]').length} objects
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex-1 overflow-hidden">
-                {jsonOutput ? (
-                  <Textarea
-                    value={jsonOutput}
-                    readOnly
-                    className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4 bg-muted/20"
-                    spellCheck={false}
-                  />
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    <FileJson className="h-12 w-12 mb-2 opacity-50" />
-                    <p className="text-center">Enter CSV to see JSON output</p>
-                  </div>
-                )}
-              </div>
+        {/* Right Panel */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium flex items-center gap-2">
+              {mode === 'csv-to-json' ? <FileJson className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />}
+              {mode === 'csv-to-json' ? 'JSON Output' : 'CSV Output'}
+            </span>
+          </div>
+          {(mode === 'csv-to-json' ? jsonOutput : csvOutput) ? (
+            <Textarea
+              value={mode === 'csv-to-json' ? jsonOutput : csvOutput}
+              readOnly
+              className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4 bg-muted/10"
+              spellCheck={false}
+            />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+              {mode === 'csv-to-json' ? <FileJson className="h-12 w-12 opacity-30" /> : <FileSpreadsheet className="h-12 w-12 opacity-30" />}
+              <p className="text-sm">{mode === 'csv-to-json' ? 'Enter CSV to see JSON output' : 'Enter JSON to see CSV output'}</p>
             </div>
-          </>
-        ) : (
-          <>
-            {/* Left Panel - JSON Input */}
-            <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-              <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <FileJson className="h-4 w-4" />
-                  JSON Input
-                </h3>
-                {jsonInput && (
-                  <Badge variant="outline" className="text-xs">
-                    {JSON.parse(jsonInput || '[]').length} objects
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex-1 overflow-hidden">
-                <Textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder="Enter JSON array (e.g., [{'name': 'John', 'age': 30}])..."
-                  className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-                  spellCheck={false}
-                />
-              </div>
-            </div>
-
-            {/* Right Panel - CSV Output */}
-            <div className="flex flex-col md:w-1/2 md:flex-1">
-              <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  CSV Output
-                </h3>
-                {csvOutput && (
-                  <Badge variant="outline" className="text-xs">
-                    {csvOutput.split('\n').filter(line => line.trim()).length} rows
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="flex-1 overflow-hidden">
-                {csvOutput ? (
-                  <Textarea
-                    value={csvOutput}
-                    readOnly
-                    className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4 bg-muted/20"
-                    spellCheck={false}
-                  />
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    <FileSpreadsheet className="h-12 w-12 mb-2 opacity-50" />
-                    <p className="text-center">Enter JSON to see CSV output</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

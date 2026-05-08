@@ -56,41 +56,38 @@ export default function BorderRadiusVisualizer() {
   ]
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Border Radius Visualizer</h1>
-            <p className="text-sm text-muted-foreground">Build CSS border-radius values visually and copy the code.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {(["px", "%"] as const).map(u => (
-              <button key={u} onClick={() => setUnit(u)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${unit === u ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
-              >{u}</button>
-            ))}
-            <button
-              onClick={() => setLinked(l => !l)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${linked ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
-            >
-              {linked ? "🔒 Linked" : "🔓 Unlinked"}
-            </button>
-            <Button variant="outline" size="sm" onClick={copy}>
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              {copied ? "Copied!" : "Copy CSS"}
-            </Button>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Border Radius Visualizer</h2>
+          <p className="text-muted-foreground">Build CSS border-radius values visually and copy the code.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {(["px", "%"] as const).map(u => (
+            <button key={u} onClick={() => setUnit(u)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${unit === u ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
+            >{u}</button>
+          ))}
+          <button
+            onClick={() => setLinked(l => !l)}
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${linked ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
+          >
+            {linked ? "🔒 Linked" : "🔓 Unlinked"}
+          </button>
+          <Button variant="outline" size="sm" onClick={copy}>
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            {copied ? "Copied!" : "Copy CSS"}
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Controls */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Controls</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Controls</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
             {/* Presets */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Presets</Label>
@@ -131,11 +128,11 @@ export default function BorderRadiusVisualizer() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Preview</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Preview</span>
           </div>
-          <div className="flex-1 flex flex-col p-6 gap-5 min-h-0">
+          <div className="flex-1 flex flex-col p-4 gap-4 min-h-0">
             <div className="flex-1 flex items-center justify-center bg-muted/20 rounded-xl border border-border min-h-0">
               <div
                 className="w-48 h-48 transition-all duration-100"

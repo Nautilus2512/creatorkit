@@ -1,12 +1,12 @@
 ﻿"use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, Download, Trash2 } from "lucide-react"
+import { Upload, Download, Trash2, Grip, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 
-interface GridImage { id: string; url: string; img: HTMLImageElement }
+interface GridImage { id: string; url: string; img: HTMLImageElement; selected?: boolean }
 
 type Layout = "2x2" | "3x3" | "1x3" | "3x1" | "1+2" | "2+1"
 
@@ -55,6 +55,9 @@ export default function ImageGrid() {
   const [gap, setGap] = useState(8)
   const [bgColor, setBgColor] = useState("#ffffff")
   const [canvasSize, setCanvasSize] = useState(1200)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const add = async (files: FileList | null) => {
@@ -72,43 +75,111 @@ export default function ImageGrid() {
   const remove = (id: string) =>
     setImages(prev => { const img = prev.find(i => i.id === id); if (img) URL.revokeObjectURL(img.url); return prev.filter(i => i.id !== id) })
 
+  const toggleSelection = (id: string) => {
+    setImages(prev => prev.map(img => 
+      img.id === id ? { ...img, selected: !img.selected } : img
+    ))
+  }
+
+  const selectAll = () => {
+    const layoutDef = LAYOUTS.find(l => l.key === layout) || LAYOUTS[0]
+    const needed = layoutDef.cols * layoutDef.rows
+    setImages(prev => prev.slice(0, needed).map(img => ({ ...img, selected: true })))
+  }
+
+  const clearSelection = () => {
+    setImages(prev => prev.map(img => ({ ...img, selected: false })))
+  }
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragEnter = (index: number) => {
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) return
+    
+    setImages(prev => {
+      const newImages = [...prev]
+      const draggedItem = newImages[draggedIndex]
+      newImages.splice(draggedIndex, 1)
+      newImages.splice(dropIndex, 0, draggedItem)
+      return newImages
+    })
+    
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   const layoutDef = LAYOUTS.find(l => l.key === layout) || LAYOUTS[0]
+  const needed = layoutDef.cols * layoutDef.rows
+  const totalPages = Math.ceil(images.length / needed)
+  const startIndex = currentPage * needed
+  const endIndex = Math.min(startIndex + needed, images.length)
+  const currentImages = images.slice(startIndex, endIndex)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas || images.length === 0) return
+    if (!canvas || currentImages.length === 0) return
     canvas.width = canvasSize
     canvas.height = canvasSize
-    drawGrid(canvas, images, layoutDef.cols, layoutDef.rows, gap, bgColor)
-  }, [images, layout, gap, bgColor, canvasSize])
+    drawGrid(canvas, currentImages, layoutDef.cols, layoutDef.rows, gap, bgColor)
+  }, [currentImages, layout, gap, bgColor, canvasSize, currentPage])
 
   const download = () => {
     const canvas = canvasRef.current
     if (!canvas) return
+    
+    // Use selected images if any are selected, otherwise use current page images
+    const selectedImages = images.filter(img => img.selected)
+    const imagesToUse = selectedImages.length > 0 ? selectedImages : currentImages
+    
+    if (imagesToUse.length === 0) return
+    
+    const tempCanvas = document.createElement("canvas")
+    tempCanvas.width = canvasSize
+    tempCanvas.height = canvasSize
+    drawGrid(tempCanvas, imagesToUse, layoutDef.cols, layoutDef.rows, gap, bgColor)
+    
     const a = Object.assign(document.createElement("a"), {
-      href: canvas.toDataURL("image/png"), download: "image-grid.png",
+      href: tempCanvas.toDataURL("image/png"), 
+      download: selectedImages.length > 0 ? "image-grid-selected.png" : "image-grid.png",
     })
     a.click()
   }
 
-  const needed = layoutDef.cols * layoutDef.rows
-
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Image Grid / Collage</h1>
-            <p className="text-sm text-muted-foreground">Arrange images in a grid and export as a single PNG.</p>
-          </div>
-          <Button onClick={download} disabled={images.length === 0}>
-            <Download className="h-4 w-4 mr-1" />Download PNG
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Image Grid / Collage</h2>
+          <p className="text-muted-foreground">Arrange images in a grid and export as a single PNG.</p>
         </div>
+        <Button onClick={download} disabled={images.length === 0}>
+          <Download className="h-4 w-4 mr-1" />Download PNG
+        </Button>
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Layout:</Label>
           {LAYOUTS.map(l => (
@@ -138,12 +209,20 @@ export default function ImageGrid() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — images */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-56 md:shrink-0">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">Images ({images.length}/{needed})</h3>
-            {images.length > 0 && <button onClick={() => setImages([])} className="text-xs text-muted-foreground hover:text-destructive">Clear</button>}
+            <div className="flex items-center gap-2">
+              {images.length > needed && (
+                <>
+                  <button onClick={selectAll} className="text-xs text-muted-foreground hover:text-primary">Select All</button>
+                  <button onClick={clearSelection} className="text-xs text-muted-foreground hover:text-primary">Clear</button>
+                </>
+              )}
+              {images.length > 0 && <button onClick={() => setImages([])} className="text-xs text-muted-foreground hover:text-destructive">Clear All</button>}
+            </div>
           </div>
           <label className="shrink-0 flex items-center justify-center gap-2 p-3 cursor-pointer border-b border-border hover:bg-muted/30 transition-colors">
             <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
@@ -151,19 +230,82 @@ export default function ImageGrid() {
             <span className="text-sm text-muted-foreground">Add images</span>
           </label>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {images.map((img, i) => (
-              <div key={img.id} className="flex items-center gap-2 p-1.5 rounded border border-border group">
-                <img src={img.url} alt="" className="w-10 h-10 object-cover rounded shrink-0" />
-                <span className="text-xs text-muted-foreground flex-1 truncate">#{i + 1}</span>
-                <button onClick={() => remove(img.id)} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity">
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+            {currentImages.map((img, i) => {
+              const globalIndex = startIndex + i
+              return (
+                <div
+                  key={img.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, globalIndex)}
+                  onDragOver={handleDragOver}
+                  onDragEnter={() => handleDragEnter(globalIndex)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, globalIndex)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-2 p-1.5 rounded border transition-all cursor-move ${
+                    img.selected ? "border-primary bg-primary/5" : "border-border"
+                  } ${
+                    dragOverIndex === globalIndex ? "border-primary bg-primary/10" : ""
+                  } group`}
+                >
+                  <Grip className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <div 
+                    className="w-10 h-10 object-cover rounded shrink-0 relative"
+                    onClick={() => toggleSelection(img.id)}
+                  >
+                    <img src={img.url} alt="" className="w-full h-full object-cover rounded" />
+                    {img.selected && (
+                      <div className="absolute inset-0 bg-primary/20 rounded flex items-center justify-center">
+                        <div className="w-3 h-3 bg-primary rounded-sm" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground flex-1 truncate">#{globalIndex + 1}</span>
+                  <button 
+                    onClick={() => remove(img.id)} 
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
+          {totalPages > 1 && (
+            <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-between">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-3 w-3" />
+                Previous
+              </button>
+              <span className="text-xs text-muted-foreground">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage === totalPages - 1}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right — Preview */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Preview</span>
+            {totalPages > 1 && (
+              <span className="text-xs text-muted-foreground">
+                Page {currentPage + 1} · {currentImages.length} images
+              </span>
+            )}
+          </div>
         <div className="flex-1 flex items-center justify-center p-6 bg-muted/10 overflow-hidden">
           {images.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center">
@@ -176,6 +318,7 @@ export default function ImageGrid() {
               style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
           )}
+        </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check } from "lucide-react"
@@ -22,10 +22,6 @@ const PRESETS = [
 
 const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-function resolveNames(val: string, names: string[]): string {
-  return val.replace(/\d+/g, n => names[+n] || n)
-}
 
 function describeCron(expr: string): string {
   const parts = expr.trim().split(/\s+/)
@@ -98,22 +94,13 @@ function getNextRuns(expr: string, count = 5): Date[] {
   const doms = domF === "*" ? null : parseField(domF, 1, 31)
   const months = monthF === "*" ? null : parseField(monthF, 1, 12)
   const dows = dowF === "*" ? null : parseField(dowF, 0, 6)
-
   const check = (field: Set<number> | null, val: number) => !field || field.has(val)
-
   const runs: Date[] = []
   const d = new Date()
   d.setSeconds(0, 0)
   d.setMinutes(d.getMinutes() + 1)
-
   for (let i = 0; i < 527040 && runs.length < count; i++) {
-    if (
-      check(mins, d.getMinutes()) &&
-      check(hours, d.getHours()) &&
-      check(doms, d.getDate()) &&
-      check(months, d.getMonth() + 1) &&
-      check(dows, d.getDay())
-    ) {
+    if (check(mins, d.getMinutes()) && check(hours, d.getHours()) && check(doms, d.getDate()) && check(months, d.getMonth() + 1) && check(dows, d.getDay())) {
       runs.push(new Date(d))
     }
     d.setMinutes(d.getMinutes() + 1)
@@ -137,51 +124,34 @@ export default function CronGenerator() {
   const description = isValid ? describeCron(expr) : "Enter a valid 5-field cron expression"
   const nextRuns = isValid ? getNextRuns(expr) : []
 
-  const copy = () => {
-    navigator.clipboard.writeText(expr)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const copy = () => { navigator.clipboard.writeText(expr); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Cron Expression Generator</h1>
-            <p className="text-sm text-muted-foreground">Build cron expressions with a human-readable preview and next-run times</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={copy}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? "Copied!" : "Copy"}
-          </Button>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Cron Expression Generator</h2>
+        <p className="text-muted-foreground">Build cron expressions with a human-readable preview and next-run times</p>
       </div>
 
-      {/* Presets */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3">
-        <div className="flex flex-wrap gap-2">
-          {PRESETS.map(({ label, expr: e }) => (
-            <button
-              key={e}
-              onClick={() => setExpr(e)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${expr === e ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {PRESETS.map(({ label, expr: e }) => (
+          <button
+            key={e}
+            onClick={() => setExpr(e)}
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${expr === e ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Editor */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Expression</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Expression</span>
           </div>
-          <div className="p-6 space-y-6">
-            {/* Expression input */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
             <div className="space-y-2">
               <Input
                 value={expr}
@@ -190,13 +160,10 @@ export default function CronGenerator() {
                 placeholder="* * * * *"
               />
               <div className="grid grid-cols-5 gap-1 text-center text-xs text-muted-foreground">
-                {["Minute", "Hour", "Day", "Month", "Weekday"].map(l => (
-                  <div key={l}>{l}</div>
-                ))}
+                {["Minute", "Hour", "Day", "Month", "Weekday"].map(l => <div key={l}>{l}</div>)}
               </div>
             </div>
 
-            {/* Field breakdown */}
             {isValid && (
               <div className="space-y-2">
                 {[
@@ -217,24 +184,27 @@ export default function CronGenerator() {
               </div>
             )}
 
-            {/* Description */}
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
               <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">Meaning</p>
               <p className="text-sm">{description}</p>
             </div>
           </div>
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
+            <Button onClick={copy} variant="outline" size="sm" className="w-full">
+              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+              {copied ? "Copied!" : "Copy Expression"}
+            </Button>
+          </div>
         </div>
 
         {/* Right — Next runs */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Next 5 Runs</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Next 5 Runs</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {nextRuns.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                No upcoming runs found
-              </div>
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">No upcoming runs found</div>
             ) : (
               nextRuns.map((date, i) => (
                 <div key={i} className="rounded-lg border border-border px-4 py-3">
@@ -247,18 +217,10 @@ export default function CronGenerator() {
               ))
             )}
           </div>
-
-          {/* Reference */}
-          <div className="shrink-0 border-t border-border bg-muted/30 p-4">
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
             <p className="text-xs font-medium mb-2">Quick Reference</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground font-mono">
-              {[
-                ["*", "any value"],
-                ["*/n", "every n units"],
-                ["a-b", "range a to b"],
-                ["a,b,c", "list of values"],
-                ["a/n", "every n from a"],
-              ].map(([sym, desc]) => (
+              {[["*", "any value"], ["*/n", "every n units"], ["a-b", "range a to b"], ["a,b,c", "list of values"], ["a/n", "every n from a"]].map(([sym, desc]) => (
                 <div key={sym} className="flex gap-2">
                   <span className="text-foreground">{sym}</span>
                   <span>{desc}</span>

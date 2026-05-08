@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check, Download, Upload } from "lucide-react"
@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge"
 
 function minifyCss(css: string): string {
   return css
-    .replace(/\/\*[\s\S]*?\*\//g, "")       // remove comments
-    .replace(/\s*([{}:;,>~+|])\s*/g, "$1")  // strip space around operators
-    .replace(/\s{2,}/g, " ")                 // collapse whitespace
-    .replace(/\s*\n\s*/g, "")               // remove newlines
-    .replace(/;}/g, "}")                     // remove trailing semicolons
-    .replace(/^\s+|\s+$/g, "")              // trim
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s*([{}:;,>~+|])\s*/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s*\n\s*/g, "")
+    .replace(/;}/g, "}")
+    .replace(/^\s+|\s+$/g, "")
 }
 
 function formatBytes(n: number): string {
@@ -49,11 +49,7 @@ export default function CssMinifier() {
   const outputBytes = new TextEncoder().encode(output).length
   const savings = inputBytes > 0 ? Math.round((1 - outputBytes / inputBytes) * 100) : 0
 
-  const copy = () => {
-    navigator.clipboard.writeText(output)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const copy = () => { navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   const download = () => {
     const blob = new Blob([output], { type: "text/css" })
@@ -75,31 +71,26 @@ export default function CssMinifier() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">CSS Minifier</h1>
-            <p className="text-sm text-muted-foreground">Remove whitespace and comments from CSS. Runs entirely in your browser.</p>
-          </div>
-          {savings > 0 && (
-            <Badge variant="secondary" className="text-green-700 border-green-300 bg-green-50">
-              -{savings}% smaller
-            </Badge>
-          )}
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">CSS Minifier</h2>
+          <p className="text-muted-foreground">Remove whitespace and comments from CSS. Runs entirely in your browser.</p>
         </div>
+        {savings > 0 && (
+          <Badge variant="secondary" className="text-green-700 border-green-300 bg-green-50 dark:bg-green-950 dark:text-green-300">
+            -{savings}% smaller
+          </Badge>
+        )}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Original CSS</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Original CSS</span>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setInput(EXAMPLE)}>
-                Load Example
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setInput(EXAMPLE)}>Load Example</Button>
               <label className="cursor-pointer">
                 <input type="file" accept=".css" className="hidden" onChange={handleFile} />
                 <Button variant="ghost" size="sm" asChild>
@@ -112,22 +103,21 @@ export default function CssMinifier() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder=".container {\n  display: flex;\n  /* my comment */\n  padding: 16px;\n}"
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0"
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
           />
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Minified CSS</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Minified CSS</span>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
                 {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                 {copied ? "Copied!" : "Copy"}
               </Button>
               <Button variant="ghost" size="sm" onClick={download} disabled={!output}>
-                <Download className="h-4 w-4 mr-1" />
-                .min.css
+                <Download className="h-4 w-4 mr-1" />.min.css
               </Button>
             </div>
           </div>
@@ -135,21 +125,17 @@ export default function CssMinifier() {
             value={output}
             readOnly
             placeholder="Minified CSS will appear here..."
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10"
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
           />
-        </div>
-      </div>
-
-      {/* Status Bar */}
-      {output && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>Original: {formatBytes(inputBytes)}</span>
-          <span>Minified: {formatBytes(outputBytes)}</span>
-          {savings > 0 && (
-            <span className="text-green-700">Saved {formatBytes(inputBytes - outputBytes)} ({savings}%)</span>
+          {output && (
+            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4">
+              <span>Original: {formatBytes(inputBytes)}</span>
+              <span>Minified: {formatBytes(outputBytes)}</span>
+              {savings > 0 && <span className="text-green-700">Saved {formatBytes(inputBytes - outputBytes)} ({savings}%)</span>}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

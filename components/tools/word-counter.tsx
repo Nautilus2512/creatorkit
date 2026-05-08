@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useMemo } from "react"
 import { Textarea } from "@/components/ui/textarea"
@@ -22,12 +22,7 @@ function analyze(text: string) {
   }
 
   return {
-    words,
-    chars,
-    charsNoSpaces,
-    sentences,
-    paragraphs,
-    lines,
+    words, chars, charsNoSpaces, sentences, paragraphs, lines,
     readingTime: words === 0 ? "—" : formatTime(readingTimeSec),
     speakingTime: words === 0 ? "—" : formatTime(speakingTimeSec),
   }
@@ -49,74 +44,65 @@ export default function WordCounter() {
   ]
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Word & Character Counter</h1>
-            <p className="text-sm text-muted-foreground">Count words, characters, sentences, and estimate reading time</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => setText("")} disabled={!text}>
-            <Trash2 className="h-4 w-4 mr-1" />
-            Clear
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Word & Character Counter</h2>
+          <p className="text-muted-foreground">Count words, characters, sentences, and estimate reading time</p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setText("")} disabled={!text}>
+          <Trash2 className="h-4 w-4 mr-1" />Clear
+        </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Text Input</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Text Input</span>
           </div>
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste or type your text here..."
-            className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 leading-relaxed"
+            className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 leading-relaxed p-4"
           />
         </div>
 
         {/* Right Panel — Stats */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Statistics</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Statistics</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4">
             <div className="grid grid-cols-2 gap-3">
               {statCards.map(({ label, value, highlight }) => (
                 <div
                   key={label}
                   className={`rounded-lg border p-4 ${highlight ? "border-primary/30 bg-primary/5" : "border-border"}`}
                 >
-                  <div className={`text-2xl font-bold tabular-nums ${highlight ? "text-primary" : ""}`}>
-                    {value}
-                  </div>
+                  <div className={`text-2xl font-bold tabular-nums ${highlight ? "text-primary" : ""}`}>{value}</div>
                   <div className="text-xs text-muted-foreground mt-1">{label}</div>
                 </div>
               ))}
             </div>
-
             {text && (
-              <div className="mt-4 rounded-lg border border-border p-4 text-xs text-muted-foreground space-y-1">
+              <div className="mt-3 rounded-lg border border-border p-4 text-xs text-muted-foreground space-y-1">
                 <p className="font-medium text-foreground text-sm mb-2">Estimates</p>
                 <p>Reading speed: ~238 words/min (average adult)</p>
                 <p>Speaking speed: ~150 words/min (presentation pace)</p>
               </div>
             )}
           </div>
+          {text && (
+            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4">
+              <span>{stats.words.toLocaleString()} words</span>
+              <span>{stats.chars.toLocaleString()} chars</span>
+              {stats.words > 0 && <span>~{stats.readingTime} read</span>}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Status Bar */}
-      {text && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>{stats.words.toLocaleString()} words</span>
-          <span>{stats.chars.toLocaleString()} chars</span>
-          {stats.words > 0 && <span>~{stats.readingTime} read</span>}
-        </div>
-      )}
     </div>
   )
 }

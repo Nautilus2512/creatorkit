@@ -94,25 +94,23 @@ export default function BatchImageEditor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Batch Image Editor</h1>
-            <p className="text-sm text-muted-foreground">Apply the same edits to multiple images and download as a ZIP. All in your browser.</p>
-          </div>
-          <Button onClick={process} disabled={!images.length || loading}>
-            {done ? <Check className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-            {loading ? `Processing… ${progress}%` : done ? "Done!" : `Process ${images.length} image${images.length !== 1 ? "s" : ""}`}
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Batch Image Editor</h2>
+          <p className="text-muted-foreground">Apply the same edits to multiple images and download as a ZIP. All in your browser.</p>
         </div>
+        <Button onClick={process} disabled={!images.length || loading}>
+          {done ? <Check className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+          {loading ? `Processing… ${progress}%` : done ? "Done!" : `Process ${images.length} image${images.length !== 1 ? "s" : ""}`}
+        </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Settings */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-72 md:shrink-0">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Edit Settings</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Edit Settings</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
             {/* Format & Quality */}
@@ -184,8 +182,8 @@ export default function BatchImageEditor() {
         </div>
 
         {/* Right — Images */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">{images.length} image{images.length !== 1 ? "s" : ""}</h3>
             <div className="flex gap-2">
               {images.length > 0 && <Button variant="ghost" size="sm" onClick={() => setImages([])}>Clear all</Button>}

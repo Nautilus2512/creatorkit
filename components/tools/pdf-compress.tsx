@@ -238,28 +238,24 @@ export function PDFCompress() {
   }
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
-      <ShortcutsModal
-        pageName="PDF Compressor (Scanned Docs)"
-        shortcuts={[
-          { keys: ["Ctrl", "Enter"], description: "Compress PDF" },
-          { keys: ["Ctrl", "O"], description: "Open file picker" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
-
+    <>
+    <ShortcutsModal
+      pageName="PDF Compressor (Scanned Docs)"
+      shortcuts={[
+        { keys: ["Ctrl", "Enter"], description: "Compress PDF" },
+        { keys: ["Ctrl", "O"], description: "Open file picker" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">PDF Compressor (Scanned Docs)</h2>
+        <p className="text-muted-foreground">Best for scanned/image-heavy PDFs · Renders to JPEG · 100% in-browser</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2">
-              <FileDown className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold">PDF Compressor (Scanned Docs)</h1>
-              <p className="text-xs text-muted-foreground">Best for scanned/image-heavy PDFs · Renders to JPEG · 100% in-browser</p>
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label className="text-sm font-medium">PDF File</Label>
@@ -424,7 +420,7 @@ export function PDFCompress() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4">
           {!result ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
@@ -477,6 +473,8 @@ export function PDFCompress() {
           </div>
         )}
       </div>
+      </div>
     </div>
+    </>
   )
 }

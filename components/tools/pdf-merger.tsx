@@ -254,28 +254,24 @@ export function PDFMerger() {
   }
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
-      <ShortcutsModal
-        pageName="PDF Merger & Splitter"
-        shortcuts={[
-          { keys: ["Ctrl", "Enter"], description: "Process PDFs" },
-          { keys: ["Ctrl", "O"], description: "Add files" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
-
+    <>
+    <ShortcutsModal
+      pageName="PDF Merger & Splitter"
+      shortcuts={[
+        { keys: ["Ctrl", "Enter"], description: "Process PDFs" },
+        { keys: ["Ctrl", "O"], description: "Add files" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">PDF Merger & Splitter</h2>
+        <p className="text-muted-foreground">Combine or extract PDF pages · 100% in-browser</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2">
-              {mode === 'merge' ? <Combine className="h-4 w-4 text-primary" /> : <Scissors className="h-4 w-4 text-primary" />}
-            </div>
-            <div>
-              <h1 className="text-base font-semibold">PDF Merger & Splitter</h1>
-              <p className="text-xs text-muted-foreground">Combine or extract PDF pages · 100% in-browser</p>
-            </div>
-          </div>
 
           {/* Mode toggle */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
@@ -483,7 +479,7 @@ export function PDFMerger() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4">
           {mode === 'merge' ? (
             !mergeResult ? (
@@ -566,6 +562,8 @@ export function PDFMerger() {
           </div>
         ) : null}
       </div>
+      </div>
     </div>
+    </>
   )
 }

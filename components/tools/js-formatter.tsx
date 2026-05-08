@@ -139,23 +139,26 @@ export default function JsFormatter() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-xl font-semibold">JS Formatter</h1>
-          <p className="text-sm text-muted-foreground">Format code with Prettier 2.8.8. Runs entirely in your browser.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">JS Formatter</h2>
+          <p className="text-muted-foreground">Format code with Prettier 2.8.8. Runs entirely in your browser.</p>
         </div>
         <div className="flex items-center gap-2">
           {status === "loading" && <span className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" />Loading Prettier…</span>}
-          {status === "ready"   && <span className="text-xs text-green-600 dark:text-green-400">● Prettier ready</span>}
-          {status === "error"   && <span className="text-xs text-destructive">● {loadErr}</span>}
+          {status === "ready" && <span className="text-xs text-green-600 dark:text-green-400">● Prettier ready</span>}
+          {status === "error" && <span className="text-xs text-destructive">● {loadErr}</span>}
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Options panel */}
-        <div className="border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-5 md:w-60 md:shrink-0">
+        <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-56">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Options</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Language</Label>
@@ -238,48 +241,37 @@ export default function JsFormatter() {
             </Button>
             <input ref={fileRef} type="file" accept=".js,.jsx,.ts,.tsx,.css,.scss,.html,.json,.md" className="hidden" onChange={upload} />
           </div>
+          </div>
         </div>
 
-        {/* Code panels */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-          {/* Input */}
-          <div className="flex-1 flex flex-col overflow-hidden border-r border-border">
-            <div className="shrink-0 px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Input</span>
-              <Button size="sm" onClick={format} disabled={status !== "ready"} className="h-7">
-                <Code2 className="h-3.5 w-3.5 mr-1" />Format
+        {/* Code panels — Input */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card flex-1">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Input</span>
+            <Button size="sm" onClick={format} disabled={status !== "ready"} className="h-7">
+              <Code2 className="h-3.5 w-3.5 mr-1" />Format
+            </Button>
+          </div>
+          <Textarea value={code} onChange={e => setCode(e.target.value)} className="flex-1 font-mono text-sm resize-none rounded-none border-0 focus-visible:ring-0 p-4" placeholder="Paste your code here…" spellCheck={false} />
+        </div>
+
+        {/* Output */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card flex-1">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output</span>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={copy} disabled={!formatted} className="h-7">
+                {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}{copied ? "Copied" : "Copy"}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={download} disabled={!formatted} className="h-7">
+                <Download className="h-3.5 w-3.5 mr-1" />Download
               </Button>
             </div>
-            <Textarea
-              value={code} onChange={e => setCode(e.target.value)}
-              className="flex-1 min-h-[200px] md:min-h-0 font-mono text-sm resize-none rounded-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="Paste your code here…" spellCheck={false}
-            />
           </div>
-
-          {/* Output */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="shrink-0 px-4 py-2 border-b border-border bg-muted/20 flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Output</span>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={copy} disabled={!formatted} className="h-7">
-                  {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={download} disabled={!formatted} className="h-7">
-                  <Download className="h-3.5 w-3.5 mr-1" />Download
-                </Button>
-              </div>
-            </div>
-            {fmtErr
-              ? <div className="flex-1 p-4 overflow-auto">
-                  <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3 text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap">{fmtErr}</div>
-                </div>
-              : <pre className="flex-1 min-h-[200px] md:min-h-0 overflow-auto p-4 text-sm font-mono whitespace-pre leading-relaxed">
-                  {formatted || <span className="text-muted-foreground italic">Formatted output will appear here…</span>}
-                </pre>
-            }
-          </div>
+          {fmtErr
+            ? <div className="flex-1 p-4 overflow-auto"><div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3 text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap">{fmtErr}</div></div>
+            : <pre className="flex-1 overflow-auto p-4 text-sm font-mono whitespace-pre leading-relaxed">{formatted || <span className="text-muted-foreground italic">Formatted output will appear here…</span>}</pre>
+          }
         </div>
       </div>
     </div>

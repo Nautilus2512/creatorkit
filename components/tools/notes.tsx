@@ -98,56 +98,40 @@ export default function Notes() {
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">Notes</h1>
-            <p className="text-sm text-muted-foreground">Quick notes saved to your browser's localStorage.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {unsaved && (
-              <Button variant="outline" size="sm" onClick={manualSave}>
-                <Save className="h-4 w-4 mr-1" />Save
-              </Button>
-            )}
-            <Button size="sm" onClick={newNote}>
-              <Plus className="h-4 w-4 mr-1" />New Note
-            </Button>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Notes</h2>
+          <p className="text-muted-foreground">Quick notes saved to your browser's localStorage.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {unsaved && <Button variant="outline" size="sm" onClick={manualSave}><Save className="h-4 w-4 mr-1" />Save</Button>}
+          <Button size="sm" onClick={newNote}><Plus className="h-4 w-4 mr-1" />New Note</Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Sidebar */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-56 md:shrink-0">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{notes.length} Note{notes.length !== 1 ? "s" : ""}</p>
+        <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-56">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{notes.length} Note{notes.length !== 1 ? "s" : ""}</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             {notes.length === 0 ? (
               <div className="p-4 text-xs text-muted-foreground text-center">No notes yet</div>
             ) : (
               notes.map(note => (
-                <div
-                  key={note.id}
-                  onClick={() => selectNote(note)}
+                <div key={note.id} onClick={() => selectNote(note)}
                   className={`px-4 py-3 border-b border-border/50 cursor-pointer group transition-colors ${activeId === note.id ? "bg-primary/5 border-l-2 border-l-primary pl-3.5" : "hover:bg-muted/30"}`}
                 >
                   <div className="flex items-start justify-between gap-1">
                     <p className="text-sm font-medium truncate flex-1">{note.title || "Untitled"}</p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteNote(note.id) }}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0 mt-0.5"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); deleteNote(note.id) }} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0 mt-0.5">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(note.updatedAt)}</p>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5 opacity-70">
-                    {note.content.slice(0, 50) || "Empty"}
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5 opacity-70">{note.content.slice(0, 50) || "Empty"}</p>
                 </div>
               ))
             )}
@@ -155,39 +139,28 @@ export default function Notes() {
         </div>
 
         {/* Editor */}
-        {activeId ? (
-          <div className="flex-1 flex flex-col min-w-0">
-            <div className="shrink-0 border-b border-border px-6 py-3">
-              <Input
-                value={title}
-                onChange={(e) => { setTitle(e.target.value); setUnsaved(true) }}
-                onBlur={manualSave}
-                placeholder="Note title..."
-                className="border-0 text-lg font-semibold px-0 focus-visible:ring-0 bg-transparent"
-              />
+        <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          {activeId ? (
+            <>
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <Input value={title} onChange={(e) => { setTitle(e.target.value); setUnsaved(true) }} onBlur={manualSave} placeholder="Note title..." className="border-0 text-lg font-semibold px-0 focus-visible:ring-0 bg-transparent" />
+              </div>
+              <Textarea value={content} onChange={(e) => { setContent(e.target.value); setUnsaved(true) }} onBlur={manualSave} placeholder="Start writing..." className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 leading-relaxed p-4" />
+              <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4">
+                <span>Stored in localStorage</span>
+                <span>{wordCount} words · {content.length} chars</span>
+                {unsaved && <span className="text-yellow-600">Unsaved changes</span>}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="text-center space-y-3">
+                <p className="text-sm">No note selected</p>
+                <Button onClick={newNote}><Plus className="h-4 w-4 mr-1" />Create your first note</Button>
+              </div>
             </div>
-            <Textarea
-              value={content}
-              onChange={(e) => { setContent(e.target.value); setUnsaved(true) }}
-              onBlur={manualSave}
-              placeholder="Start writing..."
-              className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 leading-relaxed px-6 py-4"
-            />
-          </div>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center space-y-3">
-              <p className="text-sm">No note selected</p>
-              <Button onClick={newNote}><Plus className="h-4 w-4 mr-1" />Create your first note</Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-        <span>Stored in localStorage</span>
-        {active && <span>{wordCount} words · {content.length} chars</span>}
-        {unsaved && <span className="text-yellow-600">Unsaved changes</span>}
+          )}
+        </div>
       </div>
     </div>
   )

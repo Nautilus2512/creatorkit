@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check, ArrowLeftRight } from "lucide-react"
@@ -62,68 +62,59 @@ export default function UrlEncoder() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">URL Encoder / Decoder</h1>
-            <p className="text-sm text-muted-foreground">Encode or decode URL components and full URLs</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")}>
-              Encode
-            </Button>
-            <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")}>
-              Decode
-            </Button>
-            <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
-              <ArrowLeftRight className="h-4 w-4 mr-1" />
-              Swap
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">URL Encoder / Decoder</h2>
+        <p className="text-muted-foreground">Encode or decode URL components and full URLs</p>
       </div>
 
-      {/* Encode mode selector */}
-      {mode === "encode" && (
-        <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Method:</span>
-          {([
-            { key: "component", label: "encodeURIComponent", hint: "Encodes all special chars (for query params)" },
-            { key: "full", label: "encodeURI", hint: "Preserves URL structure (for full URLs)" },
-          ] as { key: EncodeMode; label: string; hint: string }[]).map(({ key, label, hint }) => (
-            <button
-              key={key}
-              onClick={() => switchEncodeMode(key)}
-              title={hint}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors font-mono ${encodeMode === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")}>Encode</Button>
+        <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")}>Decode</Button>
+        <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
+          <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
+        </Button>
+        {mode === "encode" && (
+          <>
+            <div className="w-px h-4 bg-border" />
+            {([
+              { key: "component", label: "encodeURIComponent", hint: "Encodes all special chars (for query params)" },
+              { key: "full", label: "encodeURI", hint: "Preserves URL structure (for full URLs)" },
+            ] as { key: EncodeMode; label: string; hint: string }[]).map(({ key, label, hint }) => (
+              <button
+                key={key}
+                onClick={() => switchEncodeMode(key)}
+                title={hint}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors font-mono ${encodeMode === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </>
+        )}
+        {(input || output) && (
+          <span className="ml-auto text-xs text-muted-foreground">{input.length} → {output.length} chars</span>
+        )}
+      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encode" ? "Original Text / URL" : "Encoded URL"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">{mode === "encode" ? "Original Text / URL" : "Encoded URL"}</span>
           </div>
           <Textarea
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={mode === "encode" ? "Enter text or URL to encode..." : "Paste encoded URL to decode..."}
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0"
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
           />
         </div>
 
         {/* Right Panel */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encode" ? "Encoded Output" : "Decoded Text"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "encode" ? "Encoded Output" : "Decoded Text"}</span>
             <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
               {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
               {copied ? "Copied!" : "Copy"}
@@ -136,19 +127,11 @@ export default function UrlEncoder() {
               value={output}
               readOnly
               placeholder="Output will appear here..."
-              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10"
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
             />
           )}
         </div>
       </div>
-
-      {/* Status Bar */}
-      {(input || output) && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>Input: {input.length} chars</span>
-          {output && <span>Output: {output.length} chars</span>}
-        </div>
-      )}
     </div>
   )
 }

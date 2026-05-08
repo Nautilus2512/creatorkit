@@ -118,11 +118,11 @@ export default function InvoiceGenerator() {
   const reset = () => { if (confirm("Clear all invoice data?")) setForm(DEFAULT) }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Invoice Generator</h1>
-          <p className="text-sm text-muted-foreground">Create professional invoices. Saved locally — never uploaded.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">Invoice Generator</h2>
+          <p className="text-muted-foreground">Create professional invoices. Saved locally — never uploaded.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={reset}><RotateCcw className="h-3.5 w-3.5 mr-1.5" />Clear</Button>
@@ -130,9 +130,13 @@ export default function InvoiceGenerator() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Form */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2 overflow-y-auto">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Invoice Details</span>
+          </div>
+          <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-5">
 
             {/* From */}
@@ -217,15 +221,16 @@ export default function InvoiceGenerator() {
               <Textarea value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Payment due within 30 days. Thank you for your business!" rows={3} className="text-sm resize-none" />
             </div>
           </div>
+          </div>
         </div>
 
         {/* Right — Preview */}
-        <div className="flex flex-col md:flex-1 overflow-y-auto bg-muted/20">
-          <div className="shrink-0 px-4 py-2.5 border-b border-border bg-background/80 flex items-center justify-between">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview</span>
             <span className="text-xs text-muted-foreground">Auto-saved locally</span>
           </div>
-          <div className="p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6 md:p-8 font-sans text-sm text-foreground">
               {/* Header */}
               <div className="flex justify-between items-start mb-8">

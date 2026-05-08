@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Layers, Upload, Download, X, ImageIcon } from "lucide-react"
+import { Layers, Upload, Download, X, ImageIcon, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,8 @@ type Position =
   | "top-left"    | "top-center"    | "top-right"
   | "middle-left" | "middle-center" | "middle-right"
   | "bottom-left" | "bottom-center" | "bottom-right"
+
+type WatermarkType = "text" | "logo"
 
 const POS_GRID: Position[][] = [
   ["top-left",    "top-center",    "top-right"],
@@ -35,41 +37,57 @@ function formatBytes(n: number) {
 function renderWatermark(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
-  text: string,
-  opts: { fontSize: number; opacity: number; color: string; fontFamily: string; position: Position; padding: number }
+  watermarkType: WatermarkType,
+  watermarkContent: string | HTMLImageElement,
+  opts: { fontSize: number; opacity: number; color: string; fontFamily: string; position: Position; padding: number; logoSize: number }
 ) {
-  const { fontSize, opacity, color, fontFamily, position, padding } = opts
+  const { fontSize, opacity, color, fontFamily, position, padding, logoSize } = opts
   const ctx = canvas.getContext("2d")!
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-  if (!text.trim()) return
+  
+  if (watermarkType === "text" && typeof watermarkContent === "string") {
+    if (!watermarkContent.trim()) return
+    const minDim = Math.min(canvas.width, canvas.height)
+    const actualFontSize = Math.max(8, Math.round(minDim * fontSize / 100))
+    const pad = Math.round(minDim * padding / 100)
 
-  const minDim = Math.min(canvas.width, canvas.height)
-  const actualFontSize = Math.max(8, Math.round(minDim * fontSize / 100))
-  const pad = Math.round(minDim * padding / 100)
+    ctx.save()
+    ctx.font = `bold ${actualFontSize}px ${fontFamily}`
+    ctx.textBaseline = "middle"
 
-  ctx.save()
-  ctx.font = `bold ${actualFontSize}px ${fontFamily}`
-  ctx.textBaseline = "middle"
+    const textW = ctx.measureText(watermarkContent).width
+    const textH = actualFontSize * 1.2
 
-  const textW = ctx.measureText(text).width
-  const textH = actualFontSize * 1.2
+    const [vp, hp] = position.split("-")
+    const x = hp === "left" ? pad : hp === "center" ? (canvas.width - textW) / 2 : canvas.width - textW - pad
+    const y = vp === "top" ? pad + textH / 2 : vp === "middle" ? canvas.height / 2 : canvas.height - pad - textH / 2
 
-  const [vp, hp] = position.split("-")
-  const x = hp === "left" ? pad : hp === "center" ? (canvas.width - textW) / 2 : canvas.width - textW - pad
-  const y = vp === "top" ? pad + textH / 2 : vp === "middle" ? canvas.height / 2 : canvas.height - pad - textH / 2
+    ctx.globalAlpha = (opacity / 100) * 0.5
+    ctx.strokeStyle = color === "#ffffff" ? "#000000" : "#ffffff"
+    ctx.lineWidth = Math.max(1, actualFontSize * 0.08)
+    ctx.lineJoin = "round"
+    ctx.strokeText(watermarkContent, x, y)
 
-  // Outline so text is readable on any background
-  ctx.globalAlpha = (opacity / 100) * 0.5
-  ctx.strokeStyle = color === "#ffffff" ? "#000000" : "#ffffff"
-  ctx.lineWidth = Math.max(1, actualFontSize * 0.08)
-  ctx.lineJoin = "round"
-  ctx.strokeText(text, x, y)
+    ctx.globalAlpha = opacity / 100
+    ctx.fillStyle = color
+    ctx.fillText(watermarkContent, x, y)
+    ctx.restore()
+  } else if (watermarkType === "logo" && watermarkContent instanceof HTMLImageElement) {
+    const minDim = Math.min(canvas.width, canvas.height)
+    const actualLogoSize = Math.max(20, Math.round(minDim * logoSize / 100))
+    const pad = Math.round(minDim * padding / 100)
 
-  ctx.globalAlpha = opacity / 100
-  ctx.fillStyle = color
-  ctx.fillText(text, x, y)
-  ctx.restore()
+    ctx.save()
+    ctx.globalAlpha = opacity / 100
+
+    const [vp, hp] = position.split("-")
+    const x = hp === "left" ? pad : hp === "center" ? (canvas.width - actualLogoSize) / 2 : canvas.width - actualLogoSize - pad
+    const y = vp === "top" ? pad : vp === "middle" ? (canvas.height - actualLogoSize) / 2 : canvas.height - actualLogoSize - pad
+
+    ctx.drawImage(watermarkContent, x, y, actualLogoSize, actualLogoSize)
+    ctx.restore()
+  }
 }
 
 export function ImageWatermarkAdder() {
@@ -77,15 +95,21 @@ export function ImageWatermarkAdder() {
   const [fileName, setFileName] = useState("")
   const [fileSize, setFileSize] = useState(0)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [watermarkType, setWatermarkType] = useState<WatermarkType>("text")
   const [watermarkText, setWatermarkText] = useState("© CreatorKit")
+  const [logoEl, setLogoEl] = useState<HTMLImageElement | null>(null)
+  const [logoFileName, setLogoFileName] = useState("")
   const [fontSize, setFontSize] = useState(5)
+  const [logoSize, setLogoSize] = useState(10)
   const [opacity, setOpacity] = useState(70)
   const [color, setColor] = useState("#ffffff")
   const [fontFamily, setFontFamily] = useState("sans-serif")
   const [position, setPosition] = useState<Position>("bottom-right")
   const [padding, setPadding] = useState(3)
   const [isDragging, setIsDragging] = useState(false)
+  const [isDraggingLogo, setIsDraggingLogo] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const handleFile = (f: File) => {
@@ -98,6 +122,14 @@ export function ImageWatermarkAdder() {
     img.src = url
   }
 
+  const handleLogoFile = (f: File) => {
+    setLogoFileName(f.name)
+    const url = URL.createObjectURL(f)
+    const img = new Image()
+    img.onload = () => setLogoEl(img)
+    img.src = url
+  }
+
   // Re-render preview whenever image or any setting changes
   useEffect(() => {
     if (!imageEl || !canvasRef.current) return
@@ -105,16 +137,18 @@ export function ImageWatermarkAdder() {
     const scale = Math.min(1, 1600 / Math.max(imageEl.naturalWidth, imageEl.naturalHeight))
     canvas.width = Math.round(imageEl.naturalWidth * scale)
     canvas.height = Math.round(imageEl.naturalHeight * scale)
-    renderWatermark(canvas, imageEl, watermarkText, { fontSize, opacity, color, fontFamily, position, padding })
+    const watermarkContent = watermarkType === "text" ? watermarkText : (logoEl || "")
+    renderWatermark(canvas, imageEl, watermarkType, watermarkContent, { fontSize, opacity, color, fontFamily, position, padding, logoSize })
     setPreviewUrl(canvas.toDataURL("image/jpeg", 0.9))
-  }, [imageEl, watermarkText, fontSize, opacity, color, fontFamily, position, padding])
+  }, [imageEl, watermarkType, watermarkText, logoEl, fontSize, logoSize, opacity, color, fontFamily, position, padding])
 
   const download = useCallback(() => {
     if (!imageEl) return
     const canvas = document.createElement("canvas")
     canvas.width = imageEl.naturalWidth
     canvas.height = imageEl.naturalHeight
-    renderWatermark(canvas, imageEl, watermarkText, { fontSize, opacity, color, fontFamily, position, padding })
+    const watermarkContent = watermarkType === "text" ? watermarkText : (logoEl || "")
+    renderWatermark(canvas, imageEl, watermarkType, watermarkContent, { fontSize, opacity, color, fontFamily, position, padding, logoSize })
     const isPng = fileName.toLowerCase().endsWith(".png")
     canvas.toBlob((blob) => {
       if (!blob) return
@@ -125,7 +159,7 @@ export function ImageWatermarkAdder() {
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 100)
     }, isPng ? "image/png" : "image/jpeg", isPng ? undefined : 0.92)
-  }, [imageEl, watermarkText, fontSize, opacity, color, fontFamily, position, padding, fileName])
+  }, [imageEl, watermarkType, watermarkText, logoEl, fontSize, logoSize, opacity, color, fontFamily, position, padding, fileName])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -137,20 +171,16 @@ export function ImageWatermarkAdder() {
   }, [download])
 
   return (
-    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
+    <>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Image Watermark Adder</h2>
+        <p className="text-muted-foreground">Add text or logo watermarks · 100% in-browser</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel — settings */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2">
-              <Layers className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold">Image Watermark Adder</h1>
-              <p className="text-xs text-muted-foreground">Add text watermarks · 100% in-browser</p>
-            </div>
-          </div>
 
           {/* Upload */}
           <div className="space-y-2">
@@ -192,41 +222,116 @@ export function ImageWatermarkAdder() {
             </div>
           </div>
 
-          {/* Watermark text */}
+          {/* Watermark type selector */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Watermark Text</Label>
-            <Input
-              placeholder="© Your Name"
-              value={watermarkText}
-              onChange={(e) => setWatermarkText(e.target.value)}
-            />
-          </div>
-
-          {/* Font */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Font</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {FONTS.map(f => (
-                <button
-                  key={f.value}
-                  onClick={() => setFontFamily(f.value)}
-                  style={{ fontFamily: f.value }}
-                  className={`rounded-md border px-2 py-1.5 text-sm transition-colors ${
-                    fontFamily === f.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+            <Label className="text-sm font-medium">Watermark Type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setWatermarkType("text")}
+                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  watermarkType === "text"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                <Type className="h-4 w-4" />
+                Text
+              </button>
+              <button
+                onClick={() => setWatermarkType("logo")}
+                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  watermarkType === "logo"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                }`}
+              >
+                <ImageIcon className="h-4 w-4" />
+                Logo
+              </button>
             </div>
           </div>
+
+          {/* Watermark content based on type */}
+          {watermarkType === "text" ? (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Watermark Text</Label>
+              <Input
+                placeholder="© Your Name"
+                value={watermarkText}
+                onChange={(e) => setWatermarkText(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Logo Image</Label>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true) }}
+                onDragLeave={() => setIsDraggingLogo(false)}
+                onDrop={(e) => { e.preventDefault(); setIsDraggingLogo(false); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) handleLogoFile(f) }}
+                onClick={() => logoInputRef.current?.click()}
+                className={`relative flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+                  isDraggingLogo ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
+                }`}
+              >
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoFile(f) }} />
+                {logoEl ? (
+                  <div className="flex items-center gap-3 px-4 w-full">
+                    <div className="rounded-md bg-primary/10 p-2 shrink-0">
+                      <ImageIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{logoFileName}</p>
+                      <p className="text-xs text-muted-foreground">{logoEl.naturalWidth} × {logoEl.naturalHeight}px</p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setLogoEl(null); setLogoFileName("") }}
+                      aria-label="Remove logo"
+                      className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 px-4 text-center">
+                    <div className="rounded-full bg-muted p-2"><Upload className="h-4 w-4 text-muted-foreground" /></div>
+                    <p className="text-xs font-medium">Drop a logo here</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, WebP</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Font - only show for text watermarks */}
+          {watermarkType === "text" && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Font</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {FONTS.map(f => (
+                  <button
+                    key={f.value}
+                    onClick={() => setFontFamily(f.value)}
+                    style={{ fontFamily: f.value }}
+                    className={`rounded-md border px-2 py-1.5 text-sm transition-colors ${
+                      fontFamily === f.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Sliders */}
           <div className="space-y-4">
             {[
-              { label: "Size", value: fontSize, set: setFontSize, min: 1, max: 20, unit: "%" },
+              ...(watermarkType === "text" 
+                ? [{ label: "Size", value: fontSize, set: setFontSize, min: 1, max: 20, unit: "%" }]
+                : [{ label: "Logo Size", value: logoSize, set: setLogoSize, min: 5, max: 30, unit: "%" }]
+              ),
               { label: "Opacity", value: opacity, set: setOpacity, min: 10, max: 100, unit: "%" },
               { label: "Padding from edge", value: padding, set: setPadding, min: 0, max: 15, unit: "%" },
             ].map(({ label, value, set, min, max, unit }) => (
@@ -240,27 +345,29 @@ export function ImageWatermarkAdder() {
             ))}
           </div>
 
-          {/* Color */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Color</Label>
-            <div className="flex items-center gap-2 flex-wrap">
-              {["#ffffff", "#000000", "#ff0000", "#ffff00"].map(c => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={`h-8 w-8 rounded-md border-2 transition-all ${color === c ? "border-primary scale-110" : "border-border"}`}
-                  style={{ backgroundColor: c }}
+          {/* Color - only show for text watermarks */}
+          {watermarkType === "text" && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Color</Label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {["#ffffff", "#000000", "#ff0000", "#ffff00"].map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`h-8 w-8 rounded-md border-2 transition-all ${color === c ? "border-primary scale-110" : "border-border"}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
                 />
-              ))}
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-              />
-              <span className="text-xs text-muted-foreground font-mono">{color}</span>
+                <span className="text-xs text-muted-foreground font-mono">{color}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Position grid */}
           <div className="space-y-2">
@@ -296,7 +403,7 @@ export function ImageWatermarkAdder() {
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
         <div className="flex-1 overflow-y-auto p-4">
           {!previewUrl ? (
@@ -328,14 +435,16 @@ export function ImageWatermarkAdder() {
         )}
       </div>
 
-      <ShortcutsModal
-        pageName="Image Watermark Adder"
-        shortcuts={[
-          { keys: ["Ctrl", "S"], description: "Download image" },
-          { keys: ["Ctrl", "O"], description: "Open image" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
+      </div>
     </div>
+    <ShortcutsModal
+      pageName="Image Watermark Adder"
+      shortcuts={[
+        { keys: ["Ctrl", "S"], description: "Download image" },
+        { keys: ["Ctrl", "O"], description: "Open image" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    </>
   )
 }

@@ -83,7 +83,7 @@ export default function ImageToPdf() {
       }
       const bytes = await pdf.save()
       const a = Object.assign(document.createElement("a"), {
-        href: URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })),
+        href: URL.createObjectURL(new Blob([bytes as unknown as BlobPart], { type: "application/pdf" })),
         download: "images.pdf",
       })
       a.click()
@@ -93,21 +93,18 @@ export default function ImageToPdf() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Image to PDF</h1>
-            <p className="text-sm text-muted-foreground">Combine images into a PDF document. All processing happens in your browser.</p>
-          </div>
-          <Button onClick={convert} disabled={!images.length || loading}>
-            <Download className="h-4 w-4 mr-1" />{loading ? "Converting..." : "Download PDF"}
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Image to PDF</h2>
+          <p className="text-muted-foreground">Combine images into a PDF document. All processing happens in your browser.</p>
         </div>
+        <Button onClick={convert} disabled={!images.length || loading}>
+          <Download className="h-4 w-4 mr-1" />{loading ? "Converting..." : "Download PDF"}
+        </Button>
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Page size:</Label>
           {(["fit", "a4", "letter"] as PageSize[]).map(v => (
@@ -130,23 +127,25 @@ export default function ImageToPdf() {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Upload zone */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-56 md:shrink-0">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Images</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Add Images</span>
           </div>
-          <label className="flex-1 flex flex-col items-center justify-center p-4 cursor-pointer border-2 border-dashed border-border m-3 rounded-xl hover:border-primary/50 transition-colors">
+          <div className="flex-1 flex flex-col p-4">
+          <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors">
             <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
             <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" />
             <p className="text-xs font-medium text-center">Click or drop images here</p>
             <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
           </label>
+          </div>
         </div>
 
         {/* Image list */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">{images.length} image{images.length !== 1 ? "s" : ""} · pages in order</h3>
             {images.length > 0 && <Button variant="ghost" size="sm" onClick={() => setImages([])}>Clear all</Button>}
           </div>
@@ -182,3 +181,4 @@ export default function ImageToPdf() {
     </div>
   )
 }
+

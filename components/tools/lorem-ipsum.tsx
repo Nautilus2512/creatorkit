@@ -93,66 +93,54 @@ export default function LoremIpsum() {
   const maxCount = genType === "words" ? 500 : genType === "sentences" ? 50 : 20
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Lorem Ipsum Generator</h1>
-            <p className="text-sm text-muted-foreground">Generate placeholder text for designs and mockups</p>
-          </div>
-          <Button onClick={generate}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Generate
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Lorem Ipsum Generator</h2>
+          <p className="text-muted-foreground">Generate placeholder text for designs and mockups</p>
+        </div>
+        <Button onClick={generate}>
+          <RefreshCw className="h-4 w-4 mr-1" />Generate
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium">Type</Label>
+          {(["paragraphs", "sentences", "words"] as GenType[]).map(t => (
+            <button
+              key={t}
+              onClick={() => { setGenType(t); setCount(t === "words" ? 50 : t === "sentences" ? 5 : 3) }}
+              className={`text-sm px-3 py-1 rounded-full border capitalize transition-colors ${genType === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium">Count</Label>
+          <input
+            type="number" min={1} max={maxCount} value={count}
+            onChange={e => setCount(Math.min(maxCount, Math.max(1, parseInt(e.target.value) || 1)))}
+            className="w-20 px-3 py-1 border border-border rounded-md text-sm bg-background"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch id="start-lorem" checked={startWithLorem} onCheckedChange={setStartWithLorem} />
+          <Label htmlFor="start-lorem" className="text-sm cursor-pointer">Start with "Lorem ipsum..."</Label>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3">
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium">Type</Label>
-            {(["paragraphs", "sentences", "words"] as GenType[]).map(t => (
-              <button
-                key={t}
-                onClick={() => { setGenType(t); setCount(t === "words" ? 50 : t === "sentences" ? 5 : 3) }}
-                className={`text-sm px-3 py-1 rounded-full border capitalize transition-colors ${genType === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium">Count</Label>
-            <input
-              type="number"
-              min={1}
-              max={maxCount}
-              value={count}
-              onChange={e => setCount(Math.min(maxCount, Math.max(1, parseInt(e.target.value) || 1)))}
-              className="w-20 px-3 py-1 border border-border rounded-md text-sm bg-background"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch id="start-lorem" checked={startWithLorem} onCheckedChange={setStartWithLorem} />
-            <Label htmlFor="start-lorem" className="text-sm cursor-pointer">Start with "Lorem ipsum..."</Label>
-          </div>
-        </div>
-      </div>
-
-      {/* Output */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-          <h3 className="text-sm font-medium">Generated Text</h3>
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-medium">Generated Text</span>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
               {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
               {copied ? "Copied!" : "Copy"}
             </Button>
             <Button variant="ghost" size="sm" onClick={download} disabled={!output}>
-              <Download className="h-4 w-4 mr-1" />
-              Download
+              <Download className="h-4 w-4 mr-1" />Download
             </Button>
           </div>
         </div>
@@ -160,18 +148,15 @@ export default function LoremIpsum() {
           value={output}
           readOnly
           placeholder='Click "Generate" to create lorem ipsum text...'
-          className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 bg-muted/5 leading-relaxed"
+          className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 leading-relaxed p-4"
         />
+        {output && (
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4">
+            <span>{output.split(/\s+/).filter(Boolean).length} words</span>
+            <span>{output.length} chars</span>
+          </div>
+        )}
       </div>
-
-      {/* Status Bar */}
-      {output && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>{output.split(/\s+/).filter(Boolean).length} words</span>
-          <span>{output.length} characters</span>
-          <span>{output.split(/\n\n/).filter(Boolean).length} paragraphs</span>
-        </div>
-      )}
     </div>
   )
 }

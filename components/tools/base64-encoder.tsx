@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useCallback } from "react"
 import { Copy, Check, Upload, Download, ArrowLeftRight } from "lucide-react"
@@ -80,35 +80,31 @@ export default function Base64Encoder() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Base64 Encoder / Decoder</h1>
-            <p className="text-sm text-muted-foreground">Encode text or files to Base64, or decode Base64 back to text</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")}>
-              Encode
-            </Button>
-            <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")}>
-              Decode
-            </Button>
-            <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
-              <ArrowLeftRight className="h-4 w-4 mr-1" />
-              Swap
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Base64 Encoder / Decoder</h2>
+        <p className="text-muted-foreground">Encode text or files to Base64, or decode Base64 back to text</p>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="flex items-center gap-2">
+        <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")}>Encode</Button>
+        <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")}>Decode</Button>
+        <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
+          <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
+        </Button>
+        {(input || output) && (
+          <span className="ml-auto text-xs text-muted-foreground">
+            {input.length} → {output.length} chars
+            {mode === "encode" && output && input.length > 0 && ` (${(output.length / input.length).toFixed(2)}x)`}
+          </span>
+        )}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encode" ? "Plain Text Input" : "Base64 Input"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "encode" ? "Plain Text Input" : "Base64 Input"}</span>
             {mode === "encode" && (
               <label className="cursor-pointer">
                 <input type="file" className="hidden" onChange={handleFileUpload} />
@@ -122,22 +118,21 @@ export default function Base64Encoder() {
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
             placeholder={mode === "encode" ? "Enter text to encode..." : "Enter Base64 to decode..."}
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0"
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
           />
         </div>
 
         {/* Right Panel */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encode" ? "Base64 Output" : "Decoded Text"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "encode" ? "Base64 Output" : "Decoded Text"}</span>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
                 {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                 {copied ? "Copied!" : "Copy"}
               </Button>
               <Button variant="ghost" size="sm" onClick={download} disabled={!output}>
-                <Download className="h-4 w-4 mr-1" />
-                Download
+                <Download className="h-4 w-4 mr-1" />Download
               </Button>
             </div>
           </div>
@@ -148,22 +143,11 @@ export default function Base64Encoder() {
               value={output}
               readOnly
               placeholder="Output will appear here..."
-              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10"
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
             />
           )}
         </div>
       </div>
-
-      {/* Status Bar */}
-      {(output || input) && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>Input: {input.length} chars</span>
-          {output && <span>Output: {output.length} chars</span>}
-          {mode === "encode" && output && input.length > 0 && (
-            <span>Ratio: {(output.length / input.length).toFixed(2)}x</span>
-          )}
-        </div>
-      )}
     </div>
   )
 }

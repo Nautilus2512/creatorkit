@@ -154,19 +154,20 @@ export default function PomodoroTimer() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Pomodoro Timer</h1>
-          <p className="text-sm text-muted-foreground">Focus in sessions, rest in breaks. All in your browser.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">Pomodoro Timer</h2>
+          <p className="text-muted-foreground">Focus in sessions, rest in breaks. All in your browser.</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setShowSettings(s => !s)}>
           <Settings className="h-3.5 w-3.5 mr-1.5" />Settings
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Timer */}
+        <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
           {/* Mode selector */}
           <div className="flex gap-1 rounded-full border border-border p-1">
@@ -231,10 +232,12 @@ export default function PomodoroTimer() {
             </div>
           </div>
         </div>
+        </div>
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="border-t md:border-t-0 md:border-l border-border md:w-64 md:shrink-0 p-4 space-y-4 overflow-y-auto bg-muted/10">
+          <div className="shrink-0 w-64 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">Settings</p>
               <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground">
@@ -268,6 +271,7 @@ export default function PomodoroTimer() {
             <Button variant="outline" size="sm" className="w-full" onClick={() => {
               setSettings(DEFAULTS); setSecondsLeft(DEFAULTS.work * 60); setMode("work"); setRunning(false)
             }}>Reset to defaults</Button>
+          </div>
           </div>
         )}
       </div>

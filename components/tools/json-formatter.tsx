@@ -1,14 +1,10 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from "react"
-import { 
-  FileJson, Copy, Download, Check, AlertCircle, 
-  Minimize2, Maximize2, Eye, EyeOff
-} from "lucide-react"
+import { FileJson, Copy, Download, Check, AlertCircle, Minimize2, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 
@@ -43,14 +39,8 @@ export default function JsonFormatter() {
       const parsed = JSON.parse(jsonInput)
       setIsValid(true)
       setError(null)
-      
-      // Format with 2 spaces
-      const formatted = JSON.stringify(parsed, null, 2)
-      setFormattedJson(formatted)
-      
-      // Minify
-      const minified = JSON.stringify(parsed)
-      setMinifiedJson(minified)
+      setFormattedJson(JSON.stringify(parsed, null, 2))
+      setMinifiedJson(JSON.stringify(parsed))
     } catch (err) {
       setIsValid(false)
       setError(parseJsonError(err))
@@ -59,41 +49,30 @@ export default function JsonFormatter() {
     }
   }
 
-  const parseJsonError = (err: any): JsonError => {
-    const errorString = err.toString()
+  const parseJsonError = (err: unknown): JsonError => {
+    const errorString = String(err)
     const match = errorString.match(/position (\d+)/)
-    
     if (match) {
       const position = parseInt(match[1])
       const lines = jsonInput.substring(0, position).split('\n')
-      return {
-        line: lines.length,
-        column: lines[lines.length - 1].length + 1,
-        message: err.message || "Invalid JSON"
-      }
+      return { line: lines.length, column: lines[lines.length - 1].length + 1, message: (err as Error).message || "Invalid JSON" }
     }
-    
-    return {
-      line: 1,
-      column: 1,
-      message: err.message || "Invalid JSON"
-    }
+    return { line: 1, column: 1, message: (err as Error).message || "Invalid JSON" }
   }
 
-  const copyToClipboard = () => {
-    const textToCopy = showMinified ? minifiedJson : formattedJson
-    navigator.clipboard.writeText(textToCopy)
+  const copy = () => {
+    navigator.clipboard.writeText(showMinified ? minifiedJson : formattedJson)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const downloadJson = () => {
-    const textToDownload = showMinified ? minifiedJson : formattedJson
-    const blob = new Blob([textToDownload], { type: 'application/json' })
+  const download = () => {
+    const text = showMinified ? minifiedJson : formattedJson
+    const blob = new Blob([text], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = showMinified ? 'formatted.json' : 'minified.json'
+    a.download = showMinified ? 'minified.json' : 'formatted.json'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -101,132 +80,93 @@ export default function JsonFormatter() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">JSON Formatter</h1>
-            <p className="text-sm text-muted-foreground">Format, validate, and minify JSON</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-4">
-              <Switch
-                id="minified"
-                checked={showMinified}
-                onCheckedChange={setShowMinified}
-              />
-              <Label htmlFor="minified" className="text-sm">
-                {showMinified ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                {showMinified ? "Minified" : "Formatted"}
-              </Label>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              disabled={!isValid}
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              Copy
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadJson}
-              disabled={!isValid}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              Download
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">JSON Formatter</h2>
+        <p className="text-muted-foreground">Format, validate, and minify JSON</p>
       </div>
 
-      {/* Status Bar */}
-      {jsonInput.trim() && (
-        <div className="shrink-0 border-b border-border bg-muted/30">
-          <div className="px-6 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {isValid ? (
-                <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
-                  <Check className="h-3 w-3 mr-1" />
-                  Valid JSON
-                </Badge>
-              ) : (
-                <Badge variant="destructive">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Invalid JSON
-                </Badge>
-              )}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Switch id="minified" checked={showMinified} onCheckedChange={setShowMinified} />
+          <Label htmlFor="minified" className="text-sm flex items-center gap-1">
+            {showMinified ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            {showMinified ? "Minified" : "Formatted"}
+          </Label>
+        </div>
+        {jsonInput.trim() && (
+          isValid ? (
+            <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-300">
+              <Check className="h-3 w-3 mr-1" />Valid JSON
+            </Badge>
+          ) : (
+            <Badge variant="destructive">
+              <AlertCircle className="h-3 w-3 mr-1" />Invalid JSON
+            </Badge>
+          )
+        )}
+        {error && (
+          <span className="text-xs text-destructive">Line {error.line}, Col {error.column}: {error.message}</span>
+        )}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left Panel — Input */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
+            <FileJson className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">JSON Input</span>
+          </div>
+          <Textarea
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            placeholder="Paste or type your JSON here..."
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
+            spellCheck={false}
+          />
+        </div>
+
+        {/* Right Panel — Output */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {showMinified ? <Minimize2 className="h-4 w-4 text-muted-foreground" /> : <Maximize2 className="h-4 w-4 text-muted-foreground" />}
+              <span className="text-sm font-medium">{showMinified ? "Minified" : "Formatted"} Output</span>
               {isValid && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {showMinified ? `${minifiedJson.length} chars` : `${formattedJson.split('\n').length} lines`}
                 </span>
               )}
             </div>
-            {error && (
-              <div className="text-sm text-destructive">
-                Line {error.line}, Column {error.column}: {error.message}
-              </div>
-            )}
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" onClick={copy} disabled={!isValid}>
+                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={download} disabled={!isValid}>
+                <Download className="h-4 w-4 mr-1" />Download
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Left Panel - Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-              <FileJson className="h-4 w-4" />
-              Input
-            </h3>
-          </div>
-          
-          <div className="flex-1 overflow-hidden">
+          {isValid ? (
             <Textarea
-              value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
-              placeholder="Paste or type your JSON here..."
-              className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
+              value={showMinified ? minifiedJson : formattedJson}
+              readOnly
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
               spellCheck={false}
             />
-          </div>
-        </div>
-
-        {/* Right Panel - Output */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-              {showMinified ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              {showMinified ? "Minified" : "Formatted"} Output
-            </h3>
-          </div>
-          
-          <div className="flex-1 overflow-hidden">
-            {isValid ? (
-              <Textarea
-                value={showMinified ? minifiedJson : formattedJson}
-                readOnly
-                className="h-full w-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4 bg-muted/20"
-                spellCheck={false}
-              />
-            ) : error ? (
-              <div className="flex-1 p-4 text-destructive text-sm font-mono">
-                <AlertCircle className="h-4 w-4 mb-2" />
-                <div>JSON Error:</div>
-                <div className="mt-2">Line {error.line}, Column {error.column}</div>
-                <div>{error.message}</div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <FileJson className="h-12 w-12 mb-2 opacity-50" />
-                <p className="text-center">Enter JSON to see formatted output</p>
-              </div>
-            )}
-          </div>
+          ) : error ? (
+            <div className="flex-1 p-4 text-destructive text-sm font-mono">
+              <AlertCircle className="h-4 w-4 mb-2" />
+              <div>JSON Error at Line {error.line}, Column {error.column}:</div>
+              <div className="mt-1">{error.message}</div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+              <FileJson className="h-12 w-12 opacity-30" />
+              <p className="text-sm">Enter JSON to see formatted output</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

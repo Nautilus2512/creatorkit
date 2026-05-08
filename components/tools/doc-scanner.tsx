@@ -234,11 +234,11 @@ export default function DocScanner() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-xl font-semibold">Doc Scanner</h1>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-2xl font-semibold tracking-tight">Doc Scanner</h2>
+          <p className="text-muted-foreground">
             Scan documents with your camera. Drag 4 corner handles to align, then scan — perspective-corrected output.
           </p>
         </div>
@@ -249,7 +249,7 @@ export default function DocScanner() {
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card flex">
 
         {/* ── Idle ── */}
         {phase === "idle" && (

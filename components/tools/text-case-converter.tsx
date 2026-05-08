@@ -80,149 +80,63 @@ export default function TextCaseConverter() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Text Case Converter</h1>
-            <p className="text-sm text-muted-foreground">Convert text between different cases</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => copyToClipboard(input)}
-              disabled={!input}
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              Copy Input
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadFile(input, 'converted.txt')}
-              disabled={!input}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              Download
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Text Case Converter</h2>
+        <p className="text-muted-foreground">Convert text between different cases</p>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="shrink-0 border-b border-border bg-muted/30">
-        <div className="px-6 py-2 flex gap-2">
-          <Button
-            variant={activeTab === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('all')}
-          >
-            All Cases
-          </Button>
-          <Button
-            variant={activeTab === 'individual' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('individual')}
-          >
-            Individual
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'all' ? (
-          <div className="max-w-4xl mx-auto p-6 space-y-6">
-            {/* Input */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Type className="h-5 w-5" />
-                  Input Text
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Enter text to convert..."
-                  className="min-h-[200px] w-full resize-none font-mono text-sm"
-                  rows={6}
-                />
-              </CardContent>
-            </Card>
-
-            {/* All Conversions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">All Conversions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Object.entries(conversions).filter(([_, value]) => value).map(([caseType, value]) => (
-                  <div key={caseType} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium capitalize">{caseType}</h4>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(value)}
-                        disabled={!value}
-                      >
-                        {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                        Copy
-                      </Button>
-                    </div>
-                    <div className="p-3 bg-muted/20 rounded-md border font-mono text-sm">
-                      {value || <span className="text-muted-foreground">Enter text to see conversion</span>}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left — Input */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
+            <Type className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Input Text</span>
           </div>
-        ) : (
-          <div className="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(conversions).filter(([_, value]) => value).map(([caseType, value]) => (
-              <Card key={caseType}>
-                <CardHeader>
-                  <CardTitle className="text-lg capitalize flex items-center gap-2">
-                    <ArrowUpDown className="h-5 w-5" />
-                    {caseType}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 bg-muted/20 rounded-md border font-mono text-sm min-h-[100px]">
-                    {value || <span className="text-muted-foreground">Enter text to see conversion</span>}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(value)}
-                      disabled={!value}
-                      className="flex-1"
-                    >
-                      {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                      Copy
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter text to convert..."
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
+          />
+          {input && (
+            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => copyToClipboard(input)}>
+                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => downloadFile(input, 'text.txt')}>
+                <Download className="h-4 w-4 mr-1" />Download
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Right — Conversions */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">All Conversions</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {Object.entries(conversions).map(([caseType, value]) => (
+              <div key={caseType} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium capitalize text-muted-foreground">{caseType}</span>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => copyToClipboard(value)} disabled={!value}>
+                      {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}Copy
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => downloadFile(value, `${caseType}-case.txt`)}
-                      disabled={!value}
-                      className="flex-1"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => downloadFile(value, `${caseType}.txt`)} disabled={!value}>
+                      <Download className="h-3 w-3 mr-1" />Download
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="p-2.5 bg-muted/20 rounded-md border font-mono text-sm min-h-[2rem]">
+                  {value || <span className="text-muted-foreground text-xs">Enter text above</span>}
+                </div>
+              </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

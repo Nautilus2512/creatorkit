@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check, Lock, Unlock, Eye, EyeOff, ArrowLeftRight } from "lucide-react"
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 
 type Mode = "encrypt" | "decrypt"
 
-async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveKey(passphrase: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const base = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(passphrase),
@@ -27,8 +27,8 @@ async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKe
 }
 
 async function encryptText(text: string, passphrase: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16))
-  const iv = crypto.getRandomValues(new Uint8Array(12))
+  const salt = crypto.getRandomValues(new Uint8Array(16)) as Uint8Array<ArrayBuffer>
+  const iv = crypto.getRandomValues(new Uint8Array(12)) as Uint8Array<ArrayBuffer>
   const key = await deriveKey(passphrase, salt)
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -43,8 +43,8 @@ async function encryptText(text: string, passphrase: string): Promise<string> {
 }
 
 async function decryptText(b64: string, passphrase: string): Promise<string> {
-  const combined = Uint8Array.from(atob(b64.trim()), c => c.charCodeAt(0))
-  const key = await deriveKey(passphrase, combined.slice(0, 16))
+  const combined = Uint8Array.from(atob(b64.trim()), c => c.charCodeAt(0)) as Uint8Array<ArrayBuffer>
+  const key = await deriveKey(passphrase, combined.slice(0, 16) as Uint8Array<ArrayBuffer>)
   const plaintext = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: combined.slice(16, 28) },
     key,
@@ -104,33 +104,25 @@ export default function AesEncryptor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">AES Encrypt / Decrypt</h1>
-            <p className="text-sm text-muted-foreground">AES-256-GCM with PBKDF2 key derivation. Nothing leaves your browser.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("encrypt")}>
-              <Lock className="h-4 w-4 mr-1" />Encrypt
-            </Button>
-            <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("decrypt")}>
-              <Unlock className="h-4 w-4 mr-1" />Decrypt
-            </Button>
-            <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
-              <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">AES Encrypt / Decrypt</h2>
+        <p className="text-muted-foreground">AES-256-GCM with PBKDF2 key derivation. Nothing leaves your browser.</p>
       </div>
 
-      {/* Passphrase bar */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3">
-        <div className="flex items-center gap-3 max-w-2xl">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("encrypt")}>
+          <Lock className="h-4 w-4 mr-1" />Encrypt
+        </Button>
+        <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("decrypt")}>
+          <Unlock className="h-4 w-4 mr-1" />Decrypt
+        </Button>
+        <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
+          <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
+        </Button>
+        <div className="flex items-center gap-2 ml-2 flex-1">
           <Label className="text-sm font-medium shrink-0">Passphrase</Label>
-          <div className="flex-1 relative">
+          <div className="relative flex-1 max-w-sm">
             <Input
               type={showPass ? "text" : "password"}
               value={passphrase}
@@ -146,30 +138,30 @@ export default function AesEncryptor() {
               {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <Button onClick={run} disabled={!input.trim() || !passphrase.trim() || loading}>
+          <Button onClick={run} disabled={!input.trim() || !passphrase.trim() || loading} size="sm">
             {loading ? "Working..." : mode === "encrypt" ? "Encrypt" : "Decrypt"}
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encrypt" ? "Plaintext" : "Encrypted Text (Base64)"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">{mode === "encrypt" ? "Plaintext" : "Encrypted Text (Base64)"}</span>
           </div>
           <Textarea
             value={input}
             onChange={(e) => { setInput(e.target.value); setOutput(""); setError("") }}
             placeholder={mode === "encrypt" ? "Enter the text to encrypt..." : "Paste the encrypted base64 string..."}
-            className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono"
+            className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono p-4"
           />
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "encrypt" ? "Encrypted Output (Base64)" : "Decrypted Text"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "encrypt" ? "Encrypted Output (Base64)" : "Decrypted Text"}</span>
             <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
               {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
               {copied ? "Copied!" : "Copy"}
@@ -184,17 +176,15 @@ export default function AesEncryptor() {
               value={output}
               readOnly
               placeholder={`Output will appear here after clicking ${mode === "encrypt" ? "Encrypt" : "Decrypt"}...`}
-              className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono bg-muted/10"
+              className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono bg-muted/10 p-4"
             />
           )}
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-3">
+            <span>AES-256-GCM</span>
+            <span>PBKDF2-SHA256 · 100k iterations</span>
+            <span>Random salt + IV per encryption</span>
+          </div>
         </div>
-      </div>
-
-      <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-        <span>AES-256-GCM</span>
-        <span>PBKDF2-SHA256 · 100k iterations</span>
-        <span>Random salt + IV per encryption</span>
-        <span>Nothing leaves your browser</span>
       </div>
     </div>
   )

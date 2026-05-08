@@ -96,23 +96,16 @@ export default function VideoCompressor() {
   const savings = file && outputSize ? Math.round((1 - outputSize / file.size) * 100) : 0
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Video Compressor</h1>
-            <p className="text-sm text-muted-foreground">Compress videos using ffmpeg.wasm. Runs entirely in your browser — no uploads.</p>
-          </div>
-          {outputUrl && (
-            <Button size="sm" onClick={download}>
-              <Download className="h-4 w-4 mr-1" />Download MP4
-            </Button>
-          )}
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Video Compressor</h2>
+          <p className="text-muted-foreground">Compress videos using ffmpeg.wasm. Runs entirely in your browser — no uploads.</p>
         </div>
+        {outputUrl && <Button size="sm" onClick={download}><Download className="h-4 w-4 mr-1" />Download MP4</Button>}
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3 flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-3">
         <Label className="text-xs text-muted-foreground">Quality preset:</Label>
         {(Object.entries(PRESETS) as [Preset, typeof PRESETS[Preset]][]).map(([key, { label, hint }]) => (
           <button key={key} onClick={() => setPreset(key)}
@@ -123,10 +116,10 @@ export default function VideoCompressor() {
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">Original{file ? ` — ${fmtBytes(file.size)}` : ""}</h3>
             <label className="cursor-pointer">
               <input type="file" accept="video/*" className="hidden" onChange={handleFile} />
@@ -153,8 +146,8 @@ export default function VideoCompressor() {
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
             <h3 className="text-sm font-medium">
               {outputUrl ? `Compressed — ${fmtBytes(outputSize)}` : "Compressed Output"}
               {savings > 0 && <span className="ml-2 text-green-700 text-xs font-normal">-{savings}% smaller</span>}

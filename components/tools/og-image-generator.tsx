@@ -208,18 +208,20 @@ export default function OgImageGenerator() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold">OG Image Generator</h1>
-          <p className="text-sm text-muted-foreground">Generate Open Graph images for social media. 1200×630 PNG, rendered in your browser.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">OG Image Generator</h2>
+          <p className="text-muted-foreground">Generate Open Graph images for social media. 1200×630 PNG, rendered in your browser.</p>
         </div>
         <Button onClick={download}><Download className="h-4 w-4 mr-1.5" />Download PNG</Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Controls */}
-        <div className="border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-5 md:w-64 md:shrink-0">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Settings</span></div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Template</Label>
@@ -292,11 +294,13 @@ export default function OgImageGenerator() {
               ))}
             </div>
           </div>
+          </div>
         </div>
 
         {/* Preview */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-muted/20">
-          <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Preview</span></div>
+          <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-muted/20">
             <div className="w-full max-w-4xl space-y-3">
               <canvas ref={canvasRef} width={1200} height={630}
                 className="w-full h-auto rounded-xl shadow-xl border border-border" />

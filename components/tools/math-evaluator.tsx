@@ -97,23 +97,18 @@ export default function MathEvaluator() {
   }, [history])
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background px-6 py-4 flex items-center justify-between">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Math Calculator</h1>
-          <p className="text-sm text-muted-foreground">
-            Evaluate expressions, assign variables, convert units. Powered by mathjs.
-          </p>
+          <h2 className="text-2xl font-semibold tracking-tight">Math Calculator</h2>
+          <p className="text-muted-foreground">Evaluate expressions, assign variables, convert units. Powered by mathjs.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={resetScope}>
-          <RotateCcw className="h-3.5 w-3.5 mr-1.5" />Reset
-        </Button>
+        <Button variant="outline" size="sm" onClick={resetScope}><RotateCcw className="h-3.5 w-3.5 mr-1.5" />Reset</Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left: history + input */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {/* History */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm">
             {history.length === 0 && (
@@ -173,7 +168,7 @@ export default function MathEvaluator() {
         </div>
 
         {/* Right: variables + examples */}
-        <div className="border-t md:border-t-0 md:border-l border-border flex flex-col overflow-hidden md:w-56 md:shrink-0">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {/* Variables */}
           <div className="p-4 border-b border-border">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Variables</p>

@@ -195,30 +195,16 @@ export function BackgroundRemover() {
   const isProcessing = phase === "loading-model" || phase === "processing"
 
   return (
-    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
+    <>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Background Remover</h2>
+        <p className="text-muted-foreground">Remove image backgrounds · 100% in-browser</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-
-          {/* Header */}
-          <div className="flex items-start gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2 shrink-0">
-              <Wand2 className="h-4 w-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base font-semibold">Background Remover</h1>
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${
-                  isMobile
-                    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                    : "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                }`}>
-                  {isMobile ? "Lightweight Mode" : "AI Model"}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Remove image backgrounds · 100% in-browser</p>
-            </div>
-          </div>
 
           {/* Version info */}
           <div className={`rounded-lg border px-3 py-2.5 text-xs space-y-1 ${
@@ -355,7 +341,7 @@ export function BackgroundRemover() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4">
           {!imageEl ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
@@ -409,14 +395,16 @@ export function BackgroundRemover() {
         )}
       </div>
 
-      <ShortcutsModal
-        pageName="Background Remover"
-        shortcuts={[
-          { keys: ["Ctrl", "S"], description: "Download result" },
-          { keys: ["Ctrl", "O"], description: "Open image" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
+      </div>
     </div>
+    <ShortcutsModal
+      pageName="Background Remover"
+      shortcuts={[
+        { keys: ["Ctrl", "S"], description: "Download result" },
+        { keys: ["Ctrl", "O"], description: "Open image" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    </>
   )
 }

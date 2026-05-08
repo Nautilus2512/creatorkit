@@ -108,24 +108,20 @@ export default function ColorPaletteExtractor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Color Palette Extractor</h1>
-            <p className="text-sm text-muted-foreground">Extract dominant colors from any image. Runs entirely in your browser.</p>
-          </div>
-          {palette.length > 0 && (
-            <Button variant="outline" size="sm" onClick={copyAll}>
-              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-              Copy All
-            </Button>
-          )}
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Color Palette Extractor</h2>
+          <p className="text-muted-foreground">Extract dominant colors from any image. Runs entirely in your browser.</p>
         </div>
+        {palette.length > 0 && (
+          <Button variant="outline" size="sm" onClick={copyAll}>
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy All
+          </Button>
+        )}
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Colors:</Label>
           {[5, 8, 10, 12].map(n => (
@@ -146,11 +142,11 @@ export default function ColorPaletteExtractor() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Upload + preview */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Image</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Image</span>
           </div>
           {imageUrl ? (
             <div className="flex-1 flex flex-col p-4 gap-4 min-h-0">
@@ -173,9 +169,9 @@ export default function ColorPaletteExtractor() {
         </div>
 
         {/* Right — Palette */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Extracted Palette</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Extracted Palette</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {palette.length === 0 ? (

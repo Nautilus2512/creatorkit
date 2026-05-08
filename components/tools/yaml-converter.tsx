@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import yaml from "js-yaml"
@@ -52,11 +52,7 @@ export default function YamlConverter() {
     }
   }
 
-  const switchMode = (newMode: Mode) => {
-    setMode(newMode)
-    setInput("")
-    output = ""
-  }
+  const switchMode = (newMode: Mode) => { setMode(newMode); setInput("") }
 
   const swap = () => {
     const newMode: Mode = mode === "yaml-to-json" ? "json-to-yaml" : "yaml-to-json"
@@ -64,11 +60,7 @@ export default function YamlConverter() {
     setInput(output)
   }
 
-  const copy = () => {
-    navigator.clipboard.writeText(output)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const copy = () => { navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   const download = () => {
     const ext = mode === "yaml-to-json" ? "json" : "yaml"
@@ -91,30 +83,19 @@ export default function YamlConverter() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">YAML ↔ JSON Converter</h1>
-            <p className="text-sm text-muted-foreground">Convert between YAML and JSON formats. Runs entirely in your browser.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant={mode === "yaml-to-json" ? "default" : "outline"} size="sm" onClick={() => switchMode("yaml-to-json")}>
-              YAML → JSON
-            </Button>
-            <Button variant={mode === "json-to-yaml" ? "default" : "outline"} size="sm" onClick={() => switchMode("json-to-yaml")}>
-              JSON → YAML
-            </Button>
-            <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
-              <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
-            </Button>
-          </div>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">YAML ↔ JSON Converter</h2>
+        <p className="text-muted-foreground">Convert between YAML and JSON formats. Runs entirely in your browser.</p>
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={mode === "yaml-to-json" ? "default" : "outline"} size="sm" onClick={() => switchMode("yaml-to-json")}>YAML → JSON</Button>
+        <Button variant={mode === "json-to-yaml" ? "default" : "outline"} size="sm" onClick={() => switchMode("json-to-yaml")}>JSON → YAML</Button>
+        <Button variant="outline" size="sm" onClick={swap} disabled={!output}>
+          <ArrowLeftRight className="h-4 w-4 mr-1" />Swap
+        </Button>
+        <div className="h-4 w-px bg-border" />
         <span className="text-xs text-muted-foreground">Indent:</span>
         {[2, 4].map(n => (
           <button
@@ -127,15 +108,13 @@ export default function YamlConverter() {
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Left */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "yaml-to-json" ? "YAML Input" : "JSON Input"}</h3>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left — Input */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "yaml-to-json" ? "YAML Input" : "JSON Input"}</span>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setInput(mode === "yaml-to-json" ? EXAMPLE_YAML : EXAMPLE_JSON)}>
-                Example
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setInput(mode === "yaml-to-json" ? EXAMPLE_YAML : EXAMPLE_JSON)}>Example</Button>
               <label className="cursor-pointer">
                 <input type="file" accept=".yaml,.yml,.json" className="hidden" onChange={handleFile} />
                 <Button variant="ghost" size="sm" asChild>
@@ -148,14 +127,14 @@ export default function YamlConverter() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={mode === "yaml-to-json" ? "name: John\nage: 30\nhobbies:\n  - reading" : '{\n  "name": "John",\n  "age": 30\n}'}
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0"
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
           />
         </div>
 
-        {/* Right */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{mode === "yaml-to-json" ? "JSON Output" : "YAML Output"}</h3>
+        {/* Right — Output */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">{mode === "yaml-to-json" ? "JSON Output" : "YAML Output"}</span>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={copy} disabled={!output}>
                 {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
@@ -178,18 +157,17 @@ export default function YamlConverter() {
               value={output}
               readOnly
               placeholder="Output will appear here..."
-              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10"
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
             />
+          )}
+          {output && !error && (
+            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4">
+              <span>Input: {input.length} chars</span>
+              <span>Output: {output.length} chars</span>
+            </div>
           )}
         </div>
       </div>
-
-      {output && !error && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground flex gap-4">
-          <span>Input: {input.length} chars</span>
-          <span>Output: {output.length} chars</span>
-        </div>
-      )}
     </div>
   )
 }

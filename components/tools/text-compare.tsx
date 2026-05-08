@@ -247,7 +247,7 @@ export function TextCompare() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
+    <>
       <ShortcutsModal
         pageName="text-compare"
         shortcuts={[
@@ -258,190 +258,95 @@ export function TextCompare() {
           { keys: ["?"], description: "Toggle this panel" },
         ]}
       />
-
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-border bg-muted/50 p-2">
-            <GitCompare className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold">text-compare</h1>
-            <p className="text-xs text-muted-foreground">Compare text and files with visual diff highlighting</p>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Text Compare</h2>
+          <p className="text-muted-foreground">Compare text and files with visual diff highlighting</p>
         </div>
-        
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={swapTexts}>
-            <ArrowRightLeft className="h-3 w-3 mr-1" />
-            Swap
-          </Button>
-          
-          <Button variant="outline" size="sm" onClick={clearAll}>
-            <X className="h-3 w-3 mr-1" />
-            Clear
-          </Button>
-          
+          <Button variant="outline" size="sm" onClick={swapTexts}><ArrowRightLeft className="h-3 w-3 mr-1" />Swap</Button>
+          <Button variant="outline" size="sm" onClick={clearAll}><X className="h-3 w-3 mr-1" />Clear</Button>
           <div className="h-4 w-px bg-border" />
-          
           <Button variant="outline" size="sm" onClick={copyDiff} disabled={!diffResult}>
             {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? 'Copied!' : 'Copy Diff'}
           </Button>
-          
           <Button variant="outline" size="sm" onClick={downloadDiff} disabled={!diffResult}>
-            <Download className="h-3 w-3 mr-1" />
-            Download
+            <Download className="h-3 w-3 mr-1" />Download
           </Button>
         </div>
       </div>
 
-      {/* Settings Bar */}
-      <div className="flex items-center gap-4 p-3 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 text-xs">
-            <input
-              type="checkbox"
-              checked={showLineNumbers}
-              onChange={(e) => setShowLineNumbers(e.target.checked)}
-              className="rounded"
-            />
-            Line Numbers
+      <div className="flex flex-wrap items-center gap-4">
+        {[
+          { label: "Line Numbers", checked: showLineNumbers, set: setShowLineNumbers },
+          { label: "Show Whitespace", checked: showWhitespace, set: setShowWhitespace },
+          { label: "Ignore Case", checked: ignoreCase, set: setIgnoreCase },
+          { label: "Ignore Whitespace", checked: ignoreWhitespace, set: setIgnoreWhitespace },
+        ].map(({ label, checked, set }) => (
+          <label key={label} className="flex items-center gap-1.5 text-xs cursor-pointer">
+            <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="rounded" />
+            {label}
           </label>
-          
-          <label className="flex items-center gap-1 text-xs">
-            <input
-              type="checkbox"
-              checked={showWhitespace}
-              onChange={(e) => setShowWhitespace(e.target.checked)}
-              className="rounded"
-            />
-            Show Whitespace
-          </label>
-          
-          <label className="flex items-center gap-1 text-xs">
-            <input
-              type="checkbox"
-              checked={ignoreCase}
-              onChange={(e) => setIgnoreCase(e.target.checked)}
-              className="rounded"
-            />
-            Ignore Case
-          </label>
-          
-          <label className="flex items-center gap-1 text-xs">
-            <input
-              type="checkbox"
-              checked={ignoreWhitespace}
-              onChange={(e) => setIgnoreWhitespace(e.target.checked)}
-              className="rounded"
-            />
-            Ignore Whitespace
-          </label>
-        </div>
-
+        ))}
         {diffResult && (
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              +{diffResult.stats.additions}
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
-              -{diffResult.stats.deletions}
-            </span>
-            <span className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-gray-400 rounded"></div>
-              {diffResult.stats.unchanged}
-            </span>
+          <div className="flex items-center gap-3 text-xs ml-auto">
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" />+{diffResult.stats.additions}</span>
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded" />-{diffResult.stats.deletions}</span>
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-400 rounded" />{diffResult.stats.unchanged}</span>
           </div>
         )}
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Original</h3>
-            <div className="flex items-center gap-2">
-              <input
-                ref={leftFileRef}
-                type="file"
-                accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv"
-                onChange={(e) => handleFileUpload('left', e)}
-                className="hidden"
-                id="left-file"
-              />
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Original</span>
+            <div>
+              <input ref={leftFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => handleFileUpload('left', e)} className="hidden" id="left-file" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="left-file" className="cursor-pointer">
-                  <Upload className="h-3 w-3" />
-                </label>
+                <label htmlFor="left-file" className="cursor-pointer"><Upload className="h-3 w-3" /></label>
               </Button>
             </div>
           </div>
-          <Textarea
-            value={leftText}
-            onChange={(e) => setLeftText(e.target.value)}
-            placeholder="Enter original text here..."
-            className="flex-1 resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-          />
+          <Textarea value={leftText} onChange={(e) => setLeftText(e.target.value)} placeholder="Enter original text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
         </div>
 
         {/* Right Panel */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Modified</h3>
-            <div className="flex items-center gap-2">
-              <input
-                ref={rightFileRef}
-                type="file"
-                accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv"
-                onChange={(e) => handleFileUpload('right', e)}
-                className="hidden"
-                id="right-file"
-              />
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Modified</span>
+            <div>
+              <input ref={rightFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => handleFileUpload('right', e)} className="hidden" id="right-file" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="right-file" className="cursor-pointer">
-                  <Upload className="h-3 w-3" />
-                </label>
+                <label htmlFor="right-file" className="cursor-pointer"><Upload className="h-3 w-3" /></label>
               </Button>
             </div>
           </div>
-          <Textarea
-            value={rightText}
-            onChange={(e) => setRightText(e.target.value)}
-            placeholder="Enter modified text here..."
-            className="flex-1 resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-          />
+          <Textarea value={rightText} onChange={(e) => setRightText(e.target.value)} placeholder="Enter modified text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
+          {diffResult && (diffResult.stats.additions > 0 || diffResult.stats.deletions > 0) && (
+            <div className="shrink-0 border-t border-border">
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/30">
+                <span className="text-xs font-medium">Diff View</span>
+                <span className="text-xs text-muted-foreground">{diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                <div className="flex">
+                  <div className="w-1/2 border-r border-border">
+                    {diffResult.leftLines.map((line, index) => <div key={index}>{renderLine(line, 'left')}</div>)}
+                  </div>
+                  <div className="w-1/2">
+                    {diffResult.rightLines.map((line, index) => <div key={index}>{renderLine(line, 'right')}</div>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Diff View */}
-      {diffResult && (diffResult.stats.additions > 0 || diffResult.stats.deletions > 0) && (
-        <div className="border-t border-border bg-background">
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Diff View</h3>
-            <div className="text-xs text-muted-foreground">
-              {diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines
-            </div>
-          </div>
-          <div className="max-h-64 overflow-y-auto">
-            <div className="flex">
-              <div className="w-1/2 border-r border-border">
-                {diffResult.leftLines.map((line, index) => (
-                  <div key={index}>{renderLine(line, 'left')}</div>
-                ))}
-              </div>
-              <div className="w-1/2">
-                {diffResult.rightLines.map((line, index) => (
-                  <div key={index}>{renderLine(line, 'right')}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
+    </>
   )
 }

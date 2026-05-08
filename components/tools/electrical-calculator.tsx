@@ -364,33 +364,40 @@ export default function ElectricalCalculator() {
   const TabComponent = TABS.find(t => t.id === tab)?.component ?? OhmsLaw
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4">
-        <h1 className="text-xl font-semibold">Electrical Engineering Calculator</h1>
-        <p className="text-sm text-muted-foreground">Circuit calculations per IEC/IEEE standards — SI units throughout.</p>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Electrical Engineering Calculator</h2>
+        <p className="text-muted-foreground">Circuit calculations per IEC/IEEE standards — SI units throughout.</p>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Tab sidebar */}
-        <div className="flex flex-row md:flex-col gap-1 border-b md:border-b-0 md:border-r border-border p-2 md:w-44 md:shrink-0 overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`shrink-0 text-left rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap md:whitespace-normal ${
-                tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}>
-              {t.label}
-            </button>
-          ))}
+        <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-44">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Calculator</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-lg space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="font-semibold">{TABS.find(t => t.id === tab)?.label}</h2>
-              <Badge variant="outline" className="text-xs">IEC / IEEE</Badge>
+        <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
+            <span className="font-semibold text-sm">{TABS.find(t => t.id === tab)?.label}</span>
+            <Badge variant="outline" className="text-xs">IEC / IEEE</Badge>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="max-w-lg space-y-4">
+              <TabComponent />
             </div>
-            <TabComponent />
           </div>
         </div>
       </div>

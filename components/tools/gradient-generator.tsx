@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check, Plus, Trash2 } from "lucide-react"
@@ -54,35 +54,28 @@ export default function GradientGenerator() {
     setStops(s => [...s, { id: nextId++, color: "#ffffff", position: pos }])
   }
 
-  const removeStop = (id: number) => {
-    if (stops.length <= 2) return
-    setStops(s => s.filter(st => st.id !== id))
-  }
+  const removeStop = (id: number) => { if (stops.length <= 2) return; setStops(s => s.filter(st => st.id !== id)) }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Gradient Generator</h1>
-            <p className="text-sm text-muted-foreground">Build CSS gradients visually and copy the code instantly.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={copy}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? "Copied!" : "Copy CSS"}
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Gradient Generator</h2>
+          <p className="text-muted-foreground">Build CSS gradients visually and copy the code instantly.</p>
         </div>
+        <Button variant="outline" size="sm" onClick={copy}>
+          {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+          {copied ? "Copied!" : "Copy CSS"}
+        </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Controls */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Controls</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Controls</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Type */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Type</Label>
               <div className="flex gap-2">
@@ -98,7 +91,6 @@ export default function GradientGenerator() {
               </div>
             </div>
 
-            {/* Direction */}
             {type === "linear" && (
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Direction</Label>
@@ -130,17 +122,12 @@ export default function GradientGenerator() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Starting Angle</Label>
                 <div className="flex items-center gap-3">
-                  <Input
-                    type="number" value={angle} min={0} max={360}
-                    onChange={(e) => setAngle(parseInt(e.target.value) || 0)}
-                    className="w-20 font-mono"
-                  />
+                  <Input type="number" value={angle} min={0} max={360} onChange={(e) => setAngle(parseInt(e.target.value) || 0)} className="w-20 font-mono" />
                   <span className="text-xs text-muted-foreground">deg</span>
                 </div>
               </div>
             )}
 
-            {/* Color stops */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Color Stops</Label>
@@ -155,25 +142,12 @@ export default function GradientGenerator() {
                     onChange={(e) => updateStop(stop.id, "color", e.target.value)}
                     className="w-10 h-10 rounded border border-border cursor-pointer p-0.5 shrink-0"
                   />
-                  <Input
-                    value={stop.color}
-                    onChange={(e) => updateStop(stop.id, "color", e.target.value)}
-                    className="w-28 font-mono text-sm shrink-0"
-                  />
+                  <Input value={stop.color} onChange={(e) => updateStop(stop.id, "color", e.target.value)} className="w-28 font-mono text-sm shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <Slider
-                      value={[stop.position]}
-                      onValueChange={([v]) => updateStop(stop.id, "position", v)}
-                      min={0} max={100} step={1}
-                    />
+                    <Slider value={[stop.position]} onValueChange={([v]) => updateStop(stop.id, "position", v)} min={0} max={100} step={1} />
                   </div>
                   <span className="text-xs font-mono w-9 text-right shrink-0">{stop.position}%</span>
-                  <Button
-                    variant="ghost" size="sm"
-                    onClick={() => removeStop(stop.id)}
-                    disabled={stops.length <= 2}
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)} disabled={stops.length <= 2} className="shrink-0 text-muted-foreground hover:text-destructive">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -183,27 +157,22 @@ export default function GradientGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Preview</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Preview</span>
           </div>
-          <div className="flex-1 p-6 flex flex-col gap-5 min-h-0">
-            <div
-              className="flex-1 rounded-xl border border-border shadow-inner min-h-0"
-              style={{ background: cssValue }}
-            />
-            <div className="shrink-0 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">CSS Output</Label>
-                <Button variant="ghost" size="sm" onClick={copy}>
-                  {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? "Copied!" : "Copy"}
-                </Button>
-              </div>
-              <pre className="rounded-lg border border-border bg-muted/20 p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
-                {css}
-              </pre>
+          <div className="flex-1 p-4 flex flex-col gap-4 min-h-0">
+            <div className="flex-1 rounded-xl border border-border shadow-inner min-h-0" style={{ background: cssValue }} />
+          </div>
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">CSS Output</Label>
+              <Button variant="ghost" size="sm" onClick={copy}>
+                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                {copied ? "Copied!" : "Copy"}
+              </Button>
             </div>
+            <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">{css}</pre>
           </div>
         </div>
       </div>

@@ -211,20 +211,16 @@ export function ScreenshotToMockup() {
   }, [download])
 
   return (
-    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
+    <>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Screenshot to Mockup</h2>
+        <p className="text-muted-foreground">Wrap screenshots in device frames · 100% in-browser</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2">
-              <Monitor className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold">Screenshot to Mockup</h1>
-              <p className="text-xs text-muted-foreground">Wrap screenshots in device frames · 100% in-browser</p>
-            </div>
-          </div>
 
           {/* Upload */}
           <div className="space-y-2">
@@ -311,7 +307,7 @@ export function ScreenshotToMockup() {
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
         <div className="flex-1 overflow-y-auto p-4">
           {!previewUrl ? (
@@ -339,14 +335,16 @@ export function ScreenshotToMockup() {
         )}
       </div>
 
-      <ShortcutsModal
-        pageName="Screenshot to Mockup"
-        shortcuts={[
-          { keys: ["Ctrl", "S"], description: "Download mockup" },
-          { keys: ["Ctrl", "O"], description: "Open screenshot" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
+      </div>
     </div>
+    <ShortcutsModal
+      pageName="Screenshot to Mockup"
+      shortcuts={[
+        { keys: ["Ctrl", "S"], description: "Download mockup" },
+        { keys: ["Ctrl", "O"], description: "Open screenshot" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    </>
   )
 }

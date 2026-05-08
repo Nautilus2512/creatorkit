@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check } from "lucide-react"
@@ -76,18 +76,11 @@ function hslToRgb(h: number, s: number, l: number) {
 function parseColor(input: string): { r: number; g: number; b: number } | null {
   const s = input.trim()
   if (!s) return null
-
-  // HEX
   if (/^#?[0-9a-f]{3}$|^#?[0-9a-f]{6}$/i.test(s)) return hexToRgb(s)
-
-  // RGB / RGBA
   const rgb = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
   if (rgb) return { r: +rgb[1], g: +rgb[2], b: +rgb[3] }
-
-  // HSL / HSLA
   const hsl = s.match(/hsla?\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?/)
   if (hsl) return hslToRgb(+hsl[1], +hsl[2], +hsl[3])
-
   return null
 }
 
@@ -107,14 +100,11 @@ export default function ColorConverter() {
     if (rgb) setPickerValue(toHex(rgb.r, rgb.g, rgb.b))
   }
 
-  const handleTextInput = (value: string) => {
-    applyColor(parseColor(value), value)
-  }
+  const handleTextInput = (value: string) => applyColor(parseColor(value), value)
 
   const handlePicker = (hex: string) => {
     setPickerValue(hex)
-    const rgb = hexToRgb(hex)
-    setColor(rgb)
+    setColor(hexToRgb(hex))
     setInput(hex)
   }
 
@@ -136,22 +126,19 @@ export default function ColorConverter() {
   ] : []
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="px-6 py-4">
-          <h1 className="text-xl font-semibold">Color Converter</h1>
-          <p className="text-sm text-muted-foreground">Convert between HEX, RGB, HSL, and OKLCH color formats</p>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Color Converter</h2>
+        <p className="text-muted-foreground">Convert between HEX, RGB, HSL, and OKLCH color formats</p>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Color Input</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Color Input</span>
           </div>
-          <div className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
             <div className="flex items-start gap-4">
               <input
                 type="color"
@@ -172,33 +159,27 @@ export default function ColorConverter() {
 
             {color && (
               <div
-                className="w-full h-40 rounded-xl border border-border shadow-inner transition-colors duration-200"
+                className="w-full h-36 rounded-xl border border-border shadow-inner transition-colors duration-200"
                 style={{ backgroundColor: hex }}
               />
             )}
 
             {color && (
               <div className="rounded-lg border border-border p-4 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">R</span><span className="font-mono">{color.r}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">G</span><span className="font-mono">{color.g}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">B</span><span className="font-mono">{color.b}</span>
-                </div>
+                <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono">{color.r}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">G</span><span className="font-mono">{color.g}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">B</span><span className="font-mono">{color.b}</span></div>
               </div>
             )}
           </div>
         </div>
 
         {/* Right Panel — Formats */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">All Formats</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">All Formats</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {formats.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                 Enter or pick a color to see all formats

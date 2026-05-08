@@ -309,7 +309,7 @@ export function WhiteboardDrawing() {
   }, [elements, history, historyIndex])
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-4 md:gap-4 md:h-[calc(100vh-80px)]">
+    <>
       <ShortcutsModal
         pageName="Whiteboard Drawing"
         shortcuts={[
@@ -320,19 +320,15 @@ export function WhiteboardDrawing() {
           { keys: ["?"], description: "Toggle this panel" },
         ]}
       />
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Whiteboard Drawing</h2>
+        <p className="text-muted-foreground">Draw, sketch, and export your ideas.</p>
+      </div>
 
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card flex flex-col md:flex-row">
       {/* Toolbar */}
-      <div className="md:col-span-1 space-y-4 p-4 border-r border-border">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-border bg-muted/50 p-2">
-            <Pen className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold">Whiteboard</h1>
-            <p className="text-xs text-muted-foreground">Draw, sketch, and export</p>
-          </div>
-        </div>
-
+      <div className="shrink-0 md:w-56 border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-4">
         {/* Tools */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tools</Label>
@@ -420,7 +416,7 @@ export function WhiteboardDrawing() {
       </div>
 
       {/* Canvas */}
-      <div className="md:col-span-3 relative bg-white rounded-lg border border-border overflow-hidden">
+      <div className="flex-1 relative bg-white overflow-hidden">
         <canvas
           ref={canvasRef}
           width={800}
@@ -461,6 +457,8 @@ export function WhiteboardDrawing() {
           </div>
         )}
       </div>
+      </div>
     </div>
+    </>
   )
 }

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Copy, Check, Plus, Trash2 } from "lucide-react"
@@ -59,11 +59,7 @@ export default function ShadowGenerator() {
   const update = (id: number, field: keyof Shadow, value: unknown) =>
     setShadows(s => s.map(sh => sh.id === id ? { ...sh, [field]: value } : sh))
 
-  const addLayer = () => {
-    const s = makeDefault()
-    setShadows(prev => [...prev, s])
-    setActiveId(s.id)
-  }
+  const addLayer = () => { const s = makeDefault(); setShadows(prev => [...prev, s]); setActiveId(s.id) }
 
   const removeLayer = (id: number) => {
     setShadows(prev => {
@@ -79,62 +75,51 @@ export default function ShadowGenerator() {
   const copy = () => { navigator.clipboard.writeText(css); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Box Shadow Generator</h1>
-            <p className="text-sm text-muted-foreground">Build CSS box-shadows visually. Supports multiple layered shadows.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={copy}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? "Copied!" : "Copy CSS"}
-          </Button>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Box Shadow Generator</h2>
+          <p className="text-muted-foreground">Build CSS box-shadows visually. Supports multiple layered shadows.</p>
         </div>
+        <Button variant="outline" size="sm" onClick={copy}>
+          {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+          {copied ? "Copied!" : "Copy CSS"}
+        </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Controls */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          {/* Layer tabs */}
-          <div className="shrink-0 flex items-center gap-1 p-2 border-b border-border overflow-x-auto">
-            {shadows.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-0.5 shrink-0">
-                <button
-                  onClick={() => setActiveId(s.id)}
-                  className={`text-xs px-3 py-1.5 rounded border transition-colors ${activeId === s.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                >
-                  Shadow {i + 1}
-                </button>
-                {shadows.length > 1 && (
-                  <button onClick={() => removeLayer(s.id)} className="p-0.5 text-muted-foreground hover:text-destructive">
-                    <Trash2 className="h-3 w-3" />
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border">
+            <div className="flex items-center gap-1 p-2 overflow-x-auto">
+              {shadows.map((s, i) => (
+                <div key={s.id} className="flex items-center gap-0.5 shrink-0">
+                  <button
+                    onClick={() => setActiveId(s.id)}
+                    className={`text-xs px-3 py-1.5 rounded border transition-colors ${activeId === s.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                  >
+                    Shadow {i + 1}
                   </button>
-                )}
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" onClick={addLayer} className="ml-auto shrink-0">
-              <Plus className="h-4 w-4 mr-1" />Add
-            </Button>
+                  {shadows.length > 1 && (
+                    <button onClick={() => removeLayer(s.id)} className="p-0.5 text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <Button variant="ghost" size="sm" onClick={addLayer} className="ml-auto shrink-0">
+                <Plus className="h-4 w-4 mr-1" />Add
+              </Button>
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
-            {/* Color + Inset */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div className="flex items-end gap-4">
               <div className="space-y-1.5">
                 <Label className="text-sm">Color</Label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="color" value={active.color}
-                    onChange={(e) => update(active.id, "color", e.target.value)}
-                    className="w-10 h-10 rounded border border-border cursor-pointer p-0.5"
-                  />
-                  <Input
-                    value={active.color}
-                    onChange={(e) => update(active.id, "color", e.target.value)}
-                    className="w-28 font-mono text-sm"
-                  />
+                  <input type="color" value={active.color} onChange={(e) => update(active.id, "color", e.target.value)} className="w-10 h-10 rounded border border-border cursor-pointer p-0.5" />
+                  <Input value={active.color} onChange={(e) => update(active.id, "color", e.target.value)} className="w-28 font-mono text-sm" />
                 </div>
               </div>
               <div className="space-y-1.5 ml-auto">
@@ -149,30 +134,24 @@ export default function ShadowGenerator() {
                   <Label className="text-sm">{label}</Label>
                   <span className="text-xs font-mono text-muted-foreground">{active[field]}{unit}</span>
                 </div>
-                <Slider
-                  value={[active[field] as number]}
-                  onValueChange={([v]) => update(active.id, field, v)}
-                  min={min} max={max} step={1}
-                />
+                <Slider value={[active[field] as number]} onValueChange={([v]) => update(active.id, field, v)} min={min} max={max} step={1} />
               </div>
             ))}
           </div>
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
-            <h3 className="text-sm font-medium">Preview</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Preview</span>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs text-muted-foreground">BG</Label>
-                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)}
-                  className="w-7 h-7 rounded border border-border cursor-pointer p-0.5" />
+                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-7 h-7 rounded border border-border cursor-pointer p-0.5" />
               </div>
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs text-muted-foreground">Box</Label>
-                <input type="color" value={boxColor} onChange={(e) => setBoxColor(e.target.value)}
-                  className="w-7 h-7 rounded border border-border cursor-pointer p-0.5" />
+                <input type="color" value={boxColor} onChange={(e) => setBoxColor(e.target.value)} className="w-7 h-7 rounded border border-border cursor-pointer p-0.5" />
               </div>
             </div>
           </div>
@@ -184,7 +163,7 @@ export default function ShadowGenerator() {
             />
           </div>
 
-          <div className="shrink-0 border-t border-border p-4 space-y-2">
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">CSS Output</Label>
               <Button variant="ghost" size="sm" onClick={copy}>
@@ -192,9 +171,7 @@ export default function ShadowGenerator() {
                 {copied ? "Copied!" : "Copy"}
               </Button>
             </div>
-            <pre className="rounded-lg border border-border bg-muted/20 p-4 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
-              {css}
-            </pre>
+            <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">{css}</pre>
           </div>
         </div>
       </div>

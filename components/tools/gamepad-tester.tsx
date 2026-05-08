@@ -100,11 +100,11 @@ export default function GamepadTester() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Game Controller Tester</h1>
-          <p className="text-sm text-muted-foreground">Test your gamepad — buttons, axes, and rumble. Uses the browser Gamepad API.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">Game Controller Tester</h2>
+          <p className="text-muted-foreground">Test your gamepad — buttons, axes, and rumble. Uses the browser Gamepad API.</p>
         </div>
         <div className="flex items-center gap-2">
           {gamepads.length > 0
@@ -114,7 +114,8 @@ export default function GamepadTester() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card">
+      <div className="h-full overflow-y-auto">
         {/* Safari warning */}
         {isSafari && (
           <div className="m-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 text-sm text-amber-700 dark:text-amber-300">
@@ -229,6 +230,7 @@ export default function GamepadTester() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   )

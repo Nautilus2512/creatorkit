@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { Hash, Copy, Download, Check, RefreshCw } from "lucide-react"
@@ -19,13 +19,9 @@ export default function UuidGenerator() {
     return includeHyphens ? uuid : uuid.replace(/-/g, "")
   }
 
-  const generateSingle = () => {
-    setSingleUuid(makeUuid())
-  }
+  const generateSingle = () => setSingleUuid(makeUuid())
 
-  const generateBulk = () => {
-    setUuids(Array.from({ length: bulkCount }, makeUuid))
-  }
+  const generateBulk = () => setUuids(Array.from({ length: bulkCount }, makeUuid))
 
   const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
@@ -34,8 +30,7 @@ export default function UuidGenerator() {
   }
 
   const download = () => {
-    const content = uuids.join("\n")
-    const blob = new Blob([content], { type: "text/plain" })
+    const blob = new Blob([uuids.join("\n")], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -45,35 +40,29 @@ export default function UuidGenerator() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">UUID Generator</h1>
-            <p className="text-sm text-muted-foreground">Generate cryptographically secure UUID v4s</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={generateSingle}>
-            <Hash className="h-4 w-4 mr-1" />Generate Single
-          </Button>
-        </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">UUID Generator</h2>
+        <p className="text-muted-foreground">Generate cryptographically secure UUID v4s</p>
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-3 flex items-center gap-4">
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Switch id="hyphens" checked={includeHyphens} onCheckedChange={setIncludeHyphens} />
           <Label htmlFor="hyphens" className="text-sm">Include hyphens</Label>
         </div>
+        <Button size="sm" onClick={generateSingle}>
+          <RefreshCw className="h-4 w-4 mr-1" />Generate Single
+        </Button>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Left — Single */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Single UUID</h3>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        {/* Left — Single UUID */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Single UUID</span>
           </div>
-          <div className="p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <Textarea
               value={singleUuid}
               readOnly
@@ -93,10 +82,10 @@ export default function UuidGenerator() {
           </div>
         </div>
 
-        {/* Right — Bulk */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
-            <h3 className="text-sm font-medium">Bulk Generation</h3>
+        {/* Right — Bulk Generation */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">Bulk Generation</span>
             <div className="flex items-center gap-2">
               <Label className="text-xs text-muted-foreground">Count:</Label>
               <input
@@ -109,24 +98,6 @@ export default function UuidGenerator() {
               />
             </div>
           </div>
-
-          <div className="p-4 flex gap-2 border-b border-border">
-            <Button size="sm" onClick={generateBulk} className="flex-1">
-              <Hash className="h-4 w-4 mr-1" />Generate {bulkCount} UUIDs
-            </Button>
-            {uuids.length > 0 && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => copy(uuids.join("\n"), "all")}>
-                  {copied === "all" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  Copy All
-                </Button>
-                <Button variant="outline" size="sm" onClick={download}>
-                  <Download className="h-4 w-4 mr-1" />Download
-                </Button>
-              </>
-            )}
-          </div>
-
           <div className="flex-1 overflow-y-auto">
             {uuids.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -149,14 +120,24 @@ export default function UuidGenerator() {
               </div>
             )}
           </div>
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 flex items-center gap-2">
+            <Button size="sm" onClick={generateBulk} className="flex-1">
+              <Hash className="h-4 w-4 mr-1" />Generate {bulkCount} UUIDs
+            </Button>
+            {uuids.length > 0 && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => copy(uuids.join("\n"), "all")}>
+                  {copied === "all" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                  Copy All
+                </Button>
+                <Button variant="outline" size="sm" onClick={download}>
+                  <Download className="h-4 w-4 mr-1" />Download
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-
-      {uuids.length > 0 && (
-        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-2 text-xs text-muted-foreground">
-          {uuids.length} UUIDs generated · {includeHyphens ? "with hyphens" : "no hyphens"}
-        </div>
-      )}
     </div>
   )
 }

@@ -1,32 +1,74 @@
 ﻿"use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, Play, Pause, Download } from "lucide-react"
+import { Upload, Play, Pause, Download, Settings, Image } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-function drawWaveform(canvas: HTMLCanvasElement, data: Float32Array, playPct = 0) {
+function drawWaveform(canvas: HTMLCanvasElement, data: Float32Array, playPct = 0, options: {
+  color?: string
+  backgroundColor?: string
+  lineWidth?: number
+  style?: 'bars' | 'line'
+  barWidth?: number
+} = {}) {
   const ctx = canvas.getContext("2d")!
   const { width: W, height: H } = canvas
+  
+  // Handle high DPI displays
+  const dpr = window.devicePixelRatio || 1
+  canvas.width = W * dpr
+  canvas.height = H * dpr
+  ctx.scale(dpr, dpr)
+  
   ctx.clearRect(0, 0, W, H)
+  
+  const {
+    color = "#6366f1",
+    backgroundColor = "#f8fafc",
+    lineWidth = 2,
+    style = 'bars',
+    barWidth = 1
+  } = options
+  
+  // Background
+  ctx.fillStyle = backgroundColor
+  ctx.fillRect(0, 0, W, H)
 
   const mid = H / 2
-  const step = Math.ceil(data.length / W)
   const played = Math.round(W * playPct)
 
-  for (let x = 0; x < W; x++) {
-    let max = 0
-    for (let j = 0; j < step; j++) {
-      const v = Math.abs(data[x * step + j] || 0)
-      if (v > max) max = v
+  if (style === 'bars') {
+    const step = Math.ceil(data.length / W)
+    for (let x = 0; x < W; x += barWidth + 1) {
+      let max = 0
+      for (let j = 0; j < step; j++) {
+        const v = Math.abs(data[x * step + j] || 0)
+        if (v > max) max = v
+      }
+      const h = Math.max(1, max * mid * 0.95)
+      ctx.fillStyle = x < played ? color : "#d1d5db"
+      ctx.fillRect(x, mid - h, barWidth, h * 2)
     }
-    const h = Math.max(1, max * mid * 0.95)
-    ctx.fillStyle = x < played ? "#6366f1" : "#d1d5db"
-    ctx.fillRect(x, mid - h, 1, h * 2)
+  } else {
+    // Line style
+    ctx.strokeStyle = color
+    ctx.lineWidth = lineWidth
+    ctx.beginPath()
+    for (let x = 0; x < W; x++) {
+      const index = Math.floor(x * data.length / W)
+      const y = mid + (data[index] * mid * 0.95)
+      if (x === 0) {
+        ctx.moveTo(x, y)
+      } else {
+        ctx.lineTo(x, y)
+      }
+    }
+    ctx.stroke()
   }
 
   // Playhead
   if (playPct > 0) {
-    ctx.strokeStyle = "#6366f1"
+    ctx.strokeStyle = color
     ctx.lineWidth = 2
     ctx.beginPath()
     ctx.moveTo(played, 0)
@@ -48,6 +90,11 @@ export default function AudioWaveformVisualizer() {
   const [currentTime, setCurrentTime] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [waveColor, setWaveColor] = useState("#6366f1")
+  const [backgroundColor, setBackgroundColor] = useState("#f8fafc")
+  const [waveStyle, setWaveStyle] = useState<'bars' | 'line'>('bars')
+  const [barWidth, setBarWidth] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const rafRef = useRef(0)
@@ -91,8 +138,13 @@ export default function AudioWaveformVisualizer() {
     if (!waveData || !canvasRef.current) return
     const canvas = canvasRef.current
     const pct = duration > 0 ? currentTime / duration : 0
-    drawWaveform(canvas, waveData, pct)
-  }, [waveData, currentTime, duration])
+    drawWaveform(canvas, waveData, pct, {
+      color: waveColor,
+      backgroundColor,
+      style: waveStyle,
+      barWidth
+    })
+  }, [waveData, currentTime, duration, waveColor, backgroundColor, waveStyle, barWidth])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -130,25 +182,54 @@ export default function AudioWaveformVisualizer() {
     }
   }
 
+  const downloadWaveform = () => {
+    if (!waveData || !canvasRef.current) return
+    const canvas = canvasRef.current
+    
+    // Create a high-resolution version for download
+    const downloadCanvas = document.createElement('canvas')
+    const ctx = downloadCanvas.getContext('2d')!
+    downloadCanvas.width = 2000
+    downloadCanvas.height = 400
+    
+    drawWaveform(downloadCanvas, waveData, 0, {
+      color: waveColor,
+      backgroundColor,
+      style: waveStyle,
+      barWidth: Math.max(1, barWidth * 2)
+    })
+    
+    const link = document.createElement('a')
+    link.download = `waveform-${filename.replace(/\.[^/.]+$/, '')}.png`
+    link.href = downloadCanvas.toDataURL('image/png')
+    link.click()
+  }
+
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Audio Waveform Visualizer</h1>
-            <p className="text-sm text-muted-foreground">Visualize audio waveforms and play back any audio file in your browser.</p>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Audio Waveform Visualizer</h2>
+          <p className="text-muted-foreground">Visualize audio waveforms and export high-quality images.</p>
+        </div>
+        <div className="flex gap-2">
           {audioUrl && (
-            <a href={audioUrl} download={filename}>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-1" />Download
-              </Button>
-            </a>
+            <Button variant="outline" size="sm" onClick={downloadWaveform}>
+              <Image className="h-4 w-4 mr-1" />Export PNG
+            </Button>
           )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <Settings className="h-4 w-4 mr-1" />
+            {showSettings ? 'Hide Settings' : 'Settings'}
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         {!waveData ? (
           <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-6 rounded-xl hover:border-primary/50 transition-colors">
             <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
@@ -169,11 +250,10 @@ export default function AudioWaveformVisualizer() {
             </div>
 
             {/* Waveform */}
-            <div className="flex-1 flex flex-col gap-2 min-h-0">
+            <div className="flex-1 flex flex-col gap-2 min-h-[200px]">
               <canvas
                 ref={canvasRef}
-                className="w-full flex-1 rounded-xl border border-border bg-muted/10 cursor-pointer min-h-0"
-                style={{ minHeight: 120 }}
+                className="w-full h-full rounded-xl border border-border bg-muted/10 cursor-pointer"
               />
             </div>
 
@@ -197,6 +277,90 @@ export default function AudioWaveformVisualizer() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center">Click anywhere on the waveform to seek</p>
+            
+            {/* Settings Panel */}
+            {showSettings && (
+              <div className="shrink-0 border-t border-border p-4 space-y-4 bg-card">
+                <h4 className="text-sm font-medium mb-4">Waveform Settings</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">Style</label>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setWaveStyle('bars')}
+                        className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                          waveStyle === 'bars' 
+                            ? 'border-primary bg-primary text-primary-foreground' 
+                            : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                        }`}
+                      >
+                        Bars
+                      </button>
+                      <button
+                        onClick={() => setWaveStyle('line')}
+                        className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                          waveStyle === 'line' 
+                            ? 'border-primary bg-primary text-primary-foreground' 
+                            : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                        }`}
+                      >
+                        Line
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {waveStyle === 'bars' && (
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium text-foreground">Bar Width</label>
+                      <div className="flex gap-3">
+                        {[1, 2, 3].map(width => (
+                          <button
+                            key={width}
+                            onClick={() => setBarWidth(width)}
+                            className={`w-12 h-10 text-sm rounded-lg border transition-colors ${
+                              barWidth === width 
+                                ? 'border-primary bg-primary text-primary-foreground' 
+                                : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                            }`}
+                          >
+                            {width}px
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">Wave Color</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={waveColor}
+                        onChange={(e) => setWaveColor(e.target.value)}
+                        className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <span className="text-sm text-muted-foreground font-mono">{waveColor}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-foreground">Background</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                      />
+                      <span className="text-sm text-muted-foreground font-mono">{backgroundColor}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

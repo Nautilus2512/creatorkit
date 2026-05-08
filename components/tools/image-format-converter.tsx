@@ -159,19 +159,16 @@ export function ImageFormatConverter() {
   const isLossy = OUTPUT_FORMATS.find(f => f.id === format)?.lossy ?? true
 
   return (
-    <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
+    <>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Image Format Converter</h2>
+        <p className="text-muted-foreground">Convert formats locally · No uploads</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-border bg-muted/50 p-2">
-              <RefreshCw className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-base font-semibold">Image Format Converter</h1>
-              <p className="text-xs text-muted-foreground">Convert formats locally · No uploads</p>
-            </div>
-          </div>
 
           <FileDropzone
             ref={uploadRef}
@@ -229,7 +226,7 @@ export function ImageFormatConverter() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4">
           {isProcessing ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3">
@@ -265,6 +262,7 @@ export function ImageFormatConverter() {
                   </div>
                   <button
                     onClick={() => downloadOne(r, i)}
+                    aria-label="Download converted image"
                     className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
                   >
                     {downloadedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Download className="h-3.5 w-3.5" />}
@@ -288,14 +286,16 @@ export function ImageFormatConverter() {
         </div>
       </div>
 
-      <ShortcutsModal
-        pageName="Image Format Converter"
-        shortcuts={[
-          { keys: ["Ctrl", "O"], description: "Upload images" },
-          { keys: ["Ctrl", "D"], description: "Download all" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
+      </div>
     </div>
+    <ShortcutsModal
+      pageName="Image Format Converter"
+      shortcuts={[
+        { keys: ["Ctrl", "O"], description: "Upload images" },
+        { keys: ["Ctrl", "D"], description: "Download all" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    </>
   )
 }

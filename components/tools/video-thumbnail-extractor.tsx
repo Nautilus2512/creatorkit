@@ -98,28 +98,25 @@ export default function VideoThumbnailExtractor() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Video Thumbnail Extractor</h1>
-            <p className="text-sm text-muted-foreground">Extract frames from any video as JPG images. Runs entirely in your browser.</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={extract} disabled={!videoUrl || loading}>
-              {loading ? `Extracting… ${progress}%` : "Extract Frames"}
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Video Thumbnail Extractor</h2>
+          <p className="text-muted-foreground">Extract frames from any video as JPG images. Runs entirely in your browser.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={extract} disabled={!videoUrl || loading}>
+            {loading ? `Extracting… ${progress}%` : "Extract Frames"}
+          </Button>
+          {thumbs.length > 0 && (
+            <Button size="sm" onClick={downloadAll}>
+              <Download className="h-4 w-4 mr-1" />Download ZIP
             </Button>
-            {thumbs.length > 0 && (
-              <Button size="sm" onClick={downloadAll}>
-                <Download className="h-4 w-4 mr-1" />Download ZIP
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Options */}
-      <div className="shrink-0 border-b border-border bg-muted/30 px-6 py-2 flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Mode:</Label>
           <button onClick={() => setMode("grid")}
@@ -140,18 +137,18 @@ export default function VideoThumbnailExtractor() {
         ) : (
           <div className="flex items-center gap-3">
             <Label className="text-xs text-muted-foreground">Every:</Label>
-            <Slider value={[intervalSec]} onValueChange={([v]) => setIntervalSec(v)} min={1} max={60} step={1} className="w-28" />
-            <span className="text-xs font-mono text-muted-foreground">{intervalSec}s</span>
+            <Slider value={[interval]} onValueChange={([v]) => setIntervalSec(v)} min={1} max={60} step={1} className="w-28" />
+            <span className="text-xs font-mono text-muted-foreground">{interval}s</span>
           </div>
         )}
         {duration > 0 && <span className="text-xs text-muted-foreground">Duration: {fmtTime(duration)}</span>}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Video */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border md:w-1/2">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">Video</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">Video</span>
           </div>
           {videoUrl ? (
             <div className="flex-1 flex flex-col p-4 gap-3 min-h-0">
@@ -180,9 +177,9 @@ export default function VideoThumbnailExtractor() {
         </div>
 
         {/* Right — Thumbnails */}
-        <div className="flex flex-col md:w-1/2 md:flex-1">
-          <div className="p-3 border-b border-border bg-muted/30">
-            <h3 className="text-sm font-medium">{thumbs.length > 0 ? `${thumbs.length} frames extracted` : "Frames"}</h3>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">{thumbs.length > 0 ? `${thumbs.length} frames extracted` : "Frames"}</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             {thumbs.length === 0 ? (
