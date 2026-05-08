@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { 
-  FileText, Eye, EyeOff, Download, Upload, Copy, Check, 
-  Bold, Italic, Link, Image, Code, List, ListOrdered, 
-  Quote, Hash, Strikethrough, Table, Moon, Sun
+import {
+  Download, Upload, Copy, Check,
+  Bold, Italic, Link, Image, Code, List, ListOrdered,
+  Quote, Hash, Strikethrough,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
@@ -30,10 +29,18 @@ const parseMarkdown = (text: string): string => {
   html = html.replace(/~~(.+?)~~/g, '<del class="line-through">$1</del>')
   
   // Code blocks
-  html = html.replace(/```[\s\S]*?```/g, '<pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto"><code>$1</code></pre>')
+  html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+    // Remove any script tags from code content
+    const sanitizedCode = code.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    return `<pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto"><code>${sanitizedCode}</code></pre>`;
+  })
   
   // Inline code
-  html = html.replace(/`(.+?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">$1</code>')
+  html = html.replace(/`(.+?)`/g, (match, code) => {
+    // Remove any script tags from inline code content
+    const sanitizedCode = code.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    return `<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">${sanitizedCode}</code>`;
+  })
   
   // Links
   html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
@@ -58,6 +65,9 @@ const parseMarkdown = (text: string): string => {
   
   // Remove empty paragraphs
   html = html.replace(/<p class="mb-3"><\/p>/g, '')
+  
+  // Remove any remaining script tags from the entire HTML
+  html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   
   return html
 }
@@ -93,7 +103,6 @@ function hello() {
 * Another item
 * Last item`)
   
-  const [showPreview, setShowPreview] = useState(true)
   const [copied, setCopied] = useState(false)
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -149,14 +158,14 @@ function hello() {
 
   // Scroll sync
   const syncScroll = useCallback(() => {
-    if (!editorRef.current || !previewRef.current || !showPreview) return
+    if (!editorRef.current || !previewRef.current) return
     
     const editor = editorRef.current
     const preview = previewRef.current
     const scrollRatio = editor.scrollTop / (editor.scrollHeight - editor.clientHeight)
     
     preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight)
-  }, [showPreview])
+  }, [])
 
   useEffect(() => {
     const editor = editorRef.current
@@ -176,138 +185,112 @@ function hello() {
         e.preventDefault()
         copyMarkdown()
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault()
-        setShowPreview(!showPreview)
-      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [markdown, showPreview])
+  }, [markdown])
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)]">
+    <>
       <ShortcutsModal
         pageName="Markdown Editor"
         shortcuts={[
           { keys: ["Ctrl", "S"], description: "Download markdown" },
           { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
-          { keys: ["Ctrl", "P"], description: "Toggle preview" },
           { keys: ["Ctrl", "B"], description: "Bold text" },
           { keys: ["Ctrl", "I"], description: "Italic text" },
           { keys: ["?"], description: "Toggle this panel" },
         ]}
       />
-
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-border bg-muted/50 p-2">
-            <FileText className="h-4 w-4 text-primary" />
-          </div>
+      <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between shrink-0 flex-wrap gap-2">
           <div>
-            <h1 className="text-base font-semibold">Markdown Editor</h1>
-            <p className="text-xs text-muted-foreground">Write and preview markdown with live rendering</p>
+            <h2 className="text-2xl font-semibold tracking-tight">Markdown Editor</h2>
+            <p className="text-muted-foreground">Write and preview markdown with live rendering</p>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
-            {showPreview ? <EyeOff className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
-            {showPreview ? 'Hide' : 'Show'} Preview
-          </Button>
-          
-          <div className="h-4 w-px bg-border" />
-          
-          <Button variant="outline" size="sm" onClick={copyMarkdown}>
-            {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
-          
-          <Button variant="outline" size="sm" onClick={downloadMarkdown}>
-            <Download className="h-3 w-3 mr-1" />
-            Download
-          </Button>
-          
-          <div className="relative">
-            <input
-              type="file"
-              accept=".md,.txt"
-              onChange={uploadMarkdown}
-              className="hidden"
-              id="upload-md"
-            />
-            <Button variant="outline" size="sm" asChild>
-              <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1">
-                <Upload className="h-3 w-3" />
-                Upload
-              </label>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={copyMarkdown}>
+              {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+              {copied ? "Copied!" : "Copy"}
             </Button>
+            <Button variant="outline" size="sm" onClick={downloadMarkdown}>
+              <Download className="h-3 w-3 mr-1" />Download
+            </Button>
+            <div className="relative">
+              <input type="file" accept=".md,.txt" onChange={uploadMarkdown} className="hidden" id="upload-md" />
+              <Button variant="outline" size="sm" asChild>
+                <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1">
+                  <Upload className="h-3 w-3" />Upload
+                </label>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={() => insertText('**', '**')} title="Bold (Ctrl+B)">
-            <Bold className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('*', '*')} title="Italic (Ctrl+I)">
-            <Italic className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('~~', '~~')} title="Strikethrough">
-            <Strikethrough className="h-3 w-3" />
-          </Button>
-          <div className="h-4 w-px bg-border mx-1" />
-          <Button variant="ghost" size="sm" onClick={() => insertText('# ', '')} title="Heading">
-            <Hash className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('> ', '')} title="Quote">
-            <Quote className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('`', '`')} title="Inline code">
-            <Code className="h-3 w-3" />
-          </Button>
-          <div className="h-4 w-px bg-border mx-1" />
-          <Button variant="ghost" size="sm" onClick={() => insertText('- ', '')} title="Unordered list">
-            <List className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('1. ', '')} title="Ordered list">
-            <ListOrdered className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('[', '](url)')} title="Link">
-            <Link className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => insertText('![', '](url)')} title="Image">
-            <Image className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
+        <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+          {/* Left card — Editor */}
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+            {/* Toolbar */}
+            <div className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30">
+              <Button variant="ghost" size="sm" onClick={() => insertText("**", "**")} title="Bold (Ctrl+B)">
+                <Bold className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("*", "*")} title="Italic (Ctrl+I)">
+                <Italic className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("~~", "~~")} title="Strikethrough">
+                <Strikethrough className="h-3 w-3" />
+              </Button>
+              <div className="h-4 w-px bg-border mx-1" />
+              <Button variant="ghost" size="sm" onClick={() => insertText("# ", "")} title="Heading">
+                <Hash className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("> ", "")} title="Quote">
+                <Quote className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
+                <Code className="h-3 w-3" />
+              </Button>
+              <div className="h-4 w-px bg-border mx-1" />
+              <Button variant="ghost" size="sm" onClick={() => insertText("- ", "")} title="Unordered list">
+                <List className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("1. ", "")} title="Ordered list">
+                <ListOrdered className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("[", "](url)")} title="Link">
+                <Link className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("![", "](url)")} title="Image">
+                <Image className="h-3 w-3" />
+              </Button>
+            </div>
+            {/* Editor */}
+            <div className="flex-1 min-h-0">
+              <Textarea
+                ref={editorRef}
+                value={markdown}
+                onChange={(e) => setMarkdown(e.target.value)}
+                placeholder="Write your markdown here..."
+                className="w-full h-full resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+              />
+            </div>
+          </div>
 
-      {/* Two Column Layout */}
-      <div className="flex-1 flex">
-        {/* Editor Column */}
-        <div className={`${showPreview ? 'w-1/2' : 'w-full'} border-r border-border`}>
-          <Textarea
-            ref={editorRef}
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="Write your markdown here..."
-            className="h-full resize-none border-0 rounded-none focus:ring-0 font-mono text-sm p-4"
-          />
-        </div>
-
-        {/* Preview Column */}
-        {showPreview && (
-          <div className="w-1/2 overflow-y-auto p-4 bg-background prose prose-sm max-w-none">
-            <div 
+          {/* Right card — Preview */}
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+            <div className="shrink-0 border-b border-border px-4 py-3 bg-muted/30">
+              <span className="text-sm font-medium">Preview</span>
+            </div>
+            <div
               ref={previewRef}
+              className="flex-1 overflow-y-auto p-4 prose prose-sm max-w-none dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

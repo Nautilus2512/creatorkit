@@ -1,131 +1,345 @@
-﻿"use client"
+"use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Delete, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 
-// Two mathjs instances — one per angle mode
-let mathRad: { evaluate: (e: string, s?: Record<string, unknown>) => unknown; format: (v: unknown, o?: object) => string } | null = null
-let mathDeg: { evaluate: (e: string, s?: Record<string, unknown>) => unknown; format: (v: unknown, o?: object) => string } | null = null
+let mathRad: MathInst | null = null
+let mathDeg: MathInst | null = null
+type MathInst = { evaluate: (e: string, s?: Record<string, unknown>) => unknown }
 
 type CalcEntry = { expr: string; result: string }
+type RightTab = "graph" | "calculus" | "constants" | "history"
 
 const CONSTANTS: Record<string, { value: number; label: string; desc: string }> = {
-  c:   { value: 299792458,   label: "c",   desc: "Speed of light (m/s)" },
-  G:   { value: 6.674e-11,   label: "G",   desc: "Gravitational constant" },
-  h:   { value: 6.626e-34,   label: "h",   desc: "Planck constant" },
-  hbar:{ value: 1.0546e-34,  label: "ℏ",   desc: "Reduced Planck constant" },
-  k_B: { value: 1.381e-23,   label: "kB",  desc: "Boltzmann constant" },
-  Na:  { value: 6.022e23,    label: "Nₐ",  desc: "Avogadro's number" },
-  e_c: { value: 1.602e-19,   label: "e",   desc: "Elementary charge (C)" },
+  c:    { value: 299792458,  label: "c",  desc: "Speed of light (m/s)"  },
+  G:    { value: 6.674e-11,  label: "G",  desc: "Gravitational constant" },
+  h:    { value: 6.626e-34,  label: "h",  desc: "Planck constant"        },
+  hbar: { value: 1.0546e-34, label: "ℏ",  desc: "Reduced Planck"         },
+  k_B:  { value: 1.381e-23,  label: "kB", desc: "Boltzmann constant"     },
+  Na:   { value: 6.022e23,   label: "Nₐ", desc: "Avogadro's number"      },
+  e_c:  { value: 1.602e-19,  label: "e",  desc: "Elementary charge (C)"  },
 }
 
-type BtnDef = { label: string; action: string; variant?: "primary" | "fn" | "op" | "num" | "eq" | "const" }
+type BtnDef = { label: string; action: string; variant?: "primary" | "fn" | "op" | "num" | "eq" }
 
 const BUTTONS: BtnDef[] = [
-  // Row 1 — functions
-  { label: "sin",  action: "sin(",    variant: "fn" },
-  { label: "cos",  action: "cos(",    variant: "fn" },
-  { label: "tan",  action: "tan(",    variant: "fn" },
-  { label: "asin", action: "asin(",   variant: "fn" },
-  { label: "acos", action: "acos(",   variant: "fn" },
-  // Row 2
-  { label: "atan", action: "atan(",   variant: "fn" },
-  { label: "ln",   action: "log(",    variant: "fn" },
-  { label: "log",  action: "log10(",  variant: "fn" },
-  { label: "√x",   action: "sqrt(",   variant: "fn" },
-  { label: "x!",   action: "factorial(", variant: "fn" },
-  // Row 3
-  { label: "x²",   action: "^2",      variant: "fn" },
-  { label: "xⁿ",   action: "^",       variant: "op" },
-  { label: "π",    action: "pi",      variant: "fn" },
-  { label: "e",    action: "e",       variant: "fn" },
-  { label: "ANS",  action: "ANS",     variant: "fn" },
-  // Row 4
-  { label: "(", action: "(", variant: "op" },
-  { label: ")", action: ")", variant: "op" },
-  { label: "%",    action: " mod ",   variant: "op" },
-  { label: "C",    action: "__clear", variant: "primary" },
-  { label: "⌫",    action: "__back",  variant: "primary" },
-  // Row 5 — number pad
+  { label: "sin",  action: "sin(",      variant: "fn" },
+  { label: "cos",  action: "cos(",      variant: "fn" },
+  { label: "tan",  action: "tan(",      variant: "fn" },
+  { label: "asin", action: "asin(",     variant: "fn" },
+  { label: "acos", action: "acos(",     variant: "fn" },
+  { label: "atan", action: "atan(",     variant: "fn" },
+  { label: "ln",   action: "log(",      variant: "fn" },
+  { label: "log",  action: "log10(",    variant: "fn" },
+  { label: "√x",   action: "sqrt(",     variant: "fn" },
+  { label: "x!",   action: "factorial(",variant: "fn" },
+  { label: "x²",   action: "^2",        variant: "fn" },
+  { label: "xⁿ",   action: "^",         variant: "op" },
+  { label: "π",    action: "pi",        variant: "fn" },
+  { label: "eˣ",   action: "exp(",      variant: "fn" },
+  { label: "ANS",  action: "ANS",       variant: "fn" },
+  { label: "(",    action: "(",         variant: "op" },
+  { label: ")",    action: ")",         variant: "op" },
+  { label: "%",    action: " mod ",     variant: "op" },
+  { label: "C",    action: "__clear",   variant: "primary" },
+  { label: "⌫",    action: "__back",    variant: "primary" },
   { label: "7", action: "7", variant: "num" },
   { label: "8", action: "8", variant: "num" },
   { label: "9", action: "9", variant: "num" },
-  { label: "÷", action: " / ",  variant: "op" },
-  { label: "±", action: "(-1)*(",variant: "op" },
-  // Row 6
+  { label: "÷", action: " / ", variant: "op" },
+  { label: "±", action: "(-1)*(", variant: "op" },
   { label: "4", action: "4", variant: "num" },
   { label: "5", action: "5", variant: "num" },
   { label: "6", action: "6", variant: "num" },
-  { label: "×", action: " * ",  variant: "op" },
+  { label: "×", action: " * ", variant: "op" },
   { label: "abs", action: "abs(", variant: "fn" },
-  // Row 7
   { label: "1", action: "1", variant: "num" },
   { label: "2", action: "2", variant: "num" },
   { label: "3", action: "3", variant: "num" },
-  { label: "+", action: " + ",  variant: "op" },
-  { label: "−", action: " - ",  variant: "op" },
-  // Row 8
-  { label: "0", action: "0", variant: "num" },
-  { label: ".", action: ".", variant: "num" },
-  { label: "EE", action: "e",   variant: "fn" },
-  { label: "=",  action: "__eval", variant: "eq" },
-  { label: "?",  action: "",    variant: "num" }, // placeholder
+  { label: "+", action: " + ", variant: "op" },
+  { label: "−", action: " - ", variant: "op" },
+  { label: "0",  action: "0",        variant: "num" },
+  { label: ".",  action: ".",        variant: "num" },
+  { label: "EE", action: "e",        variant: "fn"  },
+  { label: "1/x",action: "1/(",      variant: "fn"  },
+  { label: "=",  action: "__eval",   variant: "eq"  },
 ]
+
+function getConstantScope() {
+  return Object.fromEntries(Object.entries(CONSTANTS).map(([k, v]) => [k, v.value]))
+}
 
 function formatNum(val: unknown): string {
   if (typeof val === "number") {
     if (!isFinite(val)) return String(val)
-    const s = val.toPrecision(12)
-    return parseFloat(s).toString()
+    return parseFloat(val.toPrecision(12)).toString()
   }
   return String(val)
 }
 
+function niceStep(range: number, targetSteps: number): number {
+  if (range <= 0 || targetSteps <= 0) return 1
+  const rough = range / targetSteps
+  const power = Math.pow(10, Math.floor(Math.log10(rough)))
+  const norm  = rough / power
+  const nice  = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10
+  return nice * power
+}
+
+function simpsonIntegral(fn: (x: number) => number, a: number, b: number, n = 1000): number {
+  if (n % 2 !== 0) n++
+  const h = (b - a) / n
+  let s = fn(a) + fn(b)
+  for (let i = 1; i < n; i++) s += (i % 2 === 0 ? 2 : 4) * fn(a + i * h)
+  return (h / 3) * s
+}
+
+function centralDiff(fn: (x: number) => number, x: number): number {
+  const h = 1e-7
+  return (fn(x + h) - fn(x - h)) / (2 * h)
+}
+
 export default function EngineeringCalculator() {
-  const [expr, setExpr]     = useState("")
+  // ── Calculator state ──
+  const [expr, setExpr]       = useState("")
   const [display, setDisplay] = useState("0")
   const [history, setHistory] = useState<CalcEntry[]>([])
-  const [ans, setAns]       = useState(0)
-  const [isDeg, setIsDeg]   = useState(true)
-  const [ready, setReady]   = useState(false)
-  const [error, setError]   = useState(false)
-  const [mem, setMem]       = useState(0)
+  const [ans, setAns]         = useState(0)
+  const [isDeg, setIsDeg]     = useState(true)
+  const [ready, setReady]     = useState(false)
+  const [error, setError]     = useState(false)
+  const [mem, setMem]         = useState(0)
+  const [rightTab, setRightTab] = useState<RightTab>("graph")
 
+  // ── Graph state ──
+  const [graphFn, setGraphFn]     = useState("sin(x)")
+  const [graphXMin, setGraphXMin] = useState("-10")
+  const [graphXMax, setGraphXMax] = useState("10")
+  const [graphError, setGraphError] = useState("")
+  const canvasRef   = useRef<HTMLCanvasElement>(null)
+  const graphBoxRef = useRef<HTMLDivElement>(null)
+
+  // ── Calculus state ──
+  const [intFn, setIntFn]           = useState("sin(x)")
+  const [intA, setIntA]             = useState("0")
+  const [intB, setIntB]             = useState("pi")
+  const [intResult, setIntResult]   = useState<string | null>(null)
+  const [intError, setIntError]     = useState("")
+  const [dFn, setDFn]               = useState("x^2")
+  const [dX, setDX]                 = useState("2")
+  const [dResult, setDResult]       = useState<string | null>(null)
+  const [dError, setDError]         = useState("")
+
+  // ── Load mathjs ──
   useEffect(() => {
     import("mathjs").then(m => {
       const { create, all } = m as typeof import("mathjs")
-      mathRad = create(all)
-      mathDeg = create(all) as typeof mathRad
-      // Override trig in degree instance
-      ;(mathDeg as unknown as { import: (fns: Record<string, unknown>, opts: object) => void }).import({
-        sin:  (x: number) => Math.sin((x * Math.PI) / 180),
-        cos:  (x: number) => Math.cos((x * Math.PI) / 180),
-        tan:  (x: number) => Math.tan((x * Math.PI) / 180),
-        asin: (x: number) => (Math.asin(x) * 180) / Math.PI,
-        acos: (x: number) => (Math.acos(x) * 180) / Math.PI,
-        atan: (x: number) => (Math.atan(x) * 180) / Math.PI,
+      mathRad = create(all) as MathInst
+      mathDeg = create(all) as MathInst
+      ;(mathDeg as unknown as { import: (fns: Record<string, unknown>, o: object) => void }).import({
+        sin:   (x: number) => Math.sin((x * Math.PI) / 180),
+        cos:   (x: number) => Math.cos((x * Math.PI) / 180),
+        tan:   (x: number) => Math.tan((x * Math.PI) / 180),
+        asin:  (x: number) => (Math.asin(x) * 180) / Math.PI,
+        acos:  (x: number) => (Math.acos(x) * 180) / Math.PI,
+        atan:  (x: number) => (Math.atan(x) * 180) / Math.PI,
         log10: (x: number) => Math.log10(x),
       }, { override: true })
       setReady(true)
     })
   }, [])
 
+  // ── Graph drawing ──
+  const drawGraph = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !mathRad) return
+    const W = canvas.width
+    const H = canvas.height
+    if (W === 0 || H === 0) return
+
+    const xMin = parseFloat(graphXMin)
+    const xMax = parseFloat(graphXMax)
+    if (isNaN(xMin) || isNaN(xMax) || xMin >= xMax) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const scope: Record<string, unknown> = { ...getConstantScope() }
+    const evalAt = (x: number): number | null => {
+      scope.x = x
+      try {
+        const r = mathRad!.evaluate(graphFn, scope)
+        return typeof r === "number" && isFinite(r) ? r : null
+      } catch { return null }
+    }
+
+    // Collect y values for auto-scale (sample every 2px)
+    const ys: number[] = []
+    for (let px = 0; px <= W; px += 2) {
+      const v = evalAt(xMin + (px / W) * (xMax - xMin))
+      if (v !== null) ys.push(v)
+    }
+
+    if (ys.length === 0) { setGraphError("Cannot evaluate function"); return }
+    setGraphError("")
+
+    let yMin = Math.min(...ys)
+    let yMax = Math.max(...ys)
+    if (yMin === yMax) { yMin -= 1; yMax += 1 }
+    const yPad = (yMax - yMin) * 0.12
+    yMin -= yPad; yMax += yPad
+
+    const toCx = (x: number) => ((x - xMin) / (xMax - xMin)) * W
+    const toCy = (y: number) => H - ((y - yMin) / (yMax - yMin)) * H
+
+    // Background
+    ctx.fillStyle = "#0d1117"
+    ctx.fillRect(0, 0, W, H)
+
+    // Grid lines
+    const gx = niceStep(xMax - xMin, 6)
+    const gy = niceStep(yMax - yMin, 5)
+    ctx.strokeStyle = "#1e2d3d"
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    for (let x = Math.ceil(xMin / gx) * gx; x <= xMax + gx * 0.01; x += gx) {
+      ctx.moveTo(toCx(x), 0); ctx.lineTo(toCx(x), H)
+    }
+    for (let y = Math.ceil(yMin / gy) * gy; y <= yMax + gy * 0.01; y += gy) {
+      ctx.moveTo(0, toCy(y)); ctx.lineTo(W, toCy(y))
+    }
+    ctx.stroke()
+
+    // Axes
+    ctx.strokeStyle = "#334155"
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    if (yMin <= 0 && yMax >= 0) { ctx.moveTo(0, toCy(0)); ctx.lineTo(W, toCy(0)) }
+    if (xMin <= 0 && xMax >= 0) { ctx.moveTo(toCx(0), 0); ctx.lineTo(toCx(0), H) }
+    ctx.stroke()
+
+    // Axis labels
+    ctx.fillStyle = "#64748b"
+    ctx.font = "10px ui-monospace, monospace"
+    ctx.textAlign = "center"
+    for (let x = Math.ceil(xMin / gx) * gx; x <= xMax + gx * 0.01; x += gx) {
+      if (Math.abs(x) < gx * 0.01) continue
+      const lx = toCx(x)
+      const ly = yMin <= 0 && yMax >= 0 ? Math.min(toCy(0) + 12, H - 4) : H - 4
+      ctx.fillText(parseFloat(x.toPrecision(4)).toString(), lx, ly)
+    }
+    ctx.textAlign = "right"
+    for (let y = Math.ceil(yMin / gy) * gy; y <= yMax + gy * 0.01; y += gy) {
+      if (Math.abs(y) < gy * 0.01) continue
+      const ly = toCy(y)
+      const lx = xMin <= 0 && xMax >= 0 ? Math.max(toCx(0) - 4, 28) : W - 4
+      ctx.fillText(parseFloat(y.toPrecision(4)).toString(), lx, ly + 3)
+    }
+
+    // Function curve
+    ctx.strokeStyle = "#38bdf8"
+    ctx.lineWidth = 2
+    ctx.shadowColor = "#38bdf860"
+    ctx.shadowBlur = 6
+    ctx.beginPath()
+    let pen = false
+    let prevPy = 0
+    for (let px = 0; px <= W; px++) {
+      const v = evalAt(xMin + (px / W) * (xMax - xMin))
+      if (v !== null) {
+        const py = toCy(v)
+        if (pen && Math.abs(py - prevPy) > H * 0.6) {
+          ctx.stroke(); ctx.beginPath(); pen = false
+        }
+        if (!pen) { ctx.moveTo(px, py); pen = true } else { ctx.lineTo(px, py) }
+        prevPy = py
+      } else {
+        if (pen) { ctx.stroke(); ctx.beginPath(); pen = false }
+      }
+    }
+    if (pen) ctx.stroke()
+    ctx.shadowBlur = 0
+  }, [graphFn, graphXMin, graphXMax])
+
+  // Resize canvas to container
+  useEffect(() => {
+    const box = graphBoxRef.current
+    const cnv = canvasRef.current
+    if (!box || !cnv) return
+    const ro = new ResizeObserver(() => {
+      cnv.width  = box.clientWidth
+      cnv.height = box.clientHeight
+      drawGraph()
+    })
+    ro.observe(box)
+    cnv.width  = box.clientWidth
+    cnv.height = box.clientHeight
+    return () => ro.disconnect()
+  }, [drawGraph])
+
+  useEffect(() => {
+    if (ready && rightTab === "graph") drawGraph()
+  }, [ready, rightTab, drawGraph])
+
+  // ── Bound parser using mathjs (supports "pi", "pi/2", "e", expressions) ──
+  const parseBound = (s: string): number => {
+    if (!mathRad) return NaN
+    try {
+      const r = mathRad.evaluate(s.trim(), getConstantScope())
+      return typeof r === "number" ? r : NaN
+    } catch { return NaN }
+  }
+
+  const computeIntegral = () => {
+    if (!mathRad) return
+    const a = parseBound(intA)
+    const b = parseBound(intB)
+    if (isNaN(a) || isNaN(b)) { setIntError("Invalid bounds"); return }
+    const sc = getConstantScope()
+    const fn = (x: number): number => {
+      try {
+        const r = mathRad!.evaluate(intFn, { ...sc, x })
+        return typeof r === "number" ? r : NaN
+      } catch { return NaN }
+    }
+    try {
+      setIntResult(formatNum(simpsonIntegral(fn, a, b)))
+      setIntError("")
+    } catch { setIntError("Evaluation failed") }
+  }
+
+  const computeDerivative = () => {
+    if (!mathRad) return
+    const xVal = parseBound(dX)
+    if (isNaN(xVal)) { setDError("Invalid x"); return }
+    const sc = getConstantScope()
+    const fn = (x: number): number => {
+      try {
+        const r = mathRad!.evaluate(dFn, { ...sc, x })
+        return typeof r === "number" ? r : NaN
+      } catch { return NaN }
+    }
+    try {
+      setDResult(formatNum(centralDiff(fn, xVal)))
+      setDError("")
+    } catch { setDError("Evaluation failed") }
+  }
+
+  // ── Main calculator eval ──
   const evalExpr = useCallback((rawExpr: string) => {
     const math = isDeg ? mathDeg : mathRad
     if (!math) return
-    const scope: Record<string, unknown> = {
-      ANS: ans,
-      ...Object.fromEntries(Object.entries(CONSTANTS).map(([k, v]) => [k, v.value])),
-    }
+    const scope: Record<string, unknown> = { ANS: ans, ...getConstantScope() }
     try {
-      const result = math.evaluate(rawExpr, scope)
+      const result    = math.evaluate(rawExpr, scope)
       const resultStr = formatNum(result)
-      const numResult = parseFloat(resultStr)
-      if (!isNaN(numResult)) setAns(numResult)
+      const num       = parseFloat(resultStr)
+      if (!isNaN(num)) setAns(num)
       setDisplay(resultStr)
-      setHistory(h => [{ expr: rawExpr, result: resultStr }, ...h.slice(0, 29)])
+      setHistory(h => [{ expr: rawExpr, result: resultStr }, ...h.slice(0, 49)])
       setError(false)
     } catch {
       setDisplay("Error")
@@ -137,7 +351,6 @@ export default function EngineeringCalculator() {
     if (action === "__clear") { setExpr(""); setDisplay("0"); setError(false); return }
     if (action === "__back")  { setExpr(e => e.slice(0, -1)); return }
     if (action === "__eval")  { if (expr.trim()) evalExpr(expr); return }
-    if (action === "")        return
     setExpr(e => e + action)
     setError(false)
   }, [expr, evalExpr])
@@ -151,25 +364,36 @@ export default function EngineeringCalculator() {
     return `${base} bg-card border-border hover:bg-muted/50`
   }
 
+  const TABS: { id: RightTab; label: string }[] = [
+    { id: "graph",     label: "Graph"     },
+    { id: "calculus",  label: "Calculus"  },
+    { id: "constants", label: "Constants" },
+    { id: "history",   label: "History"   },
+  ]
+
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border px-6 py-4 flex items-center justify-between">
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-xl font-semibold">Engineering Calculator</h1>
-          <p className="text-sm text-muted-foreground">Scientific calculator with unit support and physical constants.</p>
+          <h2 className="text-2xl font-semibold tracking-tight">Engineering Calculator</h2>
+          <p className="text-muted-foreground">Scientific calculator with graphing, integration, and differentiation.</p>
         </div>
         {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Calculator column */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border overflow-hidden md:w-80 md:shrink-0">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+
+        {/* ── Left: Calculator ── */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {/* Display */}
-          <div className="p-4 bg-muted/20 border-b border-border">
-            <div className="flex items-center justify-between mb-1">
-              <button onClick={() => setIsDeg(d => !d)}
-                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${isDeg ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+          <div className="shrink-0 p-4 bg-muted/20 border-b border-border">
+            <div className="flex items-center justify-between mb-2">
+              <button
+                onClick={() => setIsDeg(d => !d)}
+                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                  isDeg ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
+                }`}
+              >
                 {isDeg ? "DEG" : "RAD"}
               </button>
               <div className="flex gap-1">
@@ -181,9 +405,7 @@ export default function EngineeringCalculator() {
                   className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground">MC</button>
               </div>
             </div>
-            {/* Expression */}
             <div className="text-right font-mono text-sm text-muted-foreground truncate min-h-[1.25rem]">{expr || " "}</div>
-            {/* Result */}
             <div className={`text-right font-mono text-2xl font-semibold mt-1 ${error ? "text-destructive" : "text-foreground"}`}>
               {display}
             </div>
@@ -192,60 +414,201 @@ export default function EngineeringCalculator() {
           {/* Buttons */}
           <div className="flex-1 overflow-y-auto p-3">
             <div className="grid grid-cols-5 gap-1.5">
-              {BUTTONS.map((btn, i) =>
-                btn.label === "?" ? <div key={i} /> :
-                <button key={i} onClick={() => handleBtn(btn.action)}
-                  disabled={!ready}
+              {BUTTONS.map((btn, i) => (
+                <button key={i} onClick={() => handleBtn(btn.action)} disabled={!ready}
                   className={btnClass(btn.variant)}>
                   {btn.label === "⌫" ? <Delete className="h-4 w-4 mx-auto" /> : btn.label}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: constants + history */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Constants */}
-          <div className="shrink-0 p-4 border-b border-border">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Physical Constants — click to insert</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {Object.entries(CONSTANTS).map(([key, c]) => (
-                <button key={key} onClick={() => setExpr(e => e + key)}
-                  disabled={!ready}
-                  className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs font-mono shrink-0">{c.label}</Badge>
-                    <span className="text-xs text-muted-foreground truncate">{c.desc}</span>
-                  </div>
-                  <p className="text-xs font-mono text-primary mt-0.5">{c.value.toExponential(3)}</p>
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* History */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">History</p>
-              {history.length > 0 && (
-                <button onClick={() => setHistory([])} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                  <RotateCcw className="h-3 w-3" />Clear
-                </button>
-              )}
-            </div>
-            {history.length === 0
-              ? <p className="text-xs text-muted-foreground italic">No calculations yet</p>
-              : <div className="space-y-1.5">
-                  {history.map((h, i) => (
-                    <button key={i} onClick={() => setExpr(h.result)} className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors">
-                      <div className="text-muted-foreground truncate">{h.expr}</div>
-                      <div className="text-primary font-semibold">= {h.result}</div>
-                    </button>
-                  ))}
-                </div>
-            }
+        {/* ── Right: Tabs ── */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0">
+
+          {/* Tab bar */}
+          <div className="flex shrink-0 border-b border-border">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setRightTab(t.id)}
+                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                  rightTab === t.id
+                    ? "text-foreground border-b-2 border-primary bg-muted/30"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}>
+                {t.label}
+              </button>
+            ))}
           </div>
+
+          {/* ── Graph tab ── */}
+          {rightTab === "graph" && (
+            <div className="flex flex-col flex-1 min-h-0 p-3 gap-2">
+              <div className="flex gap-2 items-end shrink-0">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                  <Input
+                    value={graphFn}
+                    onChange={e => setGraphFn(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && drawGraph()}
+                    className="font-mono text-sm h-8"
+                    placeholder="sin(x)"
+                  />
+                </div>
+                <Button size="sm" onClick={drawGraph} disabled={!ready} className="h-8 shrink-0">Plot</Button>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">x min</label>
+                  <Input value={graphXMin} onChange={e => setGraphXMin(e.target.value)} className="h-8 text-sm font-mono" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground block mb-1">x max</label>
+                  <Input value={graphXMax} onChange={e => setGraphXMax(e.target.value)} className="h-8 text-sm font-mono" />
+                </div>
+              </div>
+              {graphError && <p className="text-xs text-destructive shrink-0">{graphError}</p>}
+              <div ref={graphBoxRef} className="flex-1 min-h-0 rounded-lg overflow-hidden">
+                <canvas ref={canvasRef} />
+              </div>
+              <p className="text-xs text-muted-foreground shrink-0 text-center">
+                Use <code className="bg-muted px-1 rounded">x</code> as variable · e.g.{" "}
+                <code className="bg-muted px-1 rounded">x^2 - 3*x + 2</code>
+              </p>
+            </div>
+          )}
+
+          {/* ── Calculus tab ── */}
+          {rightTab === "calculus" && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+
+              {/* Definite Integral */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <span className="text-lg leading-none font-normal">∫</span>
+                  Definite Integral
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                    <Input value={intFn} onChange={e => setIntFn(e.target.value)}
+                      className="font-mono text-sm h-8" placeholder="sin(x)" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground block mb-1">Lower bound (a)</label>
+                      <Input value={intA} onChange={e => setIntA(e.target.value)} className="h-8 text-sm font-mono" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground block mb-1">Upper bound (b)</label>
+                      <Input value={intB} onChange={e => setIntB(e.target.value)} className="h-8 text-sm font-mono" />
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={computeIntegral} disabled={!ready} className="w-full h-8">
+                    Compute ∫ f(x) dx
+                  </Button>
+                  {intError && <p className="text-xs text-destructive">{intError}</p>}
+                  {intResult !== null && (
+                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3">
+                      <p className="text-xs text-muted-foreground">
+                        ∫ ({intFn}) dx &nbsp;from {intA} to {intB}
+                      </p>
+                      <p className="text-xl font-mono font-bold text-primary mt-1">≈ {intResult}</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Bounds support expressions: <code className="bg-muted px-1 rounded">pi</code>,{" "}
+                    <code className="bg-muted px-1 rounded">pi/2</code>,{" "}
+                    <code className="bg-muted px-1 rounded">sqrt(2)</code>
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Derivative at point */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <span className="text-sm font-bold leading-none">d/dx</span>
+                  Derivative at Point
+                  <span className="text-xs text-muted-foreground font-normal">(numerical)</span>
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                    <Input value={dFn} onChange={e => setDFn(e.target.value)}
+                      className="font-mono text-sm h-8" placeholder="x^2" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">x =</label>
+                    <Input value={dX} onChange={e => setDX(e.target.value)}
+                      className="h-8 text-sm font-mono" />
+                  </div>
+                  <Button size="sm" onClick={computeDerivative} disabled={!ready} className="w-full h-8">
+                    Compute f′(x)
+                  </Button>
+                  {dError && <p className="text-xs text-destructive">{dError}</p>}
+                  {dResult !== null && (
+                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3">
+                      <p className="text-xs text-muted-foreground">f′({dX}) for f(x) = {dFn}</p>
+                      <p className="text-xl font-mono font-bold text-primary mt-1">≈ {dResult}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Constants tab ── */}
+          {rightTab === "constants" && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Physical Constants — click to insert
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {Object.entries(CONSTANTS).map(([key, c]) => (
+                  <button key={key} onClick={() => setExpr(e => e + key)} disabled={!ready}
+                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs font-mono shrink-0">{c.label}</Badge>
+                      <span className="text-xs text-muted-foreground truncate">{c.desc}</span>
+                    </div>
+                    <p className="text-xs font-mono text-primary mt-0.5">{c.value.toExponential(3)}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── History tab ── */}
+          {rightTab === "history" && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">History</p>
+                {history.length > 0 && (
+                  <button onClick={() => setHistory([])}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                    <RotateCcw className="h-3 w-3" />Clear
+                  </button>
+                )}
+              </div>
+              {history.length === 0
+                ? <p className="text-xs text-muted-foreground italic">No calculations yet</p>
+                : (
+                  <div className="space-y-1.5">
+                    {history.map((h, i) => (
+                      <button key={i} onClick={() => setExpr(h.result)}
+                        className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors">
+                        <div className="text-muted-foreground truncate">{h.expr}</div>
+                        <div className="text-primary font-semibold">= {h.result}</div>
+                      </button>
+                    ))}
+                  </div>
+                )
+              }
+            </div>
+          )}
+
         </div>
       </div>
     </div>

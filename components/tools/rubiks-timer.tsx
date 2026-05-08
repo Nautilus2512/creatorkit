@@ -308,152 +308,148 @@ export default function RubiksTimer() {
   const lastSolve = lastSolveId ? solves.find(s => s.id === lastSolveId) : null
 
   return (
-    <div className="h-full flex flex-col bg-background select-none" tabIndex={-1}>
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">Rubik's Cube Timer</h1>
-            <p className="text-sm text-muted-foreground">
-              {inspEnabled
-                ? "Space → 15s inspect → Space/hold to start · Space to stop"
-                : "Hold Space → release to start · Space to stop"}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Inspection toggle */}
-            <div className="flex items-center gap-2">
-              <Switch
-                id="inspection-toggle"
-                checked={inspEnabled}
-                onCheckedChange={toggleInspection}
-                disabled={phase === "running" || isInspPhase}
-              />
-              <Label htmlFor="inspection-toggle" className="text-sm cursor-pointer">
-                15s Inspection
-              </Label>
-            </div>
-            <Button
-              variant="outline" size="sm"
-              onClick={() => setScramble(genScramble())}
+    <div className="flex h-full flex-col gap-3 p-4 select-none" tabIndex={-1}>
+      {/* Title + controls */}
+      <div className="flex items-start justify-between shrink-0 flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Rubik's Cube Timer</h2>
+          <p className="text-sm text-muted-foreground">
+            {inspEnabled
+              ? "Space → 15s inspect → Space/hold to start · Space to stop"
+              : "Hold Space → release to start · Space to stop"}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="inspection-toggle"
+              checked={inspEnabled}
+              onCheckedChange={toggleInspection}
               disabled={phase === "running" || isInspPhase}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />New Scramble
-            </Button>
+            />
+            <Label htmlFor="inspection-toggle" className="text-sm cursor-pointer">
+              15s Inspection
+            </Label>
           </div>
-        </div>
-      </div>
-
-      {/* Scramble */}
-      <div className="shrink-0 border-b border-border bg-muted/20 px-6 py-4">
-        <p className="font-mono text-sm text-center tracking-widest leading-relaxed">
-          {scramble || "Loading…"}
-        </p>
-      </div>
-
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
-        {/* Timer */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
-          {/* Big display */}
-          <div
-            className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"}`}
-            onPointerDown={() => { if (phase === "running") stopTimer() }}
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setScramble(genScramble())}
+            disabled={phase === "running" || isInspPhase}
           >
-            {timerDisplay}
-          </div>
+            <RefreshCw className="h-4 w-4 mr-1" />New Scramble
+          </Button>
+        </div>
+      </div>
 
-          {/* Inspection label */}
-          {isInspPhase && (
-            <p className="text-sm font-medium text-muted-foreground -mt-2">seconds remaining</p>
-          )}
-
-          {/* Hint */}
-          <p className="text-sm text-muted-foreground">{hint}</p>
-
-          {/* Penalty buttons */}
-          {phase === "stopped" && lastSolve && (
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">Penalty:</span>
-              {(["none", "+2", "dnf"] as const).map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPenalty(lastSolve.id, p)}
-                  className={`text-xs px-3 py-1.5 rounded-full border font-semibold uppercase tracking-wide transition-colors ${
-                    lastSolve.penalty === p
-                      ? p === "dnf" ? "bg-destructive text-destructive-foreground border-destructive"
-                      : p === "+2"  ? "bg-yellow-500 text-white border-yellow-500"
-                      :               "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-muted-foreground hover:border-primary/40"
-                  }`}
-                >
-                  {p === "none" ? "OK" : p}
-                </button>
-              ))}
-              <span className="text-sm font-mono ml-2 text-muted-foreground">
-                {fmtSolve(lastSolve)}
-              </span>
-            </div>
-          )}
-
-          {/* Stats */}
-          <div className="flex gap-10 text-center mt-6">
-            {[
-              { label: "Best",  value: calcBest(solves) },
-              { label: "Ao5",   value: calcAo(solves, 5) },
-              { label: "Ao12",  value: calcAo(solves, 12) },
-              { label: "Count", value: String(solves.length) },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p className="text-2xl font-mono font-bold">{value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
+      {/* Main card */}
+      <div className="flex-1 min-h-0 rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+        {/* Scramble bar */}
+        <div className="shrink-0 border-b border-border bg-muted/20 px-6 py-3">
+          <p className="font-mono text-sm text-center tracking-widest leading-relaxed">
+            {scramble || "Loading…"}
+          </p>
         </div>
 
-        {/* Solve history sidebar */}
-        {solves.length > 0 && (
-          <div className="flex flex-col border-t md:border-t-0 md:border-l border-border md:w-52 md:shrink-0">
-            <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Session ({solves.length})
-              </h3>
-              <button
-                onClick={clearSession}
-                className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-              >
-                Clear all
-              </button>
+        {/* Timer + history */}
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+          {/* Timer */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
+            <div
+              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"}`}
+              onPointerDown={() => { if (phase === "running") stopTimer() }}
+            >
+              {timerDisplay}
             </div>
-            <div className="flex-1 overflow-y-auto">
-              {[...solves].reverse().map((s, i) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center px-3 py-2 border-b border-border/50 text-sm group ${
-                    s.id === lastSolveId ? "bg-primary/5" : "hover:bg-muted/20"
-                  }`}
-                >
-                  <span className="text-xs text-muted-foreground w-6 shrink-0">
-                    {solves.length - i}
-                  </span>
-                  <span className={`font-mono flex-1 text-center ${
-                    s.penalty === "dnf" ? "text-destructive" :
-                    s.penalty === "+2"  ? "text-yellow-600"  : ""
-                  }`}>
-                    {fmtSolve(s)}
-                  </span>
+
+            {isInspPhase && (
+              <p className="text-sm font-medium text-muted-foreground -mt-2">seconds remaining</p>
+            )}
+
+            <p className="text-sm text-muted-foreground">{hint}</p>
+
+            {phase === "stopped" && lastSolve && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">Penalty:</span>
+                {(["none", "+2", "dnf"] as const).map(p => (
                   <button
-                    onClick={() => deleteSolve(s.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0 ml-1"
-                    title="Delete solve"
+                    key={p}
+                    onClick={() => setPenalty(lastSolve.id, p)}
+                    className={`text-xs px-3 py-1.5 rounded-full border font-semibold uppercase tracking-wide transition-colors ${
+                      lastSolve.penalty === p
+                        ? p === "dnf" ? "bg-destructive text-destructive-foreground border-destructive"
+                        : p === "+2"  ? "bg-yellow-500 text-white border-yellow-500"
+                        :               "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:border-primary/40"
+                    }`}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    {p === "none" ? "OK" : p}
                   </button>
+                ))}
+                <span className="text-sm font-mono ml-2 text-muted-foreground">
+                  {fmtSolve(lastSolve)}
+                </span>
+              </div>
+            )}
+
+            <div className="flex gap-10 text-center mt-4">
+              {[
+                { label: "Best",  value: calcBest(solves) },
+                { label: "Ao5",   value: calcAo(solves, 5) },
+                { label: "Ao12",  value: calcAo(solves, 12) },
+                { label: "Count", value: String(solves.length) },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-2xl font-mono font-bold">{value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{label}</p>
                 </div>
               ))}
             </div>
           </div>
-        )}
+
+          {/* Solve history sidebar */}
+          {solves.length > 0 && (
+            <div className="flex flex-col border-t md:border-t-0 md:border-l border-border md:w-52 md:shrink-0">
+              <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Session ({solves.length})
+                </h3>
+                <button
+                  onClick={clearSession}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {[...solves].reverse().map((s, i) => (
+                  <div
+                    key={s.id}
+                    className={`flex items-center px-3 py-2 border-b border-border/50 text-sm group ${
+                      s.id === lastSolveId ? "bg-primary/5" : "hover:bg-muted/20"
+                    }`}
+                  >
+                    <span className="text-xs text-muted-foreground w-6 shrink-0">
+                      {solves.length - i}
+                    </span>
+                    <span className={`font-mono flex-1 text-center ${
+                      s.penalty === "dnf" ? "text-destructive" :
+                      s.penalty === "+2"  ? "text-yellow-600"  : ""
+                    }`}>
+                      {fmtSolve(s)}
+                    </span>
+                    <button
+                      onClick={() => deleteSolve(s.id)}
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity shrink-0 ml-1"
+                      title="Delete solve"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

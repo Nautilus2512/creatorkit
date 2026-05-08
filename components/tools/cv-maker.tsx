@@ -203,8 +203,10 @@ export default function CvMaker() {
   const [template, setTemplate] = useState<"classic" | "modern">("modern")
   const [skillInput, setSkillInput] = useState("")
   const [confirmingClear, setConfirmingClear] = useState(false)
-  const previewRef = useRef<HTMLDivElement>(null)
+  const previewRef     = useRef<HTMLDivElement>(null)
+  const previewPaneRef = useRef<HTMLDivElement>(null)
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [previewScale, setPreviewScale] = useState(1)
 
   useEffect(() => {
     setCv(load())
@@ -214,6 +216,18 @@ export default function CvMaker() {
 
   // Cleanup confirm timer on unmount
   useEffect(() => () => { clearTimeout(confirmTimerRef.current!) }, [])
+
+  // Scale preview to fit the panel
+  useEffect(() => {
+    const el = previewPaneRef.current
+    if (!el) return
+    const CV_W_PX = (210 / 25.4) * 96  // A4 width at 96 dpi ≈ 793.7px
+    const measure = () => setPreviewScale(Math.min(1, (el.clientWidth - 32) / CV_W_PX))
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    measure()
+    return () => ro.disconnect()
+  }, [])
 
   const update = (patch: Partial<CVData>) => {
     setCv(prev => { const next = { ...prev, ...patch }; persist(next); return next })
@@ -288,46 +302,40 @@ export default function CvMaker() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">CV Maker</h1>
-            <p className="text-sm text-muted-foreground">
-              Saved locally in your browser only — never uploaded.{" "}
-              <button
-                onClick={handleClear}
-                className={`underline underline-offset-2 transition-colors ${
-                  confirmingClear
-                    ? "text-destructive font-medium"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {confirmingClear ? "Click again to confirm clear" : "Clear all data"}
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">CV Maker</h2>
+          <p className="text-sm text-muted-foreground">Your data is saved locally in your browser and never uploaded.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleClear}
+            className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+              confirmingClear
+                ? "border-destructive text-destructive bg-destructive/10 font-medium"
+                : "border-border text-muted-foreground hover:border-destructive/60 hover:text-destructive"
+            }`}
+          >
+            {confirmingClear ? "Confirm clear?" : "Clear data"}
+          </button>
+          <div className="flex items-center gap-1">
+            {(["classic", "modern"] as const).map(t => (
+              <button key={t} onClick={() => setTmpl(t)}
+                className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors ${template === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                {t}
               </button>
-            </p>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            {/* Template selector */}
-            <div className="flex items-center gap-1">
-              {(["classic", "modern"] as const).map(t => (
-                <button key={t} onClick={() => setTmpl(t)}
-                  className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors ${template === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-            <Button size="sm" onClick={handlePrint}>
-              <Download className="h-4 w-4 mr-1" />Download PDF
-            </Button>
-          </div>
+          <Button size="sm" onClick={handlePrint}><Download className="h-4 w-4 mr-1" />Download PDF</Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Form */}
-        <div className="flex flex-col border-b md:border-b-0 md:border-r border-border overflow-y-auto md:w-[380px] md:shrink-0">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Edit CV</span></div>
+          <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-3">
 
             {/* Personal Info */}
@@ -464,11 +472,17 @@ export default function CvMaker() {
 
           </div>
         </div>
+        </div>
 
         {/* Right — Live preview */}
-        <div className="flex-1 overflow-auto bg-muted/30 flex items-start justify-center p-6">
-          <div ref={previewRef} className="shadow-xl">
-            <CvPreview cv={cv} tmpl={template} />
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Preview</span></div>
+          <div ref={previewPaneRef} className="flex-1 overflow-y-auto bg-muted/30 p-4">
+            <div className="flex justify-center">
+              <div ref={previewRef} style={{ zoom: previewScale }} className="shadow-xl">
+                <CvPreview cv={cv} tmpl={template} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

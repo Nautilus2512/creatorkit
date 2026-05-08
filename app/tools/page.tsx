@@ -585,15 +585,17 @@ export default function ToolsPage() {
   const categories = ["All", "Image & Visual", "Design", "PDF", "Developer", "Media", "Security", "Productivity"]
 
   const q = search.trim().toLowerCase()
-  const filtered = toolCards.filter(t => {
-    const matchesCat = activeCategory === "All" || t.category === activeCategory
-    const matchesSearch = !q ||
-      t.title.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q) ||
-      t.category.toLowerCase().includes(q) ||
-      t.stat.toLowerCase().includes(q)
-    return matchesCat && matchesSearch
-  })
+  const filtered = toolCards
+    .filter(t => {
+      const matchesCat = activeCategory === "All" || t.category === activeCategory
+      const matchesSearch = !q ||
+        t.title.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        t.stat.toLowerCase().includes(q)
+      return matchesCat && matchesSearch
+    })
+    .sort((a, b) => a.title.localeCompare(b.title))
 
   // Restore category + read ?q= from URL + queue scroll restore
   useEffect(() => {

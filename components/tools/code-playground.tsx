@@ -122,18 +122,23 @@ ${html}
   }
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-2 md:gap-4 md:h-[calc(100vh-80px)]">
-      <ShortcutsModal
-        pageName="Code Playground"
-        shortcuts={[
-          { keys: ["Ctrl", "Enter"], description: "Run code" },
-          { keys: ["Ctrl", "S"], description: "Download files" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
-
+    <>
+    <ShortcutsModal
+      pageName="Code Playground"
+      shortcuts={[
+        { keys: ["Ctrl", "Enter"], description: "Run code" },
+        { keys: ["Ctrl", "S"], description: "Download files" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Code Playground</h2>
+        <p className="text-muted-foreground">Write and preview HTML, CSS, and JavaScript live in your browser</p>
+      </div>
+      <div className="grid grid-rows-1 gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel - Editors */}
-      <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0">
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* Tab bar */}
           <div className="flex items-center gap-1 p-2 border-b border-border bg-muted/30">
@@ -241,7 +246,7 @@ ${html}
       </div>
 
       {/* Right panel - Preview */}
-      <div className="hidden md:flex flex-col rounded-xl border border-border bg-card overflow-hidden">
+      <div className="hidden md:flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0">
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 text-muted-foreground" />
@@ -265,6 +270,8 @@ ${html}
           />
         </div>
       </div>
+      </div>
     </div>
+    </>
   )
 }

@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button"
 
 interface PageInfo { idx: number; thumb: string }
 
-const PDFJS_VERSION = "4.9.155"
-
 async function loadPdfJs() {
   const pdfjs = await import("pdfjs-dist" as any)
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
   }
   return pdfjs
 }
@@ -73,7 +71,7 @@ export default function PdfOrganizer() {
       copied.forEach(p => out.addPage(p))
       const bytes = await out.save()
       const a = Object.assign(document.createElement("a"), {
-        href: URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })),
+        href: URL.createObjectURL(new Blob([bytes as unknown as BlobPart], { type: "application/pdf" })),
         download: `${filename}-organized.pdf`,
       })
       a.click()
@@ -81,28 +79,24 @@ export default function PdfOrganizer() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold">PDF Organizer</h1>
-            <p className="text-sm text-muted-foreground">Reorder and delete PDF pages. All processing happens in your browser.</p>
-          </div>
-          <div className="flex gap-2">
-            <label>
-              <input type="file" accept=".pdf" className="hidden" onChange={handleFile} />
-              <Button variant="outline" size="sm" asChild>
-                <span><Upload className="h-4 w-4 mr-1" />Open PDF</span>
-              </Button>
-            </label>
-            <Button onClick={download} disabled={!pages.length || loading}>
-              <Download className="h-4 w-4 mr-1" />{loading ? "Saving..." : "Download PDF"}
-            </Button>
-          </div>
+    <div className="flex h-full flex-col gap-3 p-4">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">PDF Organizer</h2>
+          <p className="text-muted-foreground">Reorder and delete PDF pages. All processing happens in your browser.</p>
+        </div>
+        <div className="flex gap-2">
+          <label>
+            <input type="file" accept=".pdf" className="hidden" onChange={handleFile} />
+            <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-1" />Open PDF</span></Button>
+          </label>
+          <Button onClick={download} disabled={!pages.length || loading}>
+            <Download className="h-4 w-4 mr-1" />{loading ? "Saving..." : "Download PDF"}
+          </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card">
         {pages.length === 0 ? (
           <label className="flex flex-col items-center justify-center h-full cursor-pointer">
             <input type="file" accept=".pdf" className="hidden" onChange={handleFile} />
