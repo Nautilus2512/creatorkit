@@ -158,42 +158,64 @@ function hello() {
     reader.readAsText(file)
   }
 
-  // Scroll sync - bidirectional
+  // Scroll sync - bidirectional with RAF for smoothness
   const isSyncingRef = useRef(false)
+  const rafRef = useRef<number | null>(null)
 
   const syncEditorToPreview = useCallback(() => {
     if (!syncScroll || !editorRef.current || !previewRef.current || isSyncingRef.current) return
     isSyncingRef.current = true
 
-    const editor = editorRef.current
-    const preview = previewRef.current
-    const scrollRatio = editor.scrollTop / (editor.scrollHeight - editor.clientHeight || 1)
-    preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight || 1)
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const editor = editorRef.current
+      const preview = previewRef.current
+      if (!editor || !preview) return
 
-    setTimeout(() => { isSyncingRef.current = false }, 50)
+      const editorScrollable = editor.scrollHeight - editor.clientHeight
+      const previewScrollable = preview.scrollHeight - preview.clientHeight
+
+      if (editorScrollable > 0 && previewScrollable > 0) {
+        const scrollRatio = editor.scrollTop / editorScrollable
+        preview.scrollTop = scrollRatio * previewScrollable
+      }
+
+      isSyncingRef.current = false
+    })
   }, [syncScroll])
 
   const syncPreviewToEditor = useCallback(() => {
     if (!syncScroll || !editorRef.current || !previewRef.current || isSyncingRef.current) return
     isSyncingRef.current = true
 
-    const editor = editorRef.current
-    const preview = previewRef.current
-    const scrollRatio = preview.scrollTop / (preview.scrollHeight - preview.clientHeight || 1)
-    editor.scrollTop = scrollRatio * (editor.scrollHeight - editor.clientHeight || 1)
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const editor = editorRef.current
+      const preview = previewRef.current
+      if (!editor || !preview) return
 
-    setTimeout(() => { isSyncingRef.current = false }, 50)
+      const editorScrollable = editor.scrollHeight - editor.clientHeight
+      const previewScrollable = preview.scrollHeight - preview.clientHeight
+
+      if (editorScrollable > 0 && previewScrollable > 0) {
+        const scrollRatio = preview.scrollTop / previewScrollable
+        editor.scrollTop = scrollRatio * editorScrollable
+      }
+
+      isSyncingRef.current = false
+    })
   }, [syncScroll])
 
   useEffect(() => {
     const editor = editorRef.current
     const preview = previewRef.current
     if (editor && preview) {
-      editor.addEventListener('scroll', syncEditorToPreview)
-      preview.addEventListener('scroll', syncPreviewToEditor)
+      editor.addEventListener('scroll', syncEditorToPreview, { passive: true })
+      preview.addEventListener('scroll', syncPreviewToEditor, { passive: true })
       return () => {
         editor.removeEventListener('scroll', syncEditorToPreview)
         preview.removeEventListener('scroll', syncPreviewToEditor)
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
       }
     }
   }, [syncEditorToPreview, syncPreviewToEditor])
@@ -240,7 +262,7 @@ function hello() {
               title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
             >
               {syncScroll ? <Link2 className="h-3 w-3 mr-1" /> : <Link2Off className="h-3 w-3 mr-1" />}
-              {syncScroll ? "Sync" : "Free"}
+              {syncScroll ? "Sync Scroll" : "Free"}
             </Button>
             <Button variant="outline" size="sm" onClick={copyMarkdown}>
               {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
