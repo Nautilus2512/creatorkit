@@ -418,8 +418,7 @@ export default function RubiksTimer() {
           {/* Timer */}
           <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
             <div
-              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"} touch-manipulation`}
-              onPointerDown={() => { if (phase === "running") stopTimer() }}
+              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"} touch-manipulation select-none`}
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
             >
