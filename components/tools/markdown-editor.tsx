@@ -373,11 +373,11 @@ function hello() {
               <Button variant="ghost" size="sm" onClick={() => insertText("# ", "")} title="Heading">
                 <Hash className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
-                <Code className="h-3 w-3" />
-              </Button>
               <Button variant="ghost" size="sm" onClick={() => insertText("> ", "")} title="Quote">
                 <Quote className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
+                <Code className="h-3 w-3" />
               </Button>
               <div className="h-4 w-px bg-border mx-1" />
               <Button variant="ghost" size="sm" onClick={() => insertText("- ", "")} title="Unordered list">
