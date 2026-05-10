@@ -259,6 +259,9 @@ export default function ImageGrid() {
                 <Upload className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Add more images</span>
               </label>
+              <p className="text-xs text-muted-foreground text-center py-2 px-4">
+                <span className="inline-flex items-center gap-1"><Grip className="h-3 w-3" /> Drag images to reorder</span>
+              </p>
               <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {currentImages.map((img, i) => {
               const globalIndex = startIndex + i
