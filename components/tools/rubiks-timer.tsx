@@ -189,6 +189,10 @@ export default function RubiksTimer() {
     }, 1000)
   }, [startTimer])
 
+  // ─── Touch handler refs ─────────────────────────────────────────────────────
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+  const isTouchHoldingRef = useRef(false)
+
   // ─── Keyboard handler ────────────────────────────────────────────────────────
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
@@ -259,6 +263,65 @@ export default function RubiksTimer() {
       window.removeEventListener("keyup", onUp)
     }
   }, [startTimer, stopTimer, startInspection])
+
+  // ─── Touch handlers for timer area ────────────────────────────────────────────
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
+    isTouchHoldingRef.current = true
+
+    const p = phaseRef.current
+
+    // Always: touch stops the timer
+    if (p === "running") { stopTimer(); return }
+
+    // From idle / stopped
+    if (p === "idle" || p === "stopped") {
+      if (inspEnabledRef.current) {
+        startInspection()
+      } else {
+        setLastSolveId(null)
+        setDisplayMs(0)
+        setPhase("holding")
+        phaseRef.current = "holding"
+        holdTimerRef.current = setTimeout(() => {
+          setPhase("ready")
+          phaseRef.current = "ready"
+        }, 300)
+      }
+      return
+    }
+
+    // During inspection: touch starts hold mechanic
+    if (p === "inspecting") {
+      setPhase("insp-holding")
+      phaseRef.current = "insp-holding"
+      holdTimerRef.current = setTimeout(() => {
+        setPhase("insp-ready")
+        phaseRef.current = "insp-ready"
+      }, 300)
+    }
+  }, [startTimer, stopTimer, startInspection])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    isTouchHoldingRef.current = false
+    touchStartRef.current = null
+
+    const p = phaseRef.current
+
+    if (p === "holding") {
+      clearTimeout(holdTimerRef.current!)
+      setPhase("idle")
+      phaseRef.current = "idle"
+    } else if (p === "ready") {
+      startTimer()
+    } else if (p === "insp-holding") {
+      clearTimeout(holdTimerRef.current!)
+      startTimer()
+    } else if (p === "insp-ready") {
+      startTimer()
+    }
+  }, [startTimer])
 
   // Cleanup on unmount
   useEffect(() => () => {
@@ -355,8 +418,10 @@ export default function RubiksTimer() {
           {/* Timer */}
           <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
             <div
-              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"}`}
+              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"} touch-manipulation`}
               onPointerDown={() => { if (phase === "running") stopTimer() }}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
             >
               {timerDisplay}
             </div>

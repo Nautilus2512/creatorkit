@@ -180,6 +180,19 @@ export function WhiteboardDrawing() {
     }
   }
 
+  const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return { x: 0, y: 0 }
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const touch = e.touches[0] || e.changedTouches[0]
+    return {
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
+    }
+  }
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (currentTool === "text") {
       const pos = getMousePos(e)
@@ -189,6 +202,30 @@ export function WhiteboardDrawing() {
 
     setIsDrawing(true)
     const pos = getMousePos(e)
+    const newElement: DrawingElement = {
+      id: Date.now().toString(),
+      type: currentTool,
+      startX: pos.x,
+      startY: pos.y,
+      endX: pos.x,
+      endY: pos.y,
+      color: currentColor,
+      lineWidth: lineWidth,
+      path: currentTool === "pen" || currentTool === "eraser" ? [pos] : undefined
+    }
+    setCurrentElement(newElement)
+  }
+
+  const startDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault()
+    if (currentTool === "text") {
+      const pos = getTouchPos(e)
+      setTextPosition(pos)
+      return
+    }
+
+    setIsDrawing(true)
+    const pos = getTouchPos(e)
     const newElement: DrawingElement = {
       id: Date.now().toString(),
       type: currentTool,
@@ -222,6 +259,26 @@ export function WhiteboardDrawing() {
     }
   }
 
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault()
+    if (!isDrawing || !currentElement) return
+
+    const pos = getTouchPos(e)
+
+    if (currentElement.type === "pen" || currentElement.type === "eraser") {
+      setCurrentElement({
+        ...currentElement,
+        path: [...(currentElement.path || []), pos]
+      })
+    } else {
+      setCurrentElement({
+        ...currentElement,
+        endX: pos.x,
+        endY: pos.y
+      })
+    }
+  }
+
   const stopDrawing = () => {
     if (currentElement && isDrawing) {
       const newElements = [...elements, currentElement]
@@ -231,6 +288,11 @@ export function WhiteboardDrawing() {
     }
     setIsDrawing(false)
     setCurrentElement(null)
+  }
+
+  const stopDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault()
+    stopDrawing()
   }
 
   const addText = () => {
@@ -421,11 +483,15 @@ export function WhiteboardDrawing() {
           ref={canvasRef}
           width={800}
           height={600}
-          className="w-full h-full cursor-crosshair"
+          className="w-full h-full cursor-crosshair touch-none"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
+          onTouchStart={startDrawingTouch}
+          onTouchMove={drawTouch}
+          onTouchEnd={stopDrawingTouch}
+          onTouchCancel={stopDrawingTouch}
         />
         
         {/* Text Input Popup */}
