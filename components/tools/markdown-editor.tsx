@@ -373,10 +373,10 @@ function hello() {
               <Button variant="ghost" size="sm" onClick={() => insertText("# ", "")} title="Heading">
                 <Hash className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("> ", "")} title="Quote">
+              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
                 <Quote className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
+              <Button variant="ghost" size="sm" onClick={() => insertText("> ", "")} title="Quote">
                 <Code className="h-3 w-3" />
               </Button>
               <div className="h-4 w-px bg-border mx-1" />
