@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import {
   Download, Upload, Copy, Check,
   Bold, Italic, Link, Image, Code, List, ListOrdered,
-  Quote, Hash, Strikethrough,
+  Quote, Hash, Strikethrough, Link2, Link2Off,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -105,6 +105,7 @@ function hello() {
 * Last item`)
   
   const [copied, setCopied] = useState(false)
+  const [syncScroll, setSyncScroll] = useState(true)
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   
@@ -161,7 +162,7 @@ function hello() {
   const isSyncingRef = useRef(false)
 
   const syncEditorToPreview = useCallback(() => {
-    if (!editorRef.current || !previewRef.current || isSyncingRef.current) return
+    if (!syncScroll || !editorRef.current || !previewRef.current || isSyncingRef.current) return
     isSyncingRef.current = true
 
     const editor = editorRef.current
@@ -170,10 +171,10 @@ function hello() {
     preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight || 1)
 
     setTimeout(() => { isSyncingRef.current = false }, 50)
-  }, [])
+  }, [syncScroll])
 
   const syncPreviewToEditor = useCallback(() => {
-    if (!editorRef.current || !previewRef.current || isSyncingRef.current) return
+    if (!syncScroll || !editorRef.current || !previewRef.current || isSyncingRef.current) return
     isSyncingRef.current = true
 
     const editor = editorRef.current
@@ -182,7 +183,7 @@ function hello() {
     editor.scrollTop = scrollRatio * (editor.scrollHeight - editor.clientHeight || 1)
 
     setTimeout(() => { isSyncingRef.current = false }, 50)
-  }, [])
+  }, [syncScroll])
 
   useEffect(() => {
     const editor = editorRef.current
@@ -232,6 +233,15 @@ function hello() {
             <p className="text-muted-foreground">Write and preview markdown with live rendering</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSyncScroll(!syncScroll)}
+              title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
+            >
+              {syncScroll ? <Link2 className="h-3 w-3 mr-1" /> : <Link2Off className="h-3 w-3 mr-1" />}
+              {syncScroll ? "Sync" : "Free"}
+            </Button>
             <Button variant="outline" size="sm" onClick={copyMarkdown}>
               {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
               {copied ? "Copied!" : "Copy"}
