@@ -200,27 +200,27 @@ export default function ImageGrid() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Layout:</Label>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Label className="text-xs text-muted-foreground shrink-0">Layout:</Label>
           {LAYOUTS.map(l => (
             <button key={l.key} onClick={() => setLayout(l.key)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${layout === l.key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+              className={`text-xs px-2 sm:px-3 py-1 rounded-full border transition-colors ${layout === l.key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
               {l.label}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Gap:</Label>
-          <Slider value={[gap]} onValueChange={([v]) => setGap(v)} min={0} max={40} step={2} className="w-24" />
+          <Slider value={[gap]} onValueChange={([v]) => setGap(v)} min={0} max={40} step={2} className="w-20 sm:w-24" />
           <span className="text-xs font-mono text-muted-foreground">{gap}px</span>
         </div>
         <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">BG:</Label>
-          <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-7 h-7 rounded border border-border cursor-pointer p-0.5" />
+          <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-6 h-6 sm:w-7 sm:h-7 rounded border border-border cursor-pointer p-0.5" />
         </div>
         <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Size:</Label>
+          <Label className="text-xs text-muted-foreground shrink-0">Size:</Label>
           {[800, 1200, 2000].map(s => (
             <button key={s} onClick={() => setCanvasSize(s)}
               className={`text-xs px-2 py-1 rounded-full border transition-colors ${canvasSize === s ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
@@ -230,9 +230,9 @@ export default function ImageGrid() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
         {/* Left — images */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-[300px] md:min-h-0">
+        <div className="flex flex-col rounded-xl border border-border bg-card min-h-[250px] lg:min-h-0 lg:overflow-hidden">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">Images ({images.length}/{needed})</h3>
             <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function ImageGrid() {
               <p className="text-xs text-muted-foreground text-center py-2 px-4">
                 <span className="inline-flex items-center gap-1"><Grip className="h-3 w-3" /> Drag images to reorder</span>
               </p>
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[40vh] lg:max-h-none">
             {currentImages.map((img, i) => {
               const globalIndex = startIndex + i
               return (
@@ -332,7 +332,7 @@ export default function ImageGrid() {
         </div>
 
         {/* Right — Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-[300px] md:min-h-0">
+        <div className="flex flex-col rounded-xl border border-border bg-card min-h-[300px] lg:min-h-0 lg:overflow-hidden">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Preview</span>
             {totalPages > 1 && (
@@ -341,19 +341,19 @@ export default function ImageGrid() {
               </span>
             )}
           </div>
-        <div className="flex-1 flex items-center justify-center p-6 bg-muted/10 overflow-hidden">
-          {images.length === 0 ? (
-            <div className="text-sm text-muted-foreground text-center">
-              <p>Add {needed} images to fill the {layoutDef.cols}×{layoutDef.rows} grid</p>
-            </div>
-          ) : (
-            <canvas
-              ref={canvasRef}
-              className="max-w-full max-h-full object-contain rounded-lg border border-border shadow-lg"
-              style={{ maxWidth: "100%", maxHeight: "100%" }}
-            />
-          )}
-        </div>
+          <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-muted/10 overflow-hidden min-h-[250px]">
+            {images.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center">
+                <p>Add {needed} images to fill the {layoutDef.cols}×{layoutDef.rows} grid</p>
+              </div>
+            ) : (
+              <canvas
+                ref={canvasRef}
+                className="max-w-full max-h-[50vh] lg:max-h-full object-contain rounded-lg border border-border shadow-lg"
+                style={{ maxWidth: "100%" }}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
