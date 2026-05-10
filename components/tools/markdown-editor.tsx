@@ -6,6 +6,7 @@ import {
   Download, Upload, Copy, Check,
   Bold, Italic, Link, Image, Code, List, ListOrdered,
   Quote, Hash, Strikethrough, Link2, Link2Off,
+  Undo, Redo,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -106,8 +107,11 @@ function hello() {
   
   const [copied, setCopied] = useState(false)
   const [syncScroll, setSyncScroll] = useState(true)
+  const [history, setHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+  const isUndoingRef = useRef(false)
   
   const html = parseMarkdown(markdown)
 
@@ -121,7 +125,7 @@ function hello() {
     const newText = before + selectedText + after
     
     const newMarkdown = markdown.substring(0, start) + newText + markdown.substring(end)
-    setMarkdown(newMarkdown)
+    setMarkdownWithHistory(newMarkdown)
     
     // Restore cursor position
     setTimeout(() => {
@@ -153,9 +157,48 @@ function hello() {
     const reader = new FileReader()
     reader.onload = (event) => {
       const content = event.target?.result as string
-      setMarkdown(content)
+      setMarkdownWithHistory(content)
     }
     reader.readAsText(file)
+  }
+
+  const setMarkdownWithHistory = useCallback((newMarkdown: string) => {
+    if (isUndoingRef.current) {
+      isUndoingRef.current = false
+      setMarkdown(newMarkdown)
+      return
+    }
+
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1)
+      if (newHistory[newHistory.length - 1] !== newMarkdown) {
+        newHistory.push(newMarkdown)
+      }
+      return newHistory
+    })
+    setHistoryIndex(prev => {
+      const newIndex = Math.min(prev + 1, history.length)
+      return newIndex
+    })
+    setMarkdown(newMarkdown)
+  }, [historyIndex, history.length])
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      isUndoingRef.current = true
+      const newIndex = historyIndex - 1
+      setHistoryIndex(newIndex)
+      setMarkdown(history[newIndex])
+    }
+  }
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      isUndoingRef.current = true
+      const newIndex = historyIndex + 1
+      setHistoryIndex(newIndex)
+      setMarkdown(history[newIndex])
+    }
   }
 
   // Scroll sync - bidirectional with RAF for smoothness
@@ -231,8 +274,29 @@ function hello() {
         copyMarkdown()
       }
     }
+    const handleEditorKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        redo()
+      }
+    }
+
+    const editor = editorRef.current
+    if (editor) {
+      editor.addEventListener('keydown', handleEditorKeyDown)
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      if (editor) {
+        editor.removeEventListener('keydown', handleEditorKeyDown)
+      }
+    }
   }, [markdown])
 
   return (
@@ -244,6 +308,8 @@ function hello() {
           { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
           { keys: ["Ctrl", "B"], description: "Bold text" },
           { keys: ["Ctrl", "I"], description: "Italic text" },
+          { keys: ["Ctrl", "Z"], description: "Undo" },
+          { keys: ["Ctrl", "Y"], description: "Redo" },
           { keys: ["?"], description: "Toggle this panel" },
         ]}
       />
@@ -262,7 +328,7 @@ function hello() {
               title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
             >
               {syncScroll ? <Link2 className="h-3 w-3 mr-1" /> : <Link2Off className="h-3 w-3 mr-1" />}
-              {syncScroll ? "Sync Scroll" : "Free"}
+              {syncScroll ? "Sync Scroll" : "Free Scroll"}
             </Button>
             <Button variant="outline" size="sm" onClick={copyMarkdown}>
               {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
@@ -287,6 +353,13 @@ function hello() {
           <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
             {/* Toolbar */}
             <div className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30">
+              <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)">
+                <Undo className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo (Ctrl+Y)">
+                <Redo className="h-3 w-3" />
+              </Button>
+              <div className="h-4 w-px bg-border mx-1" />
               <Button variant="ghost" size="sm" onClick={() => insertText("**", "**")} title="Bold (Ctrl+B)">
                 <Bold className="h-3 w-3" />
               </Button>
@@ -325,7 +398,7 @@ function hello() {
               <Textarea
                 ref={editorRef}
                 value={markdown}
-                onChange={(e) => setMarkdown(e.target.value)}
+                onChange={(e) => setMarkdownWithHistory(e.target.value)}
                 placeholder="Write your markdown here..."
                 className="w-full h-full resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
               />
