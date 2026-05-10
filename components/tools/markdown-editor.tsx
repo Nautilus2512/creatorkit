@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+
 import {
   Download, Upload, Copy, Check,
   Bold, Italic, Link, Image, Code, List, ListOrdered,
@@ -156,24 +157,45 @@ function hello() {
     reader.readAsText(file)
   }
 
-  // Scroll sync
-  const syncScroll = useCallback(() => {
-    if (!editorRef.current || !previewRef.current) return
-    
+  // Scroll sync - bidirectional
+  const isSyncingRef = useRef(false)
+
+  const syncEditorToPreview = useCallback(() => {
+    if (!editorRef.current || !previewRef.current || isSyncingRef.current) return
+    isSyncingRef.current = true
+
     const editor = editorRef.current
     const preview = previewRef.current
-    const scrollRatio = editor.scrollTop / (editor.scrollHeight - editor.clientHeight)
-    
-    preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight)
+    const scrollRatio = editor.scrollTop / (editor.scrollHeight - editor.clientHeight || 1)
+    preview.scrollTop = scrollRatio * (preview.scrollHeight - preview.clientHeight || 1)
+
+    setTimeout(() => { isSyncingRef.current = false }, 50)
+  }, [])
+
+  const syncPreviewToEditor = useCallback(() => {
+    if (!editorRef.current || !previewRef.current || isSyncingRef.current) return
+    isSyncingRef.current = true
+
+    const editor = editorRef.current
+    const preview = previewRef.current
+    const scrollRatio = preview.scrollTop / (preview.scrollHeight - preview.clientHeight || 1)
+    editor.scrollTop = scrollRatio * (editor.scrollHeight - editor.clientHeight || 1)
+
+    setTimeout(() => { isSyncingRef.current = false }, 50)
   }, [])
 
   useEffect(() => {
     const editor = editorRef.current
-    if (editor) {
-      editor.addEventListener('scroll', syncScroll)
-      return () => editor.removeEventListener('scroll', syncScroll)
+    const preview = previewRef.current
+    if (editor && preview) {
+      editor.addEventListener('scroll', syncEditorToPreview)
+      preview.addEventListener('scroll', syncPreviewToEditor)
+      return () => {
+        editor.removeEventListener('scroll', syncEditorToPreview)
+        preview.removeEventListener('scroll', syncPreviewToEditor)
+      }
     }
-  }, [syncScroll])
+  }, [syncEditorToPreview, syncPreviewToEditor])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
