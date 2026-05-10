@@ -5,6 +5,7 @@ import { Upload, Download, Trash2, Grip, ChevronLeft, ChevronRight } from "lucid
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 interface GridImage { id: string; url: string; img: HTMLImageElement; selected?: boolean }
 
@@ -167,7 +168,27 @@ export default function ImageGrid() {
     a.click()
   }
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (images.length > 0) download()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [images, download])
+
   return (
+    <>
+      <ShortcutsModal
+        pageName="Image Grid"
+        shortcuts={[
+          { keys: ["Ctrl", "S"], description: "Download PNG" },
+          { keys: ["?"], description: "Toggle this panel" },
+        ]}
+      />
     <div className="flex h-full flex-col gap-3 p-4">
       <div className="flex items-start justify-between">
         <div>
@@ -224,12 +245,21 @@ export default function ImageGrid() {
               {images.length > 0 && <button onClick={() => setImages([])} className="text-xs text-muted-foreground hover:text-destructive">Clear All</button>}
             </div>
           </div>
-          <label className="shrink-0 flex items-center justify-center gap-2 p-3 cursor-pointer border-b border-border hover:bg-muted/30 transition-colors">
-            <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
-            <Upload className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Add images</span>
-          </label>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {images.length === 0 ? (
+            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-4 rounded-xl hover:border-primary/50 transition-colors">
+              <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
+              <Upload className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium">Click to add images</p>
+              <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
+            </label>
+          ) : (
+            <>
+              <label className="shrink-0 flex items-center justify-center gap-2 p-3 cursor-pointer border-b border-border hover:bg-muted/30 transition-colors">
+                <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
+                <Upload className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Add more images</span>
+              </label>
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {currentImages.map((img, i) => {
               const globalIndex = startIndex + i
               return (
@@ -270,7 +300,9 @@ export default function ImageGrid() {
                 </div>
               )
             })}
-          </div>
+              </div>
+            </>
+          )}
           {totalPages > 1 && (
             <div className="shrink-0 border-t border-border px-4 py-3 flex items-center justify-between">
               <button
@@ -322,5 +354,6 @@ export default function ImageGrid() {
         </div>
       </div>
     </div>
+    </>
   )
 }
