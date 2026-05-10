@@ -232,7 +232,7 @@ export default function ImageGrid() {
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — images */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-[300px] md:min-h-0">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">Images ({images.length}/{needed})</h3>
             <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ export default function ImageGrid() {
         </div>
 
         {/* Right — Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-[300px] md:min-h-0">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Preview</span>
             {totalPages > 1 && (
