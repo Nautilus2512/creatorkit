@@ -2,9 +2,6 @@
 
 
 ## v1.59.0 — May 2026
-### New Features
-- **Lossy PNG Compression** — Image Compressor now supports lossy PNG compression using color quantization (same algorithm as iloveimg). Quality slider controls colors (16-256), providing 50-80% file size reduction for PNGs.
-
 ### Accessibility Improvements
 - **Electrical Calculator** — Complete accessibility overhaul:
   - Keyboard shortcut labels on all input fields (V, I, R, P, L, C, F)
@@ -17,10 +14,11 @@
   - DEG/RAD toggle with proper radio role
   - Memory buttons with focus states and titles
   - Enhanced aria-live regions for calculator display
-  - Full input labels for all form fields
 
-### Dependencies
-- Added imagequant@0.1.2 for lossy PNG compression
+### Note
+- Losty PNG compression was removed due to performance issues on low-end devices and mobile.
+- Pure JavaScript color quantization was too slow for large images (10MB+).
+- Will revisit when a lightweight WASM solution is available.
 
 ## v1.58.0 — May 2026
 ### New Tools

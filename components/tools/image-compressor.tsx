@@ -18,7 +18,7 @@ type CompressResult = {
 }
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff,.tif"
-const FORMATS = ["jpeg", "webp", "png", "png-lossy"] as const
+const FORMATS = ["jpeg", "webp", "png"] as const
 type Format = typeof FORMATS[number]
 
 function formatBytes(bytes: number): string {
@@ -31,84 +31,11 @@ function savingPercent(original: number, compressed: number): number {
   return Math.round((1 - compressed / original) * 100)
 }
 
-function quantizeColor(r: number, g: number, b: number, factor: number): [number, number, number] {
-  const q = factor > 1 ? factor : 1
-  return [
-    Math.round(Math.round(r / q) * q),
-    Math.round(Math.round(g / q) * q),
-    Math.round(Math.round(b / q) * q)
-  ]
-}
-
-async function quantizePng(imageData: ImageData, targetColors: number): Promise<Blob> {
-  const { width, height, data } = imageData
-  const pixelCount = width * height
-  
-  const colorMap = new Map<string, number>()
-  const colorList: Array<{r: number, g: number, b: number, count: number}> = []
-  
-  for (let i = 0; i < pixelCount; i++) {
-    const idx = i * 4
-    const r = data[idx]
-    const g = data[idx + 1]
-    const b = data[idx + 2]
-    const key = `${r},${g},${b}`
-    colorMap.set(key, (colorMap.get(key) || 0) + 1)
-  }
-  
-  const sortedColors = Array.from(colorMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, targetColors)
-  
-  const palette = new Map<string, number>()
-  sortedColors.forEach(([key], idx) => palette.set(key, idx))
-  
-  const output = new Uint8ClampedArray(data.length)
-  
-  for (let i = 0; i < pixelCount; i++) {
-    const idx = i * 4
-    const r = data[idx]
-    const g = data[idx + 1]
-    const b = data[idx + 2]
-    const key = `${r},${g},${b}`
-    
-    let palIdx = palette.get(key)
-    if (palIdx === undefined) {
-      let minDist = Infinity
-      for (const [palKey, palI] of palette) {
-        const [pr, pg, pb] = palKey.split(",").map(Number)
-        const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
-        if (dist < minDist) {
-          minDist = dist
-          palIdx = palI
-        }
-      }
-    }
-    
-    const newKey = sortedColors[palIdx!][0]
-    const [nr, ng, nb] = newKey.split(",").map(Number)
-    output[idx] = nr
-    output[idx + 1] = ng
-    output[idx + 2] = nb
-    output[idx + 3] = data[idx + 3]
-  }
-  
-  const canvas = document.createElement("canvas")
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext("2d")!
-  ctx.putImageData(new ImageData(output, width, height), 0, 0)
-  
-  return new Promise((resolve) => {
-    canvas.toBlob((b) => resolve(b!), "image/png")
-  })
-}
-
 async function compressImage(file: File, format: Format, quality: number): Promise<CompressResult> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const objectUrl = URL.createObjectURL(file)
-    img.onload = async () => {
+    img.onload = () => {
       const canvas = document.createElement("canvas")
       canvas.width = img.width
       canvas.height = img.height
@@ -116,33 +43,22 @@ async function compressImage(file: File, format: Format, quality: number): Promi
       if (!ctx) { URL.revokeObjectURL(objectUrl); reject(new Error("Canvas error")); return }
       ctx.drawImage(img, 0, 0)
       URL.revokeObjectURL(objectUrl)
-      
-      let blob: Blob | null = null
-      
-      if (format === "png-lossy") {
-        const colors = Math.max(16, Math.min(256, Math.round((quality / 100) * 256)))
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        blob = await quantizePng(imageData, colors)
-      } else {
-        blob = await new Promise<Blob | null>((res) => {
-          canvas.toBlob(
-            (b) => res(b),
-            format === "jpeg" ? "image/jpeg" : format === "png" ? "image/png" : "image/webp",
-            quality / 100
-          )
-        })
-      }
-      
-      if (!blob) { reject(new Error("Compression failed")); return }
-      const ext = format === "jpeg" ? "jpg" : format.startsWith("png") ? "png" : format
-      const baseName = file.name.replace(/\.[^/.]+$/, "")
-      resolve({
-        name: `${baseName}.${ext}`,
-        originalSize: file.size,
-        compressedSize: blob.size,
-        blob,
-        url: URL.createObjectURL(blob),
-      })
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error("Compression failed")); return }
+          const ext = format === "jpeg" ? "jpg" : format
+          const baseName = file.name.replace(/\.[^/.]+$/, "")
+          resolve({
+            name: `${baseName}.${ext}`,
+            originalSize: file.size,
+            compressedSize: blob.size,
+            blob,
+            url: URL.createObjectURL(blob),
+          })
+        },
+        `image/${format}`,
+        quality / 100
+      )
     }
     img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")) }
     img.src = objectUrl
@@ -251,7 +167,7 @@ export function ImageCompressor() {
               {/* Format */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Output format</Label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {FORMATS.map(f => (
                     <button
                       key={f}
@@ -269,24 +185,13 @@ export function ImageCompressor() {
                 {format === "png" && (
                   <p className="text-xs text-muted-foreground">PNG is lossless — quality slider has no effect</p>
                 )}
-                {format === "png-lossy" && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    Lossy PNG — uses color quantization (like iloveimg) for smaller files
-                  </p>
-                )}
               </div>
 
               {/* Quality */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">
-                    {format === "png-lossy" ? "Colors" : "Quality"}
-                  </Label>
-                  <span className="text-sm font-mono font-medium tabular-nums">
-                    {format === "png-lossy" 
-                      ? `${Math.max(16, Math.min(256, Math.round((quality / 100) * 256)))} colors`
-                      : `${quality}%`}
-                  </span>
+                  <Label className="text-sm font-medium">Quality</Label>
+                  <span className="text-sm font-mono font-medium tabular-nums">{quality}%</span>
                 </div>
                 <Slider
                   min={1}
@@ -294,19 +199,11 @@ export function ImageCompressor() {
                   step={1}
                   value={[quality]}
                   onValueChange={([v]) => setQuality(v)}
+                  disabled={format === "png"}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  {format === "png-lossy" ? (
-                    <>
-                      <span>Smaller file</span>
-                      <span>More colors</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Smaller file</span>
-                      <span>Better quality</span>
-                    </>
-                  )}
+                  <span>Smaller file</span>
+                  <span>Better quality</span>
                 </div>
               </div>
             </>
