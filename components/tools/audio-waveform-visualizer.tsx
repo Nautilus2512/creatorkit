@@ -176,9 +176,18 @@ export default function AudioWaveformVisualizer() {
     if (playing) {
       audioRef.current.pause()
       setPlaying(false)
+      cancelAnimationFrame(rafRef.current)
     } else {
       audioRef.current.play()
       setPlaying(true)
+      // Start smooth animation loop
+      const animate = () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          setCurrentTime(audioRef.current.currentTime)
+          rafRef.current = requestAnimationFrame(animate)
+        }
+      }
+      rafRef.current = requestAnimationFrame(animate)
     }
   }
 
