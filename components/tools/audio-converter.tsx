@@ -294,6 +294,23 @@ const convert = async () => {
         <h2 className="text-2xl font-semibold tracking-tight">Audio Converter</h2>
         <p className="text-muted-foreground">Convert between audio formats · Powered by ffmpeg.wasm</p>
       </div>
+
+      {/* Development Warning - merged note */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
+        <div className="flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+              ⚠️ Under Development - ~25MB download required on first use
+            </p>
+            <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
+              <li>CDN loading issues may occur - use "Test mode" to simulate conversion</li>
+              <li>This tool is experimental and may not work in all environments</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
       {/* Left panel */}
       <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
@@ -337,13 +354,6 @@ const convert = async () => {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Warning about large download */}
-          <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 text-xs">
-            <p className="text-blue-700 dark:text-blue-300">
-              <strong>Note:</strong> Audio converter requires downloading ~25MB of ffmpeg.wasm files on first use. This may take 30-60 seconds depending on your internet connection.
-            </p>
           </div>
 
           {/* Conversion settings */}
@@ -411,13 +421,6 @@ const convert = async () => {
             </div>
           )}
 
-          {!ffmpegLoaded && !isLoadingFFmpeg && (
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-xs">
-              <p className="text-amber-700 dark:text-amber-300">
-                <strong>Note:</strong> Audio converter requires downloading ~25MB of WASM files on first use.
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="shrink-0 border-t border-border p-4">
@@ -472,22 +475,6 @@ const convert = async () => {
 
       {/* Right panel */}
       <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
-        {/* Development Warning - moved to top of right panel */}
-        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3 m-4 mb-0">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                ⚠️ Under Development
-              </p>
-              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
-                <li>CDN loading issues may occur</li>
-                <li>Use "Test mode" to simulate conversion</li>
-                <li>~25MB download required for real conversion</li>
-              </ul>
-            </div>
-          </div>
-        </div>
         <div className="flex-1 overflow-y-auto p-4 lg:max-h-none">
           {!result ? (
             <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-3 text-center">
