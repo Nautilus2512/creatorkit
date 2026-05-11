@@ -508,11 +508,6 @@ const convert = async () => {
         </div>
 
         <div className="shrink-0 border-t border-border p-4">
-          {file && !isConverting && !isLoadingFFmpeg && (
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              <kbd className="px-1 rounded bg-muted font-mono">Ctrl+Enter</kbd> to convert
-            </p>
-          )}
           {isLoadingFFmpeg && (
             <div className="mb-3" role="status" aria-live="polite" aria-label="Loading ffmpeg">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -556,7 +551,7 @@ const convert = async () => {
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Convert Audio</span>
+                <span>Convert Audio <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-xs">Ctrl+Enter</kbd></span>
               </>
             )}
           </Button>
@@ -606,16 +601,13 @@ const convert = async () => {
 
         {result && (
           <div className="shrink-0 border-t border-border p-4">
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              <kbd className="px-1 rounded bg-muted font-mono">Ctrl+D</kbd> to download
-            </p>
             <Button 
               className="w-full" 
               onClick={download}
               aria-label={`Download converted audio file in ${targetFormat.toUpperCase()} format`}
             >
               <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              <span>Download {targetFormat.toUpperCase()}</span>
+              <span>Download {targetFormat.toUpperCase()} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-xs">Ctrl+D</kbd></span>
             </Button>
           </div>
         )}
