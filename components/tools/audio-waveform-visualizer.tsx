@@ -96,6 +96,33 @@ export default function AudioWaveformVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef(0)
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      
+      // Global shortcuts
+      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+        e.preventDefault()
+        document.querySelector('input[type="file"]')?.click()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "e" && waveData) {
+        e.preventDefault()
+        downloadWaveform()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "s" && showSettings) {
+        e.preventDefault()
+        setShowSettings(false)
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "," && !showSettings) {
+        e.preventDefault()
+        setShowSettings(true)
+      }
+    }
+    
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [waveData, showSettings, downloadWaveform])
+
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -182,9 +209,26 @@ export default function AudioWaveformVisualizer() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Upload area */}
           {!waveData ? (
-            <label className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors min-h-[200px]">
-              <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
-              <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" />
+            <label 
+              className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors min-h-[200px] focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Upload audio file"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  document.querySelector('input[type="file"]')?.click()
+                }
+              }}
+            >
+              <input 
+                type="file" 
+                accept="audio/*" 
+                className="hidden" 
+                onChange={handleFile}
+                aria-label="Audio file input"
+              />
+              <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" aria-hidden="true" />
               <p className="text-xs font-medium text-center">{loading ? "Analyzing audio…" : "Click or drop audio file here"}</p>
               <p className="text-xs text-muted-foreground mt-1">MP3, WAV, OGG, FLAC, M4A</p>
             </label>
@@ -195,8 +239,13 @@ export default function AudioWaveformVisualizer() {
                 <p className="text-sm font-medium truncate flex-1">{filename}</p>
                 <label className="cursor-pointer">
                   <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
-                  <Button variant="ghost" size="sm" asChild>
-                    <span><Upload className="h-4 w-4 mr-1" />Change</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    asChild
+                    aria-label="Change audio file"
+                  >
+                    <span><Upload className="h-4 w-4 mr-1" aria-hidden="true" />Change <kbd className="ml-1 px-1 rounded bg-muted font-mono text-[10px]">Ctrl+O</kbd></span>
                   </Button>
                 </label>
               </div>
@@ -205,7 +254,18 @@ export default function AudioWaveformVisualizer() {
 
           {/* Settings */}
           <div className="space-y-6">
-            <h4 className="text-sm font-medium">Waveform Settings</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Waveform Settings</h4>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowSettings(!showSettings)}
+                aria-label={showSettings ? "Hide settings" : "Show settings"}
+                aria-expanded={showSettings}
+              >
+                <Settings className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
             
             <div className="space-y-4">
               <div className="space-y-3">
@@ -213,21 +273,21 @@ export default function AudioWaveformVisualizer() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setWaveStyle('bars')}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                      waveStyle === 'bars' 
-                        ? 'border-primary bg-primary text-primary-foreground' 
-                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-                    }`}
+                    className={`px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${\n                      waveStyle === 'bars' \n                        ? 'border-primary bg-primary text-primary-foreground' \n                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'\n                    }`}
+                    aria-label="Select bars style"
+                    aria-pressed={waveStyle === 'bars'}
+                    role="button"
+                    tabIndex={0}
                   >
                     Bars
                   </button>
                   <button
                     onClick={() => setWaveStyle('line')}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                      waveStyle === 'line' 
-                        ? 'border-primary bg-primary text-primary-foreground' 
-                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-                    }`}
+                    className={`px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${\n                      waveStyle === 'line' \n                        ? 'border-primary bg-primary text-primary-foreground' \n                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'\n                    }`}
+                    aria-label="Select line style"
+                    aria-pressed={waveStyle === 'line'}
+                    role="button"
+                    tabIndex={0}
                   >
                     Line
                   </button>
@@ -242,11 +302,15 @@ export default function AudioWaveformVisualizer() {
                       <button
                         key={width}
                         onClick={() => setBarWidth(width)}
-                        className={`w-12 h-10 text-sm rounded-lg border transition-colors ${
+                        className={`w-12 h-10 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                           barWidth === width 
                             ? 'border-primary bg-primary text-primary-foreground' 
                             : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
                         }`}
+                        aria-label={`Set bar width to ${width} pixels`}
+                        aria-pressed={barWidth === width}
+                        role="button"
+                        tabIndex={0}
                       >
                         {width}px
                       </button>
@@ -264,7 +328,8 @@ export default function AudioWaveformVisualizer() {
                     type="color"
                     value={waveColor}
                     onChange={(e) => setWaveColor(e.target.value)}
-                    className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                    className="w-12 h-10 rounded-lg border border-border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label="Waveform color"
                   />
                   <span className="text-sm text-muted-foreground font-mono">{waveColor}</span>
                 </div>
@@ -277,7 +342,8 @@ export default function AudioWaveformVisualizer() {
                     type="color"
                     value={backgroundColor}
                     onChange={(e) => setBackgroundColor(e.target.value)}
-                    className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                    className="w-12 h-10 rounded-lg border border-border cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label="Background color"
                   />
                   <span className="text-sm text-muted-foreground font-mono">{backgroundColor}</span>
                 </div>
@@ -305,8 +371,13 @@ export default function AudioWaveformVisualizer() {
 
               {/* Export button */}
               <div className="shrink-0">
-                <Button onClick={downloadWaveform} className="w-full">
-                  <Image className="h-4 w-4 mr-2" />Export PNG
+                <Button 
+                  onClick={downloadWaveform} 
+                  className="w-full"
+                  aria-label="Export waveform as PNG image"
+                  disabled={!waveData}
+                >
+                  <Image className="h-4 w-4 mr-2" aria-hidden="true" />Export PNG <kbd className="ml-2 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+E</kbd>
                 </Button>
               </div>
 
@@ -327,5 +398,17 @@ export default function AudioWaveformVisualizer() {
       </div>
       </div>
     </div>
+    
+    <ShortcutsModal
+      pageName="Audio Waveform Visualizer"
+      shortcuts={[
+        { keys: ["Ctrl", "O"], description: "Open audio file" },
+        { keys: ["Ctrl", "E"], description: "Export PNG (when waveform loaded)" },
+        { keys: ["Ctrl", ","], description: "Show settings" },
+        { keys: ["Ctrl", "S"], description: "Hide settings" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    </>
   )
 }
