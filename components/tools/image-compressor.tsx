@@ -31,27 +31,77 @@ function savingPercent(original: number, compressed: number): number {
   return Math.round((1 - compressed / original) * 100)
 }
 
-async function quantizePng(imageData: ImageData, colors: number): Promise<Blob> {
+function quantizeColor(r: number, g: number, b: number, factor: number): [number, number, number] {
+  const q = factor > 1 ? factor : 1
+  return [
+    Math.round(Math.round(r / q) * q),
+    Math.round(Math.round(g / q) * q),
+    Math.round(Math.round(b / q) * q)
+  ]
+}
+
+async function quantizePng(imageData: ImageData, targetColors: number): Promise<Blob> {
   const { width, height, data } = imageData
-  const rgba = new Uint8Array(width * height * 4)
+  const pixelCount = width * height
   
-  for (let i = 0; i < data.length; i++) {
-    rgba[i] = data[i]
+  const colorMap = new Map<string, number>()
+  const colorList: Array<{r: number, g: number, b: number, count: number}> = []
+  
+  for (let i = 0; i < pixelCount; i++) {
+    const idx = i * 4
+    const r = data[idx]
+    const g = data[idx + 1]
+    const b = data[idx + 2]
+    const key = `${r},${g},${b}`
+    colorMap.set(key, (colorMap.get(key) || 0) + 1)
   }
   
-  const { Imagequant } = await import("imagequant")
-  const iq = new Imagequant()
-  iq.set_max_colors(colors)
-  iq.set_quality(0, 80)
-  iq.set_speed(4)
+  const sortedColors = Array.from(colorMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, targetColors)
   
-  const img = Imagequant.new_image(rgba, width, height, 0.0)
-  const result = iq.process(img)
-  img.free()
-  iq.free()
+  const palette = new Map<string, number>()
+  sortedColors.forEach(([key], idx) => palette.set(key, idx))
   
-  const blob = new Blob([result], { type: "image/png" })
-  return blob
+  const output = new Uint8ClampedArray(data.length)
+  
+  for (let i = 0; i < pixelCount; i++) {
+    const idx = i * 4
+    const r = data[idx]
+    const g = data[idx + 1]
+    const b = data[idx + 2]
+    const key = `${r},${g},${b}`
+    
+    let palIdx = palette.get(key)
+    if (palIdx === undefined) {
+      let minDist = Infinity
+      for (const [palKey, palI] of palette) {
+        const [pr, pg, pb] = palKey.split(",").map(Number)
+        const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
+        if (dist < minDist) {
+          minDist = dist
+          palIdx = palI
+        }
+      }
+    }
+    
+    const newKey = sortedColors[palIdx!][0]
+    const [nr, ng, nb] = newKey.split(",").map(Number)
+    output[idx] = nr
+    output[idx + 1] = ng
+    output[idx + 2] = nb
+    output[idx + 3] = data[idx + 3]
+  }
+  
+  const canvas = document.createElement("canvas")
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext("2d")!
+  ctx.putImageData(new ImageData(output, width, height), 0, 0)
+  
+  return new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b!), "image/png")
+  })
 }
 
 async function compressImage(file: File, format: Format, quality: number): Promise<CompressResult> {
