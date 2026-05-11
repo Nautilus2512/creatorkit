@@ -221,9 +221,11 @@ export function AnkiCard() {
               <Label className="text-sm font-medium">Decks</Label>
               <button
                 onClick={() => setAddingDeck(v => !v)}
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                className="flex items-center gap-1 text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                aria-label="Create new deck"
+                aria-expanded={addingDeck}
               >
-                <Plus className="h-3.5 w-3.5" />New deck
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />New deck
               </button>
             </div>
 
@@ -236,8 +238,15 @@ export function AnkiCard() {
                   onChange={e => setNewDeckName(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") createDeck(); if (e.key === "Escape") setAddingDeck(false) }}
                   className="text-sm"
+                  aria-label="Enter deck name"
+                  aria-describedby="deck-name-help"
                 />
-                <Button size="sm" onClick={createDeck} disabled={!newDeckName.trim()}>Add</Button>
+                <Button 
+                  size="sm" 
+                  onClick={createDeck} 
+                  disabled={!newDeckName.trim()}
+                  aria-label="Create deck"
+                >Add</Button>
               </div>
             )}
 
@@ -251,22 +260,27 @@ export function AnkiCard() {
                     <div
                       key={d.id}
                       onClick={() => setActiveDeckId(d.id)}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors ${
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setActiveDeckId(d.id) }}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                         activeDeckId === d.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                       }`}
+                      aria-label={`Select deck: ${d.name}, ${d.cards.length} cards${due > 0 ? `, ${due} due` : ''}`}
+                      aria-pressed={activeDeckId === d.id}
                     >
-                      <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{d.name}</p>
                         <p className="text-xs text-muted-foreground">{d.cards.length} cards</p>
                       </div>
-                      {due > 0 && <Badge className="text-xs shrink-0">{due} due</Badge>}
+                      {due > 0 && <Badge className="text-xs shrink-0" aria-label={`${due} cards due for review`}>{due} due</Badge>}
                       <button
                         onClick={e => { e.stopPropagation(); deleteDeck(d.id) }}
-                        aria-label="Delete deck"
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                        aria-label={`Delete deck: ${d.name}`}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   )
@@ -351,6 +365,7 @@ export function AnkiCard() {
                 size="sm" className="flex-1"
                 onClick={startStudy}
                 disabled={dueCards.length === 0}
+                aria-label={dueCards.length > 0 ? `Study now: ${dueCards.length} cards due` : "No cards due for study"}
               >
                 Study Now {dueCards.length > 0 && `(${dueCards.length})`}
               </Button>
@@ -358,8 +373,9 @@ export function AnkiCard() {
                 variant={view === "add-card" ? "default" : "outline"}
                 size="sm" className="flex-1"
                 onClick={() => setView("add-card")}
+                aria-label="Add new card to deck"
               >
-                <Plus className="h-3.5 w-3.5 mr-1" />Add Card
+                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
               </Button>
             </div>
           )}
@@ -396,12 +412,21 @@ export function AnkiCard() {
                 <p className="text-xs text-muted-foreground mt-1">No cards due today. Come back tomorrow.</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setView("add-card")}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />Add Card
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setView("add-card")}
+                  aria-label="Add new card to deck"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
                 </Button>
                 {dueCards.length > 0 && (
-                  <Button size="sm" onClick={startStudy}>
-                    <RotateCcw className="h-3.5 w-3.5 mr-1" />Study Again
+                  <Button 
+                    size="sm" 
+                    onClick={startStudy}
+                    aria-label="Study again"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Study Again
                   </Button>
                 )}
               </div>
@@ -418,30 +443,45 @@ export function AnkiCard() {
                 </p>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Front (Question)</Label>
+                <Label className="text-sm font-medium" htmlFor="front-input">Front (Question)</Label>
                 <Textarea
+                  id="front-input"
                   placeholder="What is the capital of France?"
                   value={front}
                   onChange={e => setFront(e.target.value)}
                   className="resize-none" rows={3}
+                  aria-label="Enter card front side (question)"
+                  aria-describedby="front-help"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Back (Answer)</Label>
+                <Label className="text-sm font-medium" htmlFor="back-input">Back (Answer)</Label>
                 <Textarea
+                  id="back-input"
                   placeholder="Paris"
                   value={back}
                   onChange={e => setBack(e.target.value)}
                   className="resize-none" rows={3}
+                  aria-label="Enter card back side (answer)"
+                  aria-describedby="back-help"
                 />
               </div>
               <div className="flex gap-2">
-                <Button onClick={addCard} disabled={!front.trim() || !back.trim()} className="flex-1">
-                  <Plus className="h-4 w-4 mr-2" />Add Card
-                  <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+Enter</kbd>
+                <Button 
+                  onClick={addCard} 
+                  disabled={!front.trim() || !back.trim()} 
+                  className="flex-1"
+                  aria-label={front.trim() && back.trim() ? "Add card to deck" : "Please fill in both front and back fields"}
+                >
+                  <Plus className="h-4 w-4 mr-2" aria-hidden="true" />Add Card
+                  <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>
                 </Button>
                 {dueCards.length > 0 && (
-                  <Button variant="outline" onClick={startStudy}>Study</Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={startStudy}
+                    aria-label="Start studying due cards"
+                  >Study</Button>
                 )}
               </div>
 
@@ -456,10 +496,10 @@ export function AnkiCard() {
                       </div>
                       <button
                         onClick={() => deleteCard(c.id)}
-                        aria-label="Delete card"
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                        aria-label={`Delete card: ${c.front}`}
+                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -487,9 +527,13 @@ export function AnkiCard() {
                 </div>
 
                 {!isFlipped ? (
-                  <Button className="w-full max-w-xs" onClick={() => setIsFlipped(true)}>
+                  <Button 
+                    className="w-full max-w-xs" 
+                    onClick={() => setIsFlipped(true)}
+                    aria-label="Show answer for this card"
+                  >
                     Show Answer
-                    <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Space</kbd>
+                    <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Space</kbd>
                   </Button>
                 ) : (
                   <div className="w-full space-y-2">
@@ -504,11 +548,12 @@ export function AnkiCard() {
                         <button
                           key={label}
                           onClick={() => rateCard(quality)}
-                          className={`flex flex-col items-center gap-0.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${color}`}
+                          className={`flex flex-col items-center gap-0.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${color}`}
+                          aria-label={`Rate card as ${label}: ${nextInterval(currentCard, quality)} interval`}
                         >
                           <span>{label}</span>
                           <span className="text-[10px] opacity-70">{nextInterval(currentCard, quality)}</span>
-                          <kbd className="text-[9px] opacity-50">[{key}]</kbd>
+                          <kbd className="text-[9px] opacity-50" aria-hidden="true">[{key}]</kbd>
                         </button>
                       ))}
                     </div>
