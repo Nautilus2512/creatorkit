@@ -182,6 +182,33 @@ export function AnkiCard() {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      
+      // Global shortcuts
+      if ((e.ctrlKey || e.metaKey) && e.key === "n" && !addingDeck) {
+        e.preventDefault()
+        setAddingDeck(true)
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "a" && activeDeck && view !== "add-card") {
+        e.preventDefault()
+        setView("add-card")
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "s" && activeDeck && dueCards.length > 0 && view !== "study") {
+        e.preventDefault()
+        startStudy()
+        return
+      }
+      if (e.key === "Escape") {
+        if (addingDeck) {
+          e.preventDefault()
+          setAddingDeck(false)
+          setNewDeckName("")
+        }
+        return
+      }
+      
+      // Study mode shortcuts
       if (view === "study") {
         if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!isFlipped) setIsFlipped(true) }
         if (isFlipped) {
@@ -198,7 +225,7 @@ export function AnkiCard() {
     window.addEventListener("keydown", h)
     window.addEventListener("keydown", addHandler)
     return () => { window.removeEventListener("keydown", h); window.removeEventListener("keydown", addHandler) }
-  }, [view, isFlipped, rateCard, addCard])
+  }, [view, isFlipped, rateCard, addCard, addingDeck, activeDeck, dueCards, startStudy])
 
   const currentCard = queue[currentIdx] ?? null
   if (!mounted) return null
@@ -225,7 +252,7 @@ export function AnkiCard() {
                 aria-label="Create new deck"
                 aria-expanded={addingDeck}
               >
-                <Plus className="h-3.5 w-3.5" aria-hidden="true" />New deck
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />New deck <kbd className="ml-1 px-1 rounded bg-muted font-mono text-[10px]">Ctrl+N</kbd>
               </button>
             </div>
 
@@ -246,7 +273,7 @@ export function AnkiCard() {
                   onClick={createDeck} 
                   disabled={!newDeckName.trim()}
                   aria-label="Create deck"
-                >Add</Button>
+                >Add <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Enter</kbd></Button>
               </div>
             )}
 
@@ -367,7 +394,7 @@ export function AnkiCard() {
                 disabled={dueCards.length === 0}
                 aria-label={dueCards.length > 0 ? `Study now: ${dueCards.length} cards due` : "No cards due for study"}
               >
-                Study Now {dueCards.length > 0 && `(${dueCards.length})`}
+                Study Now {dueCards.length > 0 && `(${dueCards.length})`} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd>
               </Button>
               <Button
                 variant={view === "add-card" ? "default" : "outline"}
@@ -375,7 +402,7 @@ export function AnkiCard() {
                 onClick={() => setView("add-card")}
                 aria-label="Add new card to deck"
               >
-                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
+                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+A</kbd>
               </Button>
             </div>
           )}
@@ -418,7 +445,7 @@ export function AnkiCard() {
                   onClick={() => setView("add-card")}
                   aria-label="Add new card to deck"
                 >
-                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
+                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+A</kbd>
                 </Button>
                 {dueCards.length > 0 && (
                   <Button 
@@ -426,7 +453,7 @@ export function AnkiCard() {
                     onClick={startStudy}
                     aria-label="Study again"
                   >
-                    <RotateCcw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Study Again
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Study Again <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd>
                   </Button>
                 )}
               </div>
@@ -481,7 +508,7 @@ export function AnkiCard() {
                     variant="outline" 
                     onClick={startStudy}
                     aria-label="Start studying due cards"
-                  >Study</Button>
+                  >Study <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd></Button>
                 )}
               </div>
 
@@ -571,12 +598,17 @@ export function AnkiCard() {
     <ShortcutsModal
       pageName="Anki Flashcards"
       shortcuts={[
+        { keys: ["Ctrl", "N"], description: "Create new deck" },
+        { keys: ["Ctrl", "A"], description: "Add card to deck" },
+        { keys: ["Ctrl", "S"], description: "Start studying" },
+        { keys: ["Ctrl", "Enter"], description: "Add card (in Add Card view)" },
         { keys: ["Space"], description: "Flip card / Show answer" },
         { keys: ["1"], description: "Rate: Again" },
         { keys: ["2"], description: "Rate: Hard" },
         { keys: ["3"], description: "Rate: Good" },
         { keys: ["4"], description: "Rate: Easy" },
-        { keys: ["Ctrl", "Enter"], description: "Add card (in Add Card view)" },
+        { keys: ["Enter"], description: "Create deck (when typing name)" },
+        { keys: ["Escape"], description: "Cancel deck creation" },
         { keys: ["?"], description: "Toggle this panel" },
       ]}
     />
