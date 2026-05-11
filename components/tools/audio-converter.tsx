@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download, Music, AlertCircle, X, FileAudio, Settings, Play, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -279,6 +279,59 @@ const convert = async () => {
     a.click()
   }
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+O - Upload file (trigger file input)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+        e.preventDefault()
+        inputRef.current?.click()
+      }
+      // Ctrl+Enter - Convert
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault()
+        if (file && !isConverting && !isLoadingFFmpeg) {
+          convert()
+        }
+      }
+      // Ctrl+D - Download (when result available)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault()
+        if (result) {
+          download()
+        }
+      }
+      // Ctrl+T - Toggle test mode
+      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+        e.preventDefault()
+        setTestMode(prev => !prev)
+      }
+      // Number keys 1-8 for format selection (when not typing in an input)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        const activeElement = document.activeElement
+        if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
+          const num = parseInt(e.key)
+          if (num >= 1 && num <= FORMATS.length) {
+            e.preventDefault()
+            setTargetFormat(FORMATS[num - 1].value)
+          }
+          // Q key for quality selection cycle
+          if (e.key === 'q' || e.key === 'Q') {
+            e.preventDefault()
+            setQuality(prev => {
+              if (prev === 'high') return 'medium'
+              if (prev === 'medium') return 'low'
+              return 'high'
+            })
+          }
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [file, isConverting, isLoadingFFmpeg, result, convert])
+
   return (
     <>
     <ShortcutsModal
@@ -286,6 +339,13 @@ const convert = async () => {
       shortcuts={[
         { keys: ["Ctrl", "Enter"], description: "Convert audio" },
         { keys: ["Ctrl", "O"], description: "Upload file" },
+        { keys: ["Ctrl", "D"], description: "Download converted file" },
+        { keys: ["Ctrl", "T"], description: "Toggle test mode" },
+        { keys: ["1"], description: "Select MP3 format" },
+        { keys: ["2"], description: "Select WAV format" },
+        { keys: ["3"], description: "Select OGG format" },
+        { keys: ["4"], description: "Select FLAC format" },
+        { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
         { keys: ["?"], description: "Toggle this panel" },
       ]}
     />
@@ -318,7 +378,10 @@ const convert = async () => {
 
           {/* File upload */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Audio File</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Audio File</Label>
+              <span className="text-xs text-muted-foreground"><kbd className="px-1 rounded bg-muted font-mono">Ctrl+O</kbd> to upload</span>
+            </div>
             <div
               onClick={() => inputRef.current?.click()}
               className="relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors"
@@ -363,9 +426,12 @@ const convert = async () => {
           {/* Conversion settings */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium" id="format-label">Target Format</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium" id="format-label">Target Format</Label>
+                <span className="text-xs text-muted-foreground">Press 1-8 to select</span>
+              </div>
               <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-label">
-                {FORMATS.map((fmt) => (
+                {FORMATS.map((fmt, index) => (
                   <button
                     key={fmt.value}
                     onClick={() => setTargetFormat(fmt.value)}
@@ -378,7 +444,10 @@ const convert = async () => {
                     aria-checked={targetFormat === fmt.value}
                     aria-label={`${fmt.label} - ${fmt.desc}`}
                   >
-                    <div className="font-medium text-sm">{fmt.label}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{fmt.label}</span>
+                      <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">{index + 1}</kbd>
+                    </div>
                     <div className="text-xs text-muted-foreground">{fmt.desc}</div>
                   </button>
                 ))}
@@ -394,12 +463,15 @@ const convert = async () => {
                   className="rounded border-border"
                   aria-label="Enable test mode to skip ffmpeg loading"
                 />
-                <span className="text-xs">Test mode (skip ffmpeg loading)</span>
+                <span className="text-xs">Test mode <kbd className="px-1 rounded bg-muted font-mono text-[10px]">Ctrl+T</kbd></span>
               </label>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium" id="quality-label">Quality</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium" id="quality-label">Quality</Label>
+                <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">Q</kbd> to cycle</span>
+              </div>
               <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-label">
                 {[
                   { value: "high", label: "High", desc: "320kbps / Best" },
@@ -436,6 +508,11 @@ const convert = async () => {
         </div>
 
         <div className="shrink-0 border-t border-border p-4">
+          {file && !isConverting && !isLoadingFFmpeg && (
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              <kbd className="px-1 rounded bg-muted font-mono">Ctrl+Enter</kbd> to convert
+            </p>
+          )}
           {isLoadingFFmpeg && (
             <div className="mb-3" role="status" aria-live="polite" aria-label="Loading ffmpeg">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -529,6 +606,9 @@ const convert = async () => {
 
         {result && (
           <div className="shrink-0 border-t border-border p-4">
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              <kbd className="px-1 rounded bg-muted font-mono">Ctrl+D</kbd> to download
+            </p>
             <Button 
               className="w-full" 
               onClick={download}
