@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, Play, Pause, Download, Settings, Image } from "lucide-react"
+import { Upload, Download, Settings, Image } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 function drawWaveform(canvas: HTMLCanvasElement, data: Float32Array, playPct = 0, options: {
@@ -87,8 +87,6 @@ export default function AudioWaveformVisualizer() {
   const [filename, setFilename] = useState("")
   const [waveData, setWaveData] = useState<Float32Array | null>(null)
   const [duration, setDuration] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [playing, setPlaying] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [waveColor, setWaveColor] = useState("#6366f1")
@@ -96,7 +94,6 @@ export default function AudioWaveformVisualizer() {
   const [waveStyle, setWaveStyle] = useState<'bars' | 'line'>('bars')
   const [barWidth, setBarWidth] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   const rafRef = useRef(0)
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,9 +101,6 @@ export default function AudioWaveformVisualizer() {
     if (!file) return
     setLoading(true)
     setWaveData(null)
-    setPlaying(false)
-    audioRef.current?.pause()
-    setCurrentTime(0)
 
     const url = URL.createObjectURL(file)
     setAudioUrl(url)
@@ -137,115 +131,15 @@ export default function AudioWaveformVisualizer() {
   useEffect(() => {
     if (!waveData || !canvasRef.current) return
     const canvas = canvasRef.current
-    const pct = duration > 0 ? currentTime / duration : 0
-    drawWaveform(canvas, waveData, pct, {
+    drawWaveform(canvas, waveData, 0, {
       color: waveColor,
       backgroundColor,
       style: waveStyle,
       barWidth
     })
-  }, [waveData, currentTime, duration, waveColor, backgroundColor, waveStyle, barWidth])
+  }, [waveData, waveColor, backgroundColor, waveStyle, barWidth])
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas || !waveData || !duration) return
 
-    const onClick = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      const pct = (e.clientX - rect.left) / rect.width
-      const t = pct * duration
-      setCurrentTime(t)
-      if (audioRef.current) audioRef.current.currentTime = t
-    }
-    canvas.addEventListener("click", onClick)
-    return () => canvas.removeEventListener("click", onClick)
-  }, [waveData, duration])
-
-  const togglePlay = () => {
-    if (!audioUrl) return
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audioUrl)
-      audioRef.current.ontimeupdate = () => {
-        setCurrentTime(audioRef.current!.currentTime)
-      }
-      audioRef.current.onended = () => {
-        setPlaying(false)
-        cancelAnimationFrame(rafRef.current)
-      }
-      audioRef.current.onerror = (e) => {
-        const audio = audioRef.current!
-        const errorCode = audio.error?.code
-        const errorMessage = audio.error?.message
-        
-        console.error('Audio error:', {
-          code: errorCode,
-          message: errorMessage,
-          networkState: audio.networkState,
-          readyState: audio.readyState,
-          currentTime: audio.currentTime,
-          duration: audio.duration
-        })
-        
-        setPlaying(false)
-        cancelAnimationFrame(rafRef.current)
-        
-        // Show user-friendly error message based on error code
-        let userMessage = 'Audio playback failed. '
-        if (errorCode) {
-          switch (errorCode) {
-            case 1: // MEDIA_ERR_ABORTED
-              userMessage += 'The audio playback was aborted.'
-              break
-            case 2: // MEDIA_ERR_NETWORK
-              userMessage += 'A network error occurred while loading the audio.'
-              break
-            case 3: // MEDIA_ERR_DECODE
-              userMessage += 'The audio file could not be decoded. The file may be corrupted or in an unsupported format.'
-              break
-            case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
-              userMessage += 'The audio format is not supported by your browser.'
-              break
-            default:
-              userMessage += 'An unknown error occurred.'
-          }
-        } else {
-          userMessage += 'This might be due to an unsupported audio format or corrupted file. Please try a different file.'
-        }
-        
-        alert(userMessage)
-      }
-    }
-    if (playing) {
-      audioRef.current.pause()
-      setPlaying(false)
-      cancelAnimationFrame(rafRef.current)
-    } else {
-      // Check if audio can be played before attempting
-      audioRef.current.play().catch(error => {
-        console.error('Playback failed:', error)
-        setPlaying(false)
-        if (error.name === 'NotSupportedError') {
-          alert('This audio format is not supported in your browser. Please try a different format (MP3, WAV, OGG, or M4A).')
-        } else if (error.name === 'NotAllowedError') {
-          alert('Audio playback was blocked by the browser. Please allow audio playback and try again.')
-        } else {
-          alert('Audio playback failed: ' + error.message)
-        }
-      }).then(() => {
-        if (audioRef.current && !audioRef.current.paused) {
-          setPlaying(true)
-          // Start smooth animation loop
-          const animate = () => {
-            if (audioRef.current && !audioRef.current.paused) {
-              setCurrentTime(audioRef.current.currentTime)
-              rafRef.current = requestAnimationFrame(animate)
-            }
-          }
-          rafRef.current = requestAnimationFrame(animate)
-        }
-      })
-    }
-  }
 
   const downloadWaveform = () => {
     if (!waveData || !canvasRef.current) return
@@ -276,13 +170,6 @@ export default function AudioWaveformVisualizer() {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Audio Waveform Visualizer</h2>
           <p className="text-muted-foreground">Visualize audio waveforms and export high-quality images.</p>
-        </div>
-        <div className="flex gap-2">
-          {audioUrl && (
-            <Button variant="outline" size="sm" onClick={downloadWaveform}>
-              <Image className="h-4 w-4 mr-1" />Export PNG
-            </Button>
-          )}
         </div>
       </div>
 
@@ -412,30 +299,18 @@ export default function AudioWaveformVisualizer() {
               <div className="flex-1 flex flex-col gap-2 min-h-[200px]">
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-full rounded-xl border border-border bg-muted/10 cursor-pointer"
+                  className="w-full h-full rounded-xl border border-border bg-muted/10"
                 />
               </div>
 
-              {/* Controls */}
-              <div className="shrink-0 flex items-center gap-4">
-                <Button variant="outline" size="sm" onClick={togglePlay} className="w-10 h-10 p-0">
-                  {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {/* Export button */}
+              <div className="shrink-0">
+                <Button onClick={downloadWaveform} className="w-full">
+                  <Image className="h-4 w-4 mr-2" />Export PNG
                 </Button>
-                <span className="text-sm font-mono tabular-nums text-muted-foreground">
-                  {fmtTime(currentTime)} / {fmtTime(duration)}
-                </span>
-                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden cursor-pointer"
-                  onClick={(e) => {
-                    const pct = e.nativeEvent.offsetX / e.currentTarget.offsetWidth
-                    const t = pct * duration
-                    setCurrentTime(t)
-                    if (audioRef.current) audioRef.current.currentTime = t
-                  }}>
-                  <div className="h-full bg-primary rounded-full transition-none" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
-                </div>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center">Click anywhere on the waveform to seek</p>
+              <p className="text-xs text-muted-foreground text-center">High-quality waveform export</p>
             </div>
           ) : (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
