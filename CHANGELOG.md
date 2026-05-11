@@ -1,6 +1,27 @@
 # CreatorKit Changelog
 
 
+## v1.59.0 — May 2026
+### New Features
+- **Lossy PNG Compression** — Image Compressor now supports lossy PNG compression using color quantization (same algorithm as iloveimg). Quality slider controls colors (16-256), providing 50-80% file size reduction for PNGs.
+
+### Accessibility Improvements
+- **Electrical Calculator** — Complete accessibility overhaul:
+  - Keyboard shortcut labels on all input fields (V, I, R, P, L, C, F)
+  - Number shortcuts on frequency presets and circuit type buttons
+  - Tab navigation hint and enhanced aria-labels
+  - Filter/resizer shortcuts with "press X to switch" titles
+- **Engineering Calculator** — Complete accessibility overhaul:
+  - Keyboard shortcuts on calculator buttons (S, C, T, P, E, Enter, Escape)
+  - 1-4 keys to switch between Graph/Calculus/Constants/History tabs
+  - DEG/RAD toggle with proper radio role
+  - Memory buttons with focus states and titles
+  - Enhanced aria-live regions for calculator display
+  - Full input labels for all form fields
+
+### Dependencies
+- Added imagequant@0.1.2 for lossy PNG compression
+
 ## v1.58.0 — May 2026
 ### New Tools
 - **Electrical Calculator** — Ohm's Law (auto-solve any 2 of V/I/R/P), AC reactance (XL/XC/Z/PF), single-phase power, three-phase Star/Delta, resistor color codes (4/5-band), and RC/RL time constants. IEC/IEEE standards with SI units.

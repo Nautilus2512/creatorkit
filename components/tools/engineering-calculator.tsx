@@ -23,29 +23,29 @@ const CONSTANTS: Record<string, { value: number; label: string; desc: string }> 
   e_c:  { value: 1.602e-19,  label: "e",  desc: "Elementary charge (C)"  },
 }
 
-type BtnDef = { label: string; action: string; variant?: "primary" | "fn" | "op" | "num" | "eq" }
+type BtnDef = { label: string; action: string; variant?: "primary" | "fn" | "op" | "num" | "eq"; shortcut?: string }
 
 const BUTTONS: BtnDef[] = [
-  { label: "sin",  action: "sin(",      variant: "fn" },
-  { label: "cos",  action: "cos(",      variant: "fn" },
-  { label: "tan",  action: "tan(",      variant: "fn" },
-  { label: "asin", action: "asin(",     variant: "fn" },
-  { label: "acos", action: "acos(",     variant: "fn" },
-  { label: "atan", action: "atan(",     variant: "fn" },
-  { label: "ln",   action: "log(",      variant: "fn" },
-  { label: "log",  action: "log10(",    variant: "fn" },
-  { label: "√x",   action: "sqrt(",     variant: "fn" },
+  { label: "sin",  action: "sin(",      variant: "fn", shortcut: "S" },
+  { label: "cos",  action: "cos(",      variant: "fn", shortcut: "C" },
+  { label: "tan",  action: "tan(",      variant: "fn", shortcut: "T" },
+  { label: "asin", action: "asin(",     variant: "fn", shortcut:"A" },
+  { label: "acos", action: "acos(",     variant: "fn", shortcut:"O" },
+  { label: "atan", action: "atan(",     variant: "fn", shortcut:"N" },
+  { label: "ln",   action: "log(",      variant: "fn", shortcut: "L" },
+  { label: "log",  action: "log10(",    variant: "fn", shortcut: "G" },
+  { label: "√x",   action: "sqrt(",     variant: "fn", shortcut: "Q" },
   { label: "x!",   action: "factorial(",variant: "fn" },
   { label: "x²",   action: "^2",        variant: "fn" },
   { label: "xⁿ",   action: "^",         variant: "op" },
-  { label: "π",    action: "pi",        variant: "fn" },
-  { label: "eˣ",   action: "exp(",      variant: "fn" },
+  { label: "π",    action: "pi",        variant: "fn", shortcut: "P" },
+  { label: "eˣ",   action: "exp(",      variant: "fn", shortcut: "E" },
   { label: "ANS",  action: "ANS",       variant: "fn" },
   { label: "(",    action: "(",         variant: "op" },
   { label: ")",    action: ")",         variant: "op" },
   { label: "%",    action: " mod ",     variant: "op" },
-  { label: "C",    action: "__clear",   variant: "primary" },
-  { label: "⌫",    action: "__back",    variant: "primary" },
+  { label: "C",    action: "__clear",   variant: "primary", shortcut: "Escape" },
+  { label: "⌫",    action: "__back",    variant: "primary", shortcut: "Backspace" },
   { label: "7", action: "7", variant: "num" },
   { label: "8", action: "8", variant: "num" },
   { label: "9", action: "9", variant: "num" },
@@ -65,7 +65,7 @@ const BUTTONS: BtnDef[] = [
   { label: ".",  action: ".",        variant: "num" },
   { label: "EE", action: "e",        variant: "fn"  },
   { label: "1/x",action: "1/(",      variant: "fn"  },
-  { label: "=",  action: "__eval",   variant: "eq"  },
+  { label: "=",  action: "__eval",   variant: "eq", shortcut: "Enter" },
 ]
 
 function getConstantScope() {
@@ -356,7 +356,7 @@ export default function EngineeringCalculator() {
   }, [expr, evalExpr])
 
   const btnClass = (v: BtnDef["variant"]) => {
-    const base = "h-10 w-full rounded-lg text-sm font-medium transition-all active:scale-95 select-none border"
+    const base = "h-10 w-full rounded-lg text-sm font-medium transition-all active:scale-95 select-none border relative"
     if (v === "eq")      return `${base} bg-primary text-primary-foreground border-primary hover:opacity-90`
     if (v === "primary") return `${base} bg-destructive/80 text-white border-destructive/80 hover:bg-destructive`
     if (v === "fn")      return `${base} bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900/40`
@@ -364,11 +364,66 @@ export default function EngineeringCalculator() {
     return `${base} bg-card border-border hover:bg-muted/50`
   }
 
-  const TABS: { id: RightTab; label: string }[] = [
-    { id: "graph",     label: "Graph"     },
-    { id: "calculus",  label: "Calculus"  },
-    { id: "constants", label: "Constants" },
-    { id: "history",   label: "History"   },
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return
+      
+      const key = e.key.toUpperCase()
+      const shortcutMap: Record<string, string> = {
+        "S": "sin(", "C": "cos(", "T": "tan(", "A": "asin(", "O": "acos(", "N": "atan(",
+        "L": "log(", "G": "log10(", "Q": "sqrt(", "P": "pi", "E": "exp(",
+        "ENTER": "__eval", "ESCAPE": "__clear", "BACKSPACE": "__back",
+      }
+      
+      if (shortcutMap[key]) {
+        e.preventDefault()
+        handleBtn(shortcutMap[key])
+        announceToScreenReader(`${key} pressed`)
+      }
+      
+      if (/^[0-9.+\-*/()%]$/.test(e.key)) {
+        e.preventDefault()
+        handleBtn(e.key)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [handleBtn])
+
+  // Accessibility helper
+  const announceToScreenReader = (message: string) => {
+    const el = document.createElement('div')
+    el.setAttribute('role', 'status')
+    el.setAttribute('aria-live', 'polite')
+    el.className = 'sr-only'
+    el.textContent = message
+    document.body.appendChild(el)
+    setTimeout(() => document.body.removeChild(el), 1000)
+  }
+
+  // Tab switching with keyboard
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      
+      if (/^[1-4]$/.test(e.key)) {
+        e.preventDefault()
+        const idx = parseInt(e.key) - 1
+        setRightTab(TABS[idx].id)
+        announceToScreenReader(`Switched to ${TABS[idx].label}`)
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  const TABS: { id: RightTab; label: string; shortcut: string }[] = [
+    { id: "graph",      label: "Graph",     shortcut: "1" },
+    { id: "calculus",   label: "Calculus",  shortcut: "2" },
+    { id: "constants", label: "Constants", shortcut: "3" },
+    { id: "history",    label: "History",   shortcut: "4" },
   ]
 
   return (
@@ -386,38 +441,58 @@ export default function EngineeringCalculator() {
         {/* ── Left: Calculator ── */}
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
           {/* Display */}
-          <div className="shrink-0 p-4 bg-muted/20 border-b border-border">
+          <div className="shrink-0 p-4 bg-muted/20 border-b border-border" role="region" aria-label="Calculator display">
             <div className="flex items-center justify-between mb-2">
               <button
                 onClick={() => setIsDeg(d => !d)}
-                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                   isDeg ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
                 }`}
+                role="radio"
+                aria-checked={isDeg}
+                aria-label={isDeg ? "Degree mode" : "Radian mode"}
+                title={isDeg ? "Switch to RAD" : "Switch to DEG"}
               >
-                {isDeg ? "DEG" : "RAD"}
+                {isDeg ? "DEG" : "RAD"}<kbd className="ml-1.5 text-[9px] opacity-50" aria-hidden="true">D</kbd>
               </button>
-              <div className="flex gap-1">
+              <div className="flex gap-1" role="group" aria-label="Memory controls">
                 <button onClick={() => setMem(m => m + (parseFloat(display) || 0))}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground">M+</button>
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  title="Memory Add (M+)">M+</button>
                 <button onClick={() => setExpr(e => e + mem.toString())}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground">MR</button>
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  title="Memory Recall (MR)">MR</button>
                 <button onClick={() => setMem(0)}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground">MC</button>
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  title="Memory Clear (MC)">MC</button>
               </div>
             </div>
-            <div className="text-right font-mono text-sm text-muted-foreground truncate min-h-[1.25rem]">{expr || " "}</div>
-            <div className={`text-right font-mono text-2xl font-semibold mt-1 ${error ? "text-destructive" : "text-foreground"}`}>
+            <div className="text-right font-mono text-sm text-muted-foreground truncate min-h-[1.25rem]" aria-live="polite" aria-atomic="true">{expr || " "}</div>
+            <div className={`text-right font-mono text-2xl font-semibold mt-1 ${error ? "text-destructive" : "text-foreground"}`} role="status" aria-live="polite">
               {display}
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="flex-1 overflow-y-auto p-3">
+          <div className="flex-1 overflow-y-auto p-3" role="group" aria-label="Calculator keypad">
             <div className="grid grid-cols-5 gap-1.5">
               {BUTTONS.map((btn, i) => (
-                <button key={i} onClick={() => handleBtn(btn.action)} disabled={!ready}
-                  className={btnClass(btn.variant)}>
-                  {btn.label === "⌫" ? <Delete className="h-4 w-4 mx-auto" /> : btn.label}
+                <button 
+                  key={i} 
+                  onClick={() => handleBtn(btn.action)} 
+                  disabled={!ready}
+                  className={btnClass(btn.variant)}
+                  aria-label={btn.label}
+                  title={btn.shortcut ? `Shortcut: ${btn.shortcut}` : undefined}
+                >
+                  <span className="relative inline-flex items-center justify-center w-full h-full">
+                    {btn.label === "⌫" ? <Delete className="h-4 w-4 mx-auto" /> : btn.label}
+                    {btn.shortcut && (
+                      <kbd className="absolute -bottom-0.5 -right-0.5 text-[7px] opacity-40 font-mono" aria-hidden="true">
+                        {btn.shortcut}
+                      </kbd>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
@@ -428,51 +503,61 @@ export default function EngineeringCalculator() {
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0">
 
           {/* Tab bar */}
-          <div className="flex shrink-0 border-b border-border">
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setRightTab(t.id)}
-                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+          <div className="flex shrink-0 border-b border-border" role="tablist" aria-label="Right panel sections">
+            {TABS.map((t, idx) => (
+              <button 
+                key={t.id} 
+                onClick={() => setRightTab(t.id)}
+                className={`flex-1 py-2.5 text-xs font-medium transition-colors relative ${
                   rightTab === t.id
                     ? "text-foreground border-b-2 border-primary bg-muted/30"
                     : "text-muted-foreground hover:text-foreground"
-                }`}>
+                }`}
+                role="tab"
+                aria-selected={rightTab === t.id}
+                aria-label={`${t.label} (press ${t.shortcut})`}
+                title={`Press ${t.shortcut} to switch`}
+              >
                 {t.label}
+                <kbd className="ml-1 text-[9px] opacity-50" aria-hidden="true">{t.shortcut}</kbd>
               </button>
             ))}
           </div>
 
           {/* ── Graph tab ── */}
           {rightTab === "graph" && (
-            <div className="flex flex-col flex-1 min-h-0 p-3 gap-2">
+            <div className="flex flex-col flex-1 min-h-0 p-3 gap-2" role="region" aria-label="Function Grapher">
               <div className="flex gap-2 items-end shrink-0">
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                  <label htmlFor="graph-fn" className="text-xs text-muted-foreground block mb-1">f(x) =</label>
                   <Input
+                    id="graph-fn"
                     value={graphFn}
                     onChange={e => setGraphFn(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && drawGraph()}
                     className="font-mono text-sm h-8"
                     placeholder="sin(x)"
+                    aria-label="Function to graph"
                   />
                 </div>
                 <Button size="sm" onClick={drawGraph} disabled={!ready} className="h-8 shrink-0">Plot</Button>
               </div>
               <div className="flex gap-2 shrink-0">
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">x min</label>
-                  <Input value={graphXMin} onChange={e => setGraphXMin(e.target.value)} className="h-8 text-sm font-mono" />
+                  <label htmlFor="graph-xmin" className="text-xs text-muted-foreground block mb-1">x min</label>
+                  <Input id="graph-xmin" value={graphXMin} onChange={e => setGraphXMin(e.target.value)} className="h-8 text-sm font-mono" aria-label="X minimum value" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">x max</label>
-                  <Input value={graphXMax} onChange={e => setGraphXMax(e.target.value)} className="h-8 text-sm font-mono" />
+                  <label htmlFor="graph-xmax" className="text-xs text-muted-foreground block mb-1">x max</label>
+                  <Input id="graph-xmax" value={graphXMax} onChange={e => setGraphXMax(e.target.value)} className="h-8 text-sm font-mono" aria-label="X maximum value" />
                 </div>
               </div>
-              {graphError && <p className="text-xs text-destructive shrink-0">{graphError}</p>}
-              <div ref={graphBoxRef} className="flex-1 min-h-0 rounded-lg overflow-hidden">
-                <canvas ref={canvasRef} />
+              {graphError && <p className="text-xs text-destructive shrink-0" role="alert">{graphError}</p>}
+              <div ref={graphBoxRef} className="flex-1 min-h-0 rounded-lg overflow-hidden" role="img" aria-label="Function graph visualization">
+                <canvas ref={canvasRef} aria-label={`Graph of ${graphFn}`} />
               </div>
               <p className="text-xs text-muted-foreground shrink-0 text-center">
-                Use <code className="bg-muted px-1 rounded">x</code> as variable · e.g.{" "}
+                Use <code className="bg-muted px-1 rounded" aria-label="variable x">x</code> as variable · e.g.{" "}
                 <code className="bg-muted px-1 rounded">x^2 - 3*x + 2</code>
               </p>
             </div>
@@ -480,38 +565,38 @@ export default function EngineeringCalculator() {
 
           {/* ── Calculus tab ── */}
           {rightTab === "calculus" && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            <div className="flex-1 overflow-y-auto p-4 space-y-5" role="region" aria-label="Calculus tools">
 
               {/* Definite Integral */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <span className="text-lg leading-none font-normal">∫</span>
+                  <span className="text-lg leading-none font-normal" aria-hidden="true">∫</span>
                   Definite Integral
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
-                    <Input value={intFn} onChange={e => setIntFn(e.target.value)}
-                      className="font-mono text-sm h-8" placeholder="sin(x)" />
+                    <label htmlFor="int-fn" className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                    <Input id="int-fn" value={intFn} onChange={e => setIntFn(e.target.value)}
+                      className="font-mono text-sm h-8" placeholder="sin(x)" aria-label="Integrand function" />
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <label className="text-xs text-muted-foreground block mb-1">Lower bound (a)</label>
-                      <Input value={intA} onChange={e => setIntA(e.target.value)} className="h-8 text-sm font-mono" />
+                      <label htmlFor="int-a" className="text-xs text-muted-foreground block mb-1">Lower bound (a)</label>
+                      <Input id="int-a" value={intA} onChange={e => setIntA(e.target.value)} className="h-8 text-sm font-mono" aria-label="Lower bound" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs text-muted-foreground block mb-1">Upper bound (b)</label>
-                      <Input value={intB} onChange={e => setIntB(e.target.value)} className="h-8 text-sm font-mono" />
+                      <label htmlFor="int-b" className="text-xs text-muted-foreground block mb-1">Upper bound (b)</label>
+                      <Input id="int-b" value={intB} onChange={e => setIntB(e.target.value)} className="h-8 text-sm font-mono" aria-label="Upper bound" />
                     </div>
                   </div>
                   <Button size="sm" onClick={computeIntegral} disabled={!ready} className="w-full h-8">
                     Compute ∫ f(x) dx
                   </Button>
-                  {intError && <p className="text-xs text-destructive">{intError}</p>}
+                  {intError && <p className="text-xs text-destructive" role="alert">{intError}</p>}
                   {intResult !== null && (
-                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3">
+                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3" role="status" aria-live="polite">
                       <p className="text-xs text-muted-foreground">
-                        ∫ ({intFn}) dx &nbsp;from {intA} to {intB}
+                        ∫ ({intFn}) dx from {intA} to {intB}
                       </p>
                       <p className="text-xl font-mono font-bold text-primary mt-1">≈ {intResult}</p>
                     </div>
@@ -529,27 +614,27 @@ export default function EngineeringCalculator() {
               {/* Derivative at point */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <span className="text-sm font-bold leading-none">d/dx</span>
+                  <span className="text-sm font-bold leading-none" aria-label="derivative">d/dx</span>
                   Derivative at Point
                   <span className="text-xs text-muted-foreground font-normal">(numerical)</span>
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">f(x) =</label>
-                    <Input value={dFn} onChange={e => setDFn(e.target.value)}
-                      className="font-mono text-sm h-8" placeholder="x^2" />
+                    <label htmlFor="d-fn" className="text-xs text-muted-foreground block mb-1">f(x) =</label>
+                    <Input id="d-fn" value={dFn} onChange={e => setDFn(e.target.value)}
+                      className="font-mono text-sm h-8" placeholder="x^2" aria-label="Function to differentiate" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1">x =</label>
-                    <Input value={dX} onChange={e => setDX(e.target.value)}
-                      className="h-8 text-sm font-mono" />
+                    <label htmlFor="d-x" className="text-xs text-muted-foreground block mb-1">x =</label>
+                    <Input id="d-x" value={dX} onChange={e => setDX(e.target.value)}
+                      className="h-8 text-sm font-mono" aria-label="Point at which to evaluate derivative" />
                   </div>
                   <Button size="sm" onClick={computeDerivative} disabled={!ready} className="w-full h-8">
                     Compute f′(x)
                   </Button>
-                  {dError && <p className="text-xs text-destructive">{dError}</p>}
+                  {dError && <p className="text-xs text-destructive" role="alert">{dError}</p>}
                   {dResult !== null && (
-                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3">
+                    <div className="rounded-lg bg-muted/40 border border-border px-4 py-3" role="status" aria-live="polite">
                       <p className="text-xs text-muted-foreground">f′({dX}) for f(x) = {dFn}</p>
                       <p className="text-xl font-mono font-bold text-primary mt-1">≈ {dResult}</p>
                     </div>
@@ -561,14 +646,20 @@ export default function EngineeringCalculator() {
 
           {/* ── Constants tab ── */}
           {rightTab === "constants" && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4" role="region" aria-label="Physical constants">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Physical Constants — click to insert
               </p>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-1.5" role="listbox" aria-label="Constants list">
                 {Object.entries(CONSTANTS).map(([key, c]) => (
-                  <button key={key} onClick={() => setExpr(e => e + key)} disabled={!ready}
-                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                  <button 
+                    key={key} 
+                    onClick={() => setExpr(e => e + key)} 
+                    disabled={!ready}
+                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                    role="option"
+                    aria-label={`${c.label}: ${c.desc}, value ${c.value.toExponential(3)}`}
+                  >
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs font-mono shrink-0">{c.label}</Badge>
                       <span className="text-xs text-muted-foreground truncate">{c.desc}</span>
@@ -582,12 +673,15 @@ export default function EngineeringCalculator() {
 
           {/* ── History tab ── */}
           {rightTab === "history" && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4" role="region" aria-label="Calculation history">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">History</p>
                 {history.length > 0 && (
-                  <button onClick={() => setHistory([])}
-                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                  <button 
+                    onClick={() => setHistory([])}
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                    aria-label="Clear history"
+                  >
                     <RotateCcw className="h-3 w-3" />Clear
                   </button>
                 )}
@@ -595,10 +689,15 @@ export default function EngineeringCalculator() {
               {history.length === 0
                 ? <p className="text-xs text-muted-foreground italic">No calculations yet</p>
                 : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" role="list" aria-label="Calculation results">
                     {history.map((h, i) => (
-                      <button key={i} onClick={() => setExpr(h.result)}
-                        className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors">
+                      <button 
+                        key={i} 
+                        onClick={() => setExpr(h.result)}
+                        className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                        role="listitem"
+                        aria-label={`Expression: ${h.expr}, result: ${h.result}`}
+                      >
                         <div className="text-muted-foreground truncate">{h.expr}</div>
                         <div className="text-primary font-semibold">= {h.result}</div>
                       </button>
