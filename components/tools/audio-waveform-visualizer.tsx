@@ -234,7 +234,7 @@ export default function AudioWaveformVisualizer() {
       <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
         <div className="flex-1 overflow-y-auto p-4">
           {!waveData ? (
-            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors">
+            <label className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors min-h-[200px] m-4">
               <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
               <Upload className="h-12 w-12 text-muted-foreground/30 mb-3" />
               <p className="text-sm font-medium">{loading ? "Analyzing audio…" : "Click to upload an audio file"}</p>
