@@ -218,33 +218,26 @@ export default function AudioWaveformVisualizer() {
               <Image className="h-4 w-4 mr-1" />Export PNG
             </Button>
           )}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            <Settings className="h-4 w-4 mr-1" />
-            {showSettings ? 'Hide Settings' : 'Settings'}
-          </Button>
         </div>
       </div>
 
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
-      {/* Left panel - Main visualizer */}
+      {/* Left panel - Upload and Settings */}
       <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
         <div className="shrink-0 border-b border-border px-4 py-3">
-          <span className="text-sm font-medium">Audio File</span>
+          <span className="text-sm font-medium">Audio File & Settings</span>
         </div>
-        <div className="flex-1 flex flex-col p-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Upload area */}
           {!waveData ? (
-            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors">
+            <label className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors min-h-[200px]">
               <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
               <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" />
               <p className="text-xs font-medium text-center">{loading ? "Analyzing audio…" : "Click or drop audio file here"}</p>
               <p className="text-xs text-muted-foreground mt-1">MP3, WAV, OGG, FLAC, M4A</p>
             </label>
           ) : (
-            <div className="flex-1 flex flex-col gap-6">
+            <div className="space-y-4">
               {/* File info */}
               <div className="flex items-center gap-3">
                 <p className="text-sm font-medium truncate flex-1">{filename}</p>
@@ -255,7 +248,101 @@ export default function AudioWaveformVisualizer() {
                   </Button>
                 </label>
               </div>
+            </div>
+          )}
 
+          {/* Settings */}
+          <div className="space-y-6">
+            <h4 className="text-sm font-medium">Waveform Settings</h4>
+            
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">Style</label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setWaveStyle('bars')}
+                    className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                      waveStyle === 'bars' 
+                        ? 'border-primary bg-primary text-primary-foreground' 
+                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    Bars
+                  </button>
+                  <button
+                    onClick={() => setWaveStyle('line')}
+                    className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
+                      waveStyle === 'line' 
+                        ? 'border-primary bg-primary text-primary-foreground' 
+                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    Line
+                  </button>
+                </div>
+              </div>
+              
+              {waveStyle === 'bars' && (
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-foreground">Bar Width</label>
+                  <div className="flex gap-3">
+                    {[1, 2, 3].map(width => (
+                      <button
+                        key={width}
+                        onClick={() => setBarWidth(width)}
+                        className={`w-12 h-10 text-sm rounded-lg border transition-colors ${
+                          barWidth === width 
+                            ? 'border-primary bg-primary text-primary-foreground' 
+                            : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
+                        }`}
+                      >
+                        {width}px
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">Wave Color</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={waveColor}
+                    onChange={(e) => setWaveColor(e.target.value)}
+                    className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                  />
+                  <span className="text-sm text-muted-foreground font-mono">{waveColor}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">Background</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    className="w-12 h-10 rounded-lg border border-border cursor-pointer"
+                  />
+                  <span className="text-sm text-muted-foreground font-mono">{backgroundColor}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel - Visualizer */}
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Waveform Visualizer</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {waveData ? (
+            <div className="flex-1 flex flex-col gap-6">
               {/* Waveform */}
               <div className="flex-1 flex flex-col gap-2 min-h-[200px]">
                 <canvas
@@ -285,99 +372,15 @@ export default function AudioWaveformVisualizer() {
 
               <p className="text-xs text-muted-foreground text-center">Click anywhere on the waveform to seek</p>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right panel - Settings */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4">
-          {showSettings ? (
-            <div className="space-y-6">
-              <h4 className="text-sm font-medium">Waveform Settings</h4>
-              
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">Style</label>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setWaveStyle('bars')}
-                      className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                        waveStyle === 'bars' 
-                          ? 'border-primary bg-primary text-primary-foreground' 
-                          : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-                      }`}
-                    >
-                      Bars
-                    </button>
-                    <button
-                      onClick={() => setWaveStyle('line')}
-                      className={`px-4 py-2 text-sm rounded-lg border transition-colors ${
-                        waveStyle === 'line' 
-                          ? 'border-primary bg-primary text-primary-foreground' 
-                          : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-                      }`}
-                    >
-                      Line
-                    </button>
-                  </div>
-                </div>
-                
-                {waveStyle === 'bars' && (
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-foreground">Bar Width</label>
-                    <div className="flex gap-3">
-                      {[1, 2, 3].map(width => (
-                        <button
-                          key={width}
-                          onClick={() => setBarWidth(width)}
-                          className={`w-12 h-10 text-sm rounded-lg border transition-colors ${
-                            barWidth === width 
-                              ? 'border-primary bg-primary text-primary-foreground' 
-                              : 'border-border bg-muted text-muted-foreground hover:border-primary/50'
-                          }`}
-                        >
-                          {width}px
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">Wave Color</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={waveColor}
-                      onChange={(e) => setWaveColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg border border-border cursor-pointer"
-                    />
-                    <span className="text-sm text-muted-foreground font-mono">{waveColor}</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-foreground">Background</label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={backgroundColor}
-                      onChange={(e) => setBackgroundColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg border border-border cursor-pointer"
-                    />
-                    <span className="text-sm text-muted-foreground font-mono">{backgroundColor}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           ) : (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <Settings className="h-6 w-6 text-muted-foreground" />
-              <p className="text-sm font-medium">Settings panel</p>
-              <p className="text-xs text-muted-foreground">Click the Settings button above to customize waveform appearance</p>
+              <div className="rounded-full border border-border bg-muted/50 p-4">
+                <Upload className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">No audio file loaded</p>
+                <p className="text-xs text-muted-foreground mt-1">Upload an audio file on the left to visualize its waveform</p>
+              </div>
             </div>
           )}
         </div>
