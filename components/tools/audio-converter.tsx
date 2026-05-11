@@ -332,23 +332,27 @@ const convert = async () => {
               />
               {file ? (
                 <div className="flex items-center gap-3 px-4 w-full">
-                  <FileAudio className="h-5 w-5 text-primary shrink-0" />
+                  <FileAudio className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-medium">{file.name}</p>
+                    <p className="truncate text-sm font-medium" id="selected-file-name">{file.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatBytes(file.size)}
                       {audioInfo?.duration && ` · ${formatDuration(audioInfo.duration)}`}
                     </p>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null) }}
-                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground">
-                    <X className="h-4 w-4" />
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null) }}
+                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label="Remove selected file"
+                    title="Remove file"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               ) : (
                 
                 <div className="flex flex-col items-center gap-2 text-center px-4">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                   <p className="text-sm font-medium">Drop audio file here or click to browse</p>
                   <p className="text-xs text-muted-foreground">MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</p>
                 </div>
@@ -359,17 +363,20 @@ const convert = async () => {
           {/* Conversion settings */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Target Format</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-sm font-medium" id="format-label">Target Format</Label>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-label">
                 {FORMATS.map((fmt) => (
                   <button
                     key={fmt.value}
                     onClick={() => setTargetFormat(fmt.value)}
-                    className={`p-3 rounded-lg border text-left transition-all ${
+                    className={`p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
                       targetFormat === fmt.value
                         ? 'border-primary bg-primary/10'
                         : 'border-border hover:border-primary/50'
                     }`}
+                    role="radio"
+                    aria-checked={targetFormat === fmt.value}
+                    aria-label={`${fmt.label} - ${fmt.desc}`}
                   >
                     <div className="font-medium text-sm">{fmt.label}</div>
                     <div className="text-xs text-muted-foreground">{fmt.desc}</div>
@@ -379,20 +386,21 @@ const convert = async () => {
             </div>
 
             <div className="flex items-center gap-2 mb-4">
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
                 <input
-                type="checkbox"
-                checked={testMode}
-                onChange={(e) => setTestMode(e.target.checked)}
-                className="rounded border-border"
+                  type="checkbox"
+                  checked={testMode}
+                  onChange={(e) => setTestMode(e.target.checked)}
+                  className="rounded border-border"
+                  aria-label="Enable test mode to skip ffmpeg loading"
                 />
                 <span className="text-xs">Test mode (skip ffmpeg loading)</span>
-            </label>
+              </label>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Quality</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <Label className="text-sm font-medium" id="quality-label">Quality</Label>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-label">
                 {[
                   { value: "high", label: "High", desc: "320kbps / Best" },
                   { value: "medium", label: "Medium", desc: "192kbps / Good" },
@@ -401,11 +409,14 @@ const convert = async () => {
                   <button
                     key={q.value}
                     onClick={() => setQuality(q.value as "high" | "medium" | "low")}
-                    className={`p-2 rounded-lg border text-sm transition-all ${
+                    className={`p-2 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
                       quality === q.value
                         ? 'border-primary bg-primary/10'
                         : 'border-border hover:border-primary/50'
                     }`}
+                    role="radio"
+                    aria-checked={quality === q.value}
+                    aria-label={`${q.label} quality - ${q.desc}`}
                   >
                     <div className="font-medium">{q.label}</div>
                     <div className="text-xs text-muted-foreground">{q.desc}</div>
@@ -416,8 +427,9 @@ const convert = async () => {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-xs text-red-500">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />{error}
+            <div className="flex items-center gap-2 text-xs text-red-500" role="alert" aria-live="assertive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -425,24 +437,24 @@ const convert = async () => {
 
         <div className="shrink-0 border-t border-border p-4">
           {isLoadingFFmpeg && (
-            <div className="mb-3">
+            <div className="mb-3" role="status" aria-live="polite" aria-label="Loading ffmpeg">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Loading ffmpeg.wasm...
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <span>Loading ffmpeg.wasm...</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={50} aria-valuemin={0} aria-valuemax={100} aria-label="Loading progress">
                 <div className="bg-primary h-2 rounded-full animate-pulse w-1/2"></div>
               </div>
             </div>
           )}
           
           {isConverting && (
-            <div className="mb-3">
+            <div className="mb-3" role="status" aria-live="polite" aria-label="Converting audio">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
                 <span>Converting...</span>
-                <span>{progress}%</span>
+                <span aria-live="polite">{progress}%</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion progress">
                 <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
               </div>
             </div>
@@ -452,21 +464,22 @@ const convert = async () => {
             className="w-full" 
             onClick={convert}
             disabled={!file || isConverting || isLoadingFFmpeg}
+            aria-label={isConverting ? "Converting audio, please wait" : isLoadingFFmpeg ? "Loading ffmpeg" : file ? "Convert audio file" : "Upload a file to convert"}
           >
             {isConverting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Converting...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>Converting...</span>
               </>
             ) : isLoadingFFmpeg ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>Loading...</span>
               </>
             ) : (
               <>
-                <Play className="mr-2 h-4 w-4" />
-                Convert Audio
+                <Play className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>Convert Audio</span>
               </>
             )}
           </Button>
@@ -516,9 +529,13 @@ const convert = async () => {
 
         {result && (
           <div className="shrink-0 border-t border-border p-4">
-            <Button className="w-full" onClick={download}>
-              <Download className="mr-2 h-4 w-4" />
-              Download {targetFormat.toUpperCase()}
+            <Button 
+              className="w-full" 
+              onClick={download}
+              aria-label={`Download converted audio file in ${targetFormat.toUpperCase()} format`}
+            >
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>Download {targetFormat.toUpperCase()}</span>
             </Button>
           </div>
         )}
