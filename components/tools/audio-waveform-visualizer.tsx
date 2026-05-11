@@ -173,11 +173,46 @@ export default function AudioWaveformVisualizer() {
         cancelAnimationFrame(rafRef.current)
       }
       audioRef.current.onerror = (e) => {
-        console.error('Audio error:', e)
+        const audio = audioRef.current!
+        const errorCode = audio.error?.code
+        const errorMessage = audio.error?.message
+        
+        console.error('Audio error:', {
+          code: errorCode,
+          message: errorMessage,
+          networkState: audio.networkState,
+          readyState: audio.readyState,
+          currentTime: audio.currentTime,
+          duration: audio.duration
+        })
+        
         setPlaying(false)
         cancelAnimationFrame(rafRef.current)
-        // Show user-friendly error message
-        alert('Audio playback failed. This might be due to an unsupported audio format or corrupted file. Please try a different file.')
+        
+        // Show user-friendly error message based on error code
+        let userMessage = 'Audio playback failed. '
+        if (errorCode) {
+          switch (errorCode) {
+            case 1: // MEDIA_ERR_ABORTED
+              userMessage += 'The audio playback was aborted.'
+              break
+            case 2: // MEDIA_ERR_NETWORK
+              userMessage += 'A network error occurred while loading the audio.'
+              break
+            case 3: // MEDIA_ERR_DECODE
+              userMessage += 'The audio file could not be decoded. The file may be corrupted or in an unsupported format.'
+              break
+            case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+              userMessage += 'The audio format is not supported by your browser.'
+              break
+            default:
+              userMessage += 'An unknown error occurred.'
+          }
+        } else {
+          userMessage += 'This might be due to an unsupported audio format or corrupted file. Please try a different file.'
+        }
+        
+        alert(userMessage)
       }
     }
     if (playing) {
