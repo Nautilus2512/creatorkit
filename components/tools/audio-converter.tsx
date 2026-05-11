@@ -294,28 +294,10 @@ const convert = async () => {
         <h2 className="text-2xl font-semibold tracking-tight">Audio Converter</h2>
         <p className="text-muted-foreground">Convert between audio formats · Powered by ffmpeg.wasm</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
       {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-
-          {/* Development Warning */}
-          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  ⚠️ Under Development - Known Issues
-                </p>
-                <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1 list-disc list-inside">
-                  <li>CDN loading issues: ffmpeg.wasm files may fail to load due to network restrictions</li>
-                  <li>Use "Test mode" checkbox to simulate conversion without downloading ffmpeg</li>
-                  <li>Real conversion requires ~25MB download and may timeout on slow connections</li>
-                  <li>This tool is experimental and may not work in all environments</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 lg:max-h-none">
 
           {/* File upload */}
           <div className="space-y-2">
@@ -489,10 +471,26 @@ const convert = async () => {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
+        {/* Development Warning - moved to top of right panel */}
+        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3 m-4 mb-0">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                ⚠️ Under Development
+              </p>
+              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
+                <li>CDN loading issues may occur</li>
+                <li>Use "Test mode" to simulate conversion</li>
+                <li>~25MB download required for real conversion</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 lg:max-h-none">
           {!result ? (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
+            <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-3 text-center">
               <div className="rounded-full border border-border bg-muted/50 p-4">
                 <Music className="h-6 w-6 text-muted-foreground" />
               </div>
