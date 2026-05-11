@@ -311,10 +311,10 @@ const convert = async () => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 lg:max-h-none">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* File upload */}
           <div className="space-y-2">
@@ -474,8 +474,8 @@ const convert = async () => {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 lg:max-h-none">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
+        <div className="flex-1 overflow-y-auto p-4">
           {!result ? (
             <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-3 text-center">
               <div className="rounded-full border border-border bg-muted/50 p-4">
