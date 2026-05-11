@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Upload, Download, Settings, Image } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 function drawWaveform(canvas: HTMLCanvasElement, data: Float32Array, playPct = 0, options: {
   color?: string
@@ -103,7 +104,8 @@ export default function AudioWaveformVisualizer() {
       // Global shortcuts
       if ((e.ctrlKey || e.metaKey) && e.key === "o") {
         e.preventDefault()
-        document.querySelector('input[type="file"]')?.click()
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+        fileInput?.click()
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "e" && waveData) {
         e.preventDefault()
@@ -121,7 +123,30 @@ export default function AudioWaveformVisualizer() {
     
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [waveData, showSettings, downloadWaveform])
+  }, [waveData, showSettings])
+
+  const downloadWaveform = () => {
+    if (!waveData || !canvasRef.current) return
+    const canvas = canvasRef.current as HTMLCanvasElement
+    
+    // Create a high-resolution version for download
+    const downloadCanvas = document.createElement('canvas')
+    const ctx = downloadCanvas.getContext('2d')!
+    downloadCanvas.width = 2000
+    downloadCanvas.height = 400
+    
+    drawWaveform(downloadCanvas, waveData, 0, {
+      color: waveColor,
+      backgroundColor,
+      style: waveStyle,
+      barWidth: Math.max(1, barWidth * 2)
+    })
+    
+    const link = document.createElement('a')
+    link.download = `waveform-${filename.replace(/\.[^/.]+$/, '')}.png`
+    link.href = downloadCanvas.toDataURL('image/png')
+    link.click()
+  }
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -166,14 +191,6 @@ export default function AudioWaveformVisualizer() {
     })
   }, [waveData, waveColor, backgroundColor, waveStyle, barWidth])
 
-
-
-  const downloadWaveform = () => {
-    if (!waveData || !canvasRef.current) return
-    const canvas = canvasRef.current
-    
-    // Create a high-resolution version for download
-    const downloadCanvas = document.createElement('canvas')
     const ctx = downloadCanvas.getContext('2d')!
     downloadCanvas.width = 2000
     downloadCanvas.height = 400
@@ -217,7 +234,8 @@ export default function AudioWaveformVisualizer() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
-                  document.querySelector('input[type="file"]')?.click()
+                  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+                  fileInput?.click()
                 }
               }}
             >
@@ -273,7 +291,7 @@ export default function AudioWaveformVisualizer() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setWaveStyle('bars')}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${\n                      waveStyle === 'bars' \n                        ? 'border-primary bg-primary text-primary-foreground' \n                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'\n                    }`}
+                    className={"px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary " + (waveStyle === 'bars' ? ' border-primary bg-primary text-primary-foreground' : ' border-border bg-muted text-muted-foreground hover:border-primary/50')}
                     aria-label="Select bars style"
                     aria-pressed={waveStyle === 'bars'}
                     role="button"
@@ -283,7 +301,7 @@ export default function AudioWaveformVisualizer() {
                   </button>
                   <button
                     onClick={() => setWaveStyle('line')}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${\n                      waveStyle === 'line' \n                        ? 'border-primary bg-primary text-primary-foreground' \n                        : 'border-border bg-muted text-muted-foreground hover:border-primary/50'\n                    }`}
+                    className={"px-4 py-2 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary " + (waveStyle === 'line' ? ' border-primary bg-primary text-primary-foreground' : ' border-border bg-muted text-muted-foreground hover:border-primary/50')}
                     aria-label="Select line style"
                     aria-pressed={waveStyle === 'line'}
                     role="button"
