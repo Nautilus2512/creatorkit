@@ -16,9 +16,11 @@
   - Enhanced aria-live regions for calculator display
 
 ### Note
-- Losty PNG compression was removed due to performance issues on low-end devices and mobile.
-- Pure JavaScript color quantization was too slow for large images (10MB+).
-- Will revisit when a lightweight WASM solution is available.
+- Image Compressor's "Lossy PNG" feature was removed due to performance issues
+- Pure JavaScript color quantization was too slow for large images (>1MB)
+- Caused "page unresponsive" on older PCs and mobile devices
+- Works fine for small images (~0.5MB) but problematic for larger files
+- Will revisit when a lightweight WASM solution is available
 
 ## v1.58.0 — May 2026
 ### New Tools
