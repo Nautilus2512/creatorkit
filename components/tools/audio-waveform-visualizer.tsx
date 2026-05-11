@@ -172,22 +172,43 @@ export default function AudioWaveformVisualizer() {
         setPlaying(false)
         cancelAnimationFrame(rafRef.current)
       }
+      audioRef.current.onerror = (e) => {
+        console.error('Audio error:', e)
+        setPlaying(false)
+        cancelAnimationFrame(rafRef.current)
+        // Show user-friendly error message
+        alert('Audio playback failed. This might be due to an unsupported audio format or corrupted file. Please try a different file.')
+      }
     }
     if (playing) {
       audioRef.current.pause()
       setPlaying(false)
       cancelAnimationFrame(rafRef.current)
     } else {
-      audioRef.current.play()
-      setPlaying(true)
-      // Start smooth animation loop
-      const animate = () => {
+      // Check if audio can be played before attempting
+      audioRef.current.play().catch(error => {
+        console.error('Playback failed:', error)
+        setPlaying(false)
+        if (error.name === 'NotSupportedError') {
+          alert('This audio format is not supported in your browser. Please try a different format (MP3, WAV, OGG, or M4A).')
+        } else if (error.name === 'NotAllowedError') {
+          alert('Audio playback was blocked by the browser. Please allow audio playback and try again.')
+        } else {
+          alert('Audio playback failed: ' + error.message)
+        }
+      }).then(() => {
         if (audioRef.current && !audioRef.current.paused) {
-          setCurrentTime(audioRef.current.currentTime)
+          setPlaying(true)
+          // Start smooth animation loop
+          const animate = () => {
+            if (audioRef.current && !audioRef.current.paused) {
+              setCurrentTime(audioRef.current.currentTime)
+              rafRef.current = requestAnimationFrame(animate)
+            }
+          }
           rafRef.current = requestAnimationFrame(animate)
         }
-      }
-      rafRef.current = requestAnimationFrame(animate)
+      })
     }
   }
 
