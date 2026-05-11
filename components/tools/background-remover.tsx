@@ -201,9 +201,9 @@ export function BackgroundRemover() {
         <h2 className="text-2xl font-semibold tracking-tight">Background Remover</h2>
         <p className="text-muted-foreground">Remove image backgrounds · 100% in-browser</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
-      {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0 h-full">
+      {/* Left panel - Input & Controls */}
+      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Version info */}
@@ -340,8 +340,8 @@ export function BackgroundRemover() {
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      {/* Right panel - Output */}
+      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4">
           {!imageEl ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
@@ -360,7 +360,7 @@ export function BackgroundRemover() {
                 <button onClick={() => { setResultUrl(null); setPhase("idle") }} className="text-xs text-muted-foreground hover:text-foreground underline">Try again</button>
               </div>
               <div className="rounded-lg overflow-hidden border border-border" style={CHECKER}>
-                <img src={resultUrl} alt="Result" className="w-full object-contain" />
+                <img src={resultUrl} alt="Result" className="w-full h-auto max-w-full object-contain block" />
               </div>
             </div>
           ) : (
@@ -372,7 +372,7 @@ export function BackgroundRemover() {
                 <img
                   src={objectUrl!}
                   alt="Original"
-                  className="w-full object-contain"
+                  className="w-full h-auto max-w-full object-contain block"
                   onClick={handleImageClick}
                 />
                 {pickingColor && (
