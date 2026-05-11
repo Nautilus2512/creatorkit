@@ -231,13 +231,16 @@ export default function AudioWaveformVisualizer() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel - Main visualizer */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Audio File</span>
+        </div>
+        <div className="flex-1 flex flex-col p-4">
           {!waveData ? (
-            <label className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors min-h-[200px] m-4">
+            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors">
               <input type="file" accept="audio/*" className="hidden" onChange={handleFile} />
-              <Upload className="h-12 w-12 text-muted-foreground/30 mb-3" />
-              <p className="text-sm font-medium">{loading ? "Analyzing audio…" : "Click to upload an audio file"}</p>
+              <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-xs font-medium text-center">{loading ? "Analyzing audio…" : "Click or drop audio file here"}</p>
               <p className="text-xs text-muted-foreground mt-1">MP3, WAV, OGG, FLAC, M4A</p>
             </label>
           ) : (
