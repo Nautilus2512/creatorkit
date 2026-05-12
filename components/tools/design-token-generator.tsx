@@ -8,6 +8,18 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
+// Accessibility helper for screen reader announcements
+function announceToScreenReader(message: string) {
+  const announcement = document.createElement('div')
+  announcement.setAttribute('role', 'status')
+  announcement.setAttribute('aria-live', 'polite')
+  announcement.setAttribute('aria-atomic', 'true')
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
+
 // ── Color conversion helpers ──────────────────────────────────────────────────
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
@@ -67,7 +79,7 @@ function simulateColorBlindness(hex: string, mode: CBMode): string {
 
 // ── Custom Color Picker ───────────────────────────────────────────────────────
 
-function ColorPicker({ label, value, onChange }: { label: string; value: string; onChange: (hex: string) => void }) {
+function ColorPicker({ label, value, onChange, shortcut, id }: { label: string; value: string; onChange: (hex: string) => void; shortcut?: string; id?: string }) {
   const hsl = useMemo(() => hexToHSL(value), [value])
   const [h, setH] = useState(hsl.h)
   const [s, setS] = useState(hsl.s)
@@ -134,22 +146,33 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm">{label}</Label>
+      <Label className="text-sm" id={`color-label-${label.toLowerCase()}`}>{label}{shortcut && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{shortcut}</kbd>}</Label>
 
       {/* Color swatch trigger */}
       <button
         type="button"
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 w-full rounded-lg border border-border bg-muted/30 px-3 py-2 hover:border-primary/50 transition-colors"
+        id={id}
+        onClick={() => {
+          setOpen(v => !v)
+          if (!open) announceToScreenReader(`${label} color picker opened`)
+        }}
+        className="flex items-center gap-2 w-full rounded-lg border border-border bg-muted/30 px-3 py-2 hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-labelledby={`color-label-${label.toLowerCase()}`}
       >
-        <span className="h-6 w-6 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} />
+        <span className="h-6 w-6 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} aria-hidden="true" />
         <span className="font-mono text-sm flex-1 text-left">{hexInput}</span>
-        <span className="text-xs text-muted-foreground">Click to edit</span>
+        <span className="text-xs text-muted-foreground">{open ? 'Click to close' : 'Click to edit'}</span>
       </button>
 
       {/* Picker panel */}
       {open && (
-        <div className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3">
+        <div 
+          className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3"
+          role="dialog"
+          aria-label={`${label} color picker`}
+        >
           {/* SL gradient area */}
           <div
             ref={slRef}
@@ -162,11 +185,19 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
             onPointerMove={(e) => { if (draggingSL.current) handleSLPointer(e) }}
             onPointerUp={(e) => { draggingSL.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
             onPointerCancel={() => { draggingSL.current = false }}
+            role="slider"
+            aria-label="Saturation and lightness"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={s}
+            aria-valuetext={`Saturation ${s}%, Lightness ${l}%`}
+            tabIndex={0}
           >
             {/* Thumb */}
             <div
               className="absolute h-4 w-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
               style={{ left: thumbX, top: thumbY, backgroundColor: value }}
+              aria-hidden="true"
             />
           </div>
 
@@ -179,24 +210,33 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
             onPointerMove={(e) => { if (draggingH.current) handleHuePointer(e) }}
             onPointerUp={(e) => { draggingH.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
             onPointerCancel={() => { draggingH.current = false }}
+            role="slider"
+            aria-label="Hue"
+            aria-valuemin={0}
+            aria-valuemax={360}
+            aria-valuenow={h}
+            aria-valuetext={`Hue ${h} degrees`}
+            tabIndex={0}
           >
             {/* Hue thumb */}
             <div
               className="absolute h-5 w-5 rounded-full border-2 border-white shadow-md top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
               style={{ left: hueX, backgroundColor: `hsl(${h}, 100%, 50%)` }}
+              aria-hidden="true"
             />
           </div>
 
           {/* Hex + RGB display */}
           <div className="flex gap-2 items-center">
-            <span className="h-8 w-8 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} />
+            <span className="h-8 w-8 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} aria-hidden="true" />
             <Input
               value={hexInput}
               onChange={(e) => handleHexInput(e.target.value)}
               className="flex-1 font-mono text-sm h-8"
               placeholder="#000000"
+              aria-label="Hex color value"
             />
-            <span className="text-xs text-muted-foreground shrink-0">
+            <span className="text-xs text-muted-foreground shrink-0" aria-label={`RGB values: ${rgb.r}, ${rgb.g}, ${rgb.b}`}>
               {rgb.r}, {rgb.g}, {rgb.b}
             </span>
           </div>
@@ -271,34 +311,85 @@ export function DesignTokenGenerator() {
     return JSON.stringify(tokens, null, 2)
   }
 
-  const copyToClipboard = async (text: string, key: string) => {
+  const copyToClipboard = useCallback(async (text: string, key: string, label?: string) => {
     await navigator.clipboard.writeText(text)
     setCopiedKey(key)
+    if (label) {
+      announceToScreenReader(`${label} copied to clipboard`)
+    } else {
+      announceToScreenReader('Copied to clipboard')
+    }
     setTimeout(() => setCopiedKey(null), 2000)
-  }
+  }, [])
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Close color pickers on Escape
+      if (e.key === "Escape") {
+        const pickers = document.querySelectorAll('[role="dialog"]')
+        if (pickers.length > 0) {
+          // Color picker will close via its own state
+          announceToScreenReader('Color picker closed')
+        }
+      }
+      
       const ctrl = e.ctrlKey || e.metaKey
       if (!ctrl) return
-      if (e.key === "c" || e.key === "C") { e.preventDefault(); copyToClipboard(generateCSS(), "css") }
+      
+      // Ctrl+C to copy CSS
+      if (e.key === "c" || e.key === "C") { 
+        e.preventDefault()
+        copyToClipboard(generateCSS(), "css", "CSS tokens")
+      }
+      
+      // Ctrl+1/2/3 to focus color pickers
+      if (e.key === "1") {
+        e.preventDefault()
+        const primaryBtn = document.getElementById('primary-color-trigger')
+        primaryBtn?.click()
+      }
+      if (e.key === "2") {
+        e.preventDefault()
+        const secondaryBtn = document.getElementById('secondary-color-trigger')
+        secondaryBtn?.click()
+      }
+      if (e.key === "3") {
+        e.preventDefault()
+        const accentBtn = document.getElementById('accent-color-trigger')
+        accentBtn?.click()
+      }
+      
+      // Ctrl+L for light mode preview
+      if (e.key === "l" || e.key === "L") {
+        e.preventDefault()
+        setPreviewMode("light")
+        announceToScreenReader('Switched to light preview mode')
+      }
+      
+      // Ctrl+D for dark mode preview
+      if (e.key === "d" || e.key === "D") {
+        e.preventDefault()
+        setPreviewMode("dark")
+        announceToScreenReader('Switched to dark preview mode')
+      }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [primaryColor, secondaryColor, accentColor])
+  }, [primaryColor, secondaryColor, accentColor, copyToClipboard])
 
   const ColorPalette = ({ shades, name }: { shades: Record<string, string>; name: string }) => (
     <div className="space-y-1.5">
       <p className="text-xs font-medium capitalize text-muted-foreground">{name}</p>
-      <div className="flex gap-0.5 overflow-hidden rounded-lg">
+      <div className="flex gap-0.5 overflow-hidden rounded-lg" role="group" aria-label={`${name} color palette shades`}>
         {Object.entries(shades).map(([shade, color]) => {
           const displayColor = simulateColorBlindness(color, cbMode)
           return (
-            <button key={shade} className="group relative h-8 flex-1 transition-transform hover:scale-110 hover:z-10"
-              style={{ backgroundColor: displayColor }} onClick={() => copyToClipboard(color, `${name}-${shade}`)}
-              title={`${name}-${shade}: ${color}`} aria-label={`Copy ${name}-${shade}: ${color}`}>
-              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" /> : shade}
+            <button key={shade} className="group relative h-8 flex-1 transition-transform hover:scale-110 hover:z-10 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+              style={{ backgroundColor: displayColor }} onClick={() => copyToClipboard(color, `${name}-${shade}`, `${name}-${shade}`)}
+              title={`${name}-${shade}: ${color}`} aria-label={`Copy ${name} ${shade}: ${color}`}>
+              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
+                {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" aria-hidden="true" /> : shade}
               </span>
             </button>
           )
@@ -310,45 +401,54 @@ export function DesignTokenGenerator() {
   return (
     <>
       <div className="flex h-full flex-col space-y-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Design Token Generator</h2>
-          <p className="text-muted-foreground">Generate a complete design system from your brand colors.</p>
+        <div role="banner">
+          <h2 className="text-2xl font-semibold tracking-tight" id="design-token-title">Design Token Generator</h2>
+          <p className="text-muted-foreground" id="design-token-description">Generate a complete design system from your brand colors. Press Ctrl+1/2/3 to open color pickers, Ctrl+C to copy CSS, Ctrl+L/D for preview modes. Press ? for shortcuts.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
 
           {/* LEFT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Brand colors and palette editor">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
-                <Palette className="h-4 w-4 text-muted-foreground" />
+                <Palette className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="text-sm font-medium">Brand Colors & Palette</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Click a color to open the picker — drag to adjust hue and tone</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Click a color to open the picker (Ctrl+1/2/3) — drag to adjust hue and tone</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
               {/* Custom Color Pickers */}
-              <div className="space-y-4">
-                <ColorPicker label="Primary" value={primaryColor} onChange={setPrimaryColor} />
-                <ColorPicker label="Secondary" value={secondaryColor} onChange={setSecondaryColor} />
-                <ColorPicker label="Accent" value={accentColor} onChange={setAccentColor} />
+              <div className="space-y-4" role="group" aria-label="Color pickers">
+                <ColorPicker label="Primary" value={primaryColor} onChange={setPrimaryColor} shortcut="Ctrl+1" id="primary-color-trigger" />
+                <ColorPicker label="Secondary" value={secondaryColor} onChange={setSecondaryColor} shortcut="Ctrl+2" id="secondary-color-trigger" />
+                <ColorPicker label="Accent" value={accentColor} onChange={setAccentColor} shortcut="Ctrl+3" id="accent-color-trigger" />
               </div>
 
               {/* Generated Palette */}
-              <div className="space-y-3 rounded-lg border border-border p-3">
+              <div className="space-y-3 rounded-lg border border-border p-3" role="region" aria-label="Generated color palette">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <p className="text-xs font-medium">Generated Palette <span className="text-muted-foreground font-normal">— click any shade to copy</span></p>
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Color blindness simulation mode">
                     {([ ["none", "Normal"], ["deuteranopia", "Deuter."], ["protanopia", "Protan."], ["tritanopia", "Tritan."] ] as [CBMode, string][]).map(([mode, label]) => (
                       <button
                         key={mode}
-                        onClick={() => setCbMode(mode)}
+                        onClick={() => {
+                          setCbMode(mode)
+                          if (mode !== 'none') {
+                            announceToScreenReader(`Color vision simulation: ${label}`)
+                          } else {
+                            announceToScreenReader('Normal color vision')
+                          }
+                        }}
                         aria-pressed={cbMode === mode}
                         aria-label={`${label} color vision simulation`}
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                           cbMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                         }`}
+                        role="radio"
+                        aria-checked={cbMode === mode}
                       >
                         {label}
                       </button>
@@ -361,7 +461,7 @@ export function DesignTokenGenerator() {
               </div>
 
               {/* Core Scales */}
-              <div className="space-y-2">
+              <div className="space-y-2" role="region" aria-label="Core design scales">
                 <p className="text-xs font-medium">Core Scales</p>
                 <div className="grid gap-3 grid-cols-3">
                   <div className="space-y-1.5 rounded-lg border border-border p-3">
@@ -388,31 +488,56 @@ export function DesignTokenGenerator() {
 
             {/* Sticky Action Bar */}
             <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
-              <Button variant="outline" className="w-full" onClick={() => copyToClipboard(generateCSS(), "css")}>
-                {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => copyToClipboard(generateCSS(), "css", "CSS tokens")}
+                aria-label="Copy CSS tokens (Ctrl+C)"
+              >
+                {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
                 Copy CSS
-                <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+C</kbd>
+                <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+C</kbd>
               </Button>
             </div>
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Live preview and export">
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium">Live Preview & Export</span>
                 <p className="text-xs text-muted-foreground">See tokens in action and export in your preferred format</p>
               </div>
-              <div className="flex items-center gap-1 rounded-lg border border-border p-1">
-                <button type="button" onClick={() => setPreviewMode("light")}
-                  aria-label="Switch to light preview"
-                  className={`rounded-md p-1.5 transition-colors ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`} title="Light mode">
-                  <Sun className="h-4 w-4" />
+              <div className="flex items-center gap-1 rounded-lg border border-border p-1" role="tablist" aria-label="Preview mode">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setPreviewMode("light")
+                    announceToScreenReader('Light preview mode')
+                  }}
+                  aria-label="Switch to light preview (Ctrl+L)"
+                  className={`rounded-md p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`} 
+                  title="Light mode (Ctrl+L)"
+                  role="tab"
+                  aria-selected={previewMode === "light"}
+                >
+                  <Sun className="h-4 w-4" aria-hidden="true" />
+                  <kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">L</kbd>
                 </button>
-                <button type="button" onClick={() => setPreviewMode("dark")}
-                  aria-label="Switch to dark preview"
-                  className={`rounded-md p-1.5 transition-colors ${previewMode === "dark" ? "bg-muted" : "hover:bg-muted/50"}`} title="Dark mode">
-                  <Moon className="h-4 w-4" />
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setPreviewMode("dark")
+                    announceToScreenReader('Dark preview mode')
+                  }}
+                  aria-label="Switch to dark preview (Ctrl+D)"
+                  className={`rounded-md p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${previewMode === "dark" ? "bg-muted" : "hover:bg-muted/50"}`} 
+                  title="Dark mode (Ctrl+D)"
+                  role="tab"
+                  aria-selected={previewMode === "dark"}
+                >
+                  <Moon className="h-4 w-4" aria-hidden="true" />
+                  <kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">D</kbd>
                 </button>
               </div>
             </div>
@@ -457,32 +582,47 @@ export function DesignTokenGenerator() {
                 </div>
               </div>
 
-              <div>
+              <div role="region" aria-label="Export tokens">
                 <p className="text-xs font-medium mb-2">Export <span className="text-muted-foreground font-normal">— includes light & dark semantic tokens</span></p>
                 <Tabs defaultValue="css">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="css">CSS</TabsTrigger>
-                    <TabsTrigger value="tailwind">Tailwind</TabsTrigger>
-                    <TabsTrigger value="json">JSON</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-3" role="tablist" aria-label="Export format">
+                    <TabsTrigger value="css" role="tab" aria-selected={true}>CSS</TabsTrigger>
+                    <TabsTrigger value="tailwind" role="tab" aria-selected={false}>Tailwind</TabsTrigger>
+                    <TabsTrigger value="json" role="tab" aria-selected={false}>JSON</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="css" className="space-y-2">
-                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs"><code>{generateCSS()}</code></pre>
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(generateCSS(), "css")}>
-                      {copiedKey === "css" ? <Check className="mr-2 h-3.5 w-3.5" /> : <Copy className="mr-2 h-3.5 w-3.5" />}
-                      Copy CSS <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+C</kbd>
+                  <TabsContent value="css" className="space-y-2" role="tabpanel" aria-label="CSS export">
+                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs" role="code" aria-label="Generated CSS code"><code>{generateCSS()}</code></pre>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => copyToClipboard(generateCSS(), "css", "CSS tokens")}
+                      aria-label="Copy CSS tokens (Ctrl+C)"
+                    >
+                      {copiedKey === "css" ? <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
+                      Copy CSS <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+C</kbd>
                     </Button>
                   </TabsContent>
-                  <TabsContent value="tailwind" className="space-y-2">
-                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs"><code>{generateTailwind()}</code></pre>
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(generateTailwind(), "tailwind")}>
-                      {copiedKey === "tailwind" ? <Check className="mr-2 h-3.5 w-3.5" /> : <Copy className="mr-2 h-3.5 w-3.5" />}
+                  <TabsContent value="tailwind" className="space-y-2" role="tabpanel" aria-label="Tailwind export">
+                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs" role="code" aria-label="Generated Tailwind config"><code>{generateTailwind()}</code></pre>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => copyToClipboard(generateTailwind(), "tailwind", "Tailwind config")}
+                      aria-label="Copy Tailwind config"
+                    >
+                      {copiedKey === "tailwind" ? <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
                       Copy Config
                     </Button>
                   </TabsContent>
-                  <TabsContent value="json" className="space-y-2">
-                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs"><code>{generateJSON()}</code></pre>
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(generateJSON(), "json")}>
-                      {copiedKey === "json" ? <Check className="mr-2 h-3.5 w-3.5" /> : <Copy className="mr-2 h-3.5 w-3.5" />}
+                  <TabsContent value="json" className="space-y-2" role="tabpanel" aria-label="JSON export">
+                    <pre className="max-h-48 overflow-auto rounded-lg bg-muted p-3 text-xs" role="code" aria-label="Generated JSON tokens"><code>{generateJSON()}</code></pre>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => copyToClipboard(generateJSON(), "json", "JSON tokens")}
+                      aria-label="Copy JSON tokens"
+                    >
+                      {copiedKey === "json" ? <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
                       Copy JSON
                     </Button>
                   </TabsContent>
@@ -496,8 +636,15 @@ export function DesignTokenGenerator() {
       <ShortcutsModal
         pageName="Design Token Generator"
         shortcuts={[
+          { keys: ["Ctrl", "1"], description: "Open primary color picker" },
+          { keys: ["Ctrl", "2"], description: "Open secondary color picker" },
+          { keys: ["Ctrl", "3"], description: "Open accent color picker" },
           { keys: ["Ctrl", "C"], description: "Copy CSS tokens" },
+          { keys: ["Ctrl", "L"], description: "Switch to light preview" },
+          { keys: ["Ctrl", "D"], description: "Switch to dark preview" },
+          { keys: ["Escape"], description: "Close color picker" },
           { keys: ["?"], description: "Toggle this shortcuts panel" },
+          { keys: ["Tab"], description: "Navigate between controls" },
         ]}
       />
     </>

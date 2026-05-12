@@ -197,13 +197,19 @@ export function FileChecksumVerifier() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">File</Label>
+            <Label id="file-label" className="text-sm font-medium">File</Label>
             <div
+              ref={inputRef}
+              role="button"
+              tabIndex={0}
+              aria-label={`File drop area${file ? `, ${file.name}, ${formatBytes(file.size)}` : ", click or drop a file to verify"}`}
+              aria-describedby="file-hint file-desc"
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
               onClick={() => inputRef.current?.click()}
-              className={`relative flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
+              className={`relative flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
               }`}
             >
@@ -211,6 +217,7 @@ export function FileChecksumVerifier() {
                 ref={inputRef}
                 type="file"
                 className="hidden"
+                aria-label="Select file to compute checksum"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
               />
               {file ? (
@@ -224,7 +231,8 @@ export function FileChecksumVerifier() {
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); setFile(null); setResults([]); setError(null) }}
-                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={`Remove file ${file?.name || ""}`}
+                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -243,14 +251,16 @@ export function FileChecksumVerifier() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Algorithms</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2" role="group" aria-labelledby="algo-label">
+            <Label id="algo-label" className="text-sm font-medium">Algorithms</Label>
+            <div className="grid grid-cols-2 gap-2" role="group">
               {ALGOS.map(algo => (
                 <button
                   key={algo}
                   onClick={() => toggleAlgo(algo)}
-                  className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors text-left ${
+                  aria-pressed={selectedAlgos.has(algo)}
+                  aria-label={`${algo} algorithm${selectedAlgos.has(algo) ? " (selected)" : ""}`}
+                  className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                     selectedAlgos.has(algo)
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -260,28 +270,34 @@ export function FileChecksumVerifier() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">SHA-256 is recommended for modern file verification</p>
+            <p className="text-xs text-muted-foreground" id="algo-desc">SHA-256 is recommended for modern file verification</p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
+            <Label id="expected-label" className="text-sm font-medium">
               Expected Hash{" "}
               <span className="font-normal text-muted-foreground">(optional)</span>
             </Label>
             <Input
+              aria-describedby="expected-desc"
               placeholder="Paste checksum from download page…"
               value={expectedHash}
               onChange={(e) => setExpectedHash(e.target.value)}
               className="font-mono text-xs"
             />
-            <p className="text-xs text-muted-foreground">
+            <p id="expected-desc" className="text-xs text-muted-foreground">
               Paste the hash from the software publisher to verify the file has not been tampered with
             </p>
           </div>
         </div>
 
         <div className="shrink-0 border-t border-border p-4 space-y-2">
-          <Button className="w-full" onClick={compute} disabled={!file || computing}>
+          <Button
+              className="w-full"
+              onClick={compute}
+              disabled={!file || computing}
+              aria-label={computing ? "Computing hash, please wait" : `Compute hash using ${Array.from(selectedAlgos).join(", ")}`}
+            >
             {computing ? (
               <>
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
@@ -368,7 +384,8 @@ export function FileChecksumVerifier() {
                       <span className="flex-1 break-all font-mono text-xs leading-relaxed select-all">{hash}</span>
                       <button
                         onClick={() => copy(algo, hash)}
-                        className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground mt-0.5"
+                        aria-label={copiedAlgo === algo ? `Copied ${algo} hash to clipboard` : `Copy ${algo} hash to clipboard`}
+                        className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground mt-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         {copiedAlgo === algo
                           ? <Check className="h-3.5 w-3.5 text-green-500" />

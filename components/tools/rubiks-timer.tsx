@@ -5,6 +5,7 @@ import { RefreshCw, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Solve {
@@ -110,6 +111,12 @@ export default function RubiksTimer() {
   const [inspEnabled, setInspEnabled] = useState(true)
   const [solves, setSolves] = useState<Solve[]>([])
   const [lastSolveId, setLastSolveId] = useState<string | null>(null)
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   // Refs — keep values accessible inside stable callbacks without stale closures
   const phaseRef = useRef<Phase>("idle")
@@ -153,7 +160,8 @@ export default function RubiksTimer() {
     setPhase("running")
     phaseRef.current = "running"
     rafRef.current = requestAnimationFrame(tick)
-  }, [tick])
+    announceToScreenReader("Timer started")
+  }, [tick, announceToScreenReader])
 
   const stopTimer = useCallback(() => {
     isRunningRef.current = false
@@ -167,7 +175,8 @@ export default function RubiksTimer() {
     setPhase("stopped")
     phaseRef.current = "stopped"
     setScramble(genScramble())
-  }, [])
+    announceToScreenReader(`Timer stopped: ${fmt(elapsed)}`)
+  }, [announceToScreenReader])
 
   // ─── Inspection ─────────────────────────────────────────────────────────────
   const startInspection = useCallback(() => {
@@ -177,6 +186,7 @@ export default function RubiksTimer() {
     setLastSolveId(null)
     setPhase("inspecting")
     phaseRef.current = "inspecting"
+    announceToScreenReader("Inspection started, 15 seconds")
     inspTimerRef.current = setInterval(() => {
       setInspSecs(prev => {
         if (prev <= 1) {
@@ -187,7 +197,7 @@ export default function RubiksTimer() {
         return prev - 1
       })
     }, 1000)
-  }, [startTimer])
+  }, [startTimer, announceToScreenReader])
 
   // ─── Touch handler refs ─────────────────────────────────────────────────────
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
@@ -264,6 +274,40 @@ export default function RubiksTimer() {
     }
   }, [startTimer, stopTimer, startInspection])
 
+  // Additional keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "s":
+            e.preventDefault()
+            if (phase !== "running" && !isInspPhase) {
+              setScramble(genScramble())
+              announceToScreenReader("New scramble generated")
+            }
+            break
+          case "c":
+            if (solves.length > 0) {
+              e.preventDefault()
+              setSolves([])
+              saveSolves([])
+              setLastSolveId(null)
+              announceToScreenReader("Session cleared")
+            }
+            break
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [phase, solves.length])
+
+  const shortcuts = [
+    { keys: ["Space"], description: "Start/Stop timer (or inspection)" },
+    { keys: ["Ctrl", "Shift", "S"], description: "Generate new scramble" },
+    { keys: ["Ctrl", "Shift", "C"], description: "Clear session" },
+  ]
+
   // ─── Touch handlers for timer area ────────────────────────────────────────────
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0]
@@ -332,16 +376,23 @@ export default function RubiksTimer() {
   }, [])
 
   // ─── Actions ─────────────────────────────────────────────────────────────────
-  const setPenalty = (id: string, penalty: Solve["penalty"]) => {
+  const setPenalty = useCallback((id: string, penalty: Solve["penalty"]) => {
     setSolves(prev => { const u = prev.map(s => s.id === id ? { ...s, penalty } : s); saveSolves(u); return u })
-  }
+    announceToScreenReader(`Penalty set to ${penalty === "none" ? "OK" : penalty}`)
+  }, [announceToScreenReader])
 
-  const deleteSolve = (id: string) => {
+  const deleteSolve = useCallback((id: string) => {
     setSolves(prev => { const u = prev.filter(s => s.id !== id); saveSolves(u); return u })
     if (lastSolveId === id) setLastSolveId(null)
-  }
+    announceToScreenReader("Solve deleted")
+  }, [lastSolveId, announceToScreenReader])
 
-  const clearSession = () => { setSolves([]); saveSolves([]); setLastSolveId(null) }
+  const clearSession = useCallback(() => { 
+    setSolves([]); 
+    saveSolves([]); 
+    setLastSolveId(null)
+    announceToScreenReader("Session cleared")
+  }, [announceToScreenReader])
 
   // ─── Display ─────────────────────────────────────────────────────────────────
   const isInspPhase = phase === "inspecting" || phase === "insp-holding" || phase === "insp-ready"
@@ -372,6 +423,10 @@ export default function RubiksTimer() {
 
   return (
     <div className="flex h-full flex-col gap-3 p-4 select-none" tabIndex={-1}>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
+      
       {/* Title + controls */}
       <div className="flex items-start justify-between shrink-0 flex-wrap gap-2">
         <div>
@@ -383,23 +438,31 @@ export default function RubiksTimer() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <ShortcutsModal pageName="Rubik's Timer" shortcuts={shortcuts} />
           <div className="flex items-center gap-2">
             <Switch
               id="inspection-toggle"
               checked={inspEnabled}
-              onCheckedChange={toggleInspection}
+              onCheckedChange={(val) => { toggleInspection(val); announceToScreenReader(val ? "Inspection enabled" : "Inspection disabled") }}
               disabled={phase === "running" || isInspPhase}
+              aria-label="Enable 15 second inspection"
             />
             <Label htmlFor="inspection-toggle" className="text-sm cursor-pointer">
               15s Inspection
             </Label>
           </div>
           <Button
-            variant="outline" size="sm"
-            onClick={() => setScramble(genScramble())}
+            variant="outline" 
+            size="sm"
+            onClick={() => { setScramble(genScramble()); announceToScreenReader("New scramble generated") }}
             disabled={phase === "running" || isInspPhase}
+            aria-label="Generate new scramble"
           >
-            <RefreshCw className="h-4 w-4 mr-1" />New Scramble
+            <RefreshCw className="h-4 w-4 mr-1" />
+            <span>New Scramble</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>S</span>
+            </kbd>
           </Button>
         </div>
       </div>
@@ -416,29 +479,41 @@ export default function RubiksTimer() {
         {/* Timer + history */}
         <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           {/* Timer */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
+          <div 
+            className="flex-1 flex flex-col items-center justify-center gap-5 p-8" 
+            role="timer" 
+            aria-label={`Timer: ${timerDisplay}${phase === "running" ? ", running" : ""}`}
+          >
             <div
-              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"} touch-manipulation select-none`}
+              className={`font-bold font-mono tabular-nums transition-colors cursor-pointer leading-none ${timerColor} ${isInspPhase ? "text-9xl" : "text-8xl"} touch-manipulation select-none focus:outline-none focus:ring-4 focus:ring-primary/30 rounded-lg`}
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
+              role="button"
+              tabIndex={0}
+              aria-label={`Timer display: ${timerDisplay}. Touch or press Space to control timer.`}
             >
               {timerDisplay}
             </div>
 
             {isInspPhase && (
-              <p className="text-sm font-medium text-muted-foreground -mt-2">seconds remaining</p>
+              <p className="text-sm font-medium text-muted-foreground -mt-2" aria-live="polite">
+                {inspSecs} seconds remaining
+              </p>
             )}
 
-            <p className="text-sm text-muted-foreground">{hint}</p>
+            <p className="text-sm text-muted-foreground" aria-live="polite">{hint}</p>
 
             {phase === "stopped" && lastSolve && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" role="group" aria-label="Penalty options">
                 <span className="text-xs text-muted-foreground">Penalty:</span>
                 {(["none", "+2", "dnf"] as const).map(p => (
                   <button
                     key={p}
                     onClick={() => setPenalty(lastSolve.id, p)}
-                    className={`text-xs px-3 py-1.5 rounded-full border font-semibold uppercase tracking-wide transition-colors ${
+                    role="radio"
+                    aria-checked={lastSolve.penalty === p}
+                    aria-label={p === "none" ? "No penalty" : `Penalty: ${p}`}
+                    className={`text-xs px-3 py-1.5 rounded-full border font-semibold uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${
                       lastSolve.penalty === p
                         ? p === "dnf" ? "bg-destructive text-destructive-foreground border-destructive"
                         : p === "+2"  ? "bg-yellow-500 text-white border-yellow-500"
@@ -449,21 +524,21 @@ export default function RubiksTimer() {
                     {p === "none" ? "OK" : p}
                   </button>
                 ))}
-                <span className="text-sm font-mono ml-2 text-muted-foreground">
+                <span className="text-sm font-mono ml-2 text-muted-foreground" aria-label={`Final time: ${fmtSolve(lastSolve)}`}>
                   {fmtSolve(lastSolve)}
                 </span>
               </div>
             )}
 
-            <div className="flex gap-10 text-center mt-4">
+            <div className="flex gap-10 text-center mt-4" role="region" aria-label="Statistics">
               {[
-                { label: "Best",  value: calcBest(solves) },
-                { label: "Ao5",   value: calcAo(solves, 5) },
-                { label: "Ao12",  value: calcAo(solves, 12) },
-                { label: "Count", value: String(solves.length) },
-              ].map(({ label, value }) => (
+                { label: "Best",  value: calcBest(solves), aria: "Best time" },
+                { label: "Ao5",   value: calcAo(solves, 5), aria: "Average of 5" },
+                { label: "Ao12",  value: calcAo(solves, 12), aria: "Average of 12" },
+                { label: "Count", value: String(solves.length), aria: `${solves.length} solves` },
+              ].map(({ label, value, aria }) => (
                 <div key={label}>
-                  <p className="text-2xl font-mono font-bold">{value}</p>
+                  <p className="text-2xl font-mono font-bold" aria-label={aria}>{value}</p>
                   <p className="text-xs text-muted-foreground mt-1">{label}</p>
                 </div>
               ))}
@@ -472,22 +547,25 @@ export default function RubiksTimer() {
 
           {/* Solve history sidebar */}
           {solves.length > 0 && (
-            <div className="flex flex-col border-t md:border-t-0 md:border-l border-border md:w-52 md:shrink-0">
+            <div className="flex flex-col border-t md:border-t-0 md:border-l border-border md:w-52 md:shrink-0" role="region" aria-label="Solve history">
               <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Session ({solves.length})
                 </h3>
                 <button
                   onClick={clearSession}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/50 rounded px-1"
+                  aria-label="Clear all solves in session"
                 >
                   Clear all
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto" role="list" aria-label="List of solves">
                 {[...solves].reverse().map((s, i) => (
                   <div
                     key={s.id}
+                    role="listitem"
+                    aria-label={`Solve ${solves.length - i}: ${fmtSolve(s)}${s.penalty === "dnf" ? ", Did Not Finish" : s.penalty === "+2" ? ", plus 2 seconds" : ""}`}
                     className={`flex items-center px-3 py-2 border-b border-border/50 text-sm group ${
                       s.id === lastSolveId ? "bg-primary/5" : "hover:bg-muted/20"
                     }`}

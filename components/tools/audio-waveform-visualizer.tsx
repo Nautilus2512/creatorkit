@@ -359,14 +359,14 @@ export default function AudioWaveformVisualizer() {
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Waveform Settings</h4>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                onClick={() => setShowSettings(!showSettings)}
+                onClick={() => setShowSettings(v => !v)}
                 aria-label={showSettings ? "Hide settings panel" : "Show settings panel"}
                 aria-expanded={showSettings}
               >
                 <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
-                {showSettings ? 'Hide' : 'Show'} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">,</kbd>
+                {showSettings ? 'Hide' : 'Show'} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+,</kbd>
               </Button>
             </div>
             

@@ -75,92 +75,24 @@ const parseMarkdown = (text: string): string => {
 }
 
 export function MarkdownEditor() {
-  const [markdown, setMarkdown] = useState(`# Welcome to Markdown Editor
-
-## Features
-- **Live preview** with instant rendering
-- *Syntax highlighting* support
-- ~~Strikethrough~~ text
-- \`Inline code\` examples
-
-## Code Example
-\`\`\`javascript
-function hello() {
-  console.log("Hello, World!");
-}
-\`\`\`
-
-## Links and Images
-[Visit GitHub](https://github.com)
-
-> This is a blockquote example
-> Perfect for highlighting important content
-
-## Lists
-1. First item
-2. Second item
-3. Third item
-
-* Unordered list item
-* Another item
-* Last item`)
+  const [markdown, setMarkdown] = useState("# Welcome to Markdown Editor\n\n## Features\n- **Live preview** with instant rendering\n- *Syntax highlighting* support\n- ~~Strikethrough~~ text\n- `Inline code` examples\n\n## Code Example\n```javascript\nfunction hello() {\n  console.log(\"Hello, World!\");\n}\n```\n\n## Links and Images\n[Visit GitHub](https://github.com)\n\n> This is a blockquote example\n> Perfect for highlighting important content\n\n## Lists\n1. First item\n2. Second item\n3. Third item\n\n* Unordered list item\n* Another item\n* Last item")
   
   const [copied, setCopied] = useState(false)
   const [syncScroll, setSyncScroll] = useState(true)
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [announcement, setAnnouncement] = useState("")
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const isUndoingRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
   
   const html = parseMarkdown(markdown)
-
-  const insertText = (before: string, after: string = "") => {
-    const textarea = editorRef.current
-    if (!textarea) return
-    
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = markdown.substring(start, end)
-    const newText = before + selectedText + after
-    
-    const newMarkdown = markdown.substring(0, start) + newText + markdown.substring(end)
-    setMarkdownWithHistory(newMarkdown)
-    
-    // Restore cursor position
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length)
-    }, 0)
-  }
-
-  const copyMarkdown = async () => {
-    await navigator.clipboard.writeText(markdown)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const downloadMarkdown = () => {
-    const blob = new Blob([markdown], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = 'document.md'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const uploadMarkdown = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const content = event.target?.result as string
-      setMarkdownWithHistory(content)
-    }
-    reader.readAsText(file)
-  }
 
   const setMarkdownWithHistory = useCallback((newMarkdown: string) => {
     if (isUndoingRef.current) {
@@ -182,6 +114,56 @@ function hello() {
     })
     setMarkdown(newMarkdown)
   }, [historyIndex, history.length])
+
+  const insertText = (before: string, after: string = "") => {
+    const textarea = editorRef.current
+    if (!textarea) return
+    
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = markdown.substring(start, end)
+    const newText = before + selectedText + after
+    
+    const newMarkdown = markdown.substring(0, start) + newText + markdown.substring(end)
+    setMarkdownWithHistory(newMarkdown)
+    
+    // Restore cursor position
+    setTimeout(() => {
+      textarea.focus()
+      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length)
+    }, 0)
+  }
+
+  const copyMarkdown = useCallback(async () => {
+    await navigator.clipboard.writeText(markdown)
+    setCopied(true)
+    announceToScreenReader("Markdown copied to clipboard")
+    setTimeout(() => setCopied(false), 2000)
+  }, [markdown, announceToScreenReader])
+
+  const downloadMarkdown = useCallback(() => {
+    const blob = new Blob([markdown], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = 'document.md'
+    a.click()
+    URL.revokeObjectURL(url)
+    announceToScreenReader("Markdown file downloaded")
+  }, [markdown, announceToScreenReader])
+
+  const uploadMarkdown = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target?.result as string
+      setMarkdownWithHistory(content)
+      announceToScreenReader(`File "${file.name}" uploaded successfully`)
+    }
+    reader.readAsText(file)
+  }, [setMarkdownWithHistory, announceToScreenReader])
 
   const undo = () => {
     if (historyIndex > 0) {
@@ -265,23 +247,40 @@ function hello() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault()
         downloadMarkdown()
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && e.shiftKey) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
         e.preventDefault()
         copyMarkdown()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
+        insertText("**", "**")
+        announceToScreenReader("Bold applied")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault()
+        insertText("*", "*")
+        announceToScreenReader("Italic applied")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault()
+        fileInputRef.current?.click()
+        announceToScreenReader("File upload dialog opened")
       }
     }
     const handleEditorKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault()
         undo()
+        announceToScreenReader("Undo")
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault()
         redo()
+        announceToScreenReader("Redo")
       }
     }
 
@@ -297,20 +296,24 @@ function hello() {
         editor.removeEventListener('keydown', handleEditorKeyDown)
       }
     }
-  }, [markdown])
+  }, [markdown, downloadMarkdown, copyMarkdown, announceToScreenReader])
 
   return (
     <>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <ShortcutsModal
         pageName="Markdown Editor"
         shortcuts={[
-          { keys: ["Ctrl", "S"], description: "Download markdown" },
+          { keys: ["Ctrl", "Shift", "S"], description: "Download markdown" },
           { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
-          { keys: ["Ctrl", "B"], description: "Bold text" },
-          { keys: ["Ctrl", "I"], description: "Italic text" },
+          { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+          { keys: ["Ctrl", "Shift", "B"], description: "Bold text" },
+          { keys: ["Ctrl", "Shift", "I"], description: "Italic text" },
           { keys: ["Ctrl", "Z"], description: "Undo" },
           { keys: ["Ctrl", "Y"], description: "Redo" },
-          { keys: ["?"], description: "Toggle this panel" },
+          { keys: ["?"], description: "Show keyboard shortcuts" },
         ]}
       />
       <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
@@ -320,28 +323,58 @@ function hello() {
             <h2 className="text-2xl font-semibold tracking-tight">Markdown Editor</h2>
             <p className="text-muted-foreground">Write and preview markdown with live rendering</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="group" aria-label="Editor actions">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSyncScroll(!syncScroll)}
+              onClick={() => { setSyncScroll(!syncScroll); announceToScreenReader(syncScroll ? "Scroll sync disabled" : "Scroll sync enabled") }}
               title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-pressed={syncScroll}
+              aria-label="Toggle scroll sync"
             >
-              {syncScroll ? <Link2 className="h-3 w-3 mr-1" /> : <Link2Off className="h-3 w-3 mr-1" />}
+              {syncScroll ? <Link2 className="h-3 w-3 mr-1" aria-hidden="true" /> : <Link2Off className="h-3 w-3 mr-1" aria-hidden="true" />}
               {syncScroll ? "Sync Scroll" : "Free Scroll"}
             </Button>
-            <Button variant="outline" size="sm" onClick={copyMarkdown}>
-              {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={copyMarkdown}
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label={copied ? "Copied to clipboard" : "Copy markdown to clipboard"}
+            >
+              {copied ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
+              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
-            <Button variant="outline" size="sm" onClick={downloadMarkdown}>
-              <Download className="h-3 w-3 mr-1" />Download
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadMarkdown}
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Download markdown file"
+            >
+              <Download className="h-3 w-3 mr-1" aria-hidden="true" />Download
+              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
             <div className="relative">
-              <input type="file" accept=".md,.txt" onChange={uploadMarkdown} className="hidden" id="upload-md" />
-              <Button variant="outline" size="sm" asChild>
-                <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1">
-                  <Upload className="h-3 w-3" />Upload
+              <input 
+                type="file" 
+                accept=".md,.txt" 
+                onChange={uploadMarkdown} 
+                className="hidden" 
+                id="upload-md"
+                ref={fileInputRef}
+                aria-label="Upload markdown file"
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                asChild
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1" role="button" aria-label="Upload markdown file">
+                  <Upload className="h-3 w-3" aria-hidden="true" />Upload<kbd className="ml-1 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
                 </label>
               </Button>
             </div>
@@ -350,70 +383,168 @@ function hello() {
 
         <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
           {/* Left card — Editor */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="editor-panel-label">
+            <div className="sr-only" id="editor-panel-label">Markdown Editor</div>
             {/* Toolbar */}
-            <div className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30">
-              <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)">
-                <Undo className="h-3 w-3" />
+            <div 
+              className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30"
+              role="toolbar"
+              aria-label="Formatting tools"
+            >
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { undo(); announceToScreenReader("Undo") }}
+                disabled={historyIndex <= 0} 
+                title="Undo (Ctrl+Z)"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Undo"
+                aria-disabled={historyIndex <= 0}
+              >
+                <Undo className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1} title="Redo (Ctrl+Y)">
-                <Redo className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { redo(); announceToScreenReader("Redo") }}
+                disabled={historyIndex >= history.length - 1} 
+                title="Redo (Ctrl+Y)"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Redo"
+                aria-disabled={historyIndex >= history.length - 1}
+              >
+                <Redo className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <div className="h-4 w-px bg-border mx-1" />
-              <Button variant="ghost" size="sm" onClick={() => insertText("**", "**")} title="Bold (Ctrl+B)">
-                <Bold className="h-3 w-3" />
+              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("**", "**"); announceToScreenReader("Bold applied") }}
+                title="Bold (Ctrl+Shift+B)"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Bold"
+              >
+                <Bold className="h-3 w-3" aria-hidden="true" />
+                <kbd className="sr-only">Ctrl+Shift+B</kbd>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("*", "*")} title="Italic (Ctrl+I)">
-                <Italic className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("*", "*"); announceToScreenReader("Italic applied") }}
+                title="Italic (Ctrl+Shift+I)"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Italic"
+              >
+                <Italic className="h-3 w-3" aria-hidden="true" />
+                <kbd className="sr-only">Ctrl+Shift+I</kbd>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("~~", "~~")} title="Strikethrough">
-                <Strikethrough className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("~~", "~~"); announceToScreenReader("Strikethrough applied") }}
+                title="Strikethrough"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Strikethrough"
+              >
+                <Strikethrough className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <div className="h-4 w-px bg-border mx-1" />
-              <Button variant="ghost" size="sm" onClick={() => insertText("# ", "")} title="Heading">
-                <Hash className="h-3 w-3" />
+              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("# ", ""); announceToScreenReader("Heading added") }}
+                title="Heading"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add heading"
+              >
+                <Hash className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("`", "`")} title="Inline code">
-                <Quote className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("`", "`"); announceToScreenReader("Inline code added") }}
+                title="Inline code"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add inline code"
+              >
+                <Quote className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("> ", "")} title="Quote">
-                <Code className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("> ", ""); announceToScreenReader("Blockquote added") }}
+                title="Quote"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add blockquote"
+              >
+                <Code className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <div className="h-4 w-px bg-border mx-1" />
-              <Button variant="ghost" size="sm" onClick={() => insertText("- ", "")} title="Unordered list">
-                <List className="h-3 w-3" />
+              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("- ", ""); announceToScreenReader("Unordered list added") }}
+                title="Unordered list"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add unordered list"
+              >
+                <List className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("1. ", "")} title="Ordered list">
-                <ListOrdered className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("1. ", ""); announceToScreenReader("Ordered list added") }}
+                title="Ordered list"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add ordered list"
+              >
+                <ListOrdered className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("[", "](url)")} title="Link">
-                <Link className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("[", "](url)"); announceToScreenReader("Link template added") }}
+                title="Link"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add link"
+              >
+                <Link className="h-3 w-3" aria-hidden="true" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => insertText("![", "](url)")} title="Image">
-                <Image className="h-3 w-3" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { insertText("![", "](url)"); announceToScreenReader("Image template added") }}
+                title="Image"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Add image"
+              >
+                <Image className="h-3 w-3" aria-hidden="true" />
               </Button>
             </div>
             {/* Editor */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0" role="textbox" aria-label="Markdown editor">
               <Textarea
                 ref={editorRef}
                 value={markdown}
-                onChange={(e) => setMarkdownWithHistory(e.target.value)}
+                onChange={(e) => { setMarkdownWithHistory(e.target.value); announceToScreenReader("Editor content updated") }}
                 placeholder="Write your markdown here..."
                 className="w-full h-full resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+                aria-label="Markdown editor input"
               />
             </div>
           </div>
 
           {/* Right card — Preview */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-panel-label">
             <div className="shrink-0 border-b border-border px-4 py-3 bg-muted/30">
-              <span className="text-sm font-medium">Preview</span>
+              <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
             </div>
             <div
               ref={previewRef}
               className="flex-1 overflow-y-auto p-4 prose prose-sm max-w-none dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: html }}
+              role="document"
+              aria-label="Markdown preview"
             />
           </div>
         </div>

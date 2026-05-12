@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 type Template = "minimal" | "dark" | "gradient" | "split"
 type FontId = "sans-serif" | "serif" | "monospace" | "Georgia" | "Arial Black"
@@ -192,6 +193,12 @@ export default function OgImageGenerator() {
   const [primary, setPrimary]   = useState("#3b82f6")
   const [secondary, setSecondary] = useState("#8b5cf6")
   const [font, setFont]         = useState<FontId>("sans-serif")
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   const draw = useCallback(() => {
     if (!canvasRef.current) return
@@ -200,69 +207,137 @@ export default function OgImageGenerator() {
 
   useEffect(() => { draw() }, [draw])
 
-  const download = () => {
+  const download = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
     const a = document.createElement("a")
     a.href = canvas.toDataURL("image/png")
     a.download = "og-image.png"; a.click()
-  }
+    announceToScreenReader("OG Image downloaded")
+  }, [announceToScreenReader])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        download()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [download])
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">OG Image Generator</h2>
-          <p className="text-muted-foreground">Generate Open Graph images for social media. 1200×630 PNG, rendered in your browser.</p>
-        </div>
-        <Button onClick={download}><Download className="h-4 w-4 mr-1.5" />Download PNG</Button>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
       </div>
+      <ShortcutsModal
+        pageName="OG Image Generator"
+        shortcuts={[
+          { keys: ["Ctrl", "Shift", "S"], description: "Download OG Image" },
+        ]}
+      />
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">OG Image Generator</h2>
+            <p className="text-muted-foreground">Generate Open Graph images for social media. 1200×630 PNG, rendered in your browser.</p>
+          </div>
+          <Button 
+            onClick={download}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label="Download OG Image as PNG"
+          >
+            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download PNG
+            <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
+          </Button>
+        </div>
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Settings</span></div>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="settings-label">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="settings-label">Settings</span></div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Template</Label>
-            <div className="grid grid-cols-2 gap-1">
+          <div className="space-y-2" role="group" aria-labelledby="template-label">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="template-label">Template</Label>
+            <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label="Template selection">
               {TEMPLATES.map(t => (
-                <button key={t.id} onClick={() => setTemplate(t.id)}
-                  className={`text-xs px-2 py-2 rounded border transition-colors ${template===t.id?"bg-primary text-primary-foreground border-primary":"border-border text-muted-foreground hover:border-primary/40"}`}>
+                <button 
+                  key={t.id} 
+                  onClick={() => { setTemplate(t.id); announceToScreenReader(`Template changed to ${t.label}`) }}
+                  role="radio"
+                  aria-checked={template === t.id}
+                  className={`text-xs px-2 py-2 rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${template===t.id?"bg-primary text-primary-foreground border-primary":"border-border text-muted-foreground hover:border-primary/40"}`}
+                >
                   {t.label}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content</Label>
+          <div className="space-y-3" role="group" aria-labelledby="content-label">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="content-label">Content</Label>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Title</Label>
-              <Textarea value={title} onChange={e=>setTitle(e.target.value)} rows={2} className="text-sm resize-none" placeholder="Your headline" />
+              <Label className="text-xs text-muted-foreground" htmlFor="og-title">Title</Label>
+              <Textarea 
+                id="og-title"
+                value={title} 
+                onChange={e=>{setTitle(e.target.value); announceToScreenReader("Title updated")}} 
+                rows={2} 
+                className="text-sm resize-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
+                placeholder="Your headline"
+                aria-label="Image title"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Subtitle / Description</Label>
-              <Textarea value={subtitle} onChange={e=>setSubtitle(e.target.value)} rows={3} className="text-sm resize-none" placeholder="A short description" />
+              <Label className="text-xs text-muted-foreground" htmlFor="og-subtitle">Subtitle / Description</Label>
+              <Textarea 
+                id="og-subtitle"
+                value={subtitle} 
+                onChange={e=>{setSubtitle(e.target.value); announceToScreenReader("Subtitle updated")}} 
+                rows={3} 
+                className="text-sm resize-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
+                placeholder="A short description"
+                aria-label="Image subtitle"
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Site / Brand name</Label>
-              <Input value={site} onChange={e=>setSite(e.target.value)} className="text-sm" placeholder="yoursite.com" />
+              <Label className="text-xs text-muted-foreground" htmlFor="og-site">Site / Brand name</Label>
+              <Input 
+                id="og-site"
+                value={site} 
+                onChange={e=>{setSite(e.target.value); announceToScreenReader("Site name updated")}} 
+                className="text-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
+                placeholder="yoursite.com"
+                aria-label="Site or brand name"
+              />
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Colors</Label>
+          <div className="space-y-3" role="group" aria-labelledby="colors-label">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="colors-label">Colors</Label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <input type="color" value={primary} onChange={e=>setPrimary(e.target.value)} className="w-8 h-8 rounded border border-border cursor-pointer shrink-0" />
+                <input 
+                  type="color" 
+                  value={primary} 
+                  onChange={e=>{setPrimary(e.target.value); announceToScreenReader("Primary color updated")}} 
+                  className="w-8 h-8 rounded border border-border cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Primary color"
+                />
                 <div>
                   <Label className="text-xs text-muted-foreground">Primary</Label>
                   <p className="text-xs font-mono text-muted-foreground">{primary}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <input type="color" value={secondary} onChange={e=>setSecondary(e.target.value)} className="w-8 h-8 rounded border border-border cursor-pointer shrink-0" />
+                <input 
+                  type="color" 
+                  value={secondary} 
+                  onChange={e=>{setSecondary(e.target.value); announceToScreenReader("Secondary color updated")}} 
+                  className="w-8 h-8 rounded border border-border cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Secondary color"
+                />
                 <div>
                   <Label className="text-xs text-muted-foreground">Secondary / Gradient end</Label>
                   <p className="text-xs font-mono text-muted-foreground">{secondary}</p>
@@ -271,24 +346,34 @@ export default function OgImageGenerator() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Presets</Label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5" role="list" aria-label="Color presets">
                 {PRESETS.map(({p,s}) => (
-                  <button key={p} onClick={()=>{setPrimary(p);setSecondary(s)}}
+                  <button 
+                    key={p} 
+                    onClick={()=>{setPrimary(p);setSecondary(s); announceToScreenReader(`Preset applied: ${p} to ${s}`)}}
                     title={`${p} → ${s}`}
-                    className="w-7 h-7 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
-                    style={{background:`linear-gradient(135deg,${p},${s})`}} />
+                    className="w-7 h-7 rounded-full border-2 border-white shadow hover:scale-110 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    style={{background:`linear-gradient(135deg,${p},${s})`}}
+                    role="listitem"
+                    aria-label={`Color preset ${p} to ${s}`}
+                  />
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Font</Label>
-            <div className="grid grid-cols-2 gap-1">
+          <div className="space-y-2" role="group" aria-labelledby="font-label">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="font-label">Font</Label>
+            <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label="Font selection">
               {FONTS.map(f => (
-                <button key={f.id} onClick={()=>setFont(f.id)}
-                  className={`text-xs px-2 py-1.5 rounded border transition-colors ${font===f.id?"bg-primary text-primary-foreground border-primary":"border-border text-muted-foreground hover:border-primary/40"}`}
-                  style={{fontFamily:f.id}}>
+                <button 
+                  key={f.id} 
+                  onClick={()=>{setFont(f.id); announceToScreenReader(`Font changed to ${f.label}`)}}
+                  role="radio"
+                  aria-checked={font === f.id}
+                  className={`text-xs px-2 py-1.5 rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${font===f.id?"bg-primary text-primary-foreground border-primary":"border-border text-muted-foreground hover:border-primary/40"}`}
+                  style={{fontFamily:f.id}}
+                >
                   {f.label}
                 </button>
               ))}
@@ -298,13 +383,18 @@ export default function OgImageGenerator() {
         </div>
 
         {/* Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Preview</span></div>
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-label">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="preview-label">Preview</span></div>
           <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-muted/20">
             <div className="w-full max-w-4xl space-y-3">
-              <canvas ref={canvasRef} width={1200} height={630}
-                className="w-full h-auto rounded-xl shadow-xl border border-border" />
-              <p className="text-center text-xs text-muted-foreground">
+              <canvas 
+                ref={canvasRef} 
+                width={1200} 
+                height={630}
+                className="w-full h-auto rounded-xl shadow-xl border border-border" 
+                aria-label="OG Image preview"
+              />
+              <p className="text-center text-xs text-muted-foreground" role="status">
                 1200 × 630 px — standard Open Graph / Twitter Card size
               </p>
             </div>

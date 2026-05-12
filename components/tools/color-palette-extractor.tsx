@@ -1,9 +1,22 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Upload, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
+
+// Accessibility helper for screen reader announcements
+function announceToScreenReader(message: string) {
+  const announcement = document.createElement('div')
+  announcement.setAttribute('role', 'status')
+  announcement.setAttribute('aria-live', 'polite')
+  announcement.setAttribute('aria-atomic', 'true')
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
 
 interface ColorSwatch { hex: string; rgb: [number, number, number]; count: number; pct: number }
 
@@ -71,130 +84,267 @@ export default function ColorPaletteExtractor() {
   const [copied, setCopied] = useState<string | null>(null)
   const [colorFormat, setColorFormat] = useState<"hex" | "rgb" | "hsl">("hex")
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !file.type.startsWith("image/")) return
+    if (!file || !file.type.startsWith("image/")) {
+      announceToScreenReader('Please select a valid image file')
+      return
+    }
     const url = URL.createObjectURL(file)
     setImageUrl(url)
     const img = new Image()
-    img.onload = () => { setPalette(extractPalette(img, numColors)) }
+    img.onload = () => { 
+      const extracted = extractPalette(img, numColors)
+      setPalette(extracted)
+      announceToScreenReader(`Image uploaded. Extracted ${extracted.length} colors.`)
+    }
     img.src = url
     e.target.value = ""
-  }
+  }, [numColors])
 
-  const reExtract = () => {
+  const reExtract = useCallback(() => {
     if (!imageUrl) return
     const img = new Image()
-    img.onload = () => setPalette(extractPalette(img, numColors))
+    img.onload = () => {
+      const extracted = extractPalette(img, numColors)
+      setPalette(extracted)
+      announceToScreenReader(`Re-extracted ${extracted.length} colors`)
+    }
     img.src = imageUrl
-  }
+  }, [imageUrl, numColors])
 
-  const getLabel = (sw: ColorSwatch) => {
+  const changeNumColors = useCallback((n: number) => {
+    setNumColors(n)
+    if (imageUrl) {
+      const img = new Image()
+      img.onload = () => {
+        const extracted = extractPalette(img, n)
+        setPalette(extracted)
+        announceToScreenReader(`Set to extract ${n} colors`)
+      }
+      img.src = imageUrl
+    }
+  }, [imageUrl])
+
+  const changeFormat = useCallback((f: "hex" | "rgb" | "hsl") => {
+    setColorFormat(f)
+    announceToScreenReader(`Color format changed to ${f.toUpperCase()}`)
+  }, [])
+
+  const getLabel = useCallback((sw: ColorSwatch) => {
     if (colorFormat === "hex") return sw.hex
     if (colorFormat === "rgb") return `rgb(${sw.rgb.join(", ")})`
     const [h, s, l] = rgbToHsl(...sw.rgb)
     return `hsl(${h}, ${s}%, ${l}%)`
-  }
+  }, [colorFormat])
 
-  const copy = (value: string) => {
+  const copy = useCallback((value: string) => {
     navigator.clipboard.writeText(value)
     setCopied(value)
+    announceToScreenReader(`Copied ${value}`)
     setTimeout(() => setCopied(null), 2000)
-  }
+  }, [])
 
-  const copyAll = () => {
+  const copyAll = useCallback(() => {
     const all = palette.map(sw => getLabel(sw)).join("\n")
-    copy(all)
-  }
+    navigator.clipboard.writeText(all)
+    setCopied('all')
+    announceToScreenReader(`Copied all ${palette.length} colors to clipboard`)
+    setTimeout(() => setCopied(null), 2000)
+  }, [palette, getLabel])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      
+      // Ctrl+O to upload image
+      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+        e.preventDefault()
+        e.stopPropagation()
+        const fileInput = document.getElementById('palette-image-upload') as HTMLInputElement
+        fileInput?.click()
+      }
+      
+      // Ctrl+C to copy all when palette exists
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey && palette.length > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        copyAll()
+      }
+      
+      // Number keys to focus color count buttons (Tab to navigate, Enter to select)
+      // Individual color copy with number keys would require palette to be visible
+    }
+    window.addEventListener("keydown", handleKeyDown, true)
+    return () => window.removeEventListener("keydown", handleKeyDown, true)
+  }, [palette.length, imageUrl, copyAll, changeNumColors])
 
   return (
+    <>
     <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between" role="banner">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Color Palette Extractor</h2>
-          <p className="text-muted-foreground">Extract dominant colors from any image. Runs entirely in your browser.</p>
+          <h2 className="text-2xl font-semibold tracking-tight" id="extractor-title">Color Palette Extractor</h2>
+          <p className="text-muted-foreground" id="extractor-description">Extract dominant colors from any image. Runs entirely in your browser. Press Ctrl+O to upload, Ctrl+C to copy all. Press ? for shortcuts.</p>
         </div>
         {palette.length > 0 && (
-          <Button variant="outline" size="sm" onClick={copyAll}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy All
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={copyAll}
+            aria-label="Copy all colors"
+          >
+            {copied === 'all' ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+            Copy All<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
           </Button>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Colors:</Label>
+        <div className="flex items-center gap-2" role="radiogroup" aria-label="Number of colors to extract">
+          <Label className="text-xs text-muted-foreground" id="num-colors-label">Colors:</Label>
           {[5, 8, 10, 12].map(n => (
-            <button key={n} onClick={() => { setNumColors(n); if (imageUrl) { const img = new Image(); img.onload = () => setPalette(extractPalette(img, n)); img.src = imageUrl } }}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${numColors === n ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+            <button 
+              key={n} 
+              onClick={() => changeNumColors(n)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${numColors === n ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              role="radio"
+              aria-checked={numColors === n}
+              aria-label={`Extract ${n} colors`}
+            >
               {n}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Format:</Label>
+        <div className="flex items-center gap-2" role="radiogroup" aria-label="Color format">
+          <Label className="text-xs text-muted-foreground" id="format-label">Format:</Label>
           {(["hex", "rgb", "hsl"] as const).map(f => (
-            <button key={f} onClick={() => setColorFormat(f)}
-              className={`text-xs px-3 py-1 rounded-full border uppercase transition-colors ${colorFormat === f ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+            <button 
+              key={f} 
+              onClick={() => changeFormat(f)}
+              className={`text-xs px-3 py-1 rounded-full border uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${colorFormat === f ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              role="radio"
+              aria-checked={colorFormat === f}
+              aria-label={f.toUpperCase()}
+            >
               {f}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0 overflow-hidden">
         {/* Left — Upload + preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Image upload and preview">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Image</span>
           </div>
           {imageUrl ? (
             <div className="flex-1 flex flex-col p-4 gap-4 min-h-0">
-              <img src={imageUrl} alt="Uploaded" className="flex-1 object-contain rounded-lg border border-border min-h-0" />
-              <label className="cursor-pointer">
-                <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
-                <Button variant="outline" size="sm" className="w-full" asChild>
-                  <span><Upload className="h-4 w-4 mr-1" />Change Image</span>
+              <img 
+                src={imageUrl} 
+                alt="Uploaded image for color extraction" 
+                className="flex-1 object-contain rounded-lg border border-border min-h-0"
+              />
+              <>
+                <input 
+                  type="file" 
+                  id="palette-image-upload"
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleFile}
+                  aria-label="Change image"
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    const fileInput = document.getElementById('palette-image-upload') as HTMLInputElement
+                    fileInput?.click()
+                  }}
+                >
+                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Change Image<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd>
                 </Button>
-              </label>
+              </>
             </div>
           ) : (
-            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-4 rounded-xl hover:border-primary/50 transition-colors">
-              <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
-              <Upload className="h-10 w-10 text-muted-foreground/40 mb-3" />
+            <div 
+              className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-4 rounded-xl hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              onClick={() => {
+                const fileInput = document.getElementById('palette-image-upload') as HTMLInputElement
+                fileInput?.click()
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Upload an image"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  const fileInput = document.getElementById('palette-image-upload') as HTMLInputElement
+                  fileInput?.click()
+                }
+              }}
+            >
+              <input 
+                type="file" 
+                id="palette-image-upload"
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFile}
+                aria-label="Upload image file"
+              />
+              <Upload className="h-10 w-10 text-muted-foreground/40 mb-3" aria-hidden="true" />
               <p className="text-sm font-medium">Click to upload an image</p>
-              <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP, GIF</p>
-            </label>
+              <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP, GIF · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd></p>
+              <span className="sr-only">Press Control plus O to browse for images</span>
+            </div>
           )}
         </div>
 
         {/* Right — Palette */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Extracted color palette">
           <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Extracted Palette</span>
+            <span className="text-sm font-medium">Extracted Palette {palette.length > 0 && <span className="text-muted-foreground font-normal">({palette.length} colors)</span>}</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2" role="list" aria-label="Color palette list">
             {palette.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="note">
                 Upload an image to extract colors
               </div>
             ) : (
-              palette.map((sw) => {
+              palette.map((sw, index) => {
                 const label = getLabel(sw)
                 return (
-                  <div key={sw.hex} className="flex items-center gap-3 rounded-lg border border-border p-3">
-                    <div className="w-12 h-12 rounded-md border border-border/50 shrink-0" style={{ backgroundColor: sw.hex }} />
+                  <div 
+                    key={sw.hex} 
+                    className="flex items-center gap-3 rounded-lg border border-border p-3"
+                    role="listitem"
+                  >
+                    <div 
+                      className="w-12 h-12 rounded-md border border-border/50 shrink-0" 
+                      style={{ backgroundColor: sw.hex }}
+                      aria-label={`Color ${index + 1}: ${label}`}
+                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-mono">{label}</p>
+                      <p className="text-sm font-mono" aria-live="polite">{label}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
                           <div className="h-full rounded-full bg-primary/40" style={{ width: `${Math.max(sw.pct, 2)}%` }} />
                         </div>
-                        <span className="text-xs text-muted-foreground shrink-0">{sw.pct}%</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{sw.pct}% of image</span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="shrink-0 h-8 w-8 p-0" onClick={() => copy(label)}>
-                      {copied === label ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="shrink-0 h-8 w-8 p-0"
+                      onClick={() => copy(label)}
+                      aria-label={`Copy ${label}`}
+                    >
+                      {copied === label ? <Check className="h-3 w-3" aria-hidden="true" /> : <Copy className="h-3 w-3" aria-hidden="true" />}
+                      <span className="sr-only">{copied === label ? 'Copied!' : 'Copy'}</span>
                     </Button>
                   </div>
                 )
@@ -204,5 +354,17 @@ export default function ColorPaletteExtractor() {
         </div>
       </div>
     </div>
+    <ShortcutsModal
+      pageName="Color Palette Extractor"
+      shortcuts={[
+        { keys: ["Ctrl", "O"], description: "Upload or change image" },
+        { keys: ["Ctrl", "C"], description: "Copy all colors" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+        { keys: ["Tab"], description: "Navigate between controls" },
+        { keys: ["Enter"], description: "Activate focused button" },
+        { keys: ["Space"], description: "Activate focused button" },
+      ]}
+    />
+    </>
   )
 }

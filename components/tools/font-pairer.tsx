@@ -1,11 +1,12 @@
 ﻿"use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Copy, Check, Shuffle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 // ─── Font database ─────────────────────────────────────────────────────────────
 type Cat = "serif" | "sans-serif" | "display" | "monospace" | "handwriting"
@@ -140,23 +141,37 @@ function FontSelector({ label, selected, onSelect, cat, onCat }: FontSelectorPro
   )
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
-      <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" className="h-8 text-sm" />
-      <div className="flex flex-wrap gap-1">
+      <Label id={`${label.toLowerCase().replace(/\s/g,"-")}-label`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <Input 
+        value={search} 
+        onChange={e => setSearch(e.target.value)} 
+        placeholder="Search…" 
+        className="h-8 text-sm" 
+        aria-label={`Search ${label} fonts`}
+      />
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Filter by category">
         {ALL_CATS.map(c => (
-          <button key={c} onClick={() => onCat(c)}
-            className={`text-xs px-2 py-0.5 rounded-full border capitalize transition-colors ${cat === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}>
+          <button 
+            key={c} 
+            onClick={() => onCat(c)}
+            aria-pressed={cat === c}
+            aria-label={`${c === "all" ? "All categories" : c} filter`}
+            className={`text-xs px-2 py-0.5 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${cat === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}>
             {c === "all" ? "All" : CAT_LABEL[c as Cat]}
           </button>
         ))}
       </div>
       <div className="border border-border rounded-lg overflow-hidden">
-        <div className="max-h-44 overflow-y-auto divide-y divide-border/50">
+        <div className="max-h-44 overflow-y-auto divide-y divide-border/50" role="listbox" aria-label={`${label} options`}>
           {filtered.length === 0
             ? <div className="p-3 text-xs text-muted-foreground text-center">No fonts found</div>
             : filtered.map(f => (
-              <button key={f.family} onClick={() => onSelect(f.family)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors ${selected === f.family ? "bg-primary/10" : "hover:bg-muted/40"}`}>
+              <button 
+                key={f.family} 
+                onClick={() => onSelect(f.family)}
+                role="option"
+                aria-selected={selected === f.family}
+                className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${selected === f.family ? "bg-primary/10" : "hover:bg-muted/40"}`}>
                 <span className="text-sm truncate" style={{ fontFamily: `'${f.family}', sans-serif` }}>{f.family}</span>
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ml-2 shrink-0 ${CAT_BADGE[f.category]}`}>{CAT_LABEL[f.category]}</span>
               </button>
@@ -164,7 +179,7 @@ function FontSelector({ label, selected, onSelect, cat, onCat }: FontSelectorPro
           }
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground" aria-live="polite">
         Selected: <span className="font-medium text-foreground" style={{ fontFamily: `'${selected}', sans-serif` }}>{selected}</span>
       </p>
     </div>
@@ -200,7 +215,13 @@ export default function FontPairer() {
   }, [])
 
   const applyPairing = (p: Pairing) => { setHeadingFont(p.heading); setBodyFont(p.body) }
-  const randomPairing = () => applyPairing(PAIRINGS[Math.floor(Math.random() * PAIRINGS.length)])
+  const randomPairing = useCallback(() => applyPairing(PAIRINGS[Math.floor(Math.random() * PAIRINGS.length)]), [])
+
+  const cycleTheme = useCallback(() => {
+    const themes: ("light" | "dark" | "sepia")[] = ["light", "dark", "sepia"]
+    const idx = themes.indexOf(theme)
+    setTheme(themes[(idx + 1) % 3])
+  }, [theme])
 
   const activePairing = PAIRINGS.find(p => p.heading === headingFont && p.body === bodyFont)
 
@@ -227,191 +248,235 @@ export default function FontPairer() {
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 body, p { font-family: var(--font-body); }`
 
-  const copy = () => {
+  const copy = useCallback(() => {
     navigator.clipboard.writeText(cssCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
+  }, [cssCode])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) return
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "r") { e.preventDefault(); randomPairing() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "t") { e.preventDefault(); cycleTheme() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") { 
+        e.preventDefault(); copy() 
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [randomPairing, cycleTheme, copy])
 
   const t = THEMES[theme]
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Font Pairer</h2>
-          <p className="text-muted-foreground">Find perfect font combinations from Google Fonts. Runs in your browser.</p>
+    <>
+      <div className="flex h-full flex-col gap-3 p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Font Pairer</h2>
+            <p className="text-muted-foreground">Find perfect font combinations from Google Fonts. Runs in your browser.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={randomPairing} aria-label="Apply random font pairing">
+            <Shuffle className="h-4 w-4 mr-1" aria-hidden="true" />Random Pairing <kbd className="ml-1.5 rounded border border-border/30 bg-muted/30 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={randomPairing}>
-          <Shuffle className="h-4 w-4 mr-1" />Random Pairing
-        </Button>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
-        {/* Left — controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Font Settings</span></div>
-          <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-5">
+        <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+          {/* Left — controls */}
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+            <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Font Settings</span></div>
+            <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-5">
 
-            <FontSelector
-              label="Heading Font"
-              selected={headingFont}
-              onSelect={setHeadingFont}
-              cat={headingCat}
-              onCat={setHeadingCat}
-            />
+              <FontSelector
+                label="Heading Font"
+                selected={headingFont}
+                onSelect={setHeadingFont}
+                cat={headingCat}
+                onCat={setHeadingCat}
+              />
 
-            <FontSelector
-              label="Body Font"
-              selected={bodyFont}
-              onSelect={setBodyFont}
-              cat={bodyCat}
-              onCat={setBodyCat}
-            />
+              <FontSelector
+                label="Body Font"
+                selected={bodyFont}
+                onSelect={setBodyFont}
+                cat={bodyCat}
+                onCat={setBodyCat}
+              />
 
-            {/* Size sliders */}
-            <div className="space-y-3">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sizes</Label>
-              {[
-                { label: "Heading", value: headingSize, set: setHeadingSize, min: 20, max: 96 },
-                { label: "Body",    value: bodySize,    set: setBodySize,    min: 10, max: 28 },
-              ].map(({ label, value, set, min, max }) => (
-                <div key={label} className="space-y-1.5">
-                  <div className="flex justify-between">
-                    <Label className="text-xs text-muted-foreground">{label}</Label>
-                    <span className="text-xs font-mono text-muted-foreground">{value}px</span>
-                  </div>
-                  <Slider value={[value]} onValueChange={([v]) => set(v)} min={min} max={max} step={1} />
-                </div>
-              ))}
-            </div>
-
-            {/* Suggested pairings */}
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Suggested Pairings
-              </Label>
-              <div className="space-y-1.5">
-                {PAIRINGS.map(p => (
-                  <button key={p.name} onClick={() => applyPairing(p)}
-                    className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
-                      headingFont === p.heading && bodyFont === p.body
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40 hover:bg-muted/20"
-                    }`}>
-                    <div className="flex items-center justify-between gap-2 overflow-hidden">
-                      <span className="text-xs font-medium truncate" style={{ fontFamily: `'${p.heading}', serif` }}>{p.heading}</span>
-                      <span className="text-xs text-muted-foreground shrink-0" style={{ fontFamily: `'${p.body}', sans-serif` }}>{p.body}</span>
+              {/* Size sliders */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sizes</Label>
+                {[
+                  { label: "Heading", value: headingSize, set: setHeadingSize, min: 20, max: 96 },
+                  { label: "Body",    value: bodySize,    set: setBodySize,    min: 10, max: 28 },
+                ].map(({ label, value, set, min, max }) => (
+                  <div key={label} className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <Label className="text-xs text-muted-foreground" id={`${label.toLowerCase()}-size-label`}>{label}</Label>
+                      <span className="text-xs font-mono text-muted-foreground" aria-labelledby={`${label.toLowerCase()}-size-label`}>{value}px</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.vibe}</p>
+                    <Slider 
+                      value={[value]} 
+                      onValueChange={([v]) => set(v)} 
+                      min={min} 
+                      max={max} 
+                      step={1}
+                      aria-label={`${label} font size`}
+                      aria-valuetext={`${value} pixels`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Suggested pairings */}
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Suggested Pairings
+                </Label>
+                <div className="space-y-1.5" role="list" aria-label="Suggested font pairings">
+                  {PAIRINGS.map(p => (
+                    <button 
+                      key={p.name} 
+                      onClick={() => applyPairing(p)}
+                      role="listitem"
+                      aria-label={`Apply pairing: ${p.name}, heading ${p.heading}, body ${p.body}`}
+                      className={`w-full text-left rounded-lg border px-3 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                        headingFont === p.heading && bodyFont === p.body
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/40 hover:bg-muted/20"
+                      }`}>
+                      <div className="flex items-center justify-between gap-2 overflow-hidden">
+                        <span className="text-xs font-medium truncate" style={{ fontFamily: `'${p.heading}', serif` }}>{p.heading}</span>
+                        <span className="text-xs text-muted-foreground shrink-0" style={{ fontFamily: `'${p.body}', sans-serif` }}>{p.body}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.vibe}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Right — preview */}
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+            {/* Preview toolbar */}
+            <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-3 flex-wrap">
+              <div className="flex gap-1" role="group" aria-label="Preview theme">
+                <span id="theme-hint" className="sr-only">Press Ctrl+Shift+T to cycle themes</span>
+                {(["light", "dark", "sepia"] as const).map(th => (
+                  <button 
+                    key={th} 
+                    onClick={() => setTheme(th)}
+                    aria-pressed={theme === th}
+                    aria-label={`${th} theme`}
+                    aria-describedby="theme-hint"
+                    className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${theme === th ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+                    {th}
                   </button>
                 ))}
               </div>
+              <div className="flex-1" />
+              <Input
+                value={previewText}
+                onChange={e => setPreviewText(e.target.value)}
+                placeholder="Preview text…"
+                className="text-xs h-7 max-w-56"
+                aria-label="Preview text input"
+              />
             </div>
 
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+              {/* Active pairing label */}
+              {activePairing && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">{activePairing.name}</span>
+                  <span className="text-muted-foreground">—</span>
+                  <span className="text-muted-foreground text-xs">{activePairing.vibe}</span>
+                </div>
+              )}
+
+              {/* Main preview */}
+              <div className="rounded-xl border border-border p-8 transition-colors" style={{ backgroundColor: t.bg }}>
+                <div
+                  style={{
+                    fontFamily: `'${headingFont}', serif`,
+                    fontSize: headingSize,
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    color: t.text,
+                    marginBottom: "0.3em",
+                  }}
+                >
+                  {previewText || "The quick brown fox"}
+                </div>
+                <div
+                  style={{
+                    fontFamily: `'${headingFont}', serif`,
+                    fontSize: Math.round(headingSize * 0.55),
+                    fontWeight: 400,
+                    lineHeight: 1.3,
+                    color: t.sub,
+                    marginBottom: "1.2em",
+                  }}
+                >
+                  A subtitle set in {headingFont}
+                </div>
+                <p style={{ fontFamily: `'${bodyFont}', sans-serif`, fontSize: bodySize, lineHeight: 1.75, color: t.text, marginBottom: "0.8em" }}>
+                  This body text is set in <strong>{bodyFont}</strong>. Good typographic pairing balances contrast and harmony — the heading draws the eye while the body sustains comfortable reading. {headingFont} and {bodyFont} complement each other{activePairing ? ` with a ${activePairing.vibe.toLowerCase()} quality` : ""}.
+                </p>
+                <p style={{ fontFamily: `'${bodyFont}', sans-serif`, fontSize: Math.round(bodySize * 0.88), lineHeight: 1.65, color: t.sub }}>
+                  Secondary text at {Math.round(bodySize * 0.88)}px. The five boxing wizards jump quickly. Pack my box with five dozen liquor jugs.
+                </p>
+              </div>
+
+              {/* Weight specimen */}
+              <div className="rounded-xl border border-border p-5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-4">Specimens</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  {([300, 400, 600, 700] as const).map(w => (
+                    <div key={`h${w}`} style={{ fontFamily: `'${headingFont}', serif`, fontWeight: w, fontSize: 22, lineHeight: 1.2 }}>
+                      {headingFont} {w}
+                    </div>
+                  ))}
+                  {([300, 400, 600, 700] as const).map(w => (
+                    <div key={`b${w}`} style={{ fontFamily: `'${bodyFont}', sans-serif`, fontWeight: w, fontSize: 14, lineHeight: 1.5 }}>
+                      {bodyFont} {w} — The quick brown fox
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CSS output */}
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CSS Import</span>
+                  <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied to clipboard" : "Copy CSS to clipboard"} className="h-7">
+                    {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+                    {copied ? "Copied!" : "Copy CSS"}
+                    <kbd className="ml-1.5 rounded border border-border/30 bg-muted/30 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                  </Button>
+                </div>
+                <pre className="p-4 text-xs font-mono overflow-x-auto bg-muted/10 leading-relaxed whitespace-pre">{cssCode}</pre>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Right — preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          {/* Preview toolbar */}
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-3 flex-wrap">
-            <div className="flex gap-1">
-              {(["light", "dark", "sepia"] as const).map(th => (
-                <button key={th} onClick={() => setTheme(th)}
-                  className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors ${theme === th ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-                  {th}
-                </button>
-              ))}
-            </div>
-            <div className="flex-1" />
-            <Input
-              value={previewText}
-              onChange={e => setPreviewText(e.target.value)}
-              placeholder="Preview text…"
-              className="text-xs h-7 max-w-56"
-            />
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
-
-            {/* Active pairing label */}
-            {activePairing && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium">{activePairing.name}</span>
-                <span className="text-muted-foreground">—</span>
-                <span className="text-muted-foreground text-xs">{activePairing.vibe}</span>
-              </div>
-            )}
-
-            {/* Main preview */}
-            <div className="rounded-xl border border-border p-8 transition-colors" style={{ backgroundColor: t.bg }}>
-              <div
-                style={{
-                  fontFamily: `'${headingFont}', serif`,
-                  fontSize: headingSize,
-                  fontWeight: 700,
-                  lineHeight: 1.15,
-                  color: t.text,
-                  marginBottom: "0.3em",
-                }}
-              >
-                {previewText || "The quick brown fox"}
-              </div>
-              <div
-                style={{
-                  fontFamily: `'${headingFont}', serif`,
-                  fontSize: Math.round(headingSize * 0.55),
-                  fontWeight: 400,
-                  lineHeight: 1.3,
-                  color: t.sub,
-                  marginBottom: "1.2em",
-                }}
-              >
-                A subtitle set in {headingFont}
-              </div>
-              <p style={{ fontFamily: `'${bodyFont}', sans-serif`, fontSize: bodySize, lineHeight: 1.75, color: t.text, marginBottom: "0.8em" }}>
-                This body text is set in <strong>{bodyFont}</strong>. Good typographic pairing balances contrast and harmony — the heading draws the eye while the body sustains comfortable reading. {headingFont} and {bodyFont} complement each other{activePairing ? ` with a ${activePairing.vibe.toLowerCase()} quality` : ""}.
-              </p>
-              <p style={{ fontFamily: `'${bodyFont}', sans-serif`, fontSize: Math.round(bodySize * 0.88), lineHeight: 1.65, color: t.sub }}>
-                Secondary text at {Math.round(bodySize * 0.88)}px. The five boxing wizards jump quickly. Pack my box with five dozen liquor jugs.
-              </p>
-            </div>
-
-            {/* Weight specimen */}
-            <div className="rounded-xl border border-border p-5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-4">Specimens</p>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                {([300, 400, 600, 700] as const).map(w => (
-                  <div key={`h${w}`} style={{ fontFamily: `'${headingFont}', serif`, fontWeight: w, fontSize: 22, lineHeight: 1.2 }}>
-                    {headingFont} {w}
-                  </div>
-                ))}
-                {([300, 400, 600, 700] as const).map(w => (
-                  <div key={`b${w}`} style={{ fontFamily: `'${bodyFont}', sans-serif`, fontWeight: w, fontSize: 14, lineHeight: 1.5 }}>
-                    {bodyFont} {w} — The quick brown fox
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CSS output */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CSS Import</span>
-                <Button variant="ghost" size="sm" onClick={copy} className="h-7">
-                  {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? "Copied!" : "Copy CSS"}
-                </Button>
-              </div>
-              <pre className="p-4 text-xs font-mono overflow-x-auto bg-muted/10 leading-relaxed whitespace-pre">{cssCode}</pre>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
+      <ShortcutsModal
+        pageName="Font Pairer"
+        shortcuts={[
+          { keys: ["Ctrl", "Shift", "R"], description: "Random pairing" },
+          { keys: ["Ctrl", "Shift", "T"], description: "Cycle theme" },
+          { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+          { keys: ["?"], description: "Toggle this panel" },
+        ]}
+      />
+    </>
   )
 }

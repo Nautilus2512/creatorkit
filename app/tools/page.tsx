@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp, X, Receipt, AlarmClock, Gamepad2, Zap } from "lucide-react"
+import { ArrowRight, Crop, Palette, Shield, Image, Lock, QrCode, Minimize2, Globe, Hash, Layers, Monitor, Brain, Wand2, Music2, FileDown, Combine, Code, Pen, FileText, GitCompare, Search, FileJson, FileSpreadsheet, Type, Binary, Link2, AlignLeft, Pipette, BookType, Timer, KeyRound, Braces, Minimize, CalendarClock, FileCode, ShieldCheck, KeySquare, Smartphone, ArrowRightLeft, Ruler, Blend, BoxSelect, SquareDashedBottom, FileCode2, Clock4, Mic, NotebookPen, Images, Paintbrush2, Film, Music, ScreenShare, LayoutGrid, Video, SlidersHorizontal, FileStack, FileImage, Contact, ALargeSmall, Code2, Calculator, Sigma, Share2, ScanLine, ArrowUp, X, Receipt, AlarmClock, Gamepad2, Zap, ScanSearch } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -88,6 +88,14 @@ const toolCards = [
     href: "/tools/image-watermark-adder",
     stat: "JPG, PNG, WebP · Live preview",
     category: "Image & Visual",
+  },
+  {
+    icon: ScanSearch,
+    title: "Image to Text",
+    description: "Extract text from images using AI OCR. Runs entirely in your browser, nothing is uploaded.",
+    href: "/tools/image-to-text",
+    stat: "AI OCR · 100% in-browser · Copy text",
+    category: "Productivity",
   },
   {
     icon: Monitor,
@@ -905,7 +913,7 @@ export default function ToolsPage() {
           { keys: ["@"], description: "Open Pomodoro Timer" },
           { keys: ["#"], description: "Open Game Controller Tester" },
           { keys: ["$"], description: "Open Electrical Calculator" },
-          { keys: ["?"], description: "Toggle this shortcuts panel" },
+          { keys: ["i"], description: "Open Image to Text" },
         ]}
       />
     </>

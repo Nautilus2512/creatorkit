@@ -59,6 +59,12 @@ export function QrCodeGenerator() {
   const [errorLevel, setErrorLevel] = useState<ErrorLevel>("M")
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [downloaded, setDownloaded] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   const content = buildContent(inputType, { text, email, phone, ssid, password, security, hidden })
 
@@ -88,12 +94,13 @@ export function QrCodeGenerator() {
     a.download = `qrcode-${Date.now()}.png`
     a.click()
     setDownloaded(true)
+    announceToScreenReader("QR code downloaded")
     setTimeout(() => setDownloaded(false), 2000)
-  }, [qrDataUrl])
+  }, [qrDataUrl, announceToScreenReader])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === "d")) {
         e.preventDefault()
         download()
       }
@@ -102,12 +109,37 @@ export function QrCodeGenerator() {
     return () => window.removeEventListener("keydown", handler)
   }, [download])
 
+  const handleInputTypeChange = useCallback((id: InputType) => {
+    setInputType(id)
+    announceToScreenReader(`Content type changed to ${id}`)
+  }, [announceToScreenReader])
+
+  const handleSizeChange = useCallback((s: number) => {
+    setSize(s)
+    announceToScreenReader(`Size changed to ${s} pixels`)
+  }, [announceToScreenReader])
+
+  const handleErrorLevelChange = useCallback((id: ErrorLevel) => {
+    setErrorLevel(id)
+    announceToScreenReader(`Error correction level changed to ${id}`)
+  }, [announceToScreenReader])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "D"], description: "Download QR code" },
+  ]
+
   return (
     <>
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {announcement}
+    </div>
     <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">QR Code Generator</h2>
-        <p className="text-muted-foreground">100% in-browser · No data sent anywhere</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">QR Code Generator</h2>
+          <p className="text-muted-foreground">100% in-browser · No data sent anywhere</p>
+        </div>
+        <ShortcutsModal pageName="QR Code Generator" shortcuts={shortcuts} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel — options */}
@@ -117,12 +149,15 @@ export function QrCodeGenerator() {
           {/* Input type selector */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Content type</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Content type options">
               {INPUT_TYPES.map(({ id, label, icon }) => (
                 <button
                   key={id}
-                  onClick={() => setInputType(id)}
-                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  onClick={() => handleInputTypeChange(id)}
+                  role="radio"
+                  aria-checked={inputType === id}
+                  aria-label={`${label} content type`}
+                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
                     inputType === id
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -136,12 +171,13 @@ export function QrCodeGenerator() {
 
           {/* Input fields */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Content</Label>
+            <Label id="content-label" className="text-sm font-medium">Content</Label>
             {inputType === "url" && (
               <Input
                 placeholder="https://example.com"
                 value={text}
                 onChange={e => setText(e.target.value)}
+                aria-labelledby="content-label"
               />
             )}
             {inputType === "text" && (
@@ -150,6 +186,7 @@ export function QrCodeGenerator() {
                 placeholder="Enter any text..."
                 value={text}
                 onChange={e => setText(e.target.value)}
+                aria-labelledby="content-label"
               />
             )}
             {inputType === "email" && (
@@ -158,6 +195,7 @@ export function QrCodeGenerator() {
                 placeholder="hello@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                aria-labelledby="content-label"
               />
             )}
             {inputType === "phone" && (
@@ -166,18 +204,32 @@ export function QrCodeGenerator() {
                 placeholder="+1234567890"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
+                aria-labelledby="content-label"
               />
             )}
             {inputType === "wifi" && (
               <div className="space-y-3">
-                <Input placeholder="Network name (SSID)" value={ssid} onChange={e => setSsid(e.target.value)} />
-                <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-                <div className="flex gap-2">
+                <Input 
+                  placeholder="Network name (SSID)" 
+                  value={ssid} 
+                  onChange={e => setSsid(e.target.value)} 
+                  aria-label="Wi-Fi network name (SSID)"
+                />
+                <Input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  aria-label="Wi-Fi password"
+                />
+                <div className="flex gap-2" role="group" aria-label="Wi-Fi security type">
                   {(["WPA", "WEP", "nopass"] as WifiSecurity[]).map(s => (
                     <button
                       key={s}
-                      onClick={() => setSecurity(s)}
-                      className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      onClick={() => { setSecurity(s); announceToScreenReader(`Security type changed to ${s === "nopass" ? "No password" : s}`) }}
+                      role="radio"
+                      aria-checked={security === s}
+                      className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
                         security === s
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"
@@ -188,8 +240,13 @@ export function QrCodeGenerator() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm text-muted-foreground font-normal">Hidden network</Label>
-                  <Switch checked={hidden} onCheckedChange={setHidden} />
+                  <Label htmlFor="hidden-network" className="text-sm text-muted-foreground font-normal">Hidden network</Label>
+                  <Switch 
+                    id="hidden-network"
+                    checked={hidden} 
+                    onCheckedChange={(v) => { setHidden(v); announceToScreenReader(v ? "Hidden network enabled" : "Hidden network disabled") }} 
+                    aria-label="Hidden network"
+                  />
                 </div>
               </div>
             )}
@@ -198,12 +255,15 @@ export function QrCodeGenerator() {
           {/* Size */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Size (px)</Label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2" role="group" aria-label="QR code size options">
               {SIZES.map(s => (
                 <button
                   key={s}
-                  onClick={() => setSize(s)}
-                  className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors ${
+                  onClick={() => handleSizeChange(s)}
+                  role="radio"
+                  aria-checked={size === s}
+                  aria-label={`${s} pixels`}
+                  className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
                     size === s
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -223,8 +283,9 @@ export function QrCodeGenerator() {
                 <input
                   type="color"
                   value={fgColor}
-                  onChange={e => setFgColor(e.target.value)}
-                  className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5"
+                  onChange={e => { setFgColor(e.target.value); announceToScreenReader(`Foreground color changed to ${e.target.value}`) }}
+                  className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  aria-label="Foreground color"
                 />
                 <span className="text-xs text-muted-foreground">Foreground</span>
               </div>
@@ -232,8 +293,9 @@ export function QrCodeGenerator() {
                 <input
                   type="color"
                   value={bgColor}
-                  onChange={e => setBgColor(e.target.value)}
-                  className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5"
+                  onChange={e => { setBgColor(e.target.value); announceToScreenReader(`Background color changed to ${e.target.value}`) }}
+                  className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  aria-label="Background color"
                 />
                 <span className="text-xs text-muted-foreground">Background</span>
               </div>
@@ -243,14 +305,17 @@ export function QrCodeGenerator() {
           {/* Error correction */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Error correction</Label>
-            <p className="text-xs text-muted-foreground">Higher = more resilient if QR is damaged, but denser pattern</p>
-            <div className="grid grid-cols-4 gap-2">
+            <p className="text-xs text-muted-foreground" id="error-correction-desc">Higher = more resilient if QR is damaged, but denser pattern</p>
+            <div className="grid grid-cols-4 gap-2" role="group" aria-label="Error correction level options" aria-describedby="error-correction-desc">
               {ERROR_LEVELS.map(({ id, label, desc }) => (
                 <button
                   key={id}
-                  onClick={() => setErrorLevel(id)}
+                  onClick={() => handleErrorLevelChange(id)}
                   title={desc}
-                  className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors ${
+                  role="radio"
+                  aria-checked={errorLevel === id}
+                  aria-label={`${label} - ${desc}`}
+                  className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
                     errorLevel === id
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -268,18 +333,18 @@ export function QrCodeGenerator() {
       <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center">
           {qrDataUrl ? (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4" role="region" aria-label="QR code preview">
               <img
                 src={qrDataUrl}
-                alt="QR Code"
+                alt="Generated QR code"
                 className="rounded-lg border border-border"
                 style={{ width: Math.min(size, 280), height: Math.min(size, 280) }}
               />
-              <p className="text-xs text-muted-foreground text-center max-w-[240px] break-all">{content}</p>
+              <p className="text-xs text-muted-foreground text-center max-w-[240px] break-all" aria-label={`Content: ${content}`}>{content}</p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="rounded-full border border-border bg-muted/50 p-4">
+            <div className="flex flex-col items-center gap-3 text-center" role="status">
+              <div className="rounded-full border border-border bg-muted/50 p-4" aria-hidden="true">
                 <QrCode className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
@@ -292,22 +357,25 @@ export function QrCodeGenerator() {
 
         {/* Sticky download button */}
         <div className="shrink-0 border-t border-border p-4">
-          <Button className="w-full" onClick={download} disabled={!qrDataUrl}>
-            {downloaded ? <Check className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" />}
-            {downloaded ? "Downloaded!" : "Download PNG"}
+          <Button 
+            className="w-full gap-2" 
+            onClick={download} 
+            disabled={!qrDataUrl}
+            aria-label={downloaded ? "QR code downloaded" : "Download QR code as PNG"}
+          >
+            {downloaded ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            <span>{downloaded ? "Downloaded!" : "Download PNG"}</span>
+            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span>
+              <span>Shift</span>
+              <span>D</span>
+            </kbd>
           </Button>
         </div>
       </div>
 
       </div>
     </div>
-    <ShortcutsModal
-      pageName="QR Code Generator"
-      shortcuts={[
-        { keys: ["Ctrl", "D"], description: "Download QR code" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }

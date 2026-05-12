@@ -1,10 +1,23 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { PDFDocument } from "pdf-lib"
-import { Upload, Download, Trash2, ArrowUp, ArrowDown } from "lucide-react"
+import { Upload, Download, Trash2, ArrowUp, ArrowDown, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
+
+function announceToScreenReader(message: string) {
+  if (typeof document === "undefined") return
+  const announcement = document.createElement("div")
+  announcement.setAttribute("role", "status")
+  announcement.setAttribute("aria-live", "polite")
+  announcement.setAttribute("aria-atomic", "true")
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
 
 interface ImgFile { id: string; file: File; url: string; name: string }
 type PageSize = "fit" | "a4" | "letter"
@@ -35,16 +48,19 @@ export default function ImageToPdf() {
   const [pageSize, setPageSize] = useState<PageSize>("fit")
   const [orientation, setOrientation] = useState<Orientation>("portrait")
   const [loading, setLoading] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const add = (files: FileList | null) => {
+  const add = useCallback((files: FileList | null) => {
     if (!files) return
-    setImages(prev => [
-      ...prev,
-      ...Array.from(files)
-        .filter(f => f.type.startsWith("image/"))
-        .map(f => ({ id: crypto.randomUUID(), file: f, url: URL.createObjectURL(f), name: f.name })),
-    ])
-  }
+    const newImages = Array.from(files)
+      .filter(f => f.type.startsWith("image/"))
+      .map(f => ({ id: crypto.randomUUID(), file: f, url: URL.createObjectURL(f), name: f.name }))
+    setImages(prev => [...prev, ...newImages])
+    if (newImages.length > 0) {
+      announceToScreenReader(`${newImages.length} image${newImages.length > 1 ? "s" : ""} added`)
+    }
+  }, [])
 
   const remove = (id: string) =>
     setImages(prev => { const img = prev.find(i => i.id === id); if (img) URL.revokeObjectURL(img.url); return prev.filter(i => i.id !== id) })
@@ -58,7 +74,7 @@ export default function ImageToPdf() {
       return arr
     })
 
-  const convert = async () => {
+  const convert = useCallback(async () => {
     if (!images.length) return
     setLoading(true)
     try {
@@ -87,39 +103,86 @@ export default function ImageToPdf() {
         download: "images.pdf",
       })
       a.click()
+      setDownloaded(true)
+      announceToScreenReader("PDF created and downloaded")
+      setTimeout(() => setDownloaded(false), 2000)
     } finally {
       setLoading(false)
     }
-  }
+  }, [images, pageSize, orientation])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) return
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
+        e.preventDefault()
+        fileInputRef.current?.click()
+        announceToScreenReader("Upload dialog opened")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p") {
+        e.preventDefault()
+        if (images.length > 0 && !loading) convert()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [images, loading, convert])
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Image to PDF</h2>
-          <p className="text-muted-foreground">Combine images into a PDF document. All processing happens in your browser.</p>
+    <>
+      <ShortcutsModal
+        pageName="Image to PDF"
+        shortcuts={[
+          { keys: ["Ctrl", "Shift", "O"], description: "Upload images" },
+          { keys: ["Ctrl", "Shift", "P"], description: "Create PDF" },
+          { keys: ["?"], description: "Toggle this panel" },
+        ]}
+      />
+      <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Image to PDF tool">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Image to PDF</h2>
+            <p className="text-muted-foreground">Combine images into a PDF document. All processing happens in your browser. Press ? for shortcuts.</p>
+          </div>
+          <Button 
+            onClick={() => convert()} 
+            disabled={!images.length || loading}
+            aria-label={downloaded ? "PDF created and downloaded" : loading ? "Converting images to PDF" : "Create and download PDF"}
+          >
+            {downloaded ? <FileDown className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+            {downloaded ? "Downloaded!" : loading ? "Converting..." : "Download PDF"}
+            {images.length > 0 && !loading && !downloaded && (
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+                Ctrl+Shift+P
+              </kbd>
+            )}
+          </Button>
         </div>
-        <Button onClick={convert} disabled={!images.length || loading}>
-          <Download className="h-4 w-4 mr-1" />{loading ? "Converting..." : "Download PDF"}
-        </Button>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Page size:</Label>
+      <div className="flex flex-wrap items-center gap-4" role="group" aria-label="PDF settings">
+        <div className="flex items-center gap-2" role="group" aria-labelledby="page-size-label">
+          <Label className="text-xs text-muted-foreground" id="page-size-label">Page size:</Label>
           {(["fit", "a4", "letter"] as PageSize[]).map(v => (
-            <button key={v} onClick={() => setPageSize(v)}
-              className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors ${pageSize === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+            <button 
+              key={v} 
+              onClick={() => { setPageSize(v); announceToScreenReader(v === "fit" ? "Fit to image selected" : `${v.toUpperCase()} selected`) }}
+              aria-pressed={pageSize === v}
+              aria-label={v === "fit" ? "Fit to image" : `${v.toUpperCase()} page size`}
+              className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${pageSize === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
               {v === "fit" ? "Fit to image" : v.toUpperCase()}
             </button>
           ))}
         </div>
         {pageSize !== "fit" && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Orientation:</Label>
+          <div className="flex items-center gap-2" role="group" aria-labelledby="orientation-label">
+            <Label className="text-xs text-muted-foreground" id="orientation-label">Orientation:</Label>
             {(["portrait", "landscape"] as Orientation[]).map(v => (
-              <button key={v} onClick={() => setOrientation(v)}
-                className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors ${orientation === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+              <button 
+                key={v} 
+                onClick={() => { setOrientation(v); announceToScreenReader(`${v} orientation selected`) }}
+                aria-pressed={orientation === v}
+                aria-label={`${v} orientation`}
+                className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${orientation === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
                 {v}
               </button>
             ))}
@@ -129,42 +192,80 @@ export default function ImageToPdf() {
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Upload zone */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="upload-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Add Images</span>
+            <span className="text-sm font-medium" id="upload-panel-label">Add Images</span>
           </div>
           <div className="flex-1 flex flex-col p-4">
-          <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors">
-            <input type="file" accept="image/*" multiple className="hidden" onChange={e => add(e.target.files)} />
-            <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" />
+          <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              className="hidden" 
+              onChange={e => add(e.target.files)}
+              ref={fileInputRef}
+              aria-label="Upload images for PDF conversion"
+            />
+            <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" aria-hidden="true" />
             <p className="text-xs font-medium text-center">Click or drop images here</p>
             <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
+            <p className="text-xs text-muted-foreground mt-2">or press Ctrl+Shift+O</p>
           </label>
           </div>
         </div>
 
         {/* Image list */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="images-list-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <h3 className="text-sm font-medium">{images.length} image{images.length !== 1 ? "s" : ""} · pages in order</h3>
-            {images.length > 0 && <Button variant="ghost" size="sm" onClick={() => setImages([])}>Clear all</Button>}
+            <h3 className="text-sm font-medium" id="images-list-label">{images.length} image{images.length !== 1 ? "s" : ""} · pages in order</h3>
+            {images.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { setImages([]); announceToScreenReader("All images cleared") }}
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                aria-label="Clear all images"
+              >
+                Clear all
+              </Button>
+            )}
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4" role="list" aria-label="Image pages">
             {images.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Add images to get started</div>
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="status">Add images to get started</div>
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {images.map((img, i) => (
-                  <div key={img.id} className="relative group rounded-lg border border-border overflow-hidden">
-                    <img src={img.url} alt={img.name} className="w-full h-28 object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                      <button onClick={() => move(img.id, -1)} disabled={i === 0} className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors">
+                  <div 
+                    key={img.id} 
+                    className="relative group rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                    role="listitem"
+                    aria-label={`Page ${i + 1}: ${img.name}`}
+                  >
+                    <img src={img.url} alt={`Page ${i + 1}: ${img.name}`} className="w-full h-28 object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1.5" aria-hidden="true">
+                      <button 
+                        onClick={() => { move(img.id, -1); announceToScreenReader(`Page ${i} moved up`) }} 
+                        disabled={i === 0} 
+                        className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+                        aria-label="Move page up"
+                      >
                         <ArrowUp className="h-3 w-3 text-white" />
                       </button>
-                      <button onClick={() => remove(img.id)} className="p-1.5 bg-red-500/70 rounded hover:bg-red-500 transition-colors">
+                      <button 
+                        onClick={() => { remove(img.id); announceToScreenReader(`${img.name} removed`) }} 
+                        className="p-1.5 bg-red-500/70 rounded hover:bg-red-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+                        aria-label={`Remove ${img.name}`}
+                      >
                         <Trash2 className="h-3 w-3 text-white" />
                       </button>
-                      <button onClick={() => move(img.id, 1)} disabled={i === images.length - 1} className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors">
+                      <button 
+                        onClick={() => { move(img.id, 1); announceToScreenReader(`Page ${i + 2} moved down`) }} 
+                        disabled={i === images.length - 1} 
+                        className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+                        aria-label="Move page down"
+                      >
                         <ArrowDown className="h-3 w-3 text-white" />
                       </button>
                     </div>
@@ -179,6 +280,7 @@ export default function ImageToPdf() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

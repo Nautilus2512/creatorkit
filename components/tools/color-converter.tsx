@@ -1,9 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
+
+// Accessibility helper for screen reader announcements
+function announceToScreenReader(message: string) {
+  const announcement = document.createElement('div')
+  announcement.setAttribute('role', 'status')
+  announcement.setAttribute('aria-live', 'polite')
+  announcement.setAttribute('aria-atomic', 'true')
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const full = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -94,47 +107,94 @@ export default function ColorConverter() {
   const [color, setColor] = useState<{ r: number; g: number; b: number } | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
-  const applyColor = (rgb: { r: number; g: number; b: number } | null, rawInput: string) => {
+  const applyColor = useCallback((rgb: { r: number; g: number; b: number } | null, rawInput: string) => {
     setColor(rgb)
     setInput(rawInput)
-    if (rgb) setPickerValue(toHex(rgb.r, rgb.g, rgb.b))
-  }
+    if (rgb) {
+      setPickerValue(toHex(rgb.r, rgb.g, rgb.b))
+      announceToScreenReader(`Color set to ${toHex(rgb.r, rgb.g, rgb.b)}`)
+    } else if (rawInput) {
+      announceToScreenReader('Invalid color format')
+    }
+  }, [])
 
-  const handleTextInput = (value: string) => applyColor(parseColor(value), value)
+  const handleTextInput = useCallback((value: string) => applyColor(parseColor(value), value), [applyColor])
 
-  const handlePicker = (hex: string) => {
+  const handlePicker = useCallback((hex: string) => {
     setPickerValue(hex)
-    setColor(hexToRgb(hex))
+    const rgb = hexToRgb(hex)
+    setColor(rgb)
     setInput(hex)
-  }
+    if (rgb) announceToScreenReader(`Color picker set to ${hex}`)
+  }, [])
 
-  const copy = (value: string, key: string) => {
+  const copy = useCallback((value: string, key: string, label: string) => {
     navigator.clipboard.writeText(value)
     setCopied(key)
+    announceToScreenReader(`${label} copied: ${value}`)
     setTimeout(() => setCopied(null), 2000)
-  }
+  }, [])
 
   const hex = color ? toHex(color.r, color.g, color.b) : ""
   const hsl = color ? rgbToHsl(color.r, color.g, color.b) : null
   const oklch = color ? rgbToOklch(color.r, color.g, color.b) : null
 
   const formats = color ? [
-    { label: "HEX", key: "hex", value: hex },
-    { label: "RGB", key: "rgb", value: `rgb(${color.r}, ${color.g}, ${color.b})` },
-    { label: "HSL", key: "hsl", value: `hsl(${hsl!.h}, ${hsl!.s}%, ${hsl!.l}%)` },
-    { label: "OKLCH", key: "oklch", value: `oklch(${oklch!.l}% ${oklch!.c} ${oklch!.h})` },
+    { label: "HEX", key: "hex", value: hex, shortcut: "1" },
+    { label: "RGB", key: "rgb", value: `rgb(${color.r}, ${color.g}, ${color.b})`, shortcut: "2" },
+    { label: "HSL", key: "hsl", value: `hsl(${hsl!.h}, ${hsl!.s}%, ${hsl!.l}%)`, shortcut: "3" },
+    { label: "OKLCH", key: "oklch", value: `oklch(${oklch!.l}% ${oklch!.c} ${oklch!.h})`, shortcut: "4" },
   ] : []
 
+  const copyAll = useCallback(() => {
+    if (!color || formats.length === 0) return
+    const allFormats = formats.map(f => `${f.label}: ${f.value}`).join('\n')
+    navigator.clipboard.writeText(allFormats)
+    announceToScreenReader('All color formats copied to clipboard')
+  }, [color, formats])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      
+      // Number keys to copy formats
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[1-4]$/.test(e.key) && color) {
+        e.preventDefault()
+        const format = formats.find(f => f.shortcut === e.key)
+        if (format) {
+          copy(format.value, format.key, format.label)
+        }
+      }
+      
+      // Ctrl+C to copy all formats
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey && color) {
+        e.preventDefault()
+        e.stopPropagation()
+        copyAll()
+      }
+      
+      // Escape to clear/focus input
+      if (e.key === "Escape") {
+        const inputEl = document.getElementById('color-input') as HTMLInputElement
+        inputEl?.focus()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown, true)
+    return () => window.removeEventListener("keydown", handleKeyDown, true)
+  }, [color, formats, copy, copyAll])
+
   return (
+    <>
     <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Color Converter</h2>
-        <p className="text-muted-foreground">Convert between HEX, RGB, HSL, and OKLCH color formats</p>
+      <div role="banner">
+        <h2 className="text-2xl font-semibold tracking-tight" id="converter-title">Color Converter</h2>
+        <p className="text-muted-foreground" id="converter-description">Convert between HEX, RGB, HSL, and OKLCH color formats. Press 1-4 to copy formats. Press ? for shortcuts.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Color input">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Color Input</span>
           </div>
@@ -142,18 +202,23 @@ export default function ColorConverter() {
             <div className="flex items-start gap-4">
               <input
                 type="color"
+                id="color-picker"
                 value={pickerValue}
                 onChange={(e) => handlePicker(e.target.value)}
-                className="w-16 h-16 rounded-lg border border-border cursor-pointer p-1 bg-background shrink-0"
+                className="w-16 h-16 rounded-lg border border-border cursor-pointer p-1 bg-background shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label="Color picker"
               />
               <div className="flex-1 space-y-1">
                 <Input
+                  id="color-input"
                   value={input}
                   onChange={(e) => handleTextInput(e.target.value)}
                   placeholder="#3b82f6 or rgb(59,130,246) or hsl(217,91%,60%)"
                   className="font-mono text-sm"
+                  aria-label="Color input (HEX, RGB, or HSL)"
+                  aria-describedby="color-formats-help"
                 />
-                <p className="text-xs text-muted-foreground">Accepts HEX, RGB, HSL</p>
+                <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
               </div>
             </div>
 
@@ -161,40 +226,63 @@ export default function ColorConverter() {
               <div
                 className="w-full h-36 rounded-xl border border-border shadow-inner transition-colors duration-200"
                 style={{ backgroundColor: hex }}
+                role="img"
+                aria-label={`Color preview: ${hex}`}
               />
             )}
 
             {color && (
-              <div className="rounded-lg border border-border p-4 space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono">{color.r}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">G</span><span className="font-mono">{color.g}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">B</span><span className="font-mono">{color.b}</span></div>
+              <div className="rounded-lg border border-border p-4 space-y-1 text-sm" role="group" aria-label="RGB values">
+                <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono" aria-live="polite">{color.r}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">G</span><span className="font-mono" aria-live="polite">{color.g}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">B</span><span className="font-mono" aria-live="polite">{color.b}</span></div>
               </div>
             )}
           </div>
         </div>
 
         {/* Right Panel — Formats */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-          <div className="shrink-0 border-b border-border px-4 py-3">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Color formats">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">All Formats</span>
+            {color && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={copyAll}
+                className="text-xs h-7"
+                aria-label="Copy all formats"
+              >
+                Copy All<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+              </Button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {formats.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="note">
                 Enter or pick a color to see all formats
               </div>
             ) : (
-              formats.map(({ label, key, value }) => (
+              formats.map(({ label, key, value, shortcut }) => (
                 <div key={key} className="rounded-lg border border-border overflow-hidden">
-                  <div className="h-8" style={{ backgroundColor: value }} />
+                  <div 
+                    className="h-8" 
+                    style={{ backgroundColor: value }}
+                    aria-hidden="true"
+                  />
                   <div className="p-3 flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-0.5">{label}</p>
-                      <code className="text-sm font-mono">{value}</code>
+                      <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-0.5">{label} <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd></p>
+                      <code className="text-sm font-mono" aria-live="polite">{value}</code>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => copy(value, key)} className="shrink-0 h-7 text-xs">
-                      {copied === key ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => copy(value, key, label)} 
+                      className="shrink-0 h-7 text-xs"
+                      aria-label={`Copy ${label} value`}
+                    >
+                      {copied === key ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
                       {copied === key ? "Copied!" : "Copy"}
                     </Button>
                   </div>
@@ -205,5 +293,20 @@ export default function ColorConverter() {
         </div>
       </div>
     </div>
+    <ShortcutsModal
+      pageName="Color Converter"
+      shortcuts={[
+        { keys: ["1"], description: "Copy HEX format" },
+        { keys: ["2"], description: "Copy RGB format" },
+        { keys: ["3"], description: "Copy HSL format" },
+        { keys: ["4"], description: "Copy OKLCH format" },
+        { keys: ["Ctrl", "C"], description: "Copy all formats" },
+        { keys: ["Escape"], description: "Focus color input" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+        { keys: ["Tab"], description: "Navigate between controls" },
+        { keys: ["Enter"], description: "Activate focused button" },
+      ]}
+    />
+    </>
   )
 }

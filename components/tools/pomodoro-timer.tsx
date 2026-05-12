@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 type Mode = "work" | "short" | "long"
 
@@ -57,10 +58,16 @@ export default function PomodoroTimer() {
   const [totalPomos, setTotalPomos] = useState(0)
   const [running, setRunning] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(DEFAULTS.work * 60)
+  const [announcement, setAnnouncement] = useState("")
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const settingsRef = useRef(settings)
   const modeRef = useRef(mode)
   const sessionRef = useRef(sessionInCycle)
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   settingsRef.current = settings
   modeRef.current = mode
@@ -85,6 +92,33 @@ export default function PomodoroTimer() {
     document.title = running ? `${m}:${s} · ${MODE_LABEL[mode]} — CreatorKit` : "Pomodoro — CreatorKit"
     return () => { document.title = "CreatorKit" }
   }, [secondsLeft, running, mode])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "s":
+            e.preventDefault()
+            toggle()
+            announceToScreenReader(running ? "Timer paused" : "Timer started")
+            break
+          case "r":
+            e.preventDefault()
+            reset()
+            announceToScreenReader("Timer reset")
+            break
+          case "n":
+            e.preventDefault()
+            skip()
+            announceToScreenReader("Skipped to next session")
+            break
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const advance = useCallback(() => {
     const s = settingsRef.current
@@ -124,21 +158,45 @@ export default function PomodoroTimer() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [running, advance])
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     if (!running && settings.notify && Notification.permission === "default") {
       Notification.requestPermission()
     }
     setRunning(r => !r)
-  }
+    announceToScreenReader(running ? "Timer paused" : "Timer started")
+  }, [running, settings.notify, announceToScreenReader])
 
-  const reset = () => { setRunning(false); setSecondsLeft(settings[mode] * 60) }
-  const skip  = () => { setRunning(false); advance() }
+  const reset = useCallback(() => { 
+    setRunning(false); 
+    setSecondsLeft(settings[mode] * 60)
+    announceToScreenReader(`Timer reset to ${settings[mode]} minutes`)
+  }, [settings, mode, announceToScreenReader])
 
-  const switchMode = (m: Mode) => {
+  const skip = useCallback(() => { 
+    setRunning(false); 
+    advance()
+    announceToScreenReader("Skipped to next session")
+  }, [advance, announceToScreenReader])
+
+  const switchMode = useCallback((m: Mode) => {
     setRunning(false); setMode(m)
     setSecondsLeft(settings[m] * 60)
     if (m === "work") setSessionInCycle(0)
-  }
+    announceToScreenReader(`Switched to ${MODE_LABEL[m]}`)
+  }, [settings, announceToScreenReader])
+
+  const setSetting = useCallback(<K extends keyof Settings>(k: K, v: Settings[K]) => {
+    setSettings(s => ({ ...s, [k]: v }))
+    if ((k === "work" && mode === "work") || (k === "short" && mode === "short") || (k === "long" && mode === "long")) {
+      setSecondsLeft((v as number) * 60)
+    }
+  }, [mode])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "S"], description: "Start/Pause timer" },
+    { keys: ["Ctrl", "Shift", "R"], description: "Reset timer" },
+    { keys: ["Ctrl", "Shift", "N"], description: "Skip to next session" },
+  ]
 
   const totalSecs = settings[mode] * 60
   const progress  = totalSecs > 0 ? secondsLeft / totalSecs : 1
@@ -146,23 +204,23 @@ export default function PomodoroTimer() {
   const mins = Math.floor(secondsLeft / 60).toString().padStart(2, "0")
   const secs = (secondsLeft % 60).toString().padStart(2, "0")
 
-  const setSetting = <K extends keyof Settings>(k: K, v: Settings[K]) => {
-    setSettings(s => ({ ...s, [k]: v }))
-    if ((k === "work" && mode === "work") || (k === "short" && mode === "short") || (k === "long" && mode === "long")) {
-      setSecondsLeft((v as number) * 60)
-    }
-  }
-
   return (
     <div className="flex h-full flex-col gap-3 p-4">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Pomodoro Timer</h2>
           <p className="text-muted-foreground">Focus in sessions, rest in breaks. All in your browser.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowSettings(s => !s)}>
-          <Settings className="h-3.5 w-3.5 mr-1.5" />Settings
-        </Button>
+        <div className="flex items-center gap-2">
+          <ShortcutsModal pageName="Pomodoro Timer" shortcuts={shortcuts} />
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(s => !s)} aria-label="Open settings">
+            <Settings className="h-3.5 w-3.5 mr-1.5" />Settings
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
@@ -170,65 +228,93 @@ export default function PomodoroTimer() {
         <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
           {/* Mode selector */}
-          <div className="flex gap-1 rounded-full border border-border p-1">
+          <div className="flex gap-1 rounded-full border border-border p-1" role="tablist" aria-label="Timer modes">
             {(["work", "short", "long"] as Mode[]).map(m => (
-              <button key={m} onClick={() => switchMode(m)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <button 
+                key={m} 
+                onClick={() => switchMode(m)}
+                role="tab"
+                aria-selected={mode === m}
+                aria-controls="timer-panel"
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+              >
                 {MODE_LABEL[m]}
               </button>
             ))}
           </div>
 
           {/* Circular timer */}
-          <div className="relative">
-            <svg width="220" height="220" viewBox="0 0 220 220" className="-rotate-90">
+          <div className="relative" role="timer" aria-label={`${mins} minutes ${secs} seconds remaining`} aria-live="polite">
+            <svg width="220" height="220" viewBox="0 0 220 220" className="-rotate-90" aria-hidden="true">
               <circle cx="110" cy="110" r={RADIUS} fill="none" stroke="currentColor" strokeWidth="8" className="text-muted/30" />
               <circle cx="110" cy="110" r={RADIUS} fill="none" stroke={MODE_RING[mode]} strokeWidth="8"
                 strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={dashOffset}
                 style={{ transition: "stroke-dashoffset 0.5s ease, stroke 0.3s ease" }} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-5xl font-bold font-mono tabular-nums ${MODE_COLOR[mode]}`}>{mins}:{secs}</span>
+              <span className={`text-5xl font-bold font-mono tabular-nums ${MODE_COLOR[mode]}`} aria-hidden="true">{mins}:{secs}</span>
+              <span className="sr-only">{mins} minutes and {secs} seconds</span>
               <span className="text-sm text-muted-foreground mt-1">{MODE_LABEL[mode]}</span>
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
-            <button onClick={reset} className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-3" role="group" aria-label="Timer controls">
+            <button 
+              onClick={reset} 
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              aria-label="Reset timer"
+            >
               <RotateCcw className="h-5 w-5" />
             </button>
-            <button onClick={toggle}
-              className={`rounded-full w-14 h-14 flex items-center justify-center text-white shadow-lg transition-all hover:scale-105 ${running ? "bg-slate-600 hover:bg-slate-700" : "bg-primary hover:opacity-90"}`}>
+            <button 
+              onClick={toggle}
+              aria-label={running ? "Pause timer" : "Start timer"}
+              className={`rounded-full w-14 h-14 flex items-center justify-center text-white shadow-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${running ? "bg-slate-600 hover:bg-slate-700" : "bg-primary hover:opacity-90"}`}
+            >
               {running ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
+              <kbd className="sr-only">Ctrl Shift S</kbd>
             </button>
-            <button onClick={skip} className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+            <button 
+              onClick={skip} 
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              aria-label="Skip to next session"
+            >
               <SkipForward className="h-5 w-5" />
             </button>
           </div>
 
           {/* Session dots */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="group" aria-label={`Session progress: ${sessionInCycle} of ${settings.longsAfter} sessions completed`}>
             {Array.from({ length: settings.longsAfter }).map((_, i) => (
-              <div key={i} className={`w-3 h-3 rounded-full transition-colors ${i < sessionInCycle ? "bg-red-500" : "bg-muted/50 border border-border"}`} />
+              <div 
+                key={i} 
+                className={`w-3 h-3 rounded-full transition-colors ${i < sessionInCycle ? "bg-red-500" : "bg-muted/50 border border-border"}`}
+                aria-label={i < sessionInCycle ? "Completed session" : "Upcoming session"}
+              />
             ))}
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-6 text-center">
+          <div className="flex items-center gap-6 text-center" role="region" aria-label="Statistics">
             <div>
-              <p className="text-2xl font-bold">{totalPomos}</p>
+              <p className="text-2xl font-bold" aria-label={`${totalPomos} total pomodoros`}>{totalPomos}</p>
               <p className="text-xs text-muted-foreground">Total pomodoros</p>
             </div>
-            <div className="h-8 w-px bg-border" />
+            <div className="h-8 w-px bg-border" aria-hidden="true" />
             <div>
-              <p className="text-2xl font-bold">{Math.floor(totalPomos * settings.work / 60)}h {(totalPomos * settings.work) % 60}m</p>
+              <p className="text-2xl font-bold" aria-label={`${Math.floor(totalPomos * settings.work / 60)} hours and ${(totalPomos * settings.work) % 60} minutes focus time`}>{Math.floor(totalPomos * settings.work / 60)}h {(totalPomos * settings.work) % 60}m</p>
               <p className="text-xs text-muted-foreground">Focus time</p>
             </div>
-            <div className="h-8 w-px bg-border" />
+            <div className="h-8 w-px bg-border" aria-hidden="true" />
             <div>
-              <button onClick={() => { setTotalPomos(0); localStorage.setItem("ck-pomodoro-pomos", "0") }}
-                className="text-xs text-muted-foreground hover:text-destructive transition-colors">Reset stats</button>
+              <button 
+                onClick={() => { setTotalPomos(0); localStorage.setItem("ck-pomodoro-pomos", "0"); announceToScreenReader("Statistics reset") }}
+                className="text-xs text-muted-foreground hover:text-destructive transition-colors focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2 px-2 py-1 rounded"
+                aria-label="Reset all statistics"
+              >
+                Reset stats
+              </button>
             </div>
           </div>
         </div>
@@ -236,11 +322,15 @@ export default function PomodoroTimer() {
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="shrink-0 w-64 flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="shrink-0 w-64 flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="dialog" aria-label="Settings panel">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">Settings</p>
-              <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground">
+              <button 
+                onClick={() => setShowSettings(false)} 
+                className="text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 rounded p-1"
+                aria-label="Close settings"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -253,24 +343,50 @@ export default function PomodoroTimer() {
             ] as const).map(({ key, label, min, max }) => (
               <div key={key} className="space-y-1.5">
                 <div className="flex justify-between">
-                  <Label className="text-xs text-muted-foreground">{label}</Label>
-                  <span className="text-xs font-mono text-muted-foreground">{settings[key]}</span>
+                  <Label htmlFor={`setting-${key}`} className="text-xs text-muted-foreground">{label}</Label>
+                  <span id={`setting-${key}-value`} className="text-xs font-mono text-muted-foreground">{settings[key]}</span>
                 </div>
-                <Slider value={[settings[key]]} onValueChange={([v]) => setSetting(key, v)} min={min} max={max} step={1} />
+                <Slider 
+                  id={`setting-${key}`}
+                  value={[settings[key]]} 
+                  onValueChange={([v]) => setSetting(key, v)} 
+                  min={min} 
+                  max={max} 
+                  step={1}
+                  aria-describedby={`setting-${key}-value`}
+                />
               </div>
             ))}
 
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground">Sound bell</Label>
-              <Switch checked={settings.sound} onCheckedChange={v => setSetting("sound", v)} />
+              <Label htmlFor="setting-sound" className="text-xs text-muted-foreground">Sound bell</Label>
+              <Switch 
+                id="setting-sound"
+                checked={settings.sound} 
+                onCheckedChange={v => { setSetting("sound", v); announceToScreenReader(v ? "Sound bell enabled" : "Sound bell disabled") }} 
+                aria-label="Enable sound bell"
+              />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground">Browser notifications</Label>
-              <Switch checked={settings.notify} onCheckedChange={v => setSetting("notify", v)} />
+              <Label htmlFor="setting-notify" className="text-xs text-muted-foreground">Browser notifications</Label>
+              <Switch 
+                id="setting-notify"
+                checked={settings.notify} 
+                onCheckedChange={v => { setSetting("notify", v); announceToScreenReader(v ? "Browser notifications enabled" : "Browser notifications disabled") }} 
+                aria-label="Enable browser notifications"
+              />
             </div>
-            <Button variant="outline" size="sm" className="w-full" onClick={() => {
-              setSettings(DEFAULTS); setSecondsLeft(DEFAULTS.work * 60); setMode("work"); setRunning(false)
-            }}>Reset to defaults</Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full" 
+              onClick={() => {
+                setSettings(DEFAULTS); setSecondsLeft(DEFAULTS.work * 60); setMode("work"); setRunning(false)
+                announceToScreenReader("Settings reset to defaults")
+              }}
+            >
+              Reset to defaults
+            </Button>
           </div>
           </div>
         )}

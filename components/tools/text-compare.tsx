@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { 
   GitCompare, FileText, Upload, Download, Copy, Check, 
   ArrowRightLeft, Eye, EyeOff, Search, X
@@ -109,8 +109,14 @@ export function TextCompare() {
   const [ignoreCase, setIgnoreCase] = useState(false)
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
   const leftFileRef = useRef<HTMLInputElement>(null)
   const rightFileRef = useRef<HTMLInputElement>(null)
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   const computeDiffWithSettings = () => {
     let processedLeft = leftText
@@ -154,7 +160,7 @@ export function TextCompare() {
     reader.readAsText(file)
   }
 
-  const copyDiff = async () => {
+  const copyDiff = useCallback(async () => {
     if (!diffResult) return
 
     let diffText = "--- Original\n+++ Modified\n"
@@ -173,10 +179,11 @@ export function TextCompare() {
 
     await navigator.clipboard.writeText(diffText)
     setCopied(true)
+    announceToScreenReader("Diff copied to clipboard")
     setTimeout(() => setCopied(false), 2000)
-  }
+  }, [diffResult, announceToScreenReader])
 
-  const downloadDiff = () => {
+  const downloadDiff = useCallback(() => {
     if (!diffResult) return
 
     let diffText = "--- Original\n+++ Modified\n"
@@ -200,21 +207,62 @@ export function TextCompare() {
     a.download = 'diff.txt'
     a.click()
     URL.revokeObjectURL(url)
-  }
+    announceToScreenReader("Diff downloaded")
+  }, [diffResult, announceToScreenReader])
 
-  const swapTexts = () => {
+  const swapTexts = useCallback(() => {
     const temp = leftText
     setLeftText(rightText)
     setRightText(temp)
-  }
+    announceToScreenReader("Texts swapped")
+  }, [leftText, rightText, announceToScreenReader])
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setLeftText("")
     setRightText("")
     setDiffResult(null)
     if (leftFileRef.current) leftFileRef.current.value = ''
     if (rightFileRef.current) rightFileRef.current.value = ''
-  }
+    announceToScreenReader("All text cleared")
+  }, [announceToScreenReader])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "d":
+            if (diffResult) {
+              e.preventDefault()
+              downloadDiff()
+            }
+            break
+          case "c":
+            if (diffResult) {
+              e.preventDefault()
+              copyDiff()
+            }
+            break
+          case "s":
+            e.preventDefault()
+            swapTexts()
+            break
+          case "x":
+            e.preventDefault()
+            clearAll()
+            break
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [diffResult, downloadDiff, copyDiff, swapTexts, clearAll])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "D"], description: "Download diff" },
+    { keys: ["Ctrl", "Shift", "C"], description: "Copy diff" },
+    { keys: ["Ctrl", "Shift", "S"], description: "Swap texts" },
+    { keys: ["Ctrl", "Shift", "X"], description: "Clear all" },
+  ]
 
   const renderLine = (line: DiffLine, side: 'left' | 'right') => {
     const bgColor = line.type === 'added' ? 'bg-green-50 dark:bg-green-950/30' :
@@ -248,16 +296,9 @@ export function TextCompare() {
 
   return (
     <>
-      <ShortcutsModal
-        pageName="text-compare"
-        shortcuts={[
-          { keys: ["Ctrl", "S"], description: "Download diff" },
-          { keys: ["Ctrl", "Shift", "C"], description: "Copy diff" },
-          { keys: ["Ctrl", "R"], description: "Swap texts" },
-          { keys: ["Ctrl", "L"], description: "Clear all" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {announcement}
+    </div>
     <div className="flex h-full flex-col gap-3 p-4">
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
@@ -265,80 +306,150 @@ export function TextCompare() {
           <p className="text-muted-foreground">Compare text and files with visual diff highlighting</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={swapTexts}><ArrowRightLeft className="h-3 w-3 mr-1" />Swap</Button>
-          <Button variant="outline" size="sm" onClick={clearAll}><X className="h-3 w-3 mr-1" />Clear</Button>
-          <div className="h-4 w-px bg-border" />
-          <Button variant="outline" size="sm" onClick={copyDiff} disabled={!diffResult}>
-            {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-            {copied ? 'Copied!' : 'Copy Diff'}
+          <ShortcutsModal pageName="Text Compare" shortcuts={shortcuts} />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={swapTexts}
+            aria-label="Swap original and modified text"
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <ArrowRightLeft className="h-3 w-3 mr-1" />
+            <span>Swap</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>S</span>
+            </kbd>
           </Button>
-          <Button variant="outline" size="sm" onClick={downloadDiff} disabled={!diffResult}>
-            <Download className="h-3 w-3 mr-1" />Download
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearAll}
+            aria-label="Clear all text"
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <X className="h-3 w-3 mr-1" />
+            <span>Clear</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>X</span>
+            </kbd>
+          </Button>
+          <div className="h-4 w-px bg-border" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={copyDiff} 
+            disabled={!diffResult}
+            aria-label={copied ? "Diff copied to clipboard" : "Copy diff to clipboard"}
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+            <span>{copied ? 'Copied!' : 'Copy Diff'}</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>C</span>
+            </kbd>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={downloadDiff} 
+            disabled={!diffResult}
+            aria-label="Download diff"
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            <span>Download</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>D</span>
+            </kbd>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Diff display options">
         {[
-          { label: "Line Numbers", checked: showLineNumbers, set: setShowLineNumbers },
-          { label: "Show Whitespace", checked: showWhitespace, set: setShowWhitespace },
-          { label: "Ignore Case", checked: ignoreCase, set: setIgnoreCase },
-          { label: "Ignore Whitespace", checked: ignoreWhitespace, set: setIgnoreWhitespace },
-        ].map(({ label, checked, set }) => (
-          <label key={label} className="flex items-center gap-1.5 text-xs cursor-pointer">
-            <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="rounded" />
+          { label: "Line Numbers", checked: showLineNumbers, set: setShowLineNumbers, id: "line-numbers" },
+          { label: "Show Whitespace", checked: showWhitespace, set: setShowWhitespace, id: "show-whitespace" },
+          { label: "Ignore Case", checked: ignoreCase, set: setIgnoreCase, id: "ignore-case" },
+          { label: "Ignore Whitespace", checked: ignoreWhitespace, set: setIgnoreWhitespace, id: "ignore-whitespace" },
+        ].map(({ label, checked, set, id }) => (
+          <label key={id} className="flex items-center gap-1.5 text-xs cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={checked} 
+              onChange={(e) => { set(e.target.checked); announceToScreenReader(`${label} ${e.target.checked ? 'enabled' : 'disabled'}`) }} 
+              className="rounded focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label={label}
+            />
             {label}
           </label>
         ))}
         {diffResult && (
-          <div className="flex items-center gap-3 text-xs ml-auto">
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" />+{diffResult.stats.additions}</span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded" />-{diffResult.stats.deletions}</span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-400 rounded" />{diffResult.stats.unchanged}</span>
+          <div className="flex items-center gap-3 text-xs ml-auto" role="status" aria-live="polite">
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.additions} additions`}>+{diffResult.stats.additions}</span></span>
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.deletions} deletions`}>-{diffResult.stats.deletions}</span></span>
+            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-400 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.unchanged} unchanged`}>{diffResult.stats.unchanged}</span></span>
           </div>
         )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Original text panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Original</span>
             <div>
-              <input ref={leftFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => handleFileUpload('left', e)} className="hidden" id="left-file" />
+              <input ref={leftFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => { handleFileUpload('left', e); announceToScreenReader("File uploaded to original") }} className="hidden" id="left-file" aria-hidden="true" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="left-file" className="cursor-pointer"><Upload className="h-3 w-3" /></label>
+                <label htmlFor="left-file" className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded" aria-label="Upload file to original text">
+                  <Upload className="h-3 w-3" />
+                </label>
               </Button>
             </div>
           </div>
-          <Textarea value={leftText} onChange={(e) => setLeftText(e.target.value)} placeholder="Enter original text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
+          <Textarea 
+            value={leftText} 
+            onChange={(e) => { setLeftText(e.target.value); announceToScreenReader("Original text updated") }} 
+            placeholder="Enter original text here..." 
+            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+            aria-label="Original text input"
+          />
         </div>
 
         {/* Right Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Modified text panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Modified</span>
             <div>
-              <input ref={rightFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => handleFileUpload('right', e)} className="hidden" id="right-file" />
+              <input ref={rightFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => { handleFileUpload('right', e); announceToScreenReader("File uploaded to modified") }} className="hidden" id="right-file" aria-hidden="true" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="right-file" className="cursor-pointer"><Upload className="h-3 w-3" /></label>
+                <label htmlFor="right-file" className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded" aria-label="Upload file to modified text">
+                  <Upload className="h-3 w-3" />
+                </label>
               </Button>
             </div>
           </div>
-          <Textarea value={rightText} onChange={(e) => setRightText(e.target.value)} placeholder="Enter modified text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
+          <Textarea 
+            value={rightText} 
+            onChange={(e) => { setRightText(e.target.value); announceToScreenReader("Modified text updated") }} 
+            placeholder="Enter modified text here..." 
+            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+            aria-label="Modified text input"
+          />
           {diffResult && (diffResult.stats.additions > 0 || diffResult.stats.deletions > 0) && (
-            <div className="shrink-0 border-t border-border">
+            <div className="shrink-0 border-t border-border" role="region" aria-label="Diff view">
               <div className="flex items-center justify-between px-4 py-2 bg-muted/30">
                 <span className="text-xs font-medium">Diff View</span>
-                <span className="text-xs text-muted-foreground">{diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines</span>
+                <span className="text-xs text-muted-foreground" aria-label={`${diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines`}>
+                  {diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines
+                </span>
               </div>
-              <div className="max-h-48 overflow-y-auto">
+              <div className="max-h-48 overflow-y-auto" role="log" aria-label="Diff results">
                 <div className="flex">
-                  <div className="w-1/2 border-r border-border">
-                    {diffResult.leftLines.map((line, index) => <div key={index}>{renderLine(line, 'left')}</div>)}
+                  <div className="w-1/2 border-r border-border" role="list" aria-label="Original lines changes">
+                    {diffResult.leftLines.map((line, index) => <div key={index} role="listitem">{renderLine(line, 'left')}</div>)}
                   </div>
-                  <div className="w-1/2">
-                    {diffResult.rightLines.map((line, index) => <div key={index}>{renderLine(line, 'right')}</div>)}
+                  <div className="w-1/2" role="list" aria-label="Modified lines changes">
+                    {diffResult.rightLines.map((line, index) => <div key={index} role="listitem">{renderLine(line, 'right')}</div>)}
                   </div>
                 </div>
               </div>

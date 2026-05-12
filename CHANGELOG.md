@@ -1,6 +1,81 @@
 # CreatorKit Changelog
 
 
+## v1.61.0 — May 2026
+### Accessibility Improvements
+- **URL Encoder / Decoder** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+E (encode mode), Ctrl+Shift+D (decode mode), Ctrl+Shift+S (swap), Ctrl+Shift+C (copy output), Ctrl+Shift+1 (encodeURIComponent), Ctrl+Shift+2 (encodeURI)
+  - Visible kbd shortcut labels on all action buttons
+  - aria-live announcements for mode switching and actions
+  - Full focus-visible ring states, role attributes on all elements
+
+- **UUID Generator** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+G (generate single), Ctrl+Shift+B (bulk), Ctrl+Shift+C (copy), Ctrl+Shift+D (download), Ctrl+Shift+H (toggle hyphens)
+  - Visible kbd labels on Generate, Copy All, Download buttons
+  - aria-live announcements, role="list" on bulk UUIDs
+
+- **Video Compressor** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+C (compress), Ctrl+Shift+D (download), Ctrl+Shift+1/2/3 (presets)
+  - Visible kbd labels on Compress, Download, preset buttons
+  - aria-live progress announcements, role="progressbar"
+
+- **Video Thumbnail Extractor** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+E (extract), Ctrl+Shift+D (download ZIP), Ctrl+Shift+G (grid mode), Ctrl+Shift+I (interval mode)
+  - Visible kbd labels on action buttons
+  - aria-live announcements for mode switching
+
+- **Voice Recorder** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+R (start recording), Ctrl+Shift+S (stop recording)
+  - Visible kbd labels on Start/Stop buttons
+  - aria-live announcements for recording states
+
+- **Whiteboard Drawing** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+Z (undo), Ctrl+Shift+Y (redo), Ctrl+Shift+D (download), Ctrl+Shift+X (clear)
+  - Single-column action buttons with compact kbd labels (C+S+Z format)
+  - aria-live announcements, role="img" on canvas
+
+- **Word Counter** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+X (clear text)
+  - Visible kbd label on Clear button
+  - aria-live statistics updates
+
+- **XML Formatter** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+F (format), Ctrl+Shift+M (minify), Ctrl+Shift+C (copy), Ctrl+Shift+D (download)
+  - Visible kbd labels on all action buttons
+  - aria-live announcements, role="alert" on errors
+
+- **YAML ↔ JSON Converter** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+Y (YAML→JSON), Ctrl+Shift+J (JSON→YAML), Ctrl+Shift+S (swap), Ctrl+Shift+C (copy), Ctrl+Shift+D (download)
+  - Visible kbd labels on mode buttons and actions
+  - aria-live announcements for mode switching
+
+### Bug Fixes
+- Whiteboard kbd labels adjusted for button space constraints (changed from symbols to compact format like "C+S+Z")
+
+### Note
+- 80+ tools now have accessibility features including screen reader announcements, aria labels, and keyboard shortcuts
+- All keyboard shortcuts use Ctrl+Shift+ modifiers to avoid browser conflicts
+- Each tool includes ShortcutsModal for reference
+
+
+## v1.60.0 — May 2026
+### Accessibility Improvements
+- **Markdown → HTML** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+O (upload), Ctrl+Shift+E (load example), Ctrl+Shift+V (toggle view), Ctrl+Shift+C (copy), Ctrl+Shift+S (download)
+  - Visible kbd shortcut labels on all buttons
+  - aria-live announcements for all actions (input changes, copy, download, view toggle)
+  - Full focus-visible ring states on all interactive elements
+  - Proper role and aria attributes throughout
+
+### Bug Fixes
+- Fixed React.Children.only error in Markdown → HTML (Button asChild had multiple children)
+- Console "Extra attributes from the server: script" warning confirmed as pre-existing ThemeProvider issue (not from our changes)
+
+### Note
+- 70+ tools now have accessibility features including screen reader announcements, aria labels, and keyboard shortcuts
+- All keyboard shortcuts use Ctrl+Shift+ modifiers to avoid browser conflicts
+
+
 ## v1.59.0 — May 2026
 ### Accessibility Improvements
 - **Electrical Calculator** — Complete accessibility overhaul:

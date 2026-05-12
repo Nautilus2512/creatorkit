@@ -160,8 +160,12 @@ export function FaviconGenerator() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) {
+      const ctrl = e.ctrlKey || e.metaKey
+      if (ctrl && (e.key === "d" || e.key === "D")) {
         e.preventDefault(); downloadAll()
+      }
+      if (ctrl && (e.key === "o" || e.key === "O")) {
+        e.preventDefault(); uploadRef.current?.click()
       }
     }
     window.addEventListener("keydown", handler)
@@ -173,9 +177,9 @@ export function FaviconGenerator() {
   return (
     <>
     <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
-      <div>
+      <div role="banner">
         <h2 className="text-2xl font-semibold tracking-tight">Favicon Generator</h2>
-        <p className="text-muted-foreground">All sizes + manifest · 100% in-browser</p>
+        <p className="text-muted-foreground">All sizes + manifest · 100% in-browser<br/><span className="text-xs">Press Ctrl+O to upload · Ctrl+D to download</span></p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
@@ -183,21 +187,25 @@ export function FaviconGenerator() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Mode toggle */}
-          <div className="space-y-2">
+          <div className="space-y-2" role="radiogroup" aria-label="Generation mode">
             <Label className="text-sm font-medium">Source</Label>
             <div className="grid grid-cols-2 gap-2">
-              {(["image", "text"] as Mode[]).map(m => (
+              {(["image", "text"] as Mode[]).map((m, idx) => (
                 <button
                   key={m}
                   onClick={() => { setMode(m); setPreviews({}); setSourceCanvas(null) }}
-                  className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                     mode === m
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                   }`}
+                  role="radio"
+                  aria-checked={mode === m}
+                  aria-label={m === "image" ? "Upload image mode" : "Text or emoji mode"}
                 >
                   {m === "image" ? <Upload className="h-3.5 w-3.5" /> : <Type className="h-3.5 w-3.5" />}
                   {m === "image" ? "Upload Image" : "Text / Emoji"}
+                  <kbd className="ml-1 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
                 </button>
               ))}
             </div>
@@ -205,21 +213,27 @@ export function FaviconGenerator() {
 
           {mode === "image" && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Image</Label>
+              <Label htmlFor="favicon-upload" className="text-sm font-medium">Image</Label>
               <div
                 onClick={() => uploadRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-8 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-8 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                role="button"
+                aria-label="Upload image for favicon"
+                tabIndex={0}
               >
                 <Upload className="h-5 w-5" />
                 <span>Click to upload</span>
                 <span className="text-xs opacity-60">PNG, JPG, WebP, SVG</span>
+                <kbd className="mt-2 rounded border border-border bg-background px-2 py-1 text-[10px]" aria-label="Shortcut">Ctrl+O</kbd>
               </div>
               <input
                 ref={uploadRef}
+                id="favicon-upload"
                 type="file"
                 accept=".png,.jpg,.jpeg,.webp,.svg"
                 className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f) }}
+                aria-label="Upload image file"
               />
             </div>
           )}
@@ -227,42 +241,68 @@ export function FaviconGenerator() {
           {mode === "text" && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Text or Emoji</Label>
+                <Label htmlFor="favicon-text" className="text-sm font-medium">Text or Emoji</Label>
                 <Input
+                  id="favicon-text"
                   placeholder="CK, 🔒, AB..."
                   value={text}
                   maxLength={3}
                   onChange={e => setText(e.target.value)}
+                  aria-label="Enter text or emoji for favicon"
+                  className="font-mono"
                 />
                 <p className="text-xs text-muted-foreground">Up to 3 characters or 1 emoji</p>
               </div>
 
               <div className="flex gap-4">
                 <div className="flex items-center gap-2">
-                  <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
-                    className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5" />
-                  <span className="text-xs text-muted-foreground">Background</span>
+                  <input 
+                    type="color" 
+                    id="favicon-bg-color"
+                    value={bgColor} 
+                    onChange={e => setBgColor(e.target.value)}
+                    className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5" 
+                  />
+                  <Label htmlFor="favicon-bg-color" className="text-xs text-muted-foreground">Background</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="color" value={textColor} onChange={e => setTextColor(e.target.value)}
-                    className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5" />
-                  <span className="text-xs text-muted-foreground">Text</span>
+                  <input 
+                    type="color" 
+                    id="favicon-text-color"
+                    value={textColor} 
+                    onChange={e => setTextColor(e.target.value)}
+                    className="h-8 w-8 cursor-pointer rounded border border-border bg-transparent p-0.5" 
+                  />
+                  <Label htmlFor="favicon-text-color" className="text-xs text-muted-foreground">Text</Label>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Font size</Label>
+                  <Label htmlFor="favicon-font-size" className="text-sm font-medium">Font size</Label>
                   <span className="text-sm font-mono tabular-nums">{fontSize}%</span>
                 </div>
-                <Slider min={20} max={80} step={1} value={[fontSize]}
-                  onValueChange={([v]) => setFontSize(v)} />
+                <Slider 
+                  id="favicon-font-size"
+                  min={20} 
+                  max={80} 
+                  step={1} 
+                  value={[fontSize]}
+                  onValueChange={([v]) => setFontSize(v)}
+                  aria-label="Font size percentage"
+                />
               </div>
             </div>
           )}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Site name</Label>
-            <Input placeholder="My App" value={siteName} onChange={e => setSiteName(e.target.value)} />
+            <Label htmlFor="favicon-site-name" className="text-sm font-medium">Site name</Label>
+            <Input 
+              id="favicon-site-name"
+              placeholder="My App" 
+              value={siteName} 
+              onChange={e => setSiteName(e.target.value)}
+              aria-label="Site name for web manifest"
+            />
             <p className="text-xs text-muted-foreground">Used in site.webmanifest</p>
           </div>
           <div className="space-y-2">
@@ -270,58 +310,62 @@ export function FaviconGenerator() {
               <Label className="text-sm font-medium">Sizes to export</Label>
               <button
                 onClick={() => setSelectedSizes(selectedSizes.size === SIZES.length ? new Set([16]) : new Set(SIZES))}
-                className="text-xs text-primary hover:underline"
+                className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                aria-label={selectedSizes.size === SIZES.length ? "Deselect all sizes" : "Select all sizes"}
               >
                 {selectedSizes.size === SIZES.length ? "Deselect all" : "Select all"}
               </button>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" role="group" aria-label="Select sizes to export">
               {SIZES.map(size => (
                 <button
                   key={size}
                   onClick={() => toggleSize(size)}
                   aria-label={`${selectedSizes.has(size) ? "Deselect" : "Select"} ${SIZE_LABELS[size]}`}
                   aria-pressed={selectedSizes.has(size)}
-                  className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left ${
+                  className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary ${
                     selectedSizes.has(size)
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/20 text-muted-foreground hover:border-primary/30"
                   }`}
                 >
-                  <div className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
-                    selectedSizes.has(size) ? "border-primary bg-primary" : "border-muted-foreground"
-                  }`}>
+                  <div 
+                    className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 ${
+                      selectedSizes.has(size) ? "border-primary bg-primary" : "border-muted-foreground"
+                    }`}
+                    aria-hidden="true"
+                  >
                     {selectedSizes.has(size) && <Check className="h-2 w-2 text-primary-foreground" />}
                   </div>
                   {SIZE_LABELS[size]}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                onClick={() => setIncludeManifest(v => !v)}
-                aria-label={`${includeManifest ? "Exclude" : "Include"} site.webmanifest`}
-                aria-pressed={includeManifest}
+            <button
+              onClick={() => setIncludeManifest(v => !v)}
+              aria-label={`${includeManifest ? "Exclude" : "Include"} site.webmanifest`}
+              aria-pressed={includeManifest}
+              className="flex items-center gap-2 pt-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+            >
+              <div 
                 className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                   includeManifest ? "border-primary bg-primary" : "border-muted-foreground"
                 }`}
+                aria-hidden="true"
               >
                 {includeManifest && <Check className="h-2 w-2 text-primary-foreground" />}
-              </button>
-              <span
-                className="text-sm text-muted-foreground cursor-pointer select-none"
-                onClick={() => setIncludeManifest(v => !v)}
-              >
+              </div>
+              <span className="text-sm text-muted-foreground cursor-pointer select-none">
                 Include site.webmanifest
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Right panel */}
       <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4" role="region" aria-label="Favicon preview">
           {!hasPreviews ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
               <div className="rounded-full border border-border bg-muted/50 p-4">
@@ -336,22 +380,22 @@ export function FaviconGenerator() {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground" role="status" aria-live="polite">
                 Preview — {selectedSizes.size} size{selectedSizes.size !== 1 ? "s" : ""}
                 {includeManifest ? " + site.webmanifest" : ""}
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3" role="list" aria-label="Favicon sizes preview">
                 {SIZES.filter(s => selectedSizes.has(s)).map(size => (
-                  <div key={size} className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-muted/20 p-3">
+                  <div key={size} className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-muted/20 p-3" role="listitem" aria-label={`${size}x${size} favicon`}>
                     <div className="rounded border border-border/50 bg-white" style={{ width: Math.min(size, 64), height: Math.min(size, 64) }}>
-                      <img src={previews[size]} alt={`${size}x${size}`} width={Math.min(size, 64)} height={Math.min(size, 64)} />
+                      <img src={previews[size]} alt={`${size}x${size} preview`} width={Math.min(size, 64)} height={Math.min(size, 64)} />
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center leading-tight">{SIZE_NAMES[size]}</p>
                     <p className="text-[10px] text-muted-foreground/60">{size === 48 ? "32×32" : `${size}×${size}`}</p>
                   </div>
                 ))}
                 {includeManifest && (
-                  <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/10 p-3">
+                  <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border bg-muted/10 p-3" role="listitem" aria-label="site.webmanifest file">
                     <p className="text-[10px] text-muted-foreground text-center leading-tight">site.webmanifest</p>
                     <p className="text-[10px] text-muted-foreground/60">JSON config</p>
                   </div>
@@ -362,11 +406,16 @@ export function FaviconGenerator() {
         </div>
 
         <div className="shrink-0 border-t border-border p-4">
-          <Button className="w-full" onClick={downloadAll} disabled={!hasPreviews || isProcessing}>
+          <Button 
+            className="w-full" 
+            onClick={downloadAll} 
+            disabled={!hasPreviews || isProcessing}
+            aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
+          >
             {downloaded ? <Check className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" />}
             {downloaded ? "Downloaded!" : "Download favicons.zip"}
             {!downloaded && (
-              <kbd className="ml-auto rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60">
+              <kbd className="ml-auto rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
                 Ctrl+D
               </kbd>
             )}
@@ -379,7 +428,10 @@ export function FaviconGenerator() {
     <ShortcutsModal
       pageName="Favicon Generator"
       shortcuts={[
+        { keys: ["Ctrl", "O"], description: "Upload image" },
         { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
+        { keys: ["1"], description: "Switch to image mode" },
+        { keys: ["2"], description: "Switch to text mode" },
         { keys: ["?"], description: "Toggle this panel" },
       ]}
     />

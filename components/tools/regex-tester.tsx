@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { 
   Search, Copy, Check, AlertCircle, Code, Eye, EyeOff
 } from "lucide-react"
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 interface RegexMatch {
   match: string
@@ -66,6 +67,12 @@ export default function RegexTester() {
   const [matches, setMatches] = useState<RegexMatch[]>([])
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   useEffect(() => {
     if (pattern && testText) {
@@ -114,11 +121,13 @@ export default function RegexTester() {
     }
   }
 
-  const copyPattern = () => {
+  const copyPattern = useCallback(() => {
+    if (!pattern) return
     navigator.clipboard.writeText(pattern)
     setCopied(true)
+    announceToScreenReader("Pattern copied to clipboard")
     setTimeout(() => setCopied(false), 2000)
-  }
+  }, [pattern, announceToScreenReader])
 
   const highlightMatches = (text: string) => {
     if (!pattern || matches.length === 0) return text
@@ -137,26 +146,79 @@ export default function RegexTester() {
     return highlightedText
   }
 
-  const useCommonPattern = (commonPattern: CommonPattern) => {
+  const useCommonPattern = useCallback((commonPattern: CommonPattern) => {
     setPattern(commonPattern.pattern)
-  }
+    announceToScreenReader(`Applied ${commonPattern.name} pattern`)
+  }, [announceToScreenReader])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "c":
+            if (pattern) {
+              e.preventDefault()
+              copyPattern()
+            }
+            break
+          case "t":
+            e.preventDefault()
+            document.getElementById("test-text-area")?.focus()
+            announceToScreenReader("Test text area focused")
+            break
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [pattern, copyPattern, announceToScreenReader])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "C"], description: "Copy pattern" },
+    { keys: ["Ctrl", "Shift", "T"], description: "Focus test text" },
+  ]
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Regex Tester</h2>
           <p className="text-muted-foreground">Test and debug regular expressions</p>
         </div>
-        <Button variant="outline" size="sm" onClick={copyPattern} disabled={!pattern}>
-          {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}Copy Pattern
-        </Button>
+        <div className="flex items-center gap-2">
+          <ShortcutsModal pageName="Regex Tester" shortcuts={shortcuts} />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={copyPattern} 
+            disabled={!pattern}
+            aria-label={copied ? "Pattern copied" : "Copy regex pattern"}
+          >
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            <span>Copy Pattern</span>
+            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+              <span>Ctrl</span><span>Shift</span><span>C</span>
+            </kbd>
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Common regex patterns">
         <span className="text-xs text-muted-foreground self-center">Patterns:</span>
         {commonPatterns.map((p) => (
-          <Button key={p.name} variant="outline" size="sm" onClick={() => useCommonPattern(p)} className="text-xs h-7">{p.name}</Button>
+          <Button 
+            key={p.name} 
+            variant="outline" 
+            size="sm" 
+            onClick={() => useCommonPattern(p)} 
+            className="text-xs h-7 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            aria-label={`Apply ${p.name} pattern: ${p.description}`}
+          >
+            {p.name}
+          </Button>
         ))}
       </div>
 
@@ -168,39 +230,71 @@ export default function RegexTester() {
             <span className="text-sm font-medium">Regular Expression</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <Input placeholder="Enter your regex pattern (e.g., \\d+)" value={pattern} onChange={(e) => setPattern(e.target.value)} className="font-mono" />
-            <div>
-              <h4 className="text-sm font-medium mb-3">Flags</h4>
+            <Input 
+              id="regex-pattern"
+              placeholder="Enter your regex pattern (e.g., \d+)" 
+              value={pattern} 
+              onChange={(e) => { setPattern(e.target.value); announceToScreenReader("Pattern updated") }} 
+              className="font-mono"
+              aria-describedby="pattern-desc"
+            />
+            <span id="pattern-desc" className="sr-only">Enter a regular expression pattern to test</span>
+            <div role="group" aria-labelledby="flags-heading">
+              <h4 id="flags-heading" className="text-sm font-medium mb-3">Flags</h4>
               <div className="grid grid-cols-3 gap-3">
-                {Object.entries(flags).map(([flag, enabled]) => (
-                  <div key={flag} className="flex items-center gap-2">
-                    <Switch id={flag} checked={enabled} onCheckedChange={(c) => setFlags(prev => ({ ...prev, [flag]: c }))} />
-                    <Label htmlFor={flag} className="text-sm font-mono">{flag}</Label>
-                  </div>
-                ))}
+                {Object.entries(flags).map(([flag, enabled]) => {
+                  const flagDescriptions: Record<string, string> = {
+                    g: "Global - find all matches",
+                    i: "Case insensitive",
+                    m: "Multiline - ^ and $ match line boundaries",
+                    s: "Dotall - . matches newlines",
+                    u: "Unicode - enable Unicode features",
+                    y: "Sticky - match from lastIndex"
+                  }
+                  return (
+                    <div key={flag} className="flex items-center gap-2">
+                      <Switch 
+                        id={`flag-${flag}`} 
+                        checked={enabled} 
+                        onCheckedChange={(c) => { 
+                          setFlags(prev => ({ ...prev, [flag]: c }))
+                          announceToScreenReader(`${flag} flag ${c ? 'enabled' : 'disabled'}`)
+                        }} 
+                        aria-label={`${flag}: ${flagDescriptions[flag] || flag}`}
+                      />
+                      <Label htmlFor={`flag-${flag}`} className="text-sm font-mono cursor-pointer">{flag}</Label>
+                    </div>
+                  )
+                })}
               </div>
             </div>
             {error && (
-              <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-md">
-                <AlertCircle className="h-4 w-4" />{error}
+              <div role="alert" className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-md">
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                <span>{error}</span>
               </div>
             )}
             {matches.length > 0 && (
-              <div>
+              <div role="region" aria-label={`Match details: ${matches.length} matches found`}>
                 <h4 className="text-sm font-medium mb-3">Match Details ({matches.length})</h4>
-                <div className="space-y-2">
+                <div className="space-y-2" role="list">
                   {matches.map((match, index) => (
-                    <div key={index} className="p-3 border rounded-md bg-muted/20 font-mono text-sm">
+                    <div 
+                      key={index} 
+                      className="p-3 border rounded-md bg-muted/20 font-mono text-sm"
+                      role="listitem"
+                      aria-label={`Match ${index + 1}: "${match.match}" at position ${match.index}`}
+                    >
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">{index + 1}</Badge>
+                        <Badge variant="outline" className="text-xs" aria-label={`Match number ${index + 1}`}>{index + 1}</Badge>
                         <span className="text-muted-foreground text-xs">Pos: {match.index}</span>
                       </div>
-                      <div className="bg-background p-2 rounded border text-xs">{match.match}</div>
+                      <div className="bg-background p-2 rounded border text-xs" aria-label={`Matched text: ${match.match}`}>{match.match}</div>
                       {match.groups.length > 0 && (
                         <div className="mt-2">
                           <div className="text-xs text-muted-foreground mb-1">Groups:</div>
                           {match.groups.map((group, gi) => (
-                            <div key={gi} className="text-xs bg-background p-1 rounded border mt-1">{gi + 1}: {group || '(empty)'}</div>
+                            <div key={gi} className="text-xs bg-background p-1 rounded border mt-1" aria-label={`Group ${gi + 1}: ${group || '(empty)'}`}>{gi + 1}: {group || '(empty)'}</div>
                           ))}
                         </div>
                       )}
@@ -213,17 +307,28 @@ export default function RegexTester() {
         </div>
 
         {/* Right — Test Text */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Test text area">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-medium flex items-center gap-2"><Search className="h-4 w-4 text-muted-foreground" />Test Text</span>
-            {matches.length > 0 && <Badge variant="secondary" className="text-xs">{matches.length} match{matches.length !== 1 ? 'es' : ''}</Badge>}
+            <span className="text-sm font-medium flex items-center gap-2"><Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />Test Text</span>
+            {matches.length > 0 && <Badge variant="secondary" className="text-xs" aria-label={`${matches.length} matches found`}>{matches.length} match{matches.length !== 1 ? 'es' : ''}</Badge>}
           </div>
           {matches.length > 0 ? (
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="font-mono text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }} />
+            <div className="flex-1 overflow-y-auto p-4" role="region" aria-label="Highlighted matches">
+              <div 
+                className="font-mono text-sm whitespace-pre-wrap" 
+                dangerouslySetInnerHTML={{ __html: highlightMatches(testText) }} 
+                aria-label={`Test text with ${matches.length} highlighted matches`}
+              />
             </div>
           ) : (
-            <Textarea value={testText} onChange={(e) => setTestText(e.target.value)} placeholder="Enter text to test against your regex..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" />
+            <Textarea 
+              id="test-text-area"
+              value={testText} 
+              onChange={(e) => { setTestText(e.target.value); announceToScreenReader("Test text updated") }} 
+              placeholder="Enter text to test against your regex..."
+              className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+              aria-label="Enter text to test against your regex pattern"
+            />
           )}
         </div>
       </div>

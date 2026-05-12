@@ -5,6 +5,7 @@ import { Copy, Check, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 const DEMO_SECRET = "JBSWY3DPEHPK3PXP"
@@ -42,6 +43,12 @@ export default function TotpGenerator() {
   const [timeLeft, setTimeLeft] = useState(30)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   const refresh = useCallback(async (s: string) => {
     if (!s.trim()) { setCode(""); setNextCode(""); return }
@@ -68,40 +75,95 @@ export default function TotpGenerator() {
     return () => clearInterval(id)
   }, [secret, refresh])
 
-  const copy = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+  const copy = useCallback(() => { 
+    if (!code) return
+    navigator.clipboard.writeText(code); 
+    setCopied(true); 
+    announceToScreenReader(`Code ${code} copied to clipboard`)
+    setTimeout(() => setCopied(false), 2000)
+  }, [code, announceToScreenReader])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "c":
+            if (code) {
+              e.preventDefault()
+              copy()
+            }
+            break
+          case "d":
+            if (secret.trim()) {
+              e.preventDefault()
+              setSecret(DEMO_SECRET)
+              announceToScreenReader("Demo secret loaded")
+            }
+            break
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [code, copy, secret])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "C"], description: "Copy current code" },
+    { keys: ["Ctrl", "Shift", "D"], description: "Load demo secret" },
+  ]
 
   const urgent = timeLeft <= 5
   const pct = (timeLeft / 30) * 100
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">TOTP / 2FA Generator</h2>
-        <p className="text-muted-foreground">Generate TOTP codes from a base32 secret. Compatible with Google Authenticator. Nothing leaves your browser.</p>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">TOTP / 2FA Generator</h2>
+          <p className="text-muted-foreground">Generate TOTP codes from a base32 secret. Compatible with Google Authenticator. Nothing leaves your browser.</p>
+        </div>
+        <ShortcutsModal pageName="TOTP Generator" shortcuts={shortcuts} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Secret key input">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Secret Key</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
             <div className="space-y-2">
-              <Label className="text-sm">Base32 Secret (from your 2FA setup screen)</Label>
+              <Label htmlFor="secret-input" className="text-sm">Base32 Secret (from your 2FA setup screen)</Label>
               <Input
+                id="secret-input"
                 value={secret}
-                onChange={(e) => setSecret(e.target.value.toUpperCase().replace(/\s/g, ""))}
+                onChange={(e) => { setSecret(e.target.value.toUpperCase().replace(/\s/g, "")); announceToScreenReader("Secret updated") }}
                 placeholder="JBSWY3DPEHPK3PXP"
                 className="font-mono tracking-widest text-center text-base"
+                aria-describedby="secret-hint"
               />
+              <span id="secret-hint" className="sr-only">
+                {error ? `Error: ${error}` : "The base32 string shown during 2FA account setup, spaces are ignored"}
+              </span>
               {error
-                ? <p className="text-xs text-destructive">{error}</p>
+                ? <p role="alert" className="text-xs text-destructive">{error}</p>
                 : <p className="text-xs text-muted-foreground">The base32 string shown during 2FA account setup (spaces are ignored)</p>
               }
             </div>
-            <Button variant="outline" className="w-full" onClick={() => setSecret(DEMO_SECRET)}>
+            <Button 
+              variant="outline" 
+              className="w-full focus:outline-none focus:ring-2 focus:ring-primary/50" 
+              onClick={() => { setSecret(DEMO_SECRET); announceToScreenReader("Demo secret loaded") }}
+              aria-label="Load demo secret for testing"
+            >
               Load Demo Secret
+              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+                <span>Ctrl</span><span>Shift</span><span>D</span>
+              </kbd>
             </Button>
             <div className="rounded-lg border border-border bg-muted/20 p-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Settings</p>
@@ -118,36 +180,63 @@ export default function TotpGenerator() {
         </div>
 
         {/* Right — Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="TOTP code display">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Current Code</span>
           </div>
           <div className="flex-1 flex flex-col items-center justify-center p-8 gap-8">
             {code ? (
               <>
-                <div className="text-center">
-                  <div className={`text-7xl font-bold font-mono tracking-[0.25em] tabular-nums transition-colors ${urgent ? "text-destructive" : ""}`}>
+                <div className="text-center" role="timer" aria-label={`Current TOTP code: ${code}, expires in ${timeLeft} seconds`}>
+                  <div 
+                    className={`text-7xl font-bold font-mono tracking-[0.25em] tabular-nums transition-colors ${urgent ? "text-destructive" : ""}`}
+                    aria-hidden="true"
+                  >
                     {code.slice(0, 3)}&nbsp;{code.slice(3)}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">Valid for {timeLeft} more seconds</p>
+                  <p className="text-sm text-muted-foreground mt-2" aria-live="polite">Valid for {timeLeft} more seconds</p>
                 </div>
-                <div className="w-full max-w-xs space-y-1.5">
+                <div className="w-full max-w-xs space-y-1.5" role="group" aria-label="Time remaining">
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />Time remaining</span>
-                    <span className={`font-mono font-medium ${urgent ? "text-destructive" : ""}`}>{timeLeft}s</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" aria-hidden="true" />Time remaining</span>
+                    <span className={`font-mono font-medium ${urgent ? "text-destructive" : ""}`} aria-label={`${timeLeft} seconds remaining`}>{timeLeft}s</span>
                   </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full rounded-full transition-[width] duration-1000 ${urgent ? "bg-destructive" : "bg-primary"}`} style={{ width: `${pct}%` }} />
+                  <div 
+                    className="h-2 rounded-full bg-muted overflow-hidden" 
+                    role="progressbar" 
+                    aria-valuenow={timeLeft} 
+                    aria-valuemin={0} 
+                    aria-valuemax={30}
+                    aria-label="Code validity progress"
+                  >
+                    <div 
+                      className={`h-full rounded-full transition-[width] duration-1000 ${urgent ? "bg-destructive" : "bg-primary"}`} 
+                      style={{ width: `${pct}%` }} 
+                    />
                   </div>
                 </div>
-                <Button onClick={copy} size="lg" className="w-full max-w-xs">
+                <Button 
+                  onClick={copy} 
+                  size="lg" 
+                  className="w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  aria-label={copied ? "Code copied to clipboard" : "Copy current TOTP code"}
+                >
                   {copied ? <Check className="h-5 w-5 mr-2" /> : <Copy className="h-5 w-5 mr-2" />}
-                  {copied ? "Copied!" : "Copy Code"}
+                  <span>{copied ? "Copied!" : "Copy Code"}</span>
+                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+                    <span>Ctrl</span><span>Shift</span><span>C</span>
+                  </kbd>
                 </Button>
                 {nextCode && (
-                  <div className="rounded-lg border border-border px-8 py-4 text-center">
+                  <div 
+                    className="rounded-lg border border-border px-8 py-4 text-center" 
+                    role="region" 
+                    aria-label={`Next code preview: ${nextCode}`}
+                  >
                     <p className="text-xs text-muted-foreground mb-1">Next code (in {timeLeft}s)</p>
-                    <p className="text-3xl font-mono font-medium tracking-[0.25em]">{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}</p>
+                    <p className="text-3xl font-mono font-medium tracking-[0.25em]" aria-label={`Next code will be ${nextCode}`}>
+                      {nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
+                    </p>
                   </div>
                 )}
               </>

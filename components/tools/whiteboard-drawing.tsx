@@ -36,6 +36,12 @@ export function WhiteboardDrawing() {
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [textInput, setTextInput] = useState("")
   const [textPosition, setTextPosition] = useState<{ x: number; y: number } | null>(null)
+  const [announcement, setAnnouncement] = useState("")
+
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
 
   const colors = [
     "#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", 
@@ -317,31 +323,35 @@ export function WhiteboardDrawing() {
     setTextInput("")
   }
 
-  const undo = () => {
+  const undo = useCallback(() => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1)
       setElements(history[historyIndex - 1])
+      announceToScreenReader("Undo performed")
     } else if (elements.length > 0) {
       setElements([])
       setHistoryIndex(-1)
+      announceToScreenReader("Canvas cleared")
     }
-  }
+  }, [historyIndex, history, elements, announceToScreenReader])
 
-  const redo = () => {
+  const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       setHistoryIndex(historyIndex + 1)
       setElements(history[historyIndex + 1])
+      announceToScreenReader("Redo performed")
     }
-  }
+  }, [historyIndex, history, announceToScreenReader])
 
-  const clear = () => {
+  const clear = useCallback(() => {
     setElements([])
     setCurrentElement(null)
     setHistory([])
     setHistoryIndex(-1)
-  }
+    announceToScreenReader("Canvas cleared")
+  }, [announceToScreenReader])
 
-  const download = () => {
+  const download = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     
@@ -349,39 +359,66 @@ export function WhiteboardDrawing() {
     link.download = "whiteboard-drawing.png"
     link.href = canvas.toDataURL()
     link.click()
-  }
+    announceToScreenReader("Image downloaded")
+  }, [announceToScreenReader])
+
+  const changeTool = useCallback((tool: Tool) => {
+    setCurrentTool(tool)
+    announceToScreenReader(`Tool changed to ${tool}`)
+  }, [announceToScreenReader])
+
+  const changeColor = useCallback((color: string) => {
+    setCurrentColor(color)
+    announceToScreenReader(`Color changed to ${color}`)
+  }, [announceToScreenReader])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault()
-        undo()
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "z":
+            e.preventDefault()
+            undo()
+            break
+          case "y":
+            e.preventDefault()
+            redo()
+            break
+          case "d":
+            e.preventDefault()
+            download()
+            break
+          case "x":
+            e.preventDefault()
+            clear()
+            break
+        }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+      if (e.key === "Delete" && !textPosition) {
         e.preventDefault()
-        redo()
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault()
-        download()
+        clear()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [elements, history, historyIndex])
+  }, [undo, redo, download, clear, textPosition])
 
   return (
     <>
       <ShortcutsModal
         pageName="Whiteboard Drawing"
         shortcuts={[
-          { keys: ["Ctrl", "Z"], description: "Undo" },
-          { keys: ["Ctrl", "Y"], description: "Redo" },
-          { keys: ["Ctrl", "S"], description: "Download image" },
+          { keys: ["Ctrl", "Shift", "Z"], description: "Undo" },
+          { keys: ["Ctrl", "Shift", "Y"], description: "Redo" },
+          { keys: ["Ctrl", "Shift", "D"], description: "Download image" },
+          { keys: ["Ctrl", "Shift", "X"], description: "Clear canvas" },
           { keys: ["Delete"], description: "Clear canvas" },
           { keys: ["?"], description: "Toggle this panel" },
         ]}
       />
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {announcement}
+    </div>
     <div className="flex h-full flex-col gap-3 p-4">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Whiteboard Drawing</h2>
@@ -390,11 +427,11 @@ export function WhiteboardDrawing() {
 
       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card flex flex-col md:flex-row">
       {/* Toolbar */}
-      <div className="shrink-0 md:w-56 border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-4">
+      <div className="shrink-0 md:w-64 border-b md:border-b-0 md:border-r border-border overflow-y-auto p-4 space-y-4">
         {/* Tools */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Tools</Label>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2" role="group" aria-label="Drawing tools">
+          <Label className="text-sm font-medium" id="tools-label">Tools</Label>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="tools-label">
             {[
               { tool: "pen" as Tool, icon: Pen, label: "Pen" },
               { tool: "rectangle" as Tool, icon: Square, label: "Rectangle" },
@@ -407,10 +444,13 @@ export function WhiteboardDrawing() {
                 key={tool}
                 variant={currentTool === tool ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCurrentTool(tool)}
-                className="flex items-center gap-1"
+                onClick={() => changeTool(tool)}
+                className="flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                role="radio"
+                aria-checked={currentTool === tool}
+                aria-label={label}
               >
-                <Icon className="h-3 w-3" />
+                <Icon className="h-3 w-3" aria-hidden="true" />
                 {label}
               </Button>
             ))}
@@ -418,72 +458,130 @@ export function WhiteboardDrawing() {
         </div>
 
         {/* Colors */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Color</Label>
-          <div className="grid grid-cols-5 gap-2">
+        <div className="space-y-2" role="group" aria-label="Color selection">
+          <Label className="text-sm font-medium" id="color-label">Color</Label>
+          <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-labelledby="color-label">
             {colors.map(color => (
               <button
                 key={color}
-                onClick={() => setCurrentColor(color)}
-                className={`w-8 h-8 rounded border-2 ${
-                  currentColor === color ? "border-primary" : "border-border"
+                onClick={() => changeColor(color)}
+                className={`w-8 h-8 rounded border-2 focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                  currentColor === color ? "border-primary ring-2 ring-primary/30" : "border-border"
                 }`}
                 style={{ backgroundColor: color }}
+                role="radio"
+                aria-checked={currentColor === color}
+                aria-label={`Color ${color}`}
+                title={color}
               />
             ))}
           </div>
           <input
             type="color"
             value={currentColor}
-            onChange={(e) => setCurrentColor(e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(e) => changeColor(e.target.value)}
+            className="w-full h-8 rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
+            aria-label="Custom color picker"
           />
         </div>
 
         {/* Line Width */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Line Width: {lineWidth}px</Label>
+          <Label className="text-sm font-medium" id="linewidth-label">Line Width: {lineWidth}px</Label>
           <Slider
             value={[lineWidth]}
-            onValueChange={(value) => setLineWidth(value[0])}
+            onValueChange={(value) => {
+              setLineWidth(value[0])
+              announceToScreenReader(`Line width set to ${value[0]} pixels`)
+            }}
             min={1}
             max={20}
             step={1}
             className="w-full"
+            aria-label={`Line width: ${lineWidth} pixels`}
           />
         </div>
 
         {/* Actions */}
-        <div className="space-y-2">
+        <div className="space-y-2" role="group" aria-label="Canvas actions">
           <Label className="text-sm font-medium">Actions</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" onClick={undo} disabled={elements.length === 0 && historyIndex < 0}>
-              <Undo className="h-3 w-3 mr-1" />
-              Undo
+          <div className="flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={undo} 
+              disabled={elements.length === 0 && historyIndex < 0}
+              className="focus:outline-none focus:ring-2 focus:ring-primary/50 justify-between"
+              aria-label="Undo last action"
+              title="Ctrl+Shift+Z"
+            >
+              <span className="flex items-center gap-2">
+                <Undo className="h-4 w-4" aria-hidden="true" />
+                <span>Undo</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center rounded border bg-background/60 px-1.5 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+                C+S+Z
+              </kbd>
             </Button>
-            <Button variant="outline" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
-              <Redo className="h-3 w-3 mr-1" />
-              Redo
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={redo} 
+              disabled={historyIndex >= history.length - 1}
+              className="focus:outline-none focus:ring-2 focus:ring-primary/50 justify-between"
+              aria-label="Redo last action"
+              title="Ctrl+Shift+Y"
+            >
+              <span className="flex items-center gap-2">
+                <Redo className="h-4 w-4" aria-hidden="true" />
+                <span>Redo</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center rounded border bg-background/60 px-1.5 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+                C+S+Y
+              </kbd>
             </Button>
-            <Button variant="outline" size="sm" onClick={clear}>
-              <Trash2 className="h-3 w-3 mr-1" />
-              Clear
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clear}
+              className="focus:outline-none focus:ring-2 focus:ring-primary/50 justify-between"
+              aria-label="Clear canvas"
+              title="Ctrl+Shift+X"
+            >
+              <span className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                <span>Clear</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center rounded border bg-background/60 px-1.5 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+                C+S+X
+              </kbd>
             </Button>
-            <Button size="sm" onClick={download}>
-              <Download className="h-3 w-3 mr-1" />
-              Save
+            <Button 
+              size="sm" 
+              onClick={download}
+              className="focus:outline-none focus:ring-2 focus:ring-primary/50 justify-between"
+              aria-label="Download drawing as image"
+              title="Ctrl+Shift+D"
+            >
+              <span className="flex items-center gap-2">
+                <Download className="h-4 w-4" aria-hidden="true" />
+                <span>Save</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center rounded border bg-background/80 px-1.5 font-mono text-[9px] font-medium text-foreground shadow-sm">
+                C+S+D
+              </kbd>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 relative bg-white overflow-hidden">
+      <div className="flex-1 relative bg-white overflow-hidden" role="region" aria-label="Drawing canvas">
         <canvas
           ref={canvasRef}
           width={800}
           height={600}
-          className="w-full h-full cursor-crosshair touch-none"
+          className="w-full h-full cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-primary/30"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -492,13 +590,17 @@ export function WhiteboardDrawing() {
           onTouchMove={drawTouch}
           onTouchEnd={stopDrawingTouch}
           onTouchCancel={stopDrawingTouch}
+          role="img"
+          aria-label={`Drawing canvas with ${elements.length} elements. Current tool: ${currentTool}, color: ${currentColor}, line width: ${lineWidth}px`}
         />
         
         {/* Text Input Popup */}
         {textPosition && (
           <div
-            className="absolute bg-background border border-border rounded-lg p-2 shadow-lg"
+            className="absolute bg-background border border-border rounded-lg p-2 shadow-lg z-10"
             style={{ left: textPosition.x, top: textPosition.y }}
+            role="dialog"
+            aria-label="Add text to canvas"
           >
             <input
               type="text"
@@ -513,12 +615,28 @@ export function WhiteboardDrawing() {
                 }
               }}
               placeholder="Enter text..."
-              className="px-2 py-1 border rounded text-sm"
+              className="px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
               autoFocus
+              aria-label="Text to add to canvas"
             />
-            <div className="flex gap-1 mt-1">
-              <Button size="sm" onClick={addText}>Add</Button>
-              <Button size="sm" variant="outline" onClick={() => { setTextPosition(null); setTextInput("") }}>Cancel</Button>
+            <div className="flex gap-1 mt-1" role="group" aria-label="Text input actions">
+              <Button 
+                size="sm" 
+                onClick={addText}
+                className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Add text to canvas"
+              >
+                Add
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => { setTextPosition(null); setTextInput(""); announceToScreenReader("Text input cancelled") }}
+                className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Cancel text input"
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         )}

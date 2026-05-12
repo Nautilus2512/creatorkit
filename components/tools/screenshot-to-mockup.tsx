@@ -168,17 +168,26 @@ export function ScreenshotToMockup() {
   const [bgIndex, setBgIndex]   = useState(4)
   const [shadow, setShadow]     = useState(true)
   const [isDragging, setIsDragging] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
   const inputRef  = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  const handleFile = (f: File) => {
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    setTimeout(() => setAnnouncement(""), 1000)
+  }, [])
+
+  const handleFile = useCallback((f: File) => {
     if (!f.type.startsWith("image/")) return
     setFileName(f.name); setFileSize(f.size); setPreviewUrl(null)
     const url = URL.createObjectURL(f)
     const img = new Image()
-    img.onload = () => setImageEl(img)
+    img.onload = () => {
+      setImageEl(img)
+      announceToScreenReader(`Screenshot loaded: ${f.name}, ${img.naturalWidth} by ${img.naturalHeight} pixels`)
+    }
     img.src = url
-  }
+  }, [announceToScreenReader])
 
   useEffect(() => {
     if (!imageEl || !canvasRef.current) return
@@ -197,60 +206,106 @@ export function ScreenshotToMockup() {
       const a = document.createElement("a")
       a.href = url
       a.download = `mockup-${device}-${fileName.replace(/\.[^.]+$/, "")}.png`
-      a.click(); setTimeout(() => URL.revokeObjectURL(url), 100)
+      a.click(); 
+      setTimeout(() => URL.revokeObjectURL(url), 100)
+      announceToScreenReader("Mockup downloaded")
     }, "image/png")
-  }, [imageEl, device, bgIndex, shadow, fileName])
+  }, [imageEl, device, bgIndex, shadow, fileName, announceToScreenReader])
+
+  const handleDeviceChange = useCallback((id: Device) => {
+    setDevice(id)
+    const deviceLabel = DEVICES.find(d => d.id === id)?.label || id
+    announceToScreenReader(`Device changed to ${deviceLabel}`)
+  }, [announceToScreenReader])
+
+  const handleBgChange = useCallback((i: number) => {
+    setBgIndex(i)
+    announceToScreenReader(`Background changed to ${BG_PRESETS[i].label}`)
+  }, [announceToScreenReader])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if ((e.ctrlKey||e.metaKey) && e.key === "s") { e.preventDefault(); download() }
-      if ((e.ctrlKey||e.metaKey) && e.key === "o") { e.preventDefault(); inputRef.current?.click() }
+      if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase() === "d") { 
+        e.preventDefault(); 
+        if (imageEl) download() 
+      }
+      if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") { 
+        e.preventDefault(); 
+        inputRef.current?.click() 
+      }
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
-  }, [download])
+  }, [download, imageEl])
+
+  const shortcuts = [
+    { keys: ["Ctrl", "Shift", "D"], description: "Download mockup" },
+    { keys: ["Ctrl", "Shift", "O"], description: "Open screenshot" },
+  ]
 
   return (
     <>
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {announcement}
+    </div>
     <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Screenshot to Mockup</h2>
-        <p className="text-muted-foreground">Wrap screenshots in device frames · 100% in-browser</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Screenshot to Mockup</h2>
+          <p className="text-muted-foreground">Wrap screenshots in device frames · 100% in-browser</p>
+        </div>
+        <ShortcutsModal pageName="Screenshot to Mockup" shortcuts={shortcuts} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Mockup settings">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Upload */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Screenshot</Label>
+            <Label htmlFor="screenshot-upload" className="text-sm font-medium">Screenshot</Label>
             <div
+              id="screenshot-upload"
+              role="button"
+              tabIndex={0}
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
               onClick={() => inputRef.current?.click()}
-              className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+              onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+              aria-label={imageEl ? `Screenshot: ${fileName}, ${imageEl.naturalWidth} by ${imageEl.naturalHeight} pixels` : "Drop or click to upload screenshot"}
+              className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${
                 isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
               }`}
             >
-              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+              <input 
+                ref={inputRef} 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+                aria-hidden="true"
+              />
               {imageEl ? (
                 <div className="flex items-center gap-3 px-4 w-full">
-                  <div className="rounded-md bg-primary/10 p-2 shrink-0"><ImageIcon className="h-5 w-5 text-primary" /></div>
+                  <div className="rounded-md bg-primary/10 p-2 shrink-0"><ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{fileName}</p>
                     <p className="text-xs text-muted-foreground">{imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null) }} aria-label="Remove image" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null); announceToScreenReader("Screenshot removed") }} 
+                    aria-label="Remove screenshot"
+                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-center px-4">
-                  <div className="rounded-full bg-muted p-3"><Upload className="h-5 w-5 text-muted-foreground" /></div>
+                  <div className="rounded-full bg-muted p-3"><Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></div>
                   <p className="text-sm font-medium">Drop a screenshot here</p>
-                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd></p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl Shift O</kbd></p>
                 </div>
               )}
             </div>
@@ -259,18 +314,21 @@ export function ScreenshotToMockup() {
           {/* Device selector */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Device</Label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2" role="group" aria-label="Device type selection">
               {DEVICES.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setDevice(id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                  onClick={() => handleDeviceChange(id)}
+                  role="radio"
+                  aria-checked={device === id}
+                  aria-label={label}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${
                     device === id
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                   {label}
                 </button>
               ))}
@@ -280,14 +338,16 @@ export function ScreenshotToMockup() {
           {/* Background presets */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">Background</Label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-5 gap-2" role="group" aria-label="Background color selection">
               {BG_PRESETS.map((bg, i) => (
                 <button
                   key={i}
-                  onClick={() => setBgIndex(i)}
+                  onClick={() => handleBgChange(i)}
                   title={bg.label}
+                  role="radio"
+                  aria-checked={bgIndex === i}
                   aria-label={`Background: ${bg.label}`}
-                  className={`h-9 rounded-lg border-2 transition-all ${bgIndex === i ? "border-primary scale-110" : "border-transparent hover:border-primary/50"}`}
+                  className={`h-9 rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${bgIndex === i ? "border-primary scale-110" : "border-transparent hover:border-primary/50"}`}
                   style={{ background: bg.type === "solid" ? bg.c1 : `linear-gradient(135deg, ${bg.c1}, ${bg.c2})` }}
                 />
               ))}
@@ -297,23 +357,28 @@ export function ScreenshotToMockup() {
           {/* Shadow toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-sm font-medium">Drop Shadow</Label>
+              <Label htmlFor="shadow-toggle" className="text-sm font-medium">Drop Shadow</Label>
               <p className="text-xs text-muted-foreground">Adds depth to the device frame</p>
             </div>
-            <Switch checked={shadow} onCheckedChange={setShadow} />
+            <Switch 
+              id="shadow-toggle"
+              checked={shadow} 
+              onCheckedChange={(val) => { setShadow(val); announceToScreenReader(val ? "Drop shadow enabled" : "Drop shadow disabled") }} 
+              aria-label="Enable drop shadow"
+            />
           </div>
 
         </div>
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Mockup preview">
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
         <div className="flex-1 overflow-y-auto p-4">
           {!previewUrl ? (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
+            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
               <div className="rounded-full border border-border bg-muted/50 p-4">
-                <Monitor className="h-6 w-6 text-muted-foreground" />
+                <Monitor className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
               </div>
               <div>
                 <p className="text-sm font-medium">No screenshot yet</p>
@@ -321,15 +386,25 @@ export function ScreenshotToMockup() {
               </div>
             </div>
           ) : (
-            <img src={previewUrl} alt="Mockup preview" className="w-full rounded-lg border border-border object-contain max-h-[70vh]" />
+            <img 
+              src={previewUrl} 
+              alt="Mockup preview showing screenshot in device frame" 
+              className="w-full rounded-lg border border-border object-contain max-h-[70vh]"
+            />
           )}
         </div>
         {previewUrl && (
           <div className="shrink-0 border-t border-border p-4">
-            <Button className="w-full" onClick={download}>
-              <Download className="mr-2 h-4 w-4" />
-              Download PNG
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+S</kbd>
+            <Button 
+              className="w-full gap-2" 
+              onClick={download}
+              aria-label="Download mockup as PNG"
+            >
+              <Download className="h-4 w-4" />
+              <span>Download PNG</span>
+              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
+                <span>Ctrl</span><span>Shift</span><span>D</span>
+              </kbd>
             </Button>
           </div>
         )}
@@ -337,14 +412,6 @@ export function ScreenshotToMockup() {
 
       </div>
     </div>
-    <ShortcutsModal
-      pageName="Screenshot to Mockup"
-      shortcuts={[
-        { keys: ["Ctrl", "S"], description: "Download mockup" },
-        { keys: ["Ctrl", "O"], description: "Open screenshot" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }

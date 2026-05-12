@@ -101,6 +101,18 @@ const CHECKER: React.CSSProperties = {
   backgroundColor: "#f9fafb",
 }
 
+// Accessibility helper for live regions
+function announceToScreenReader(message: string) {
+  const announcement = document.createElement('div')
+  announcement.setAttribute('role', 'status')
+  announcement.setAttribute('aria-live', 'polite')
+  announcement.setAttribute('aria-atomic', 'true')
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 type Phase = "idle" | "loading-model" | "processing" | "done"
 
@@ -125,7 +137,10 @@ export function BackgroundRemover() {
   }, [])
 
   const handleFile = (f: File) => {
-    if (!f.type.startsWith("image/")) return
+    if (!f.type.startsWith("image/")) {
+      announceToScreenReader('Please select a valid image file')
+      return
+    }
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     const url = URL.createObjectURL(f)
     setObjectUrl(url)
@@ -135,7 +150,10 @@ export function BackgroundRemover() {
     setError(null)
     setPhase("idle")
     const img = new Image()
-    img.onload = () => setImageEl(img)
+    img.onload = () => {
+      setImageEl(img)
+      announceToScreenReader(`Image ${f.name} loaded successfully. ${img.naturalWidth} by ${img.naturalHeight} pixels.`)
+    }
     img.src = url
   }
 
@@ -143,27 +161,34 @@ export function BackgroundRemover() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     setObjectUrl(null); setImageEl(null); setResultUrl(null)
     setError(null); setPhase("idle"); setPickingColor(false)
+    announceToScreenReader('Image removed. Ready for new upload.')
   }
 
   const processDesktop = useCallback(async () => {
     if (!imageEl || !objectUrl) return
     setError(null); setResultUrl(null)
+    announceToScreenReader('Starting background removal process. Loading AI model...')
     try {
       setPhase("loading-model"); setProgress(0)
       await loadModel(p => setProgress(p))
       setPhase("processing")
+      announceToScreenReader('AI model loaded. Processing image...')
       const result = await removeBackgroundAI(imageEl, objectUrl)
       setResultUrl(result); setPhase("done")
+      announceToScreenReader('Background removal complete. Result ready for download.')
     } catch {
       setError("Something went wrong. Check your internet connection and try again.")
       setPhase("idle")
+      announceToScreenReader('Error during background removal. Please try again.')
     }
   }, [imageEl, objectUrl])
 
   const processMobile = useCallback(() => {
     if (!imageEl) return
+    announceToScreenReader('Removing background color...')
     setResultUrl(removeColorBg(imageEl, targetColor, tolerance))
     setPhase("done")
+    announceToScreenReader('Background removal complete. Result ready for download.')
   }, [imageEl, targetColor, tolerance])
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -180,6 +205,7 @@ export function BackgroundRemover() {
     a.href = resultUrl
     a.download = `nobg_${fileName.replace(/\.[^.]+$/, "")}.png`
     a.click()
+    announceToScreenReader('Download started. Saving as PNG with transparent background.')
   }, [resultUrl, fileName])
 
   useEffect(() => {
@@ -187,19 +213,24 @@ export function BackgroundRemover() {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); download() }
       if ((e.ctrlKey || e.metaKey) && e.key === "o") { e.preventDefault(); inputRef.current?.click() }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); if (isMobile) processMobile(); else processDesktop() }
+      if (e.key === "Escape" && pickingColor) { 
+        e.preventDefault(); 
+        setPickingColor(false)
+        announceToScreenReader('Color picking mode cancelled')
+      }
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
-  }, [download])
+  }, [download, pickingColor, isMobile, processMobile, processDesktop])
 
   const isProcessing = phase === "loading-model" || phase === "processing"
 
   return (
     <>
     <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Background Remover</h2>
-        <p className="text-muted-foreground">Remove image backgrounds · 100% in-browser</p>
+      <div role="banner">
+        <h2 className="text-2xl font-semibold tracking-tight" id="page-title">Background Remover</h2>
+        <p className="text-muted-foreground" id="page-description">Remove image backgrounds · 100% in-browser · Press ? for keyboard shortcuts</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0 h-full">
       {/* Left panel - Input & Controls */}
@@ -207,9 +238,13 @@ export function BackgroundRemover() {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Version info */}
-          <div className={`rounded-lg border px-3 py-2.5 text-xs space-y-1 ${
-            isMobile ? "border-amber-500/20 bg-amber-500/5" : "border-blue-500/20 bg-blue-500/5"
-          }`}>
+          <div 
+            className={`rounded-lg border px-3 py-2.5 text-xs space-y-1 ${
+              isMobile ? "border-amber-500/20 bg-amber-500/5" : "border-blue-500/20 bg-blue-500/5"
+            }`}
+            role="region"
+            aria-label="Mode information"
+          >
             {isMobile ? (
               <>
                 <p className="font-medium text-amber-700 dark:text-amber-400">Lightweight Mode — mobile</p>
@@ -224,34 +259,61 @@ export function BackgroundRemover() {
           </div>
 
           {/* Upload */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Image</Label>
+          <div className="space-y-2" role="region" aria-label="Image upload section">
+            <Label className="text-sm font-medium" htmlFor="file-upload">Image</Label>
             <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); announceToScreenReader('Drop image here to upload') }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
               onClick={() => !imageEl && inputRef.current?.click()}
-              className={`relative flex min-h-[100px] flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+              className={`relative flex min-h-[100px] flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                 isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
               } ${imageEl ? "cursor-default" : "cursor-pointer"}`}
+              role="button"
+              tabIndex={imageEl ? -1 : 0}
+              aria-label={imageEl ? "Image uploaded" : "Upload image - click or drag and drop supported formats"}
+              aria-describedby="upload-formats"
+              onKeyDown={(e) => {
+                if (!imageEl && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault()
+                  inputRef.current?.click()
+                }
+              }}
             >
-              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+              <input 
+                ref={inputRef} 
+                id="file-upload"
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+                aria-label="Select image file"
+              />
               {imageEl ? (
                 <div className="flex items-center gap-3 px-4 w-full">
-                  <div className="rounded-md bg-primary/10 p-2 shrink-0"><ImageIcon className="h-5 w-5 text-primary" /></div>
+                  <div className="rounded-md bg-primary/10 p-2 shrink-0" aria-hidden="true"><ImageIcon className="h-5 w-5 text-primary" /></div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{fileName}</p>
-                    <p className="text-xs text-muted-foreground">{imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
+                    <p className="truncate text-sm font-medium" title={fileName}>{fileName}</p>
+                    <p className="text-xs text-muted-foreground" aria-label={`Image dimensions ${imageEl.naturalWidth} by ${imageEl.naturalHeight} pixels, file size ${formatBytes(fileSize)}`}>
+                      {imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}
+                    </p>
                   </div>
-                  <button onClick={clearImage} disabled={isProcessing} aria-label="Remove image" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40">
-                    <X className="h-4 w-4" />
+                  <button 
+                    onClick={clearImage} 
+                    disabled={isProcessing} 
+                    aria-label="Remove image and start over"
+                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                    tabIndex={0}
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-center px-4">
-                  <div className="rounded-full bg-muted p-3"><Upload className="h-5 w-5 text-muted-foreground" /></div>
+                  <div className="rounded-full bg-muted p-3" aria-hidden="true"><Upload className="h-5 w-5 text-muted-foreground" /></div>
                   <p className="text-sm font-medium">Drop an image here</p>
-                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd></p>
+                  <p className="text-xs text-muted-foreground" id="upload-formats">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd></p>
+                  <span className="sr-only">Press Ctrl plus O to browse for files</span>
                 </div>
               )}
             </div>
@@ -259,18 +321,28 @@ export function BackgroundRemover() {
 
           {/* Mobile controls */}
           {isMobile && imageEl && (
-            <div className="space-y-4">
+            <div className="space-y-4" role="region" aria-label="Background color removal settings">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Background Color to Remove</Label>
+                <Label className="text-sm font-medium" id="color-label">Background Color to Remove</Label>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="h-9 w-9 rounded-md border-2 border-border shrink-0" style={{ backgroundColor: toHex(targetColor) }} />
+                  <div 
+                    className="h-9 w-9 rounded-md border-2 border-border shrink-0" 
+                    style={{ backgroundColor: toHex(targetColor) }}
+                    role="img"
+                    aria-label={`Selected color ${toHex(targetColor)}`}
+                  />
                   <button
-                    onClick={() => setPickingColor(v => !v)}
-                    className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    onClick={() => {
+                      setPickingColor(v => !v)
+                      announceToScreenReader(pickingColor ? 'Color picking mode disabled' : 'Color picking mode enabled. Click on image to select color.')
+                    }}
+                    className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                       pickingColor ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"
                     }`}
+                    aria-pressed={pickingColor}
+                    aria-label={pickingColor ? "Disable color picker mode" : "Enable color picker mode"}
                   >
-                    <Pipette className="h-3.5 w-3.5" />
+                    <Pipette className="h-3.5 w-3.5" aria-hidden="true" />
                     {pickingColor ? "Click image →" : "Pick from image"}
                   </button>
                   <input
@@ -278,18 +350,33 @@ export function BackgroundRemover() {
                     value={toHex(targetColor)}
                     onChange={e => {
                       const h = e.target.value
-                      setTargetColor([parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)])
+                      const newColor = [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)] as [number, number, number]
+                      setTargetColor(newColor)
+                      announceToScreenReader(`Color changed to ${h}`)
                     }}
-                    className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+                    className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent p-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    aria-labelledby="color-label"
+                    aria-describedby="color-value"
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Tolerance</Label>
-                  <span className="text-xs text-muted-foreground font-mono">{tolerance}%</span>
+                  <Label className="text-sm font-medium" id="tolerance-label">Tolerance</Label>
+                  <span className="text-xs text-muted-foreground font-mono" id="tolerance-value" aria-live="polite">{tolerance}%</span>
                 </div>
-                <Slider min={1} max={80} step={1} value={[tolerance]} onValueChange={([v]) => setTolerance(v)} />
+                <Slider 
+                  min={1} 
+                  max={80} 
+                  step={1} 
+                  value={[tolerance]} 
+                  onValueChange={([v]) => {
+                    setTolerance(v)
+                    announceToScreenReader(`Tolerance set to ${v} percent`)
+                  }}
+                  aria-labelledby="tolerance-label"
+                  aria-describedby="tolerance-value"
+                />
                 <p className="text-xs text-muted-foreground">Higher = removes more similar shades. Lower = more precise.</p>
               </div>
             </div>
@@ -297,12 +384,19 @@ export function BackgroundRemover() {
 
           {/* Desktop progress bar */}
           {!isMobile && isProcessing && (
-            <div className="space-y-2">
+            <div className="space-y-2" role="region" aria-label="Processing status" aria-live="polite">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{phase === "loading-model" ? "Downloading AI model…" : "Removing background…"}</span>
-                {phase === "loading-model" && <span>{progress}%</span>}
+                {phase === "loading-model" && <span aria-label={`${progress} percent complete`}>{progress}%</span>}
               </div>
-              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div 
+                className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
+                role="progressbar"
+                aria-valuenow={phase === "loading-model" ? progress : 100}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={phase === "loading-model" ? "Model download progress" : "Background removal progress"}
+              >
                 <div
                   className="h-full bg-primary rounded-full transition-all duration-300"
                   style={{
@@ -318,60 +412,89 @@ export function BackgroundRemover() {
           )}
 
           {error && (
-            <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs text-red-600 dark:text-red-400">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />{error}
+            <div 
+              className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs text-red-600 dark:text-red-400"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{error}</span>
             </div>
           )}
 
         </div>
 
         <div className="shrink-0 border-t border-border p-4">
-          <Button className="w-full" onClick={isMobile ? processMobile : processDesktop} disabled={!imageEl || isProcessing}>
+          <Button 
+            className="w-full" 
+            onClick={isMobile ? processMobile : processDesktop} 
+            disabled={!imageEl || isProcessing}
+            aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
+            aria-describedby="remove-bg-shortcut"
+          >
             {isProcessing ? (
               <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
-                {phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
+                <span>{phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}</span>
               </>
             ) : (
-              <><Wand2 className="mr-2 h-4 w-4" />Remove Background
-                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+Enter</kbd>}</>
+              <>
+                <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>Remove Background</span>
+                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Enter</kbd>}
+                <span className="sr-only">. Press Control plus Enter to start processing</span>
+              </>
             )}
           </Button>
         </div>
       </div>
 
       {/* Right panel - Output */}
-      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
+      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card" role="region" aria-label="Image preview and results">
         <div className="flex-1 overflow-y-auto p-4">
           {!imageEl ? (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <div className="rounded-full border border-border bg-muted/50 p-4">
+            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status" aria-label="Empty state">
+              <div className="rounded-full border border-border bg-muted/50 p-4" aria-hidden="true">
                 <Wand2 className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-sm font-medium">No image yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Drop an image to get started</p>
+                <p className="text-xs text-muted-foreground mt-1">Drop an image to get started or press Ctrl+O to browse</p>
               </div>
             </div>
           ) : resultUrl ? (
-            <div className="space-y-3">
+            <div className="space-y-3" role="region" aria-label="Background removal result">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground">Result — transparent background</p>
-                <button onClick={() => { setResultUrl(null); setPhase("idle") }} className="text-xs text-muted-foreground hover:text-foreground underline">Try again</button>
+                <p className="text-xs font-medium text-muted-foreground" id="result-label">Result — transparent background</p>
+                <button 
+                  onClick={() => { 
+                    setResultUrl(null); 
+                    setPhase("idle")
+                    announceToScreenReader('Result cleared. Ready to process again.')
+                  }} 
+                  className="text-xs text-muted-foreground hover:text-foreground underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded px-1"
+                  aria-label="Clear result and try again"
+                >Try again</button>
               </div>
-              <div className="rounded-lg overflow-hidden border border-border" style={CHECKER}>
-                <img src={resultUrl} alt="Result" className="w-full h-auto max-w-full object-contain block" />
+              <div 
+                className="rounded-lg overflow-hidden border border-border" 
+                style={CHECKER}
+                role="img"
+                aria-labelledby="result-label"
+              >
+                <img src={resultUrl} alt="Image with background removed showing transparent background" className="w-full h-auto max-w-full object-contain block" />
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">
+            <div className="space-y-3" role="region" aria-label="Original image preview">
+              <p className="text-xs font-medium text-muted-foreground" aria-live="polite">
                 {pickingColor ? "Click on the background area to pick its color" : "Original image"}
               </p>
               <div className={`rounded-lg overflow-hidden border border-border relative ${pickingColor ? "cursor-crosshair ring-2 ring-primary" : ""}`}>
                 <img
                   src={objectUrl!}
-                  alt="Original"
+                  alt={pickingColor ? "Click on image to select background color" : "Original uploaded image"}
                   className="w-full h-auto max-w-full object-contain block"
                   onClick={handleImageClick}
                 />
@@ -386,10 +509,16 @@ export function BackgroundRemover() {
         </div>
         {resultUrl && (
           <div className="shrink-0 border-t border-border p-4">
-            <Button className="w-full" onClick={download}>
-              <Download className="mr-2 h-4 w-4" />
-              Download PNG (transparent)
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+S</kbd>
+            <Button 
+              className="w-full" 
+              onClick={download}
+              aria-label="Download result as PNG with transparent background"
+              aria-describedby="download-shortcut"
+            >
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>Download PNG (transparent)</span>
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+S</kbd>
+              <span className="sr-only">. Press Control plus S to download</span>
             </Button>
           </div>
         )}
@@ -400,9 +529,14 @@ export function BackgroundRemover() {
     <ShortcutsModal
       pageName="Background Remover"
       shortcuts={[
-        { keys: ["Ctrl", "S"], description: "Download result" },
-        { keys: ["Ctrl", "O"], description: "Open image" },
-        { keys: ["?"], description: "Toggle this panel" },
+        { keys: ["Ctrl", "O"], description: "Open image file" },
+        { keys: ["Ctrl", "Enter"], description: "Remove background (when image loaded)" },
+        { keys: ["Ctrl", "S"], description: "Download result (when available)" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+        { keys: ["Tab"], description: "Navigate between controls" },
+        { keys: ["Enter"], description: "Activate focused button" },
+        { keys: ["Space"], description: "Activate focused button" },
+        { keys: ["Escape"], description: "Cancel color picking mode" },
       ]}
     />
     </>

@@ -1,12 +1,24 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Layers, Upload, Download, X, ImageIcon, Type } from "lucide-react"
+import { Layers, Upload, Download, X, ImageIcon, Type, FileCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
+
+function announceToScreenReader(message: string) {
+  if (typeof document === "undefined") return
+  const announcement = document.createElement("div")
+  announcement.setAttribute("role", "status")
+  announcement.setAttribute("aria-live", "polite")
+  announcement.setAttribute("aria-atomic", "true")
+  announcement.className = 'sr-only'
+  announcement.textContent = message
+  document.body.appendChild(announcement)
+  setTimeout(() => document.body.removeChild(announcement), 1000)
+}
 
 type Position =
   | "top-left"    | "top-center"    | "top-right"
@@ -108,6 +120,7 @@ export function ImageWatermarkAdder() {
   const [padding, setPadding] = useState(3)
   const [isDragging, setIsDragging] = useState(false)
   const [isDraggingLogo, setIsDraggingLogo] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -158,94 +171,117 @@ export function ImageWatermarkAdder() {
       a.download = `watermarked_${fileName.replace(/\.[^.]+$/, "")}.${isPng ? "png" : "jpg"}`
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 100)
+      setDownloaded(true)
+      announceToScreenReader("Image downloaded with watermark")
+      setTimeout(() => setDownloaded(false), 2000)
     }, isPng ? "image/png" : "image/jpeg", isPng ? undefined : 0.92)
   }, [imageEl, watermarkType, watermarkText, logoEl, fontSize, logoSize, opacity, color, fontFamily, position, padding, fileName])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); download() }
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") { e.preventDefault(); inputRef.current?.click() }
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) return
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); if (imageEl) { download(); announceToScreenReader("Downloading watermarked image") } }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); inputRef.current?.click(); announceToScreenReader("Upload dialog opened") }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [download])
+  }, [download, imageEl])
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
+    <ShortcutsModal
+      pageName="Image Watermark Adder"
+      shortcuts={[
+        { keys: ["Ctrl", "Shift", "S"], description: "Download image" },
+        { keys: ["Ctrl", "Shift", "O"], description: "Open image" },
+        { keys: ["?"], description: "Toggle this panel" },
+      ]}
+    />
+    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Image Watermark Adder tool">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Image Watermark Adder</h2>
-        <p className="text-muted-foreground">Add text or logo watermarks · 100% in-browser</p>
+        <p className="text-muted-foreground">Add text or logo watermarks · 100% in-browser · Press ? for shortcuts</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel — settings */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="settings-panel-label">
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium" id="settings-panel-label">Watermark Settings</span>
+        </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Upload */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Image</Label>
+          <div className="space-y-2" role="group" aria-labelledby="image-upload-label">
+            <Label className="text-sm font-medium" id="image-upload-label">Image</Label>
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Drop image here or click to upload"
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
-              onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) handleFile(f) }}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) { handleFile(f); announceToScreenReader(`${f.name} added`) } }}
               onClick={() => inputRef.current?.click()}
-              className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
+              className={`relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
               }`}
             >
-              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+              <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleFile(f); announceToScreenReader(`${f.name} added`) } }} aria-label="Select image file" />
               {imageEl ? (
                 <div className="flex items-center gap-3 px-4 w-full">
                   <div className="rounded-md bg-primary/10 p-2 shrink-0">
-                    <ImageIcon className="h-5 w-5 text-primary" />
+                    <ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{fileName}</p>
                     <p className="text-xs text-muted-foreground">{imageEl.naturalWidth} × {imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null) }}
+                    onClick={(e) => { e.stopPropagation(); setImageEl(null); setPreviewUrl(null); announceToScreenReader("Image removed") }}
                     aria-label="Remove image"
-                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 px-4 text-center">
-                  <div className="rounded-full bg-muted p-3"><Upload className="h-5 w-5 text-muted-foreground" /></div>
+                  <div className="rounded-full bg-muted p-3"><Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></div>
                   <p className="text-sm font-medium">Drop an image here</p>
-                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd></p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Watermark type selector */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Watermark Type</Label>
+          <div className="space-y-2" role="group" aria-labelledby="watermark-type-label">
+            <Label className="text-sm font-medium" id="watermark-type-label">Watermark Type</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => setWatermarkType("text")}
-                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                onClick={() => { setWatermarkType("text"); announceToScreenReader("Text watermark selected") }}
+                aria-pressed={watermarkType === "text"}
+                aria-label="Text watermark"
+                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                   watermarkType === "text"
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                 }`}
               >
-                <Type className="h-4 w-4" />
+                <Type className="h-4 w-4" aria-hidden="true" />
                 Text
               </button>
               <button
-                onClick={() => setWatermarkType("logo")}
-                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                onClick={() => { setWatermarkType("logo"); announceToScreenReader("Logo watermark selected") }}
+                aria-pressed={watermarkType === "logo"}
+                aria-label="Logo watermark"
+                className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                   watermarkType === "logo"
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                 }`}
               >
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" aria-hidden="true" />
                 Logo
               </button>
             </div>
@@ -253,47 +289,53 @@ export function ImageWatermarkAdder() {
 
           {/* Watermark content based on type */}
           {watermarkType === "text" ? (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Watermark Text</Label>
+            <div className="space-y-2" role="group" aria-labelledby="watermark-text-label">
+              <Label className="text-sm font-medium" id="watermark-text-label">Watermark Text</Label>
               <Input
                 placeholder="© Your Name"
                 value={watermarkText}
-                onChange={(e) => setWatermarkText(e.target.value)}
+                onChange={(e) => { setWatermarkText(e.target.value); announceToScreenReader(`Watermark text: ${e.target.value}`) }}
+                aria-label="Watermark text input"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               />
             </div>
           ) : (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Logo Image</Label>
+            <div className="space-y-2" role="group" aria-labelledby="logo-upload-label">
+              <Label className="text-sm font-medium" id="logo-upload-label">Logo Image</Label>
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Drop logo here or click to upload"
                 onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true) }}
                 onDragLeave={() => setIsDraggingLogo(false)}
-                onDrop={(e) => { e.preventDefault(); setIsDraggingLogo(false); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) handleLogoFile(f) }}
+                onDrop={(e) => { e.preventDefault(); setIsDraggingLogo(false); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) { handleLogoFile(f); announceToScreenReader(`${f.name} logo added`) } }}
                 onClick={() => logoInputRef.current?.click()}
-                className={`relative flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); logoInputRef.current?.click() } }}
+                className={`relative flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                   isDraggingLogo ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
                 }`}
               >
-                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoFile(f) }} />
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleLogoFile(f); announceToScreenReader(`${f.name} logo added`) } }} aria-label="Select logo file" />
                 {logoEl ? (
                   <div className="flex items-center gap-3 px-4 w-full">
                     <div className="rounded-md bg-primary/10 p-2 shrink-0">
-                      <ImageIcon className="h-4 w-4 text-primary" />
+                      <ImageIcon className="h-4 w-4 text-primary" aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{logoFileName}</p>
                       <p className="text-xs text-muted-foreground">{logoEl.naturalWidth} × {logoEl.naturalHeight}px</p>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setLogoEl(null); setLogoFileName("") }}
+                      onClick={(e) => { e.stopPropagation(); setLogoEl(null); setLogoFileName(""); announceToScreenReader("Logo removed") }}
                       aria-label="Remove logo"
-                      className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3 w-3" aria-hidden="true" />
                     </button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2 px-4 text-center">
-                    <div className="rounded-full bg-muted p-2"><Upload className="h-4 w-4 text-muted-foreground" /></div>
+                    <div className="rounded-full bg-muted p-2"><Upload className="h-4 w-4 text-muted-foreground" aria-hidden="true" /></div>
                     <p className="text-xs font-medium">Drop a logo here</p>
                     <p className="text-xs text-muted-foreground">PNG, JPG, WebP</p>
                   </div>
@@ -304,15 +346,17 @@ export function ImageWatermarkAdder() {
 
           {/* Font - only show for text watermarks */}
           {watermarkType === "text" && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Font</Label>
+            <div className="space-y-2" role="group" aria-labelledby="font-label">
+              <Label className="text-sm font-medium" id="font-label">Font</Label>
               <div className="grid grid-cols-4 gap-2">
                 {FONTS.map(f => (
                   <button
                     key={f.value}
-                    onClick={() => setFontFamily(f.value)}
+                    onClick={() => { setFontFamily(f.value); announceToScreenReader(`${f.label} font selected`) }}
                     style={{ fontFamily: f.value }}
-                    className={`rounded-md border px-2 py-1.5 text-sm transition-colors ${
+                    aria-pressed={fontFamily === f.value}
+                    aria-label={`${f.label} font`}
+                    className={`rounded-md border px-2 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                       fontFamily === f.value
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -326,90 +370,107 @@ export function ImageWatermarkAdder() {
           )}
 
           {/* Sliders */}
-          <div className="space-y-4">
+          <div className="space-y-4" role="group" aria-label="Watermark settings sliders">
             {[
               ...(watermarkType === "text" 
-                ? [{ label: "Size", value: fontSize, set: setFontSize, min: 1, max: 20, unit: "%" }]
-                : [{ label: "Logo Size", value: logoSize, set: setLogoSize, min: 5, max: 30, unit: "%" }]
+                ? [{ label: "Size", value: fontSize, set: setFontSize, min: 1, max: 20, unit: "%", ariaLabel: "Watermark size" }]
+                : [{ label: "Logo Size", value: logoSize, set: setLogoSize, min: 5, max: 30, unit: "%", ariaLabel: "Logo size" }]
               ),
-              { label: "Opacity", value: opacity, set: setOpacity, min: 10, max: 100, unit: "%" },
-              { label: "Padding from edge", value: padding, set: setPadding, min: 0, max: 15, unit: "%" },
-            ].map(({ label, value, set, min, max, unit }) => (
+              { label: "Opacity", value: opacity, set: setOpacity, min: 10, max: 100, unit: "%", ariaLabel: "Watermark opacity" },
+              { label: "Padding from edge", value: padding, set: setPadding, min: 0, max: 15, unit: "%", ariaLabel: "Padding from edge" },
+            ].map(({ label, value, set, min, max, unit, ariaLabel }) => (
               <div key={label} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">{label}</Label>
-                  <span className="text-xs text-muted-foreground font-mono">{value}{unit}</span>
+                  <Label className="text-sm font-medium" id={`${label.toLowerCase().replace(/\s/g, "-")}-label`}>{label}</Label>
+                  <span className="text-xs text-muted-foreground font-mono" aria-live="polite">{value}{unit}</span>
                 </div>
-                <Slider min={min} max={max} step={1} value={[value]} onValueChange={([v]) => set(v)} />
+                <Slider 
+                  min={min} 
+                  max={max} 
+                  step={1} 
+                  value={[value]} 
+                  onValueChange={([v]) => { set(v); announceToScreenReader(`${label} ${v}${unit}`) }} 
+                  aria-label={ariaLabel}
+                  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                />
               </div>
             ))}
           </div>
 
           {/* Color - only show for text watermarks */}
           {watermarkType === "text" && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Color</Label>
+            <div className="space-y-2" role="group" aria-labelledby="color-label">
+              <Label className="text-sm font-medium" id="color-label">Color</Label>
               <div className="flex items-center gap-2 flex-wrap">
                 {["#ffffff", "#000000", "#ff0000", "#ffff00"].map(c => (
                   <button
                     key={c}
-                    onClick={() => setColor(c)}
-                    className={`h-8 w-8 rounded-md border-2 transition-all ${color === c ? "border-primary scale-110" : "border-border"}`}
+                    onClick={() => { setColor(c); announceToScreenReader(`${c} color selected`) }}
+                    aria-pressed={color === c}
+                    aria-label={`${c === "#ffffff" ? "white" : c === "#000000" ? "black" : c === "#ff0000" ? "red" : "yellow"} color`}
+                    className={`h-8 w-8 rounded-md border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${color === c ? "border-primary scale-110" : "border-border"}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
                 <input
                   type="color"
                   value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+                  onChange={(e) => { setColor(e.target.value); announceToScreenReader(`Custom color ${e.target.value} selected`) }}
+                  className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Custom color picker"
                 />
-                <span className="text-xs text-muted-foreground font-mono">{color}</span>
+                <span className="text-xs text-muted-foreground font-mono" aria-live="polite">{color}</span>
               </div>
             </div>
           )}
 
           {/* Position grid */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Position</Label>
-            <div className="grid grid-cols-3 gap-1.5 w-[126px]">
+          <div className="space-y-2" role="group" aria-labelledby="position-label">
+            <Label className="text-sm font-medium" id="position-label">Position</Label>
+            <div className="grid grid-cols-3 gap-1.5 w-[126px]" role="radiogroup" aria-label="Watermark position">
               {POS_GRID.flat().map((pos) => {
                 const [vp, hp] = pos.split("-")
                 return (
                   <button
                     key={pos}
-                    onClick={() => setPosition(pos as Position)}
+                    onClick={() => { setPosition(pos as Position); announceToScreenReader(`Position: ${pos.replace(/-/g, " ")}`) }}
+                    aria-pressed={position === pos}
                     aria-label={`Position: ${pos.replace(/-/g, " ")}`}
+                    role="radio"
+                    aria-checked={position === pos}
                     style={{
                       display: "flex",
                       alignItems: vp === "top" ? "flex-start" : vp === "middle" ? "center" : "flex-end",
                       justifyContent: hp === "left" ? "flex-start" : hp === "center" ? "center" : "flex-end",
                     }}
-                    className={`h-10 rounded border p-1.5 transition-colors ${
+                    className={`h-10 rounded border p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                       position === pos
                         ? "border-primary bg-primary/10"
                         : "border-border hover:border-primary/50 bg-muted/20"
                     }`}
                   >
-                    <div className={`h-2 w-2 rounded-full ${position === pos ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                    <div className={`h-2 w-2 rounded-full ${position === pos ? "bg-primary" : "bg-muted-foreground/40"}`} aria-hidden="true" />
                   </button>
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground">Each square = where the watermark appears</p>
+            <p className="text-xs text-muted-foreground" id="position-help">Each square = where the watermark appears</p>
           </div>
 
         </div>
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-panel-label">
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
+        </div>
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
         <div className="flex-1 overflow-y-auto p-4">
           {!previewUrl ? (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
+            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
               <div className="rounded-full border border-border bg-muted/50 p-4">
-                <Layers className="h-6 w-6 text-muted-foreground" />
+                <Layers className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
               </div>
               <div>
                 <p className="text-sm font-medium">No image yet</p>
@@ -419,17 +480,25 @@ export function ImageWatermarkAdder() {
           ) : (
             <img
               src={previewUrl}
-              alt="Watermark preview"
+              alt="Watermark preview - shows how your watermarked image will look"
               className="w-full rounded-lg border border-border object-contain"
             />
           )}
         </div>
         {previewUrl && (
           <div className="shrink-0 border-t border-border p-4">
-            <Button className="w-full" onClick={download}>
-              <Download className="mr-2 h-4 w-4" />
-              Download Full Resolution
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]">Ctrl+S</kbd>
+            <Button 
+              className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
+              onClick={() => download()}
+              aria-label={downloaded ? "Image downloaded successfully" : "Download full resolution watermarked image"}
+            >
+              {downloaded ? <FileCheck className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+              {downloaded ? "Downloaded!" : "Download Full Resolution"}
+              {!downloaded && (
+                <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+                  Ctrl+Shift+S
+                </kbd>
+              )}
             </Button>
           </div>
         )}
@@ -437,14 +506,6 @@ export function ImageWatermarkAdder() {
 
       </div>
     </div>
-    <ShortcutsModal
-      pageName="Image Watermark Adder"
-      shortcuts={[
-        { keys: ["Ctrl", "S"], description: "Download image" },
-        { keys: ["Ctrl", "O"], description: "Open image" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }
