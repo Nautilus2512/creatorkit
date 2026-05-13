@@ -460,9 +460,7 @@ export default function RubiksTimer() {
           >
             <RefreshCw className="h-4 w-4 mr-1" />
             <span>New Scramble</span>
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>S</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>

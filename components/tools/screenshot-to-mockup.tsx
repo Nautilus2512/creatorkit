@@ -402,9 +402,7 @@ export function ScreenshotToMockup() {
             >
               <Download className="h-4 w-4" />
               <span>Download PNG</span>
-              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                <span>Ctrl</span><span>Shift</span><span>D</span>
-              </kbd>
+              <kbd className="ml-auto rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         )}

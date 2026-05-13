@@ -1,6 +1,38 @@
 # CreatorKit Changelog
 
 
+## v1.63.0 — May 2026
+### Keyboard Shortcut Format Standardization
+- **Standardized shortcut display format** — Converted 40+ shortcuts across 17 files from separate `<span>` elements to compact `Ctrl+Shift+X` format:
+  - Changed from `<kbd><span>Ctrl</span><span>Shift</span><span>X</span></kbd>` to `<kbd>Ctrl+Shift+X</kbd>`
+  - Applied across all action buttons for consistent, compact display
+
+### Files Updated
+- components/tools/word-counter.tsx
+- components/tools/xml-formatter.tsx (4 shortcuts)
+- components/tools/yaml-converter.tsx (6 shortcuts)
+- components/tools/regex-tester.tsx
+- components/tools/rsa-key-generator.tsx (3 shortcuts)
+- components/tools/screen-recorder.tsx (2 shortcuts)
+- components/tools/rubiks-timer.tsx
+- components/tools/screenshot-to-mockup.tsx
+- components/tools/text-case-converter.tsx (2 shortcuts)
+- components/tools/text-compare.tsx (4 shortcuts)
+- components/tools/timestamp-converter.tsx
+- components/tools/totp-generator.tsx (2 shortcuts)
+- components/tools/url-encoder.tsx (5 shortcuts including dynamic)
+- components/tools/uuid-generator.tsx (5 shortcuts)
+- components/tools/video-compressor.tsx (5 shortcuts including dynamic)
+- components/tools/voice-recorder.tsx (2 shortcuts)
+- components/tools/video-thumbnail-extractor.tsx (2 shortcuts)
+
+### Bug Fixes
+- Fixed duplicate closing tag in video-compressor.tsx (caused build error)
+
+### Build Verification
+- 79/79 pages compiled successfully
+
+
 ## v1.62.0 — May 2026
 ### Keyboard Shortcut Fixes
 - **Systematic fix** — Replaced all standard browser keyboard shortcuts across 18+ tools with Ctrl+Shift combinations to avoid conflicts:

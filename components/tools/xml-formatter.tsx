@@ -186,9 +186,7 @@ export default function XmlFormatter() {
         >
           <Maximize2 className="h-4 w-4 mr-1" aria-hidden="true" />
           <span>Format</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>F</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+F</kbd>
         </Button>
         <Button 
           variant={mode === "minify" ? "default" : "outline"} 
@@ -199,9 +197,7 @@ export default function XmlFormatter() {
         >
           <Minimize2 className="h-4 w-4 mr-1" aria-hidden="true" />
           <span>Minify</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>M</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+M</kbd>
         </Button>
         {mode === "format" && (
           <>
@@ -269,9 +265,7 @@ export default function XmlFormatter() {
               >
                 {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                 <span>{copied ? "Copied!" : "Copy"}</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>C</span>
-                </kbd>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
               </Button>
               <Button 
                 variant="ghost" 
@@ -283,9 +277,7 @@ export default function XmlFormatter() {
               >
                 <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                 <span>Download</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>D</span>
-                </kbd>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
               </Button>
             </div>
           </div>

@@ -150,9 +150,7 @@ export default function UrlEncoder() {
           className="focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           <span>Encode</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>E</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
         </Button>
         <Button 
           variant={mode === "decode" ? "default" : "outline"} 
@@ -163,9 +161,7 @@ export default function UrlEncoder() {
           className="focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           <span>Decode</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>D</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
         </Button>
         <Button 
           variant="outline" 
@@ -177,9 +173,7 @@ export default function UrlEncoder() {
         >
           <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />
           <span>Swap</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>S</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd>
         </Button>
         {mode === "encode" && (
           <>
@@ -198,9 +192,7 @@ export default function UrlEncoder() {
                 className={`text-xs px-3 py-1 rounded-full border transition-colors font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 ${encodeMode === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
               >
                 {label}
-                <kbd className="ml-1.5 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>{shortcut}</span>
-                </kbd>
+                <kbd className="ml-1.5 rounded border border-border bg-muted px-1 text-[9px]">Ctrl+Shift+{shortcut}</kbd>
               </button>
             ))}
           </>
@@ -240,9 +232,7 @@ export default function UrlEncoder() {
             >
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               <span>{copied ? "Copied!" : "Copy"}</span>
-              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                <span>Ctrl</span><span>Shift</span><span>C</span>
-              </kbd>
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
             </Button>
           </div>
           {error ? (

@@ -161,9 +161,7 @@ export default function TotpGenerator() {
               aria-label="Load demo secret for testing"
             >
               Load Demo Secret
-              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                <span>Ctrl</span><span>Shift</span><span>D</span>
-              </kbd>
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
             </Button>
             <div className="rounded-lg border border-border bg-muted/20 p-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Settings</p>
@@ -223,9 +221,7 @@ export default function TotpGenerator() {
                 >
                   {copied ? <Check className="h-5 w-5 mr-2" /> : <Copy className="h-5 w-5 mr-2" />}
                   <span>{copied ? "Copied!" : "Copy Code"}</span>
-                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                    <span>Ctrl</span><span>Shift</span><span>C</span>
-                  </kbd>
+                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
                 </Button>
                 {nextCode && (
                   <div 

@@ -178,9 +178,7 @@ export default function YamlConverter() {
           className="focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           <span>YAML → JSON</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>Y</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+Y</kbd>
         </Button>
         <Button 
           variant={mode === "json-to-yaml" ? "default" : "outline"} 
@@ -190,9 +188,7 @@ export default function YamlConverter() {
           className="focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           <span>JSON → YAML</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>J</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+J</kbd>
         </Button>
         <Button 
           variant="outline" 
@@ -204,9 +200,7 @@ export default function YamlConverter() {
         >
           <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />
           <span>Swap</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>S</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd>
         </Button>
         <div className="h-4 w-px bg-border" aria-hidden="true" />
         <span className="text-xs text-muted-foreground" id="indent-label">Indent:</span>
@@ -271,9 +265,7 @@ export default function YamlConverter() {
               >
                 {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                 <span>{copied ? "Copied!" : "Copy"}</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>C</span>
-                </kbd>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
               </Button>
               <Button 
                 variant="ghost" 
@@ -285,9 +277,7 @@ export default function YamlConverter() {
               >
                 <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                 <span>Download</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>D</span>
-                </kbd>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
               </Button>
             </div>
           </div>

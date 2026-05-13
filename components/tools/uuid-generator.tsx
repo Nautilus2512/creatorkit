@@ -133,9 +133,7 @@ export default function UuidGenerator() {
             aria-label="Include hyphens in UUID"
           />
           <Label htmlFor="hyphens" className="text-sm">Include hyphens</Label>
-          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>H</span>
-          </kbd>
+          <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+H</kbd>
         </div>
         <Button 
           size="sm" 
@@ -145,9 +143,7 @@ export default function UuidGenerator() {
         >
           <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
           <span>Generate Single</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>G</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+G</kbd>
         </Button>
       </div>
 
@@ -181,9 +177,7 @@ export default function UuidGenerator() {
               >
                 {copied === "single" ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                 <span>{copied === "single" ? "Copied!" : "Copy"}</span>
-                <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                  <span>Ctrl</span><span>Shift</span><span>C</span>
-                </kbd>
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
               </Button>
             </div>
           </div>
@@ -239,9 +233,7 @@ export default function UuidGenerator() {
             >
               <Hash className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Generate {bulkCount} UUIDs</span>
-              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                <span>Ctrl</span><span>Shift</span><span>B</span>
-              </kbd>
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+B</kbd>
             </Button>
             {uuids.length > 0 && (
               <>
@@ -264,9 +256,7 @@ export default function UuidGenerator() {
                 >
                   <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                   <span>Download</span>
-                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                    <span>Ctrl</span><span>Shift</span><span>D</span>
-                  </kbd>
+                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
                 </Button>
               </>
             )}

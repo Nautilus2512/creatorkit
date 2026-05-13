@@ -157,9 +157,7 @@ export default function RsaKeyGenerator() {
         >
           <RefreshCw className={`h-4 w-4 mr-1 ${generating ? "animate-spin" : ""}`} />
           <span>{generating ? "Generating..." : "Generate Keys"}</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-            <span>Ctrl</span><span>Shift</span><span>G</span>
-          </kbd>
+          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+G</kbd>
         </Button>
         <span className="ml-auto text-xs text-muted-foreground">RSA-OAEP-SHA256 · PKCS#8 · Nothing leaves your browser</span>
       </div>
@@ -183,9 +181,7 @@ export default function RsaKeyGenerator() {
                 >
                   {copied === "pub" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                   <span>{copied === "pub" ? "Copied!" : "Copy"}</span>
-                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                    <span>Ctrl</span><span>Shift</span><span>P</span>
-                  </kbd>
+                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+P</kbd>
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -228,9 +224,7 @@ export default function RsaKeyGenerator() {
                 >
                   {copied === "priv" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                   <span>{copied === "priv" ? "Copied!" : "Copy"}</span>
-                  <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                    <span>Ctrl</span><span>Shift</span><span>L</span>
-                  </kbd>
+                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>
                 </Button>
                 <Button 
                   variant="ghost" 

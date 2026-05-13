@@ -170,7 +170,7 @@ export default function VoiceRecorder() {
               className="min-w-40 focus:outline-none focus:ring-2 focus:ring-primary/50"
               aria-label={isRecording ? "Stop recording" : "Start recording"}
             >
-              {isRecording ? <><Square className="h-5 w-5 mr-2" aria-hidden="true" /><span>Stop</span><kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm"><span>Ctrl</span><span>Shift</span><span>S</span></kbd></> : <><Mic className="h-5 w-5 mr-2" aria-hidden="true" /><span>Start Recording</span><kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm"><span>Ctrl</span><span>Shift</span><span>R</span></kbd></>}
+              {isRecording ? <><Square className="h-5 w-5 mr-2" aria-hidden="true" /><span>Stop</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd></> : <><Mic className="h-5 w-5 mr-2" aria-hidden="true" /><span>Start Recording</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+R</kbd></>}
             </Button>
           </div>
           <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground" role="note">

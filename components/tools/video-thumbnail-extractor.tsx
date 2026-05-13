@@ -177,9 +177,7 @@ export default function VideoThumbnailExtractor() {
             className="focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {loading ? `Extracting… ${progress}%` : "Extract Frames"}
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>E</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
           </Button>
           {thumbs.length > 0 && (
             <Button 
@@ -190,9 +188,7 @@ export default function VideoThumbnailExtractor() {
             >
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Download ZIP</span>
-              <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-                <span>Ctrl</span><span>Shift</span><span>D</span>
-              </kbd>
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
             </Button>
           )}
         </div>

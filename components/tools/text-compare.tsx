@@ -316,9 +316,7 @@ export function TextCompare() {
           >
             <ArrowRightLeft className="h-3 w-3 mr-1" />
             <span>Swap</span>
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>S</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd>
           </Button>
           <Button 
             variant="outline" 
@@ -329,9 +327,7 @@ export function TextCompare() {
           >
             <X className="h-3 w-3 mr-1" />
             <span>Clear</span>
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>X</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+X</kbd>
           </Button>
           <div className="h-4 w-px bg-border" />
           <Button 
@@ -344,9 +340,7 @@ export function TextCompare() {
           >
             {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
             <span>{copied ? 'Copied!' : 'Copy Diff'}</span>
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>C</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
           </Button>
           <Button 
             variant="outline" 
@@ -358,9 +352,7 @@ export function TextCompare() {
           >
             <Download className="h-3 w-3 mr-1" />
             <span>Download</span>
-            <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm">
-              <span>Ctrl</span><span>Shift</span><span>D</span>
-            </kbd>
+            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
           </Button>
         </div>
       </div>

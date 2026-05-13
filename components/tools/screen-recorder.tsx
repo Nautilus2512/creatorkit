@@ -198,8 +198,8 @@ export default function ScreenRecorder() {
             aria-label={isRecording ? "Stop recording" : "Start screen recording"}
           >
             {isRecording
-              ? <><Square className="h-5 w-5" /><span>Stop Recording</span><kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm"><span>Ctrl</span><span>Shift</span><span>S</span></kbd></>
-              : <><Monitor className="h-5 w-5" /><span>Start Recording</span><kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-0.5 rounded border bg-background/80 px-1 font-mono text-[10px] font-medium text-foreground shadow-sm"><span>Ctrl</span><span>Shift</span><span>R</span></kbd></>
+              ? <><Square className="h-5 w-5" /><span>Stop Recording</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd></>
+              : <><Monitor className="h-5 w-5" /><span>Start Recording</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+R</kbd></>
             }
           </Button>
         </div>
