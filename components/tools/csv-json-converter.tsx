@@ -288,7 +288,7 @@ export default function CsvJsonConverter() {
             aria-label="Copy converted output"
           >
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-            {copied ? "Copied!" : "Copy"}{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+C</kbd>}
+            {copied ? "Copied!" : "Copy"}{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>}
           </Button>
           <Button 
             variant="outline" 
@@ -297,7 +297,7 @@ export default function CsvJsonConverter() {
             disabled={!csvOutput && !jsonOutput}
             aria-label="Download converted file"
           >
-            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+S</kbd>}
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+S</kbd>}
           </Button>
         </div>
       </div>

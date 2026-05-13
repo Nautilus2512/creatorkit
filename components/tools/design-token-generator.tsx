@@ -406,10 +406,10 @@ export function DesignTokenGenerator() {
           <p className="text-muted-foreground" id="design-token-description">Generate a complete design system from your brand colors. Press Ctrl+1/2/3 to open color pickers, Ctrl+C to copy CSS, Ctrl+L/D for preview modes. Press ? for shortcuts.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
 
           {/* LEFT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Brand colors and palette editor">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Brand colors and palette editor">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -496,13 +496,13 @@ export function DesignTokenGenerator() {
               >
                 {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
                 Copy CSS
-                <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+C</kbd>
+                <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             </div>
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Live preview and export">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Live preview and export">
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium">Live Preview & Export</span>
@@ -599,7 +599,7 @@ export function DesignTokenGenerator() {
                       aria-label="Copy CSS tokens (Ctrl+C)"
                     >
                       {copiedKey === "css" ? <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
-                      Copy CSS <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+C</kbd>
+                      Copy CSS <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>
                     </Button>
                   </TabsContent>
                   <TabsContent value="tailwind" className="space-y-2" role="tabpanel" aria-label="Tailwind export">

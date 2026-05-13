@@ -358,7 +358,7 @@ ${html}
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">Download</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+S</kbd>
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
             <Button 
               variant="ghost" 

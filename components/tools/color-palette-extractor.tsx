@@ -196,7 +196,7 @@ export default function ColorPaletteExtractor() {
             aria-label="Copy all colors"
           >
             {copied === 'all' ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-            Copy All<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+            Copy All<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
         )}
       </div>

@@ -343,10 +343,10 @@ export function ImageResizer() {
         </div>
 
         {/* Split Panel */}
-        <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
 
           {/* LEFT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="left-panel-label">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="left-panel-label">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Crop className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -504,7 +504,7 @@ export function ImageResizer() {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="right-panel-label">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="right-panel-label">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <span className="text-sm font-medium" id="right-panel-label">Preview & Results</span>
               <p className="text-xs text-muted-foreground">Drag overlay to adjust crop position.</p>

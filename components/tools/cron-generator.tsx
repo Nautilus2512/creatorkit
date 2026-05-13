@@ -272,7 +272,7 @@ export default function CronGenerator() {
               aria-label="Copy cron expression"
             >
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-              {copied ? "Copied!" : "Copy Expression"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+              {copied ? "Copied!" : "Copy Expression"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           </div>
         </div>

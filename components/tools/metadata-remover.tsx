@@ -349,10 +349,10 @@ export function MetadataRemover() {
           <p className="mt-0.5 text-xs opacity-80">This tool loads multiple processing libraries that may crash on mobile devices with limited RAM. You can still try, but a desktop browser is recommended.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 md:h-[calc(100vh-13rem)]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
 
           {/* LEFT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -470,7 +470,7 @@ export function MetadataRemover() {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex flex-col md:overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <span className="text-sm font-medium">Detected Metadata</span>
               <p className="text-xs text-muted-foreground">Preview of fields found before cleanup.</p>

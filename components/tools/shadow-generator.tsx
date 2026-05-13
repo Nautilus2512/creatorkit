@@ -169,7 +169,7 @@ export default function ShadowGenerator() {
           aria-label="Copy CSS to clipboard"
         >
           {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-          {copied ? "Copied!" : "Copy CSS"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+          {copied ? "Copied!" : "Copy CSS"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
         </Button>
       </div>
 
@@ -209,7 +209,7 @@ export default function ShadowGenerator() {
                 className="ml-auto shrink-0"
                 aria-label="Add new shadow layer"
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+N</kbd>
+                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
               </Button>
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function ShadowGenerator() {
                 aria-labelledby="css-output-label"
               >
                 {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-                {copied ? "Copied!" : "Copy"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+                {copied ? "Copied!" : "Copy"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             </div>
             <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed" aria-live="polite" aria-atomic="true">{css}</pre>

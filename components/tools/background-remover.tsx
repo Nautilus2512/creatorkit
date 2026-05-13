@@ -257,6 +257,30 @@ export function BackgroundRemover() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 h-full">
       {/* Left panel - Input & Controls */}
       <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
+        {/* Action button at top */}
+        <div className="shrink-0 border-b border-border p-4">
+          <Button 
+            className="w-full" 
+            onClick={isMobile ? processMobile : processDesktop} 
+            disabled={!imageEl || isProcessing}
+            aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
+            aria-describedby="remove-bg-shortcut"
+          >
+            {isProcessing ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
+                <span>{phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>Remove Background</span>
+                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Shift+Enter</kbd>}
+                <span className="sr-only">. Press Control plus Enter to start processing</span>
+              </>
+            )}
+          </Button>
+        </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Version info */}
@@ -446,34 +470,26 @@ export function BackgroundRemover() {
           )}
 
         </div>
-
-        <div className="shrink-0 border-t border-border p-4">
-          <Button 
-            className="w-full" 
-            onClick={isMobile ? processMobile : processDesktop} 
-            disabled={!imageEl || isProcessing}
-            aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
-            aria-describedby="remove-bg-shortcut"
-          >
-            {isProcessing ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-                <span>{phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}</span>
-              </>
-            ) : (
-              <>
-                <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Remove Background</span>
-                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Shift+Enter</kbd>}
-                <span className="sr-only">. Press Control plus Enter to start processing</span>
-              </>
-            )}
-          </Button>
-        </div>
       </div>
 
       {/* Right panel - Output */}
       <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card" role="region" aria-label="Image preview and results">
+        {/* Action button at top */}
+        {resultUrl && (
+          <div className="shrink-0 border-b border-border p-4">
+            <Button 
+              className="w-full" 
+              onClick={download}
+              aria-label="Download result as PNG with transparent background"
+              aria-describedby="download-shortcut"
+            >
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>Download PNG (transparent)</span>
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <span className="sr-only">. Press Control plus S to download</span>
+            </Button>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto p-4">
           {!imageEl ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status" aria-label="Empty state">
@@ -529,21 +545,6 @@ export function BackgroundRemover() {
             </div>
           )}
         </div>
-        {resultUrl && (
-          <div className="shrink-0 border-t border-border p-4">
-            <Button 
-              className="w-full" 
-              onClick={download}
-              aria-label="Download result as PNG with transparent background"
-              aria-describedby="download-shortcut"
-            >
-              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              <span>Download PNG (transparent)</span>
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+Shift+S</kbd>
-              <span className="sr-only">. Press Control plus S to download</span>
-            </Button>
-          </div>
-        )}
       </div>
 
       </div>

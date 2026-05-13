@@ -253,7 +253,7 @@ export default function ColorConverter() {
                 className="text-xs h-7"
                 aria-label="Copy all formats"
               >
-                Copy All<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+C</kbd>
+                Copy All<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             )}
           </div>
