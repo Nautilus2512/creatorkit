@@ -168,9 +168,138 @@ Documented all open-source libraries and their licenses. Explicitly noted that j
 
 ---
 
-## Phase 4: Accessibility & Shortcut Improvements (v1.59.0 - v1.61.0)
+## Phase 4: Accessibility & Shortcut Improvements (v1.59.0 - v1.62.0)
 
-### Tools Fixed (v1.61.0 - Current Session)
+### Session v1.62.0 (May 2026) - Keyboard Shortcut Fixes & More Accessibility
+
+#### Systematic Keyboard Shortcut Fixes
+
+Fixed 18+ files to use Ctrl+Shift+ modifiers instead of standard browser shortcuts:
+
+| Original | Changed To | Purpose |
+|----------|------------|---------|
+| Ctrl+C | Ctrl+Shift+C | Copy |
+| Ctrl+S | Ctrl+Shift+S | Save/Download |
+| Ctrl+O | Ctrl+Shift+O | Open file |
+| Ctrl+N | Ctrl+Shift+N | New |
+| Ctrl+Z/Y | Ctrl+Shift+Z/Y | Undo/Redo |
+| Ctrl+P | Ctrl+Shift+P | Print/Projects |
+| Ctrl+E | Ctrl+Shift+E | Export/Example |
+| Ctrl+D | Ctrl+Shift+D | Download |
+| Ctrl+K | Ctrl+Shift+K | Focus |
+| Ctrl+R | Ctrl+Shift+R | Random |
+| Ctrl+L | Ctrl+Shift+L | Linked |
+| Ctrl+U | Ctrl+Shift+U | Unit |
+| Ctrl+T | Ctrl+Shift+T | Toggle |
+
+#### New Accessibility Improvements
+
+##### Anki Flashcards (anki-card.tsx)
+
+**Features implemented:**
+- Keyboard shortcuts: Ctrl+Shift+N (new deck), Ctrl+Shift+A (add card), Ctrl+Shift+S (study), Ctrl+Shift+D (switch deck), Ctrl+Shift+Enter (add card)
+- Space key to flip cards in study mode
+- Number keys 1-4 to rate cards (Again/Hard/Good/Easy)
+- Delete/Backspace to delete cards from list
+- Visible kbd labels on all action buttons
+
+**Accessibility features:**
+- aria-live="polite" for study session progress
+- role="listbox", "radiogroup", "article" on UI sections
+- role="button" with proper aria-pressed on deck selections
+- aria-describedby for form help text
+- Screen reader announcements for state changes
+
+---
+
+##### Audio Converter (audio-converter.tsx)
+
+**Features implemented:**
+- Keyboard shortcuts: Ctrl+Shift+O (upload), Ctrl+Shift+Enter (convert), Ctrl+Shift+D (download), Ctrl+Shift+T (test mode)
+- Number keys 1-8 to select format
+- Q key to cycle quality levels
+- Visible kbd labels on all action buttons
+
+**Accessibility features:**
+- aria-live="polite" progress announcements
+- role="radiogroup" on format and quality selectors
+- aria-required on input fields
+- Proper focus management
+
+---
+
+##### Audio Waveform Visualizer (audio-waveform-visualizer.tsx)
+
+**Features implemented:**
+- Keyboard shortcuts: Ctrl+Shift+O (open), Ctrl+Shift+E (export PNG), Ctrl+Alt+E (export SVG), Ctrl+Shift+S (settings)
+- Arrow keys to navigate between style options
+- Visible kbd labels on export buttons
+
+**Accessibility features:**
+- role="img" with detailed aria-label on canvas
+- role="region" with aria-labelledby on panels
+- aria-live announcements for file loading
+
+---
+
+##### Background Remover (background-remover.tsx)
+
+**Features implemented:**
+- Keyboard shortcuts: Ctrl+Shift+O (open), Ctrl+Shift+Enter (process), Ctrl+Shift+S (download)
+- Escape to cancel color picking mode
+
+**Accessibility features:**
+- Fixed useEffect dependencies (was causing build error)
+- role="progressbar" with proper aria attributes
+- aria-live announcements for processing states
+
+---
+
+#### UI Improvements - Em Dash Removal
+
+Removed em dashes (—) from 13 tool page descriptions:
+- app/tools/page.tsx (6 descriptions)
+- app/tools/electrical-calculator/page.tsx
+- app/tools/gamepad-tester/page.tsx
+- app/tools/pomodoro-timer/page.tsx
+- app/tools/invoice-generator/page.tsx
+- app/tools/og-image-generator/page.tsx
+- app/tools/math-evaluator/page.tsx
+- app/tools/jwt-decoder/page.tsx
+- app/tools/js-formatter/page.tsx
+- app/tools/font-pairer/page.tsx
+- app/tools/engineering-calculator/page.tsx
+- app/tools/doc-scanner/page.tsx
+- app/tools/batch-image-editor/page.tsx
+
+---
+
+#### Files Modified in This Session
+
+| File | Changes |
+|------|---------|
+| components/tools/anki-card.tsx | Full accessibility overhaul + new shortcuts |
+| components/tools/audio-converter.tsx | Full accessibility overhaul + new shortcuts |
+| components/tools/audio-waveform-visualizer.tsx | Full accessibility overhaul + new shortcuts |
+| components/tools/background-remover.tsx | Full accessibility overhaul + new shortcuts |
+| components/tools/base64-encoder.tsx | Ctrl+O → Ctrl+Shift+O |
+| components/tools/batch-image-editor.tsx | Ctrl+O → Ctrl+Shift+O |
+| components/tools/border-radius-visualizer.tsx | Ctrl+C/L/U → Ctrl+Shift+C/L/U |
+| components/tools/color-converter.tsx | Ctrl+C → Ctrl+Shift+C |
+| components/tools/color-palette-extractor.tsx | Ctrl+O/C → Ctrl+Shift+O/C |
+| components/tools/css-minifier.tsx | Ctrl+O/E → Ctrl+Shift+O/E |
+| components/tools/csv-json-converter.tsx | Ctrl+O/C/S → Ctrl+Shift+O/C/S |
+| components/tools/cv-maker.tsx | Ctrl+E/D/K/P → Ctrl+Shift+E/D/K/P |
+| components/tools/doc-scanner.tsx | Ctrl+D → Ctrl+Shift+D |
+| components/tools/favicon-generator.tsx | Ctrl+O/D → Ctrl+Shift+O/D |
+| components/tools/file-checksum-verifier.tsx | Ctrl+O → Ctrl+Shift+O |
+| components/tools/markdown-editor.tsx | Ctrl+Z/Y → Ctrl+Shift+Z/Y |
+| components/tools/shadow-generator.tsx | Ctrl+C/N → Ctrl+Shift+C/N |
+| app/tools/*.tsx (13 files) | Removed em dashes |
+
+---
+
+### Tools Fixed (v1.61.0)
 
 #### 1. url-encoder.tsx ✅
 
@@ -413,6 +542,14 @@ All tools now include:
 - Proper role and aria attributes
 - ShortcutsModal component for reference
 
+### v1.62.0 Achievements
+
+This session added:
+- 4 more tools with full accessibility (anki-card, audio-converter, audio-waveform-visualizer, background-remover)
+- Fixed keyboard shortcut conflicts in 18+ tools
+- Removed em dashes from 13 tool page descriptions
+- Total 80+ tools with accessibility features
+
 ### Coming Soon
 
 - Additional tools planned based on user feedback
@@ -439,6 +576,7 @@ All tools now include:
 ### Completed
 
 - **80+ tools have accessibility features**: All tools now include screen reader announcements (aria-live regions), keyboard shortcuts using Ctrl+Shift+ modifiers (non-conflicting), visible kbd shortcut labels on buttons, focus-visible ring states, proper role and aria attributes, and ShortcutsModal component for reference
+- **Keyboard shortcut conflicts resolved**: All standard browser shortcuts replaced with Ctrl+Shift+ combinations across 18+ tools
 
 ### Medium Priority
 
@@ -484,7 +622,22 @@ All tools now include:
 
 ## Session Summary
 
-This session added accessibility features to 9 more tools:
+### This Session (v1.62.0)
+Added accessibility features to 4 more tools and fixed keyboard shortcut conflicts:
+- anki-card.tsx
+- audio-converter.tsx
+- audio-waveform-visualizer.tsx
+- background-remover.tsx
+
+Fixed keyboard shortcuts in 18+ tools to use Ctrl+Shift+ modifiers:
+- base64-encoder, batch-image-editor, border-radius-visualizer, color-converter, color-palette-extractor, css-minifier, csv-json-converter, cv-maker, doc-scanner, favicon-generator, file-checksum-verifier, markdown-editor, shadow-generator
+
+Removed em dashes from 13 tool page descriptions for better readability.
+
+---
+
+### Previous Session (v1.61.0)
+Added accessibility features to 9 more tools:
 - url-encoder.tsx
 - uuid-generator.tsx
 - video-compressor.tsx
@@ -514,5 +667,5 @@ All keyboard shortcuts now use Ctrl+Shift+ modifiers to avoid browser conflicts.
 
 ---
 
-*Last updated: 2026-05-12*
+*Last updated: 2026-05-13*
 *This file should be updated after each development session for future reference.*

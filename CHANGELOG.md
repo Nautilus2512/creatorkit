@@ -1,6 +1,89 @@
 # CreatorKit Changelog
 
 
+## v1.62.0 — May 2026
+### Keyboard Shortcut Fixes
+- **Systematic fix** — Replaced all standard browser keyboard shortcuts across 18+ tools with Ctrl+Shift combinations to avoid conflicts:
+  - Changed `Ctrl+C` → `Ctrl+Shift+C` (copy)
+  - Changed `Ctrl+S` → `Ctrl+Shift+S` (save/download)
+  - Changed `Ctrl+O` → `Ctrl+Shift+O` (open file)
+  - Changed `Ctrl+N` → `Ctrl+Shift+N` (new)
+  - Changed `Ctrl+Z/Y` → `Ctrl+Shift+Z/Y` (undo/redo)
+  - Changed `Ctrl+P` → `Ctrl+Shift+P` (print/projects)
+  - Changed `Ctrl+E` → `Ctrl+Shift+E` (export/example)
+  - Changed `Ctrl+D` → `Ctrl+Shift+D` (download)
+  - Changed `Ctrl+K` → `Ctrl+Shift+K` (focus)
+  - Changed `Ctrl+R` → `Ctrl+Shift+R` (random)
+  - Changed `Ctrl+L` → `Ctrl+Shift+L` (linked)
+  - Changed `Ctrl+U` → `Ctrl+Shift+U` (unit)
+  - Changed `Ctrl+T` → `Ctrl+Shift+T` (toggle)
+
+### Accessibility Improvements
+- **Anki Flashcards** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+N (new deck), Ctrl+Shift+A (add card), Ctrl+Shift+S (study), Ctrl+Shift+D (switch deck), Ctrl+Shift+Enter (add), Space (flip), 1-4 (rate)
+  - Visible kbd labels on all action buttons
+  - aria-live announcements for study session progress
+  - role="listbox", role="radiogroup", role="article" on UI sections
+  
+- **Audio Converter** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+O (upload), Ctrl+Shift+Enter (convert), Ctrl+Shift+D (download), Ctrl+Shift+T (test mode), 1-8 (format), Q (quality cycle)
+  - Visible kbd labels on all buttons
+  - aria-live progress announcements
+  
+- **Audio Waveform Visualizer** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+O (open), Ctrl+Shift+E (PNG), Ctrl+Alt+E (SVG), Ctrl+Shift+S (settings)
+  - Visible kbd labels on export buttons
+  - role="img" with detailed aria-label on canvas
+  
+- **Background Remover** — Complete accessibility overhaul:
+  - Keyboard shortcuts: Ctrl+Shift+O (open), Ctrl+Shift+Enter (process), Ctrl+Shift+S (download), Escape (cancel)
+  - Visible kbd labels on action buttons
+  - Fixed useEffect dependencies to resolve build error
+
+### UI Improvements
+- **Removed em dashes** — Cleaned up tool page descriptions to remove em dash symbols (—) and made sentences flow better:
+  - Updated 13 tool pages in app/tools directory
+  - Replaced em dashes with periods or rephrased sentences
+  - Made descriptions more readable
+
+### Bug Fixes
+- Fixed useEffect dependencies in background-remover.tsx using phase state directly
+- Fixed aria-label syntax in anki-card.tsx (template literal in attribute issue)
+- Fixed keyboard shortcut conflicts across 18+ tools
+
+### Affected Files
+- components/tools/anki-card.tsx
+- components/tools/audio-converter.tsx
+- components/tools/audio-waveform-visualizer.tsx
+- components/tools/background-remover.tsx
+- components/tools/base64-encoder.tsx
+- components/tools/batch-image-editor.tsx
+- components/tools/border-radius-visualizer.tsx
+- components/tools/color-converter.tsx
+- components/tools/color-palette-extractor.tsx
+- components/tools/css-minifier.tsx
+- components/tools/csv-json-converter.tsx
+- components/tools/cv-maker.tsx
+- components/tools/doc-scanner.tsx
+- components/tools/favicon-generator.tsx
+- components/tools/file-checksum-verifier.tsx
+- components/tools/markdown-editor.tsx
+- components/tools/shadow-generator.tsx
+- app/tools/batch-image-editor/page.tsx
+- app/tools/doc-scanner/page.tsx
+- app/tools/electrical-calculator/page.tsx
+- app/tools/engineering-calculator/page.tsx
+- app/tools/font-pairer/page.tsx
+- app/tools/gamepad-tester/page.tsx
+- app/tools/invoice-generator/page.tsx
+- app/tools/js-formatter/page.tsx
+- app/tools/jwt-decoder/page.tsx
+- app/tools/math-evaluator/page.tsx
+- app/tools/og-image-generator/page.tsx
+- app/tools/page.tsx
+- app/tools/pomodoro-timer/page.tsx
+
+
 ## v1.61.0 — May 2026
 ### Accessibility Improvements
 - **URL Encoder / Decoder** — Complete accessibility overhaul:
