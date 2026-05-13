@@ -4,8 +4,8 @@ import GamepadTester from "@/components/tools/gamepad-tester"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Game Controller Tester — CreatorKit",
-  description: "Test your gamepad in the browser. Real-time button states, axis values, and visual layout. Uses the Gamepad API — no software needed.",
+  title: "Game Controller Tester - CreatorKit",
+  description: "Test your gamepad in the browser. Real-time button states, axis values, and visual layout. Uses the Gamepad API. No software needed.",
 }
 
 export default function GamepadTesterPage() {

@@ -4,8 +4,8 @@ import InvoiceGenerator from "@/components/tools/invoice-generator"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Invoice Generator — CreatorKit",
-  description: "Create professional invoices with live preview. Add line items, tax, and notes. Export as PDF. Auto-saved locally — never uploaded.",
+  title: "Invoice Generator - CreatorKit",
+  description: "Create professional invoices with live preview. Add line items, tax, and notes. Export as PDF. Auto-saved locally and never uploaded.",
 }
 
 export default function InvoiceGeneratorPage() {

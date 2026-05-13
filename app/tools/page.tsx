@@ -276,7 +276,7 @@ const toolCards = [
   {
     icon: KeyRound,
     title: "JWT Decoder",
-    description: "Decode and inspect JSON Web Tokens — view header, payload, expiry, and issued-at time. Nothing leaves your browser.",
+    description: "Decode and inspect JSON Web Tokens. View header, payload, expiry, and issued-at time. Nothing leaves your browser.",
     href: "/tools/jwt-decoder",
     stat: "Header · Payload · Expiry check",
     category: "Security",
@@ -476,7 +476,7 @@ const toolCards = [
   {
     icon: Video,
     title: "Video Compressor",
-    description: "Compress videos using ffmpeg.wasm with quality presets. No uploads — runs entirely in your browser.",
+    description: "Compress videos using ffmpeg.wasm with quality presets. No uploads. Runs entirely in your browser.",
     href: "/tools/video-compressor",
     stat: "High · Balanced · Small · MP4 output",
     category: "Media",
@@ -540,7 +540,7 @@ const toolCards = [
   {
     icon: ScanLine,
     title: "Doc Scanner",
-    description: "Scan documents with your camera. Drag 4 corner handles to align, hit Scan — perspective-corrected output in seconds.",
+    description: "Scan documents with your camera. Drag 4 corner handles to align, then hit Scan for perspective-corrected output in seconds.",
     href: "/tools/doc-scanner",
     stat: "Camera + upload · Perspective warp · B&W mode",
     category: "Productivity",
@@ -548,7 +548,7 @@ const toolCards = [
   {
     icon: Receipt,
     title: "Invoice Generator",
-    description: "Create professional invoices with line items, tax, and live preview. Export as PDF. Auto-saved locally — never uploaded.",
+    description: "Create professional invoices with line items, tax, and live preview. Export as PDF. Auto-saved locally and never uploaded.",
     href: "/tools/invoice-generator",
     stat: "Live preview · PDF export · localStorage · Multi-currency",
     category: "Productivity",
@@ -609,7 +609,7 @@ export default function ToolsPage() {
   useEffect(() => {
     const savedCat = sessionStorage.getItem(CATEGORY_KEY)
     if (savedCat && categories.includes(savedCat)) setActiveCategory(savedCat)
-    // Pre-fill search from URL param (?q=…) — used by landing page search
+    // Pre-fill search from URL param (?q=…) used by landing page search
     const urlQ = new URLSearchParams(window.location.search).get("q")
     if (urlQ) { setSearch(urlQ); setTimeout(() => searchRef.current?.focus(), 100) }
     setMounted(true)
@@ -831,7 +831,7 @@ export default function ToolsPage() {
             ))}
           </section>
 
-          {/* Feedback link — tambahkan di sini */}
+          {/* Feedback link - tambahkan di sini */}
           <div className="mt-8 text-center text-xs text-muted-foreground">
             Have feedback or a tool suggestion?{" "}
             <a href="mailto:creatorkit.hello@gmail.com?subject=CreatorKit Feedback" className="underline hover:text-foreground">

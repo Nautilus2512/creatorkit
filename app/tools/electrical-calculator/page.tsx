@@ -4,7 +4,7 @@ import ElectricalCalculator from "@/components/tools/electrical-calculator"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Electrical Engineering Calculator — CreatorKit",
+  title: "Electrical Engineering Calculator - CreatorKit",
   description: "Ohm's Law, AC reactance, power, three-phase, resistor color codes, and RC/RL time constants. IEC/IEEE standards with SI units.",
 }
 

@@ -4,7 +4,7 @@ import PomodoroTimer from "@/components/tools/pomodoro-timer"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Pomodoro Timer — CreatorKit",
+  title: "Pomodoro Timer - CreatorKit",
   description: "Focus timer with 25/5/15 minute cycles, bell sound, browser notifications, and session tracking. Settings saved locally.",
 }
 
