@@ -204,9 +204,9 @@ export default function InvoiceGenerator() {
           </div>
         </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Form */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="form-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="form-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="form-panel-label">Invoice Details</span>
           </div>
@@ -322,7 +322,7 @@ export default function InvoiceGenerator() {
         </div>
 
         {/* Right — Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="preview-panel-label">Preview</span>
             <span className="text-xs text-muted-foreground" aria-live="polite">Auto-saved locally</span>

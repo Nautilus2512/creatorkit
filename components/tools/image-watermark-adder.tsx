@@ -202,9 +202,9 @@ export function ImageWatermarkAdder() {
         <h2 className="text-2xl font-semibold tracking-tight">Image Watermark Adder</h2>
         <p className="text-muted-foreground">Add text or logo watermarks · 100% in-browser · Press ? for shortcuts</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel — settings */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="settings-panel-label">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="settings-panel-label">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <span className="text-sm font-medium" id="settings-panel-label">Watermark Settings</span>
         </div>
@@ -461,7 +461,7 @@ export function ImageWatermarkAdder() {
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-panel-label">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-panel-label">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
         </div>

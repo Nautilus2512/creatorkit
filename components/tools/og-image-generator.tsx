@@ -252,9 +252,9 @@ export default function OgImageGenerator() {
           </Button>
         </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="settings-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="settings-label">
           <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="settings-label">Settings</span></div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
@@ -383,7 +383,7 @@ export default function OgImageGenerator() {
         </div>
 
         {/* Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-label">
           <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="preview-label">Preview</span></div>
           <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-muted/20">
             <div className="w-full max-w-4xl space-y-3">

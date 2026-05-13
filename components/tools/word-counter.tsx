@@ -107,9 +107,9 @@ export default function WordCounter() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Text input panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Text input panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="input-label">Text Input</span>
           </div>
@@ -124,7 +124,7 @@ export default function WordCounter() {
         </div>
 
         {/* Right Panel — Stats */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Statistics panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Statistics panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Statistics</span>
           </div>

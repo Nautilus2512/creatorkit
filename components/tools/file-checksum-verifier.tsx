@@ -191,9 +191,9 @@ export function FileChecksumVerifier() {
         <h2 className="text-2xl font-semibold tracking-tight">File Checksum Verifier</h2>
         <p className="text-muted-foreground">Verify file integrity · 100% in-browser</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel — options */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           <div className="space-y-2">
@@ -320,7 +320,7 @@ export function FileChecksumVerifier() {
       </div>
 
       {/* Right panel — results */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
         <div className="flex-1 overflow-y-auto p-4">
           {results.length === 0 ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">

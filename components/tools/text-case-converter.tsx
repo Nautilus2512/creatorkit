@@ -135,9 +135,9 @@ export default function TextCaseConverter() {
         <ShortcutsModal pageName="Text Case Converter" shortcuts={shortcuts} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Input text">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input text">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
             <Type className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <span className="text-sm font-medium">Input Text</span>
@@ -182,7 +182,7 @@ export default function TextCaseConverter() {
         </div>
 
         {/* Right — Conversions */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Converted text cases">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Converted text cases">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">All Conversions</span>
           </div>

@@ -256,9 +256,9 @@ export function ScreenshotToMockup() {
         </div>
         <ShortcutsModal pageName="Screenshot to Mockup" shortcuts={shortcuts} />
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Mockup settings">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Mockup settings">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Upload */}
@@ -372,7 +372,7 @@ export function ScreenshotToMockup() {
       </div>
 
       {/* Right panel — preview */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Mockup preview">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Mockup preview">
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
         <div className="flex-1 overflow-y-auto p-4">
           {!previewUrl ? (

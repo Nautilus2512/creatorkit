@@ -192,9 +192,9 @@ export default function ColorConverter() {
         <p className="text-muted-foreground" id="converter-description">Convert between HEX, RGB, HSL, and OKLCH color formats. Press 1-4 to copy formats. Press ? for shortcuts.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Color input">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Color input">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Color Input</span>
           </div>
@@ -242,7 +242,7 @@ export default function ColorConverter() {
         </div>
 
         {/* Right Panel — Formats */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Color formats">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Color formats">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">All Formats</span>
             {color && (

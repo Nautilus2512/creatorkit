@@ -152,9 +152,9 @@ return (
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left: history + input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
           {/* History */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm" role="log" aria-label="Calculation history" aria-live="polite">
             {history.length === 0 && (
@@ -222,7 +222,7 @@ return (
         </div>
 
         {/* Right: variables + examples */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="variables-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="variables-label">
           {/* Variables */}
           <div className="p-4 border-b border-border">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3" id="variables-label">Variables</p>

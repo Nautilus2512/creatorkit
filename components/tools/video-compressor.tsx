@@ -208,9 +208,9 @@ export default function VideoCompressor() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Input video panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input video panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium" id="original-label">Original{file ? ` — ${fmtBytes(file.size)}` : ""}</h3>
             <label className="cursor-pointer">
@@ -251,7 +251,7 @@ export default function VideoCompressor() {
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Compressed output panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Compressed output panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <h3 className="text-sm font-medium" id="compressed-label">
               {outputUrl ? `Compressed — ${fmtBytes(outputSize)}` : "Compressed Output"}

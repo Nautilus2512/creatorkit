@@ -180,7 +180,7 @@ export default function CssMinifier() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
         {/* Left — Input */}
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Original CSS input">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">

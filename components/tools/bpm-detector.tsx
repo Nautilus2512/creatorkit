@@ -133,9 +133,9 @@ export function BPMDetector() {
         <h2 className="text-2xl font-semibold tracking-tight">BPM Detector</h2>
         <p className="text-muted-foreground">Detect audio tempo · 100% in-browser</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Limitations Warning */}
@@ -226,7 +226,7 @@ export function BPMDetector() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
         <div className="flex-1 overflow-y-auto p-4">
           {!result ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">

@@ -177,9 +177,9 @@ export default function JsonFormatter() {
           )}
         </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="input-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="input-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileJson className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -216,7 +216,7 @@ export default function JsonFormatter() {
         </div>
 
         {/* Right Panel — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="output-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="output-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {showMinified ? <Minimize2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : <Maximize2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}

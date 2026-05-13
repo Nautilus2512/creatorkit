@@ -185,7 +185,7 @@ export function ImageFormatConverter() {
         <h2 className="text-2xl font-semibold tracking-tight">Image Format Converter</h2>
         <p className="text-muted-foreground">Convert formats locally · No uploads. Press ? for shortcuts.</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel */}
       <div className="flex flex-col min-h-0 overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="settings-label">
         <div className="shrink-0 border-b border-border px-4 py-3">

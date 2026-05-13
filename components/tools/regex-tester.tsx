@@ -222,9 +222,9 @@ export default function RegexTester() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Regex */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
             <Code className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Regular Expression</span>
@@ -307,7 +307,7 @@ export default function RegexTester() {
         </div>
 
         {/* Right — Test Text */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Test text area">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Test text area">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium flex items-center gap-2"><Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />Test Text</span>
             {matches.length > 0 && <Badge variant="secondary" className="text-xs" aria-label={`${matches.length} matches found`}>{matches.length} match{matches.length !== 1 ? 'es' : ''}</Badge>}

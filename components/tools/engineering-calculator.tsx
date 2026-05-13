@@ -436,10 +436,10 @@ export default function EngineeringCalculator() {
         {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
 
         {/* ── Left: Calculator ── */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
           {/* Display */}
           <div className="shrink-0 p-4 bg-muted/20 border-b border-border" role="region" aria-label="Calculator display">
             <div className="flex items-center justify-between mb-2">

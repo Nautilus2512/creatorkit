@@ -106,9 +106,9 @@ export default function JwtDecoder() {
           )}
         </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="input-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="input-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="input-panel-label">JWT Token</span>
           </div>
@@ -145,7 +145,7 @@ export default function JwtDecoder() {
         </div>
 
         {/* Right — Decoded */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="decoded-panel-label">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="decoded-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="decoded-panel-label">Decoded</span>
           </div>

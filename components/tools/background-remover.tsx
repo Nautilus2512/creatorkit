@@ -254,7 +254,7 @@ export function BackgroundRemover() {
         <h2 className="text-2xl font-semibold tracking-tight" id="page-title">Background Remover</h2>
         <p className="text-muted-foreground" id="page-description">Remove image backgrounds · 100% in-browser · Press ? for keyboard shortcuts</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0 h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 h-full">
       {/* Left panel - Input & Controls */}
       <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">

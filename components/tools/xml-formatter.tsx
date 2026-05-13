@@ -223,9 +223,9 @@ export default function XmlFormatter() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Input XML panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input XML panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="input-label">Input XML</span>
             <div className="flex gap-1" role="group" aria-label="Input actions">
@@ -255,7 +255,7 @@ export default function XmlFormatter() {
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Output XML panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Output XML panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="output-label">{mode === "format" ? "Formatted XML" : "Minified XML"}</span>
             <div className="flex gap-1" role="group" aria-label="Output actions">

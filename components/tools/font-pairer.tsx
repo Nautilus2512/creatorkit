@@ -282,9 +282,9 @@ body, p { font-family: var(--font-body); }`
           </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
           {/* Left — controls */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
             <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Font Settings</span></div>
             <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-5">
@@ -362,7 +362,7 @@ body, p { font-family: var(--font-body); }`
         </div>
 
         {/* Right — preview */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
             {/* Preview toolbar */}
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-3 flex-wrap">
               <div className="flex gap-1" role="group" aria-label="Preview theme">

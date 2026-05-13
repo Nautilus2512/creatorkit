@@ -82,9 +82,9 @@ export default function PixelToRem() {
         <ShortcutsModal pageName="Pixel to Rem" shortcuts={shortcuts} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Converter */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Converter</span>
           </div>
@@ -187,7 +187,7 @@ export default function PixelToRem() {
         </div>
 
         {/* Right — Reference Table */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Reference Table ({base}px base)</span>
           </div>

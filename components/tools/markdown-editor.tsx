@@ -383,9 +383,9 @@ export function MarkdownEditor() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
           {/* Left card — Editor */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="editor-panel-label">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="editor-panel-label">
             <div className="sr-only" id="editor-panel-label">Markdown Editor</div>
             {/* Toolbar */}
             <div 
@@ -537,7 +537,7 @@ export function MarkdownEditor() {
           </div>
 
           {/* Right card — Preview */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-labelledby="preview-panel-label">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-panel-label">
             <div className="shrink-0 border-b border-border px-4 py-3 bg-muted/30">
               <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
             </div>

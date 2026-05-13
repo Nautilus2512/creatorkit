@@ -164,9 +164,9 @@ export default function RsaKeyGenerator() {
         <span className="ml-auto text-xs text-muted-foreground">RSA-OAEP-SHA256 · PKCS#8 · Nothing leaves your browser</span>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Public Key */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Public key">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Public key">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Public Key</span>
@@ -211,7 +211,7 @@ export default function RsaKeyGenerator() {
         </div>
 
         {/* Right — Private Key */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Private key">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Private key">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Private Key</span>

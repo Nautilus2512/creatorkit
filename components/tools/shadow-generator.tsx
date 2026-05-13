@@ -173,9 +173,9 @@ export default function ShadowGenerator() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Shadow controls">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Shadow controls">
           <div className="shrink-0 border-b border-border">
             <div className="flex items-center gap-1 p-2 overflow-x-auto" role="tablist" aria-label="Shadow layers">
               {shadows.map((s, i) => (
@@ -272,7 +272,7 @@ export default function ShadowGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Preview and CSS output">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Preview and CSS output">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Preview</span>
             <div className="flex items-center gap-3">

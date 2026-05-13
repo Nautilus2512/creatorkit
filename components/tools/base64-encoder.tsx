@@ -210,9 +210,9 @@ export default function Base64Encoder() {
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Input text">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input text">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="input-label">{mode === "encode" ? "Plain Text Input" : "Base64 Input"}</span>
             {mode === "encode" && (
@@ -250,7 +250,7 @@ export default function Base64Encoder() {
         </div>
 
         {/* Right Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Output result">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Output result">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="output-label">{mode === "encode" ? "Base64 Output" : "Decoded Text"}</span>
             <div className="flex gap-1">

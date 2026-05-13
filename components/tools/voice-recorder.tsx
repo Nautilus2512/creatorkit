@@ -147,9 +147,9 @@ export default function VoiceRecorder() {
         <ShortcutsModal pageName="Voice Recorder" shortcuts={shortcuts} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Recorder */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Recorder panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Recorder panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Recorder</span>
           </div>
@@ -179,7 +179,7 @@ export default function VoiceRecorder() {
         </div>
 
         {/* Right — Recordings list */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Recordings list panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Recordings list panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="recordings-label">Recordings ({recordings.length})</span>
           </div>

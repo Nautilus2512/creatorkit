@@ -267,9 +267,9 @@ export default function VideoThumbnailExtractor() {
         {duration > 0 && <span className="text-xs text-muted-foreground" aria-live="polite">Duration: {fmtTime(duration)}</span>}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
         {/* Left — Video */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Video panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Video panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="video-label">Video</span>
           </div>
@@ -301,7 +301,7 @@ export default function VideoThumbnailExtractor() {
         </div>
 
         {/* Right — Thumbnails */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Thumbnails panel">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Thumbnails panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="thumbnails-label">{thumbs.length > 0 ? `${thumbs.length} frames extracted` : "Frames"}</span>
           </div>
