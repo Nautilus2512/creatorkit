@@ -284,7 +284,7 @@ export default function DocScanner() {
       
       // Done phase shortcuts
       if (phase === "done") {
-        if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "D" || e.key === "d")) {
           e.preventDefault()
           downloadResult()
         }

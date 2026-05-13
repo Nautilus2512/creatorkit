@@ -115,15 +115,15 @@ export default function ShadowGenerator() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       
-      // Ctrl+C to copy CSS
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey) {
+      // Ctrl+Shift+C to copy CSS
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault()
         e.stopPropagation()
         copy()
       }
       
-      // Ctrl+N to add new layer
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
+      // Ctrl+Shift+N to add new layer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "n") {
         e.preventDefault()
         e.stopPropagation()
         addLayer()

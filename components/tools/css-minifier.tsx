@@ -120,8 +120,8 @@ export default function CssMinifier() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+O to upload
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+      // Ctrl+Shift+O to upload
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
         e.preventDefault()
         e.stopPropagation()
         const fileInput = document.getElementById('css-upload') as HTMLInputElement
@@ -142,8 +142,8 @@ export default function CssMinifier() {
         download()
       }
       
-      // Ctrl+E to load example
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
+      // Ctrl+Shift+E to load example
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
         e.preventDefault()
         e.stopPropagation()
         loadExample()

@@ -166,8 +166,8 @@ export default function CsvJsonConverter() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLTextAreaElement) {
-        // Ctrl+C to copy output when in textarea
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey) {
+        // Ctrl+Shift+C to copy output when in textarea
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") {
           const output = mode === 'csv-to-json' ? jsonOutput : csvOutput
           if (output && document.activeElement?.id !== 'output-textarea') {
             e.preventDefault()
@@ -184,16 +184,16 @@ export default function CsvJsonConverter() {
         setModeWithAnnounce(mode === 'csv-to-json' ? 'json-to-csv' : 'csv-to-json')
       }
       
-      // Ctrl+O to upload
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "o") {
+      // Ctrl+Shift+O to upload
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
         e.preventDefault()
         e.stopPropagation()
         const fileInput = document.getElementById('file-upload') as HTMLInputElement
         fileInput?.click()
       }
       
-      // Ctrl+C to copy output
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey) {
+      // Ctrl+Shift+C to copy output
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") {
         const output = mode === 'csv-to-json' ? jsonOutput : csvOutput
         if (output) {
           e.preventDefault()
@@ -202,8 +202,8 @@ export default function CsvJsonConverter() {
         }
       }
       
-      // Ctrl+S to download
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && !e.shiftKey) {
+      // Ctrl+Shift+S to download
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
         const output = mode === 'csv-to-json' ? jsonOutput : csvOutput
         if (output) {
           e.preventDefault()

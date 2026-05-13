@@ -143,8 +143,8 @@ export default function BatchImageEditor() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       
-      // Ctrl+O to add images
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+      // Ctrl+Shift+O to add images
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
         e.preventDefault()
         e.stopPropagation()
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement

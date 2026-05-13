@@ -210,9 +210,28 @@ export function BackgroundRemover() {
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); download() }
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") { e.preventDefault(); inputRef.current?.click() }
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); if (isMobile) processMobile(); else processDesktop() }
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
+      
+      const isProcessingNow = phase === "loading-model" || phase === "processing"
+      
+      // Ctrl+Shift+S - Download
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") { 
+        e.preventDefault(); 
+        if (resultUrl) download() 
+      }
+      // Ctrl+Shift+O - Open file
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "O") { 
+        e.preventDefault(); 
+        inputRef.current?.click() 
+      }
+      // Ctrl+Shift+Enter - Process
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") { 
+        e.preventDefault(); 
+        if (imageEl && !isProcessingNow) {
+          if (isMobile) processMobile(); else processDesktop()
+        }
+      }
+      // Escape - Cancel color picking
       if (e.key === "Escape" && pickingColor) { 
         e.preventDefault(); 
         setPickingColor(false)
@@ -221,13 +240,16 @@ export function BackgroundRemover() {
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
-  }, [download, pickingColor, isMobile, processMobile, processDesktop])
+  }, [download, pickingColor, isMobile, processMobile, processDesktop, phase, imageEl, resultUrl])
 
   const isProcessing = phase === "loading-model" || phase === "processing"
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Background Remover application">
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {imageEl ? `Image loaded: ${fileName}. ${resultUrl ? 'Result ready. Press Ctrl+Shift+S to download.' : 'Press Ctrl+Shift+Enter to remove background.'}` : 'No image loaded. Press Ctrl+Shift+O to upload.'}
+      </div>
       <div role="banner">
         <h2 className="text-2xl font-semibold tracking-tight" id="page-title">Background Remover</h2>
         <p className="text-muted-foreground" id="page-description">Remove image backgrounds · 100% in-browser · Press ? for keyboard shortcuts</p>
@@ -312,8 +334,8 @@ export function BackgroundRemover() {
                 <div className="flex flex-col items-center gap-2 text-center px-4">
                   <div className="rounded-full bg-muted p-3" aria-hidden="true"><Upload className="h-5 w-5 text-muted-foreground" /></div>
                   <p className="text-sm font-medium">Drop an image here</p>
-                  <p className="text-xs text-muted-foreground" id="upload-formats">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd></p>
-                  <span className="sr-only">Press Ctrl plus O to browse for files</span>
+                  <p className="text-xs text-muted-foreground" id="upload-formats">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></p>
+                  <span className="sr-only">Press Ctrl plus Shift plus O to browse for files</span>
                 </div>
               )}
             </div>
@@ -442,7 +464,7 @@ export function BackgroundRemover() {
               <>
                 <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
                 <span>Remove Background</span>
-                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Enter</kbd>}
+                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Shift+Enter</kbd>}
                 <span className="sr-only">. Press Control plus Enter to start processing</span>
               </>
             )}
@@ -517,7 +539,7 @@ export function BackgroundRemover() {
             >
               <Download className="mr-2 h-4 w-4" aria-hidden="true" />
               <span>Download PNG (transparent)</span>
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+S</kbd>
+              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+Shift+S</kbd>
               <span className="sr-only">. Press Control plus S to download</span>
             </Button>
           </div>
@@ -529,9 +551,9 @@ export function BackgroundRemover() {
     <ShortcutsModal
       pageName="Background Remover"
       shortcuts={[
-        { keys: ["Ctrl", "O"], description: "Open image file" },
-        { keys: ["Ctrl", "Enter"], description: "Remove background (when image loaded)" },
-        { keys: ["Ctrl", "S"], description: "Download result (when available)" },
+        { keys: ["Ctrl", "Shift", "O"], description: "Open image file" },
+        { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background (when image loaded)" },
+        { keys: ["Ctrl", "Shift", "S"], description: "Download result (when available)" },
         { keys: ["?"], description: "Toggle this shortcuts panel" },
         { keys: ["Tab"], description: "Navigate between controls" },
         { keys: ["Enter"], description: "Activate focused button" },

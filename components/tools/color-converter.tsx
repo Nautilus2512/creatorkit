@@ -167,8 +167,8 @@ export default function ColorConverter() {
         }
       }
       
-      // Ctrl+C to copy all formats
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey && color) {
+      // Ctrl+Shift+C to copy all formats
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && color) {
         e.preventDefault()
         e.stopPropagation()
         copyAll()

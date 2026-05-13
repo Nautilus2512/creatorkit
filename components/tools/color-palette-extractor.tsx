@@ -158,16 +158,16 @@ export default function ColorPaletteExtractor() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       
-      // Ctrl+O to upload image
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+      // Ctrl+Shift+O to upload image
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
         e.preventDefault()
         e.stopPropagation()
         const fileInput = document.getElementById('palette-image-upload') as HTMLInputElement
         fileInput?.click()
       }
       
-      // Ctrl+C to copy all when palette exists
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey && palette.length > 0) {
+      // Ctrl+Shift+C to copy all when palette exists
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && palette.length > 0) {
         e.preventDefault()
         e.stopPropagation()
         copyAll()

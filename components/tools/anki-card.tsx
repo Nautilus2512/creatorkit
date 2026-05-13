@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Brain, Plus, Trash2, BookOpen, RotateCcw } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Brain, Plus, Trash2, BookOpen, RotateCcw, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -179,24 +179,44 @@ export function AnkiCard() {
     setDecks(newDecks); saveDecks(newDecks)
   }
 
+  const handleCardKeyDown = (e: React.KeyboardEvent, cardId: string) => {
+    if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault()
+      deleteCard(cardId)
+    }
+  }
+
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
       
-      // Global shortcuts
-      if ((e.ctrlKey || e.metaKey) && e.key === "n" && !addingDeck) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "N" && !addingDeck) {
         e.preventDefault()
         setAddingDeck(true)
         return
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "a" && activeDeck && view !== "add-card") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A" && activeDeck && view !== "add-card") {
         e.preventDefault()
         setView("add-card")
         return
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "s" && activeDeck && dueCards.length > 0 && view !== "study") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S" && activeDeck && dueCards.length > 0 && view !== "study") {
         e.preventDefault()
         startStudy()
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D" && activeDeck) {
+        e.preventDefault()
+        if (decks.length > 1) {
+          const currentIdx = decks.findIndex(d => d.id === activeDeckId)
+          const nextIdx = (currentIdx + 1) % decks.length
+          setActiveDeckId(decks[nextIdx].id)
+        }
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter" && view === "add-card") {
+        e.preventDefault()
+        addCard()
         return
       }
       if (e.key === "Escape") {
@@ -205,10 +225,16 @@ export function AnkiCard() {
           setAddingDeck(false)
           setNewDeckName("")
         }
+        if (view === "study") {
+          e.preventDefault()
+          setView("add-card")
+        }
+        return
+      }
+      if (e.key === "Tab" && activeDeck && view === "empty") {
         return
       }
       
-      // Study mode shortcuts
       if (view === "study") {
         if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (!isFlipped) setIsFlipped(true) }
         if (isFlipped) {
@@ -218,46 +244,52 @@ export function AnkiCard() {
           if (e.key === "4") rateCard(5)
         }
       }
-    }
-    const addHandler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && view === "add-card") { e.preventDefault(); addCard() }
+      
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+        return
+      }
     }
     window.addEventListener("keydown", h)
-    window.addEventListener("keydown", addHandler)
-    return () => { window.removeEventListener("keydown", h); window.removeEventListener("keydown", addHandler) }
-  }, [view, isFlipped, rateCard, addCard, addingDeck, activeDeck, dueCards, startStudy])
+    return () => { window.removeEventListener("keydown", h) }
+  }, [view, isFlipped, rateCard, addCard, addingDeck, activeDeck, dueCards, startStudy, decks, activeDeckId])
 
   const currentCard = queue[currentIdx] ?? null
+  const deckListRef = useRef<HTMLDivElement>(null)
+
   if (!mounted) return null
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Anki Flashcards application">
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {studiedCount > 0 && `You have studied ${studiedCount} card${studiedCount !== 1 ? 's' : ''} this session.`}
+      </div>
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Anki-style Flashcards</h2>
         <p className="text-muted-foreground">Spaced repetition · 100% in-browser · never synced</p>
       </div>
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel — deck management */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Deck management">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6" tabIndex={-1}>
 
           {/* Deck list */}
-          <div className="space-y-2">
+          <div className="space-y-2" role="group" aria-labelledby="decks-heading">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Decks</Label>
+              <Label className="text-sm font-medium" id="decks-heading">Decks</Label>
               <button
                 onClick={() => setAddingDeck(v => !v)}
                 className="flex items-center gap-1 text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
                 aria-label="Create new deck"
                 aria-expanded={addingDeck}
+                aria-controls="new-deck-form"
               >
-                <Plus className="h-3.5 w-3.5" aria-hidden="true" />New deck <kbd className="ml-1 px-1 rounded bg-muted font-mono text-[10px]">Ctrl+N</kbd>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />New deck <kbd className="ml-1 px-1 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+N</kbd>
               </button>
             </div>
 
             {addingDeck && (
-              <div className="flex gap-2">
+              <div className="flex gap-2" id="new-deck-form" role="form" aria-label="Create new deck form">
                 <Input
                   autoFocus
                   placeholder="Deck name…"
@@ -267,70 +299,76 @@ export function AnkiCard() {
                   className="text-sm"
                   aria-label="Enter deck name"
                   aria-describedby="deck-name-help"
+                  aria-required="true"
                 />
+                <span id="deck-name-help" className="sr-only">Press Enter to create deck or Escape to cancel</span>
                 <Button 
                   size="sm" 
                   onClick={createDeck} 
                   disabled={!newDeckName.trim()}
                   aria-label="Create deck"
                 >Add <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Enter</kbd></Button>
+                <span className="sr-only">Press Enter to create, Escape to cancel</span>
               </div>
             )}
 
             {decks.length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">No decks yet — create one above</p>
             ) : (
-              <div className="space-y-1.5">
+              <ul className="space-y-1.5" role="listbox" aria-label="Available decks">
                 {decks.map(d => {
                   const due = d.cards.filter(isDue).length
                   return (
-                    <div
-                      key={d.id}
-                      onClick={() => setActiveDeckId(d.id)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setActiveDeckId(d.id) }}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                        activeDeckId === d.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                      }`}
-                      aria-label={`Select deck: ${d.name}, ${d.cards.length} cards${due > 0 ? `, ${due} due` : ''}`}
-                      aria-pressed={activeDeckId === d.id}
-                    >
-                      <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{d.name}</p>
-                        <p className="text-xs text-muted-foreground">{d.cards.length} cards</p>
-                      </div>
-                      {due > 0 && <Badge className="text-xs shrink-0" aria-label={`${due} cards due for review`}>{due} due</Badge>}
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteDeck(d.id) }}
-                        aria-label={`Delete deck: ${d.name}`}
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                    <li key={d.id} role="option" aria-selected={activeDeckId === d.id}>
+                      <div
+                        onClick={() => setActiveDeckId(d.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setActiveDeckId(d.id) }}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                          activeDeckId === d.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                        }`}
+                        aria-label={`Select deck: ${d.name}, ${d.cards.length} cards${due > 0 ? `, ${due} due` : ''}`}
+                        aria-pressed={activeDeckId === d.id}
                       >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
+                        <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{d.name}</p>
+                          <p className="text-xs text-muted-foreground">{d.cards.length} cards</p>
+                        </div>
+                        {due > 0 && <Badge className="text-xs shrink-0" variant="secondary" aria-label={`${due} cards due for review`}>{due} due</Badge>}
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteDeck(d.id) }}
+                          aria-label={`Delete deck: ${d.name}`}
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                        <span className="sr-only">Delete this deck</span>
+                      </div>
+                    </li>
                   )
                 })}
-              </div>
+              </ul>
             )}
           </div>
 
           {/* Stats */}
           {activeDeck && (
-            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{activeDeck.name}</p>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="text-center">
-                  <p className="text-lg font-semibold">{activeDeck.cards.length}</p>
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2" role="region" aria-labelledby="stats-heading" aria-describedby="stats-desc">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide" id="stats-heading">{activeDeck.name} Stats</p>
+              <span id="stats-desc" className="sr-only">Deck statistics showing total cards, cards due today, and cards studied this session</span>
+              <div className="grid grid-cols-3 gap-2" role="list" aria-label="Deck statistics">
+                <div className="text-center" role="listitem">
+                  <p className="text-lg font-semibold" aria-label={`Total: ${activeDeck.cards.length} cards`}>{activeDeck.cards.length}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
                 </div>
-                <div className="text-center">
-                  <p className={`text-lg font-semibold ${dueCards.length > 0 ? "text-amber-500" : "text-green-500"}`}>{dueCards.length}</p>
+                <div className="text-center" role="listitem">
+                  <p className={`text-lg font-semibold ${dueCards.length > 0 ? "text-amber-500" : "text-green-500"}`} aria-label={`Due today: ${dueCards.length} cards`} aria-live={dueCards.length > 0 ? "polite" : "off"}>{dueCards.length}</p>
                   <p className="text-xs text-muted-foreground">Due today</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-primary">{studiedCount}</p>
+                <div className="text-center" role="listitem">
+                  <p className="text-lg font-semibold text-primary" aria-label={`Studied this session: ${studiedCount} cards`}>{studiedCount}</p>
                   <p className="text-xs text-muted-foreground">Studied</p>
                 </div>
               </div>
@@ -353,15 +391,19 @@ export function AnkiCard() {
             const totalAll = Object.values(studyLog).reduce((a, b) => a + b, 0)
             const streak = calcStreak(studyLog)
             return (
-              <div className="space-y-2">
+              <div className="space-y-2" role="region" aria-labelledby="history-heading">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Study History</Label>
+                  <Label className="text-sm font-medium" id="history-heading">Study History</Label>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {streak > 0 && <span className="text-amber-500 font-medium">{streak}d streak</span>}
-                    <span>{totalAll} total</span>
+                    {streak > 0 && <span className="text-amber-500 font-medium" aria-label={`Current streak: ${streak} days`}>{streak}d streak</span>}
+                    <span aria-label={`Total cards studied: ${totalAll}`}>{totalAll} total</span>
                   </div>
                 </div>
-                <div className="flex items-end gap-1 h-14 pt-1">
+                <div 
+                  className="flex items-end gap-1 h-14 pt-1" 
+                  role="img" 
+                  aria-label={`Study activity chart for last 7 days. ${last7.map(d => `${d.label}: ${d.count} cards`).join(', ')}`}
+                >
                   {last7.map(({ label, count, isToday }, i) => {
                     const barH = count === 0 ? 2 : Math.max(6, Math.round((count / maxCount) * 36))
                     return (
@@ -371,11 +413,13 @@ export function AnkiCard() {
                             isToday ? "bg-primary" : count > 0 ? "bg-primary/40" : "bg-muted"
                           }`}
                           style={{ height: `${barH}px` }}
-                          title={`${count} card${count !== 1 ? "s" : ""}`}
+                          role="presentation"
+                          aria-hidden="true"
                         />
-                        <span className={`text-[9px] ${isToday ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                        <span className={`text-[9px] ${isToday ? "text-primary font-medium" : "text-muted-foreground"}`} aria-hidden="true">
                           {label}
                         </span>
+                        <span className="sr-only">{label}: {count} cards{isToday ? ' (today)' : ''}</span>
                       </div>
                     )
                   })}
@@ -386,7 +430,7 @@ export function AnkiCard() {
 
           {/* Actions */}
           {activeDeck && (
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="group" aria-label="Deck actions">
               <Button
                 variant={view === "study" ? "default" : "outline"}
                 size="sm" className="flex-1"
@@ -394,7 +438,9 @@ export function AnkiCard() {
                 disabled={dueCards.length === 0}
                 aria-label={dueCards.length > 0 ? `Study now: ${dueCards.length} cards due` : "No cards due for study"}
               >
-                Study Now {dueCards.length > 0 && `(${dueCards.length})`} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd>
+                <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                Study Now {dueCards.length > 0 && `(${dueCards.length})`}
+                <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
               </Button>
               <Button
                 variant={view === "add-card" ? "default" : "outline"}
@@ -402,7 +448,7 @@ export function AnkiCard() {
                 onClick={() => setView("add-card")}
                 aria-label="Add new card to deck"
               >
-                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+A</kbd>
+                <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+Shift+A</kbd>
               </Button>
             </div>
           )}
@@ -410,13 +456,13 @@ export function AnkiCard() {
       </div>
 
       {/* Right panel — contextual */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Content area">
+        <div className="flex-1 overflow-y-auto p-4" tabIndex={-1}>
 
           {/* Empty state */}
           {view === "empty" && (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <div className="rounded-full border border-border bg-muted/50 p-4">
+            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status" aria-live="polite">
+              <div className="rounded-full border border-border bg-muted/50 p-4" aria-hidden="true">
                 <Brain className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
@@ -428,24 +474,24 @@ export function AnkiCard() {
 
           {/* All caught up */}
           {view === "done" && (
-            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-4 text-center">
-              <div className="rounded-full border border-green-500/30 bg-green-500/10 p-4">
+            <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-4 text-center" role="status" aria-live="polite">
+              <div className="rounded-full border border-green-500/30 bg-green-500/10 p-4" aria-hidden="true">
                 <Brain className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold" aria-live="polite">
                   {studiedCount > 0 ? `Session complete! ${studiedCount} card${studiedCount > 1 ? "s" : ""} reviewed.` : "All caught up!"}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">No cards due today. Come back tomorrow.</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="group" aria-label="Session actions">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setView("add-card")}
                   aria-label="Add new card to deck"
                 >
-                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+A</kbd>
+                  <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+Shift+A</kbd>
                 </Button>
                 {dueCards.length > 0 && (
                   <Button 
@@ -453,7 +499,7 @@ export function AnkiCard() {
                     onClick={startStudy}
                     aria-label="Study again"
                   >
-                    <RotateCcw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Study Again <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd>
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Study Again <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+Shift+S</kbd>
                   </Button>
                 )}
               </div>
@@ -462,11 +508,11 @@ export function AnkiCard() {
 
           {/* Add card form */}
           {view === "add-card" && (
-            <div className="space-y-4 max-w-lg">
+            <div className="space-y-4 max-w-lg" role="form" aria-label="Add new card form">
               <div>
                 <p className="text-sm font-semibold">Add New Card</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Adding to: <span className="font-medium">{activeDeck?.name}</span>
+<p className="text-xs text-muted-foreground mt-0.5">
+                  Adding to: <span className="font-medium" aria-label={"Deck: " + activeDeck?.name}>{activeDeck?.name}</span>
                 </p>
               </div>
               <div className="space-y-2">
@@ -479,7 +525,9 @@ export function AnkiCard() {
                   className="resize-none" rows={3}
                   aria-label="Enter card front side (question)"
                   aria-describedby="front-help"
+                  aria-required="true"
                 />
+                <span id="front-help" className="text-xs text-muted-foreground">Enter the question or prompt</span>
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium" htmlFor="back-input">Back (Answer)</Label>
@@ -491,9 +539,11 @@ export function AnkiCard() {
                   className="resize-none" rows={3}
                   aria-label="Enter card back side (answer)"
                   aria-describedby="back-help"
+                  aria-required="true"
                 />
+                <span id="back-help" className="text-xs text-muted-foreground">Enter the answer</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2" role="group" aria-label="Card actions">
                 <Button 
                   onClick={addCard} 
                   disabled={!front.trim() || !back.trim()} 
@@ -501,35 +551,48 @@ export function AnkiCard() {
                   aria-label={front.trim() && back.trim() ? "Add card to deck" : "Please fill in both front and back fields"}
                 >
                   <Plus className="h-4 w-4 mr-2" aria-hidden="true" />Add Card
-                  <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>
+                  <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd>
                 </Button>
                 {dueCards.length > 0 && (
                   <Button 
                     variant="outline" 
                     onClick={startStudy}
                     aria-label="Start studying due cards"
-                  >Study <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+S</kbd></Button>
+                  >Study <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]">Ctrl+Shift+S</kbd></Button>
                 )}
               </div>
 
               {activeDeck && activeDeck.cards.length > 0 && (
-                <div className="space-y-1.5 pt-2 border-t border-border">
-                  <p className="text-xs font-medium text-muted-foreground">All cards ({activeDeck.cards.length})</p>
-                  {activeDeck.cards.map(c => (
-                    <div key={c.id} className="flex items-start gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{c.front}</p>
-                        <p className="text-xs text-muted-foreground truncate">{c.back}</p>
-                      </div>
-                      <button
-                        onClick={() => deleteCard(c.id)}
-                        aria-label={`Delete card: ${c.front}`}
-                        className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  ))}
+                <div className="space-y-1.5 pt-2 border-t border-border" role="region" aria-labelledby="cards-list-heading">
+                  <p className="text-xs font-medium text-muted-foreground" id="cards-list-heading">All cards ({activeDeck.cards.length})</p>
+                  <ul className="space-y-1.5" role="list" aria-label="Card list">
+                    {activeDeck.cards.map(c => (
+                      <li key={c.id} role="listitem">
+                        <div 
+                          className="flex items-start gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2"
+                          onKeyDown={(e) => handleCardKeyDown(e, c.id)}
+                          tabIndex={0}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate" aria-label={`Question: ${c.front}`}>{c.front}</p>
+                            <p className="text-xs text-muted-foreground truncate" aria-label={`Answer: ${c.back}`}>{c.back}</p>
+                          </div>
+                          <button
+                            onClick={() => deleteCard(c.id)}
+                            aria-label={`Delete card: ${c.front}`}
+                            className="shrink-0 rounded p-1 text-muted-foreground hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            <span className="sr-only">Delete</span>
+                          </button>
+                        </div>
+                        <span className="sr-only">Press Delete to remove this card</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    <kbd className="px-1 rounded bg-muted font-mono text-[9px]">Delete</kbd> or <kbd className="px-1 rounded bg-muted font-mono text-[9px]">Backspace</kbd> to delete
+                  </p>
                 </div>
               )}
             </div>
@@ -537,18 +600,22 @@ export function AnkiCard() {
 
           {/* Study mode */}
           {view === "study" && currentCard && (
-            <div className="flex flex-col h-full min-h-[300px] gap-4">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Card {currentIdx + 1} of {queue.length}</span>
-                <span>{studiedCount} reviewed this session</span>
+            <div className="flex flex-col h-full min-h-[300px] gap-4" role="region" aria-label="Study mode">
+              <div className="flex items-center justify-between text-xs text-muted-foreground" role="status" aria-live="polite">
+                <span aria-label={`Card ${currentIdx + 1} of ${queue.length}`}>Card {currentIdx + 1} of {queue.length}</span>
+                <span aria-label={`${studiedCount} cards reviewed this session`}>{studiedCount} reviewed</span>
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                <div className="w-full rounded-xl border border-border bg-muted/20 p-6 min-h-[160px] flex flex-col items-center justify-center gap-3 text-center">
+                <div 
+                  className="w-full rounded-xl border border-border bg-muted/20 p-6 min-h-[160px] flex flex-col items-center justify-center gap-3 text-center" 
+                  role="article" 
+                  aria-label={`Current ${isFlipped ? 'answer' : 'question'}`}
+                >
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {isFlipped ? "Answer" : "Question"}
                   </p>
-                  <p className="text-xl font-medium leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xl font-medium leading-relaxed whitespace-pre-wrap" aria-live={isFlipped ? "polite" : "off"}>
                     {isFlipped ? currentCard.back : currentCard.front}
                   </p>
                 </div>
@@ -559,13 +626,14 @@ export function AnkiCard() {
                     onClick={() => setIsFlipped(true)}
                     aria-label="Show answer for this card"
                   >
+                    <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                     Show Answer
                     <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Space</kbd>
                   </Button>
                 ) : (
-                  <div className="w-full space-y-2">
-                    <p className="text-xs text-center text-muted-foreground">How well did you remember?</p>
-                    <div className="grid grid-cols-4 gap-2">
+                  <div className="w-full space-y-2" role="group" aria-label="Rate your recall">
+                    <p className="text-xs text-center text-muted-foreground" id="rating-desc">How well did you remember?</p>
+                    <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-describedby="rating-desc">
                       {[
                         { label: "Again", quality: 0,  color: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20",    key: "1" },
                         { label: "Hard",  quality: 2,  color: "border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20", key: "2" },
@@ -576,7 +644,9 @@ export function AnkiCard() {
                           key={label}
                           onClick={() => rateCard(quality)}
                           className={`flex flex-col items-center gap-0.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${color}`}
-                          aria-label={`Rate card as ${label}: ${nextInterval(currentCard, quality)} interval`}
+                          aria-label={`Rate card as ${label}: ${nextInterval(currentCard, quality)} interval. Press ${key} key.`}
+                          role="radio"
+                          aria-checked="false"
                         >
                           <span>{label}</span>
                           <span className="text-[10px] opacity-70">{nextInterval(currentCard, quality)}</span>
@@ -598,18 +668,23 @@ export function AnkiCard() {
     <ShortcutsModal
       pageName="Anki Flashcards"
       shortcuts={[
-        { keys: ["Ctrl", "N"], description: "Create new deck" },
-        { keys: ["Ctrl", "A"], description: "Add card to deck" },
-        { keys: ["Ctrl", "S"], description: "Start studying" },
-        { keys: ["Ctrl", "Enter"], description: "Add card (in Add Card view)" },
-        { keys: ["Space"], description: "Flip card / Show answer" },
-        { keys: ["1"], description: "Rate: Again" },
-        { keys: ["2"], description: "Rate: Hard" },
-        { keys: ["3"], description: "Rate: Good" },
-        { keys: ["4"], description: "Rate: Easy" },
+        { keys: ["Ctrl", "Shift", "N"], description: "Create new deck" },
+        { keys: ["Ctrl", "Shift", "A"], description: "Add new card to deck" },
+        { keys: ["Ctrl", "Shift", "S"], description: "Start studying" },
+        { keys: ["Ctrl", "Shift", "D"], description: "Switch to next deck" },
+        { keys: ["Ctrl", "Shift", "Enter"], description: "Add card (in Add Card view)" },
+        { keys: ["Delete"], description: "Delete card from list" },
+        { keys: ["Backspace"], description: "Delete card from list" },
+        { keys: ["Space"], description: "Flip card / Show answer (in study mode)" },
         { keys: ["Enter"], description: "Create deck (when typing name)" },
-        { keys: ["Escape"], description: "Cancel deck creation" },
-        { keys: ["?"], description: "Toggle this panel" },
+        { keys: ["1"], description: "Rate card as Again (in study mode)" },
+        { keys: ["2"], description: "Rate card as Hard (in study mode)" },
+        { keys: ["3"], description: "Rate card as Good (in study mode)" },
+        { keys: ["4"], description: "Rate card as Easy (in study mode)" },
+        { keys: ["Escape"], description: "Cancel / Return to add card view" },
+        { keys: ["?"], description: "Toggle this shortcuts panel" },
+        { keys: ["Tab"], description: "Navigate between elements" },
+        { keys: ["Arrow Keys"], description: "Navigate deck list" },
       ]}
     />
     </>

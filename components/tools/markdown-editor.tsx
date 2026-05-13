@@ -272,12 +272,14 @@ export function MarkdownEditor() {
       }
     }
     const handleEditorKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Ctrl+Shift+Z to undo
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') {
         e.preventDefault()
         undo()
         announceToScreenReader("Undo")
       }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      // Ctrl+Shift+Y to redo
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
         e.preventDefault()
         redo()
         announceToScreenReader("Redo")

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Download, Music, AlertCircle, X, FileAudio, Settings, Play, Loader2 } from "lucide-react"
+import { Upload, Download, Music, AlertCircle, X, FileAudio, Settings, Play, Loader2, FolderOpen, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -279,34 +279,36 @@ const convert = async () => {
     a.click()
   }
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - using Ctrl+Shift to avoid browser conflicts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+O - Upload file (trigger file input)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
+      
+      // Ctrl+Shift+O - Upload file
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'O') {
         e.preventDefault()
         inputRef.current?.click()
       }
-      // Ctrl+Enter - Convert
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      // Ctrl+Shift+Enter - Convert
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Enter') {
         e.preventDefault()
         if (file && !isConverting && !isLoadingFFmpeg) {
           convert()
         }
       }
-      // Ctrl+D - Download (when result available)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+      // Ctrl+Shift+D - Download
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
         e.preventDefault()
         if (result) {
           download()
         }
       }
-      // Ctrl+T - Toggle test mode
-      if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+      // Ctrl+Shift+T - Toggle test mode
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
         e.preventDefault()
         setTestMode(prev => !prev)
       }
-      // Number keys 1-8 for format selection (when not typing in an input)
+      // Number keys 1-8 for format selection
       if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
         const activeElement = document.activeElement
         if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
@@ -337,22 +339,29 @@ const convert = async () => {
     <ShortcutsModal
       pageName="Audio Converter"
       shortcuts={[
-        { keys: ["Ctrl", "Enter"], description: "Convert audio" },
-        { keys: ["Ctrl", "O"], description: "Upload file" },
-        { keys: ["Ctrl", "D"], description: "Download converted file" },
-        { keys: ["Ctrl", "T"], description: "Toggle test mode" },
+        { keys: ["Ctrl", "Shift", "Enter"], description: "Convert audio" },
+        { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+        { keys: ["Ctrl", "Shift", "D"], description: "Download converted file" },
+        { keys: ["Ctrl", "Shift", "T"], description: "Toggle test mode" },
         { keys: ["1"], description: "Select MP3 format" },
         { keys: ["2"], description: "Select WAV format" },
         { keys: ["3"], description: "Select OGG format" },
         { keys: ["4"], description: "Select FLAC format" },
+        { keys: ["5"], description: "Select AAC format" },
+        { keys: ["6"], description: "Select M4A format" },
+        { keys: ["7"], description: "Select WMA format" },
+        { keys: ["8"], description: "Select OPUS format" },
         { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
         { keys: ["?"], description: "Toggle this panel" },
       ]}
     />
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Audio Converter application">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight">Audio Converter</h2>
         <p className="text-muted-foreground">Convert between audio formats · Powered by ffmpeg.wasm</p>
+      </div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {file && `File selected: ${file.name}. ${result ? 'Conversion complete.' : 'Ready to convert.'}`}
       </div>
 
       {/* Development Warning - merged note */}
@@ -373,18 +382,22 @@ const convert = async () => {
 
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
       {/* Left panel */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Conversion settings">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6" tabIndex={-1}>
 
           {/* File upload */}
-          <div className="space-y-2">
+          <div className="space-y-2" role="group" aria-labelledby="audio-file-heading">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Audio File</Label>
-              <span className="text-xs text-muted-foreground"><kbd className="px-1 rounded bg-muted font-mono">Ctrl+O</kbd> to upload</span>
+              <Label className="text-sm font-medium" id="audio-file-heading">Audio File</Label>
+              <span className="text-xs text-muted-foreground"><kbd className="px-1 rounded bg-muted font-mono">Ctrl+Shift+O</kbd> upload</span>
             </div>
             <div
               onClick={() => inputRef.current?.click()}
-              className="relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
+              role="button"
+              tabIndex={0}
+              className="relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Upload audio file. Click or press Enter to browse."
             >
               <input
                 ref={inputRef}
@@ -392,6 +405,7 @@ const convert = async () => {
                 accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus"
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                aria-hidden="true"
               />
               {file ? (
                 <div className="flex items-center gap-3 px-4 w-full">
@@ -421,16 +435,17 @@ const convert = async () => {
                 </div>
               )}
             </div>
+            <span className="sr-only">Supported formats: MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</span>
           </div>
 
           {/* Conversion settings */}
           <div className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-2" role="group" aria-labelledby="format-heading">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium" id="format-label">Target Format</Label>
-                <span className="text-xs text-muted-foreground">Press 1-8 to select</span>
+                <Label className="text-sm font-medium" id="format-heading">Target Format</Label>
+                <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">1-8</kbd> to select</span>
               </div>
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-label">
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-heading" aria-describedby="format-help">
                 {FORMATS.map((fmt, index) => (
                   <button
                     key={fmt.value}
@@ -442,16 +457,17 @@ const convert = async () => {
                     }`}
                     role="radio"
                     aria-checked={targetFormat === fmt.value}
-                    aria-label={`${fmt.label} - ${fmt.desc}`}
+                    aria-label={`${fmt.label}: ${fmt.desc}. Press ${index + 1} to select.`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{fmt.label}</span>
-                      <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">{index + 1}</kbd>
+                      <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{index + 1}</kbd>
                     </div>
                     <div className="text-xs text-muted-foreground">{fmt.desc}</div>
                   </button>
                 ))}
               </div>
+              <span id="format-help" className="sr-only">Select target audio format using number keys 1 through 8</span>
             </div>
 
             <div className="flex items-center gap-2 mb-4">
@@ -463,16 +479,16 @@ const convert = async () => {
                   className="rounded border-border"
                   aria-label="Enable test mode to skip ffmpeg loading"
                 />
-                <span className="text-xs">Test mode <kbd className="px-1 rounded bg-muted font-mono text-[10px]">Ctrl+T</kbd></span>
+                <span className="text-xs">Test mode <kbd className="px-1 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+T</kbd></span>
               </label>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2" role="group" aria-labelledby="quality-heading">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium" id="quality-label">Quality</Label>
+                <Label className="text-sm font-medium" id="quality-heading">Quality</Label>
                 <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">Q</kbd> to cycle</span>
               </div>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-label">
+              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-heading" aria-describedby="quality-help">
                 {[
                   { value: "high", label: "High", desc: "320kbps / Best" },
                   { value: "medium", label: "Medium", desc: "192kbps / Good" },
@@ -488,13 +504,14 @@ const convert = async () => {
                     }`}
                     role="radio"
                     aria-checked={quality === q.value}
-                    aria-label={`${q.label} quality - ${q.desc}`}
+                    aria-label={`${q.label} quality: ${q.desc}`}
                   >
                     <div className="font-medium">{q.label}</div>
                     <div className="text-xs text-muted-foreground">{q.desc}</div>
                   </button>
                 ))}
               </div>
+              <span id="quality-help" className="sr-only">Press Q to cycle through quality levels: High, Medium, Low</span>
             </div>
           </div>
 

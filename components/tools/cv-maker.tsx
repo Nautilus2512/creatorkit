@@ -366,8 +366,8 @@ export default function CvMaker() {
         setTmpl(e.key === "1" ? "classic" : "modern")
       }
       
-      // Ctrl+E for experience
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
+      // Ctrl+Shift+E for experience
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
         e.preventDefault()
         e.stopPropagation()
         addExp()
@@ -376,8 +376,8 @@ export default function CvMaker() {
         expSection?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
       
-      // Ctrl+D for education
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+      // Ctrl+Shift+D for education
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "d") {
         e.preventDefault()
         e.stopPropagation()
         addEdu()
@@ -385,16 +385,16 @@ export default function CvMaker() {
         eduSection?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
       
-      // Ctrl+K for skills
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      // Ctrl+Shift+K for skills
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "k") {
         e.preventDefault()
         e.stopPropagation()
         const skillInput = document.getElementById('skill-input') as HTMLInputElement
         skillInput?.focus()
       }
       
-      // Ctrl+P for projects
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+      // Ctrl+Shift+P for projects
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p") {
         e.preventDefault()
         e.stopPropagation()
         addProj()
@@ -402,8 +402,8 @@ export default function CvMaker() {
         projSection?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
       
-      // Ctrl+Shift+D for download
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "d") {
+      // Ctrl+Alt+D for download (changed to avoid conflict with Ctrl+Shift+D)
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === "d") {
         e.preventDefault()
         e.stopPropagation()
         handlePrint()

@@ -87,22 +87,22 @@ export default function BorderRadiusVisualizer() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       
-      // Ctrl+C to copy CSS
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c" && !e.shiftKey) {
+      // Ctrl+Shift+C to copy CSS
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault()
         e.stopPropagation()
         copy()
       }
       
-      // Ctrl+U to toggle unit
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "u") {
+      // Ctrl+Shift+U to toggle unit
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") {
         e.preventDefault()
         e.stopPropagation()
         toggleUnit(unit === "%" ? "px" : "%")
       }
       
-      // Ctrl+L to toggle linked
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
+      // Ctrl+Shift+L to toggle linked
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") {
         e.preventDefault()
         e.stopPropagation()
         toggleLinked()

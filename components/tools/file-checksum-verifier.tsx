@@ -165,7 +165,7 @@ export function FileChecksumVerifier() {
         e.preventDefault()
         compute()
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "O") {
         e.preventDefault()
         inputRef.current?.click()
       }

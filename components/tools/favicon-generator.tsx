@@ -161,10 +161,10 @@ export function FaviconGenerator() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey
-      if (ctrl && (e.key === "d" || e.key === "D")) {
+      if (ctrl && e.shiftKey && (e.key === "D" || e.key === "d")) {
         e.preventDefault(); downloadAll()
       }
-      if (ctrl && (e.key === "o" || e.key === "O")) {
+      if (ctrl && e.shiftKey && (e.key === "O" || e.key === "o")) {
         e.preventDefault(); uploadRef.current?.click()
       }
     }
@@ -179,7 +179,7 @@ export function FaviconGenerator() {
     <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
       <div role="banner">
         <h2 className="text-2xl font-semibold tracking-tight">Favicon Generator</h2>
-        <p className="text-muted-foreground">All sizes + manifest · 100% in-browser<br/><span className="text-xs">Press Ctrl+O to upload · Ctrl+D to download</span></p>
+        <p className="text-muted-foreground">All sizes + manifest · 100% in-browser<br/><span className="text-xs">Press Ctrl+Shift+O to upload · Ctrl+Shift+D to download</span></p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 flex-1 min-h-0">
       {/* Left panel */}

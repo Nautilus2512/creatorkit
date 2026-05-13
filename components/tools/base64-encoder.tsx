@@ -114,8 +114,8 @@ export default function Base64Encoder() {
       return
     }
     
-    // Ctrl+O to upload file (encode mode only)
-    if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+    // Ctrl+Shift+O to upload file (encode mode only)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
       e.preventDefault()
       e.stopPropagation()
       if (mode === "encode") {
