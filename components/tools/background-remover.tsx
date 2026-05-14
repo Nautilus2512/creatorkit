@@ -70,42 +70,45 @@ function removeColorBg(imgEl: HTMLImageElement, rgb: [number, number, number], t
   return canvas.toDataURL("image/png")
 }
 
-// BFS flood fill — erases connected pixels within color tolerance
-function floodFill(canvas: HTMLCanvasElement, startX: number, startY: number, tolerance: number) {
+// Magic eraser (Background Eraser tool style):
+// Samples the color at the brush center, then erases only pixels within the
+// brush radius whose color matches the sampled center color within tolerance.
+// As you drag near a different color, the center re-samples, so only the
+// color currently under the brush tip is removed — other colors stay intact.
+function magicErase(canvas: HTMLCanvasElement, clientX: number, clientY: number, brushRadius: number, tolerance: number) {
   const ctx = canvas.getContext("2d")!
-  const { width, height } = canvas
-  const imageData = ctx.getImageData(0, 0, width, height)
+  const rect = canvas.getBoundingClientRect()
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  const cx = (clientX - rect.left) * scaleX
+  const cy = (clientY - rect.top) * scaleY
+  const r = brushRadius * Math.max(scaleX, scaleY)
+
+  const cxi = Math.round(cx)
+  const cyi = Math.round(cy)
+  if (cxi < 0 || cxi >= canvas.width || cyi < 0 || cyi >= canvas.height) return
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  const si = (startY * width + startX) * 4
-  if (data[si + 3] === 0) return // already transparent — nothing to do
-
-  const targetR = data[si], targetG = data[si + 1], targetB = data[si + 2]
+  // Sample the hotspot color at the brush center
+  const si = (cyi * canvas.width + cxi) * 4
+  if (data[si + 3] === 0) return // center already transparent — nothing to sample
+  const hotR = data[si], hotG = data[si + 1], hotB = data[si + 2]
   const threshold = (tolerance / 100) * 441.67
 
-  const visited = new Uint8Array(width * height)
-  const stack: number[] = [startY * width + startX]
-
-  while (stack.length > 0) {
-    const pos = stack.pop()!
-    if (visited[pos]) continue
-    visited[pos] = 1
-
-    const idx = pos * 4
-    if (data[idx + 3] === 0) continue
-
-    const r = data[idx], g = data[idx + 1], b = data[idx + 2]
-    const diff = Math.sqrt((r - targetR) ** 2 + (g - targetG) ** 2 + (b - targetB) ** 2)
-    if (diff > threshold) continue
-
-    data[idx + 3] = 0
-
-    const x = pos % width
-    const y = (pos - x) / width
-    if (x > 0)          stack.push(pos - 1)
-    if (x < width - 1)  stack.push(pos + 1)
-    if (y > 0)          stack.push(pos - width)
-    if (y < height - 1) stack.push(pos + width)
+  const ri = Math.ceil(r)
+  for (let dy = -ri; dy <= ri; dy++) {
+    for (let dx = -ri; dx <= ri; dx++) {
+      if (dx * dx + dy * dy > r * r) continue
+      const px = Math.round(cx + dx)
+      const py = Math.round(cy + dy)
+      if (px < 0 || px >= canvas.width || py < 0 || py >= canvas.height) continue
+      const i = (py * canvas.width + px) * 4
+      if (data[i + 3] === 0) continue // already transparent
+      const diff = Math.sqrt((data[i] - hotR) ** 2 + (data[i + 1] - hotG) ** 2 + (data[i + 2] - hotB) ** 2)
+      if (diff <= threshold) data[i + 3] = 0
+    }
   }
 
   ctx.putImageData(imageData, 0, 0)
@@ -180,6 +183,7 @@ export function BackgroundRemover() {
   const originalDataRef = useRef<ImageData | null>(null)
   const isEditDragging  = useRef(false)
   const magicCanvasRef  = useRef<HTMLCanvasElement | null>(null)
+  const isMagicDragging = useRef(false)
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
@@ -287,17 +291,17 @@ export function BackgroundRemover() {
     announceToScreenReader("Canvas reset to original image.")
   }, [])
 
-  const handleMagicClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = magicCanvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-    const x = Math.round((e.clientX - rect.left) * scaleX)
-    const y = Math.round((e.clientY - rect.top) * scaleY)
-    floodFill(canvas, x, y, tolerance)
-    announceToScreenReader("Area removed. Tap more areas or click Apply.")
-  }, [tolerance])
+  const runMagicErase = useCallback((clientX: number, clientY: number) => {
+    if (!magicCanvasRef.current) return
+    magicErase(magicCanvasRef.current, clientX, clientY, brushSize, tolerance)
+  }, [brushSize, tolerance])
+
+  const handleMagicMouseDown  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { isMagicDragging.current = true;  runMagicErase(e.clientX, e.clientY) }, [runMagicErase])
+  const handleMagicMouseMove  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { if (isMagicDragging.current) runMagicErase(e.clientX, e.clientY) }, [runMagicErase])
+  const handleMagicMouseUp    = useCallback(() => { isMagicDragging.current = false }, [])
+  const handleMagicTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => { e.preventDefault(); isMagicDragging.current = true;  runMagicErase(e.touches[0].clientX, e.touches[0].clientY) }, [runMagicErase])
+  const handleMagicTouchMove  = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => { e.preventDefault(); if (isMagicDragging.current) runMagicErase(e.touches[0].clientX, e.touches[0].clientY) }, [runMagicErase])
+  const handleMagicTouchEnd   = useCallback(() => { isMagicDragging.current = false }, [])
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
     if (!pickingColor || !imageEl) return
@@ -631,7 +635,7 @@ export function BackgroundRemover() {
               ) : (
                 <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 px-3 py-2.5 text-xs space-y-1" role="region" aria-label="Magic eraser info">
                   <p className="font-medium text-violet-700 dark:text-violet-400">Magic Eraser — click to remove</p>
-                  <p className="text-muted-foreground">Click any background area in the right panel. Connected pixels of similar color are removed instantly. Click multiple areas, then press Apply.</p>
+                  <p className="text-muted-foreground">Paint over background areas in the right panel. The brush samples the color at its center tip and only removes pixels of that color within the brush radius. When you move near a foreground object, the brush naturally stops erasing it because the center tip detects a different color.</p>
                 </div>
               )}
 
@@ -681,6 +685,17 @@ export function BackgroundRemover() {
                   )}
                 </div>
               </div>
+
+              {/* Magic eraser brush size */}
+              {imageEl && removalMethod === "magic" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium" id="magic-brush-label">Brush Size</Label>
+                    <span className="text-xs text-muted-foreground font-mono">{brushSize}px</span>
+                  </div>
+                  <Slider min={5} max={100} step={1} value={[brushSize]} onValueChange={([v]) => setBrushSize(v)} aria-labelledby="magic-brush-label" />
+                </div>
+              )}
 
               {/* Tolerance — shown for magic eraser (any device) and auto mobile */}
               {imageEl && (removalMethod === "magic" || (removalMethod === "auto" && isMobile)) && (
@@ -770,7 +785,7 @@ export function BackgroundRemover() {
                 {phase === "editing"
                   ? "Brush Edit — paint to erase or restore"
                   : isMagicActive
-                    ? "Magic Eraser — click background areas to remove"
+                    ? "Magic Eraser — paint over background to remove by color"
                     : "Result"}
               </span>
             </div>
@@ -803,7 +818,7 @@ export function BackgroundRemover() {
               ) : isMagicActive ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium text-muted-foreground">Click any background area to erase it</p>
+                    <p className="text-xs font-medium text-muted-foreground">Paint over background areas to erase by color</p>
                     <button
                       onClick={resetMagic}
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded px-1"
@@ -816,12 +831,19 @@ export function BackgroundRemover() {
                     <canvas
                       ref={magicCanvasRef}
                       className="w-full h-auto block select-none cursor-crosshair"
-                      onClick={handleMagicClick}
-                      aria-label="Magic eraser canvas — click to remove background areas"
+                      style={{ touchAction: "none" }}
+                      onMouseDown={handleMagicMouseDown}
+                      onMouseMove={handleMagicMouseMove}
+                      onMouseUp={handleMagicMouseUp}
+                      onMouseLeave={handleMagicMouseUp}
+                      onTouchStart={handleMagicTouchStart}
+                      onTouchMove={handleMagicTouchMove}
+                      onTouchEnd={handleMagicTouchEnd}
+                      aria-label="Magic eraser canvas — paint to remove background by color"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Adjust <span className="text-foreground font-medium">Color Tolerance</span> in the settings panel, then click Apply when done.
+                    Paint over background areas. Only the color under your brush tip is removed. Adjust <span className="text-foreground font-medium">Brush Size</span> and <span className="text-foreground font-medium">Color Tolerance</span> in the settings panel.
                   </p>
                 </div>
               ) : !imageEl ? (
@@ -899,9 +921,10 @@ export function BackgroundRemover() {
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Magic Eraser</p>
                 <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
                   <li>Select <span className="text-foreground font-medium">Magic Eraser</span> method and upload an image.</li>
-                  <li>Click or tap any background area in the right panel. All connected pixels of similar color are removed instantly.</li>
-                  <li>Adjust <span className="text-foreground font-medium">Color Tolerance</span> before each click to control how many similar shades are included.</li>
-                  <li>Click <span className="text-foreground font-medium">Reset</span> to undo all fills and start over. Click <span className="text-foreground font-medium">Apply Magic Eraser</span> when done.</li>
+                  <li>Paint over background areas in the right panel. The brush samples the color directly under its center tip and only removes pixels of that color within the brush radius.</li>
+                  <li>As you approach a foreground object, the brush stops removing it because the center tip detects the foreground color, not the background. You get a natural edge without needing to be precise.</li>
+                  <li>Adjust <span className="text-foreground font-medium">Brush Size</span> and <span className="text-foreground font-medium">Color Tolerance</span> in the settings panel. Use a smaller brush near edges for more control.</li>
+                  <li>Click <span className="text-foreground font-medium">Reset</span> to start over. Click <span className="text-foreground font-medium">Apply Magic Eraser</span> when done.</li>
                 </ol>
               </div>
               <div className="space-y-1.5">
