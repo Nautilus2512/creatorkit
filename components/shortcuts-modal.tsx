@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { X, Keyboard } from "lucide-react"
 
 export type ShortcutItem = {
@@ -19,6 +20,9 @@ let _keyHandled = false
 
 export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -51,10 +55,10 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
         <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">?</kbd>
       </button>
 
-      {/* Modal overlay */}
-      {open && (
+      {/* Modal overlay — rendered via portal so backdrop-filter on ancestors doesn't trap fixed positioning */}
+      {mounted && open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-end p-5 sm:items-center sm:justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-label={`Keyboard shortcuts for ${pageName}`}
@@ -67,7 +71,7 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
           />
 
           {/* Modal */}
-          <div className="relative w-full max-w-sm rounded-xl border border-border bg-background shadow-xl">
+          <div className="relative w-full max-w-sm rounded-xl border border-border bg-background shadow-xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
                 <p className="text-sm font-semibold">Keyboard Shortcuts</p>
@@ -103,7 +107,8 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
               <p className="text-xs text-muted-foreground">Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> or <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Esc</kbd> to close</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

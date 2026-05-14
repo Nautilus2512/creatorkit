@@ -99,11 +99,12 @@ function nextInterval(card: Card, quality: number): string {
 type View = "study" | "add-card" | "done" | "empty"
 
 const shortcuts = [
-  { keys: ["Ctrl", "Shift", "N"], description: "Create new deck" },
-  { keys: ["Ctrl", "Shift", "A"], description: "Add new card to deck" },
+  { keys: ["Ctrl", "Shift", "X"], description: "Create new deck" },
+  { keys: ["Ctrl", "Shift", "V"], description: "Add new card to deck" },
   { keys: ["Ctrl", "Shift", "S"], description: "Start studying" },
-  { keys: ["Ctrl", "Shift", "D"], description: "Switch to next deck" },
+  { keys: ["Ctrl", "Shift", "L"], description: "Switch to next deck" },
   { keys: ["Ctrl", "Shift", "Enter"], description: "Add card (in Add Card view)" },
+  { keys: ["Ctrl", "Shift", "Z"], description: "Clear all data (shows confirmation)" },
   { keys: ["Delete"], description: "Delete card from list" },
   { keys: ["Backspace"], description: "Delete card from list" },
   { keys: ["Space"], description: "Flip card / Show answer (in study mode)" },
@@ -221,12 +222,12 @@ export function AnkiCard() {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
 
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "N" && !addingDeck) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "X" && !addingDeck) {
         e.preventDefault()
         setAddingDeck(true)
         return
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "A" && activeDeck && view !== "add-card") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "V" && activeDeck && view !== "add-card") {
         e.preventDefault()
         setView("add-card")
         return
@@ -236,7 +237,7 @@ export function AnkiCard() {
         startStudy()
         return
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "D" && activeDeck) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "L" && activeDeck) {
         e.preventDefault()
         if (decks.length > 1) {
           const currentIdx = decks.findIndex(d => d.id === activeDeckId)
@@ -248,6 +249,11 @@ export function AnkiCard() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter" && view === "add-card") {
         e.preventDefault()
         addCard()
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Z" && decks.length > 0) {
+        e.preventDefault()
+        clearAllData()
         return
       }
       if (e.key === "Escape") {
@@ -313,6 +319,7 @@ export function AnkiCard() {
             {decks.length > 0 && (
               <Button variant="ghost" size="sm" onClick={clearAllData} aria-label="Clear all decks and study history" className="text-muted-foreground hover:text-destructive">
                 <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear data
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
               </Button>
             )}
             <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
@@ -324,7 +331,7 @@ export function AnkiCard() {
               aria-controls="new-deck-form"
             >
               <Plus className="h-3 w-3" aria-hidden="true" />New Deck
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
             </button>
             <Button
               variant="outline"
@@ -334,7 +341,7 @@ export function AnkiCard() {
               aria-label="Add new card"
             >
               <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
             </Button>
             <Button
               size="sm"
@@ -344,7 +351,7 @@ export function AnkiCard() {
             >
               <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
               Study {dueCards.length > 0 && `(${dueCards.length})`}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>
@@ -372,7 +379,6 @@ export function AnkiCard() {
                 >
                   <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   Study {dueCards.length > 0 && `(${dueCards.length})`}
-                  <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+S</kbd>
                 </Button>
                 <Button
                   variant={view === "add-card" ? "default" : "outline"}
@@ -381,7 +387,6 @@ export function AnkiCard() {
                   aria-label="Add new card"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
-                  <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+A</kbd>
                 </Button>
               </div>
             )}
@@ -398,7 +403,7 @@ export function AnkiCard() {
                     aria-expanded={addingDeck}
                     aria-controls="new-deck-form"
                   >
-                    <Plus className="h-3 w-3" aria-hidden="true" />New <kbd className="ml-1 hidden md:inline px-1 rounded bg-muted font-mono text-[9px]">Ctrl+Shift+N</kbd>
+                    <Plus className="h-3 w-3" aria-hidden="true" />New <kbd className="ml-1 hidden md:inline px-1 rounded bg-muted font-mono text-[9px]">Ctrl+Shift+X</kbd>
                   </button>
                 </div>
 
@@ -507,7 +512,7 @@ export function AnkiCard() {
                   <p className="text-xs text-muted-foreground">No cards due today</p>
                   <div className="flex gap-2 mt-2" role="group" aria-label="Session actions">
                     <Button variant="outline" size="sm" onClick={() => setView("add-card")} aria-label="Add card">
-                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+A</kbd>
+                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+V</kbd>
                     </Button>
                     {dueCards.length > 0 && (
                       <Button size="sm" onClick={startStudy} aria-label="Study again">
@@ -553,7 +558,7 @@ export function AnkiCard() {
                       size="sm"
                       aria-label="Add card to deck"
                     >
-                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Enter</kbd>
+                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+V</kbd>
                     </Button>
                   </div>
 
@@ -604,20 +609,23 @@ export function AnkiCard() {
                         <p className="text-xs text-center text-muted-foreground">How well did you remember?</p>
                         <div className="grid grid-cols-4 gap-1.5" role="radiogroup">
                           {[
-                            { label: "Again", quality: 0,  color: "border-red-500/30 bg-red-500/10 text-red-600", key: "1" },
-                            { label: "Hard",  quality: 2,  color: "border-orange-500/30 bg-orange-500/10 text-orange-600", key: "2" },
-                            { label: "Good",  quality: 4,  color: "border-green-500/30 bg-green-500/10 text-green-600", key: "3" },
-                            { label: "Easy",  quality: 5,  color: "border-blue-500/30 bg-blue-500/10 text-blue-600", key: "4" },
+                            { label: "Again", quality: 0, color: "border-red-500/30 bg-red-500/10 text-red-600",       key: "1" },
+                            { label: "Hard",  quality: 2, color: "border-orange-500/30 bg-orange-500/10 text-orange-600", key: "2" },
+                            { label: "Good",  quality: 4, color: "border-green-500/30 bg-green-500/10 text-green-600", key: "3" },
+                            { label: "Easy",  quality: 5, color: "border-blue-500/30 bg-blue-500/10 text-blue-600",    key: "4" },
                           ].map(({ label, quality, color, key }) => (
                             <button
                               key={label}
                               onClick={() => rateCard(quality)}
-                              className={`flex flex-col items-center rounded-md border px-2 py-2 text-xs font-medium ${color}`}
-                              aria-label={`Rate as ${label}: ${nextInterval(currentCard, quality)} interval`}
+                              className={`flex flex-col items-center gap-1 rounded-md border px-2 py-2.5 text-xs font-medium ${color}`}
+                              aria-label={`Rate as ${label} — press ${key} — ${nextInterval(currentCard, quality)} interval`}
                             >
-                              <span>{label}</span>
+                              <kbd
+                                className="rounded border border-current/40 bg-current/10 px-1.5 py-0.5 text-[10px] font-mono leading-tight"
+                                aria-hidden="true"
+                              >{key}</kbd>
+                              <span className="font-semibold">{label}</span>
                               <span className="text-[9px] opacity-70">{nextInterval(currentCard, quality)}</span>
-                              <kbd className="text-[8px] opacity-50" aria-hidden="true">[{key}]</kbd>
                             </button>
                           ))}
                         </div>
@@ -630,6 +638,71 @@ export function AnkiCard() {
             </div>
           </div>
 
+          </div>
+
+          {/* Usage guide */}
+          <div className="mt-4 rounded-xl border border-border bg-card p-4 space-y-4">
+            <h3 className="font-semibold text-sm">How to use Anki Flashcards</h3>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Getting started</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li><span className="text-foreground font-medium">Create a deck</span> by clicking New. Group your cards by topic, such as "Spanish Vocab" or "Biology Terms".</li>
+                <li><span className="text-foreground font-medium">Add cards</span> to your deck. Each card has a Question on the front and an Answer on the back. Keep each card to a single idea.</li>
+                <li><span className="text-foreground font-medium">Study daily</span> by clicking Study to review the cards due today. Cards due appear in your queue automatically.</li>
+              </ol>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Rating cards after you flip</p>
+              <div className="grid grid-cols-2 gap-1.5 text-xs" role="group" aria-label="Card rating options">
+                <div className="rounded-md border border-red-500/30 bg-red-500/5 px-2.5 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <kbd className="text-[10px] font-mono text-muted-foreground border border-border rounded px-1 leading-tight" aria-label="keyboard shortcut: press 1">1</kbd>
+                    <p className="font-semibold text-red-600">Again</p>
+                  </div>
+                  <p className="text-muted-foreground">You forgot this one. The card resets and appears again tomorrow.</p>
+                </div>
+                <div className="rounded-md border border-orange-500/30 bg-orange-500/5 px-2.5 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <kbd className="text-[10px] font-mono text-muted-foreground border border-border rounded px-1 leading-tight" aria-label="keyboard shortcut: press 2">2</kbd>
+                    <p className="font-semibold text-orange-600">Hard</p>
+                  </div>
+                  <p className="text-muted-foreground">You remembered but it was tough. Your next review will be sooner than usual.</p>
+                </div>
+                <div className="rounded-md border border-green-500/30 bg-green-500/5 px-2.5 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <kbd className="text-[10px] font-mono text-muted-foreground border border-border rounded px-1 leading-tight" aria-label="keyboard shortcut: press 3">3</kbd>
+                    <p className="font-semibold text-green-600">Good</p>
+                  </div>
+                  <p className="text-muted-foreground">You remembered correctly. The gap before your next review grows at a normal rate.</p>
+                </div>
+                <div className="rounded-md border border-blue-500/30 bg-blue-500/5 px-2.5 py-2">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <kbd className="text-[10px] font-mono text-muted-foreground border border-border rounded px-1 leading-tight" aria-label="keyboard shortcut: press 4">4</kbd>
+                    <p className="font-semibold text-blue-600">Easy</p>
+                  </div>
+                  <p className="text-muted-foreground">You recalled this instantly. Your next review is scheduled far into the future.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How spaced repetition works</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This tool uses the <span className="text-foreground font-medium">SM-2 algorithm</span>, the same algorithm behind the original Anki app. Cards you know well gradually appear less often, growing from days to weeks to months between reviews. Cards you struggle with come back sooner. The goal is to review each card just before you would forget it, making your study time as efficient as possible.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li>One fact per card. Simpler cards are easier to recall.</li>
+                <li>Study a little every day. Consistency beats long sessions.</li>
+                <li>Use keyboard shortcuts: <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Space</kbd> to flip, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> through <kbd className="rounded border border-border bg-muted px-1 text-[10px]">4</kbd> to rate.</li>
+                <li>All decks and cards are saved locally in your browser.</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -650,10 +723,10 @@ export function AnkiCard() {
                 </Button>
               ) : (
                 <>
-                  <button onClick={() => rateCard(0)} className="h-11 flex-1 flex flex-col items-center justify-center rounded-md border border-red-500/30 bg-red-500/10 text-red-600 text-xs font-medium" aria-label="Rate as Again">Again</button>
-                  <button onClick={() => rateCard(2)} className="h-11 flex-1 flex flex-col items-center justify-center rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 text-xs font-medium" aria-label="Rate as Hard">Hard</button>
-                  <button onClick={() => rateCard(4)} className="h-11 flex-1 flex flex-col items-center justify-center rounded-md border border-green-500/30 bg-green-500/10 text-green-600 text-xs font-medium" aria-label="Rate as Good">Good</button>
-                  <button onClick={() => rateCard(5)} className="h-11 flex-1 flex flex-col items-center justify-center rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 text-xs font-medium" aria-label="Rate as Easy">Easy</button>
+                  <button onClick={() => rateCard(0)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-red-500/30 bg-red-500/10 text-red-600 text-xs font-medium" aria-label="Rate as Again — press 1"><span className="text-[9px] font-mono opacity-60">1</span><span>Again</span></button>
+                  <button onClick={() => rateCard(2)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 text-xs font-medium" aria-label="Rate as Hard — press 2"><span className="text-[9px] font-mono opacity-60">2</span><span>Hard</span></button>
+                  <button onClick={() => rateCard(4)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-600 text-xs font-medium" aria-label="Rate as Good — press 3"><span className="text-[9px] font-mono opacity-60">3</span><span>Good</span></button>
+                  <button onClick={() => rateCard(5)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 text-xs font-medium" aria-label="Rate as Easy — press 4"><span className="text-[9px] font-mono opacity-60">4</span><span>Easy</span></button>
                 </>
               )}
             </>
