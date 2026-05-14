@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Brain, Plus, Trash2, BookOpen, RotateCcw, Eye } from "lucide-react"
+import { Brain, Plus, Trash2, BookOpen, RotateCcw, Eye, History } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -96,7 +96,7 @@ function nextInterval(card: Card, quality: number): string {
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
-type View = "study" | "add-card" | "done" | "empty"
+type View = "study" | "add-card" | "done" | "empty" | "history"
 
 const shortcuts = [
   { keys: ["Ctrl", "Shift", "X"], description: "Create new deck" },
@@ -105,6 +105,7 @@ const shortcuts = [
   { keys: ["Ctrl", "Shift", "L"], description: "Switch to next deck" },
   { keys: ["Ctrl", "Shift", "Enter"], description: "Add card (in Add Card view)" },
   { keys: ["Ctrl", "Shift", "Z"], description: "Clear all data (shows confirmation)" },
+  { keys: ["Ctrl", "Shift", "Y"], description: "Browse all decks and cards" },
   { keys: ["Delete"], description: "Delete card from list" },
   { keys: ["Backspace"], description: "Delete card from list" },
   { keys: ["Space"], description: "Flip card / Show answer (in study mode)" },
@@ -256,6 +257,11 @@ export function AnkiCard() {
         clearAllData()
         return
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Y" && decks.length > 0) {
+        e.preventDefault()
+        setView(v => v === "history" ? "empty" : "history")
+        return
+      }
       if (e.key === "Escape") {
         if (addingDeck) {
           e.preventDefault()
@@ -317,10 +323,16 @@ export function AnkiCard() {
           )}
           <div className="ml-auto flex items-center gap-1.5">
             {decks.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearAllData} aria-label="Clear all decks and study history" className="text-muted-foreground hover:text-destructive">
-                <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear data
-                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
-              </Button>
+              <>
+                <Button variant={view === "history" ? "default" : "ghost"} size="sm" onClick={() => setView(v => v === "history" ? "empty" : "history")} aria-label="Browse all decks and cards" className={view === "history" ? "" : "text-muted-foreground"}>
+                  <History className="h-4 w-4 mr-1" aria-hidden="true" />Browse
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Y</kbd>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={clearAllData} aria-label="Clear all decks and study history" className="text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear data
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
+                </Button>
+              </>
             )}
             <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
           </div>
@@ -340,13 +352,23 @@ export function AnkiCard() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {decks.length > 0 && (
-              <button
-                onClick={clearAllData}
-                className="rounded p-1 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="Clear all decks and study history"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+              <>
+                <button
+                  onClick={() => setView(v => v === "history" ? "empty" : "history")}
+                  className={`rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${view === "history" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  aria-label="Browse all decks and cards"
+                  aria-pressed={view === "history"}
+                >
+                  <History className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  onClick={clearAllData}
+                  className="rounded p-1 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Clear all decks and study history"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </>
             )}
             <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
           </div>
@@ -476,6 +498,7 @@ export function AnkiCard() {
                   {view === "add-card" && "Add Card"}
                   {view === "study" && "Study Mode"}
                   {view === "done" && "All Done!"}
+                  {view === "history" && "All Cards"}
                 </span>
                 {view === "study" && currentCard && (
                   <span className="text-xs text-muted-foreground">{currentIdx + 1}/{queue.length}</span>
@@ -565,6 +588,55 @@ export function AnkiCard() {
                       {activeDeck.cards.length > 6 && (
                         <p className="text-[10px] text-muted-foreground mt-2">+{activeDeck.cards.length - 6} more</p>
                       )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* History / browse */}
+              {view === "history" && (
+                <div className="flex flex-col h-full" role="region" aria-label="All cards browser">
+                  {decks.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">No decks yet</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {decks.map(deck => {
+                        const deckDue = deck.cards.filter(isDue).length
+                        return (
+                          <div key={deck.id} className="rounded-lg border border-border overflow-hidden">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-muted/30">
+                              <BookOpen className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+                              <span className="text-xs font-semibold flex-1 truncate">{deck.name}</span>
+                              <span className="text-xs text-muted-foreground shrink-0">{deck.cards.length} card{deck.cards.length !== 1 ? "s" : ""}</span>
+                              {deckDue > 0 && <span className="text-xs text-amber-500 font-medium shrink-0">{deckDue} due</span>}
+                            </div>
+                            {deck.cards.length === 0 ? (
+                              <p className="px-3 py-2 text-xs text-muted-foreground italic">No cards in this deck yet</p>
+                            ) : (
+                              <div className="divide-y divide-border/50">
+                                {[...deck.cards].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).map(card => {
+                                  const overdue = card.dueDate < todayStr()
+                                  const due = card.dueDate === todayStr()
+                                  return (
+                                    <div key={card.id} className="px-3 py-2 flex items-start gap-2 hover:bg-muted/20 transition-colors">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium truncate">{card.front}</p>
+                                        <p className="text-[10px] text-muted-foreground truncate">{card.back}</p>
+                                      </div>
+                                      <div className="shrink-0 text-right text-[10px] space-y-0.5">
+                                        <p className={overdue ? "text-red-500 font-medium" : due ? "text-amber-500 font-medium" : "text-green-600"}>
+                                          {overdue ? "Overdue" : due ? "Due today" : card.dueDate}
+                                        </p>
+                                        <p className="text-muted-foreground">{card.repetitions} review{card.repetitions !== 1 ? "s" : ""} · {card.interval}d</p>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
