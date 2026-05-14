@@ -86,10 +86,11 @@ export default function AudioWaveformVisualizer() {
   const [isPlaying, setIsPlaying]   = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
 
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
-  const audioRef   = useRef<HTMLAudioElement | null>(null)
-  const blobUrlRef = useRef<string | null>(null)
-  const inputRef   = useRef<HTMLInputElement>(null)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const audioRef     = useRef<HTMLAudioElement | null>(null)
+  const blobUrlRef   = useRef<string | null>(null)
+  const inputRef     = useRef<HTMLInputElement>(null)
+  const isDragging   = useRef(false)
 
   // ── Cleanup on unmount ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -157,14 +158,29 @@ export default function AudioWaveformVisualizer() {
     else            { audio.play();  setIsPlaying(true)  }
   }, [isPlaying])
 
-  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const seekTo = useCallback((clientX: number) => {
     const audio = audioRef.current
     if (!audio || !duration || !canvasRef.current) return
     const rect = canvasRef.current.getBoundingClientRect()
-    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     audio.currentTime = pct * duration
     setCurrentTime(pct * duration)
   }, [duration])
+
+  // Mouse drag
+  const handleMouseDown  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { isDragging.current = true;  seekTo(e.clientX) }, [seekTo])
+  const handleMouseMove  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { if (isDragging.current) seekTo(e.clientX) }, [seekTo])
+  const handleMouseUp    = useCallback(() => { isDragging.current = false }, [])
+  const handleMouseLeave = useCallback(() => { isDragging.current = false }, [])
+
+  // Touch drag (e.preventDefault stops the page from scrolling while scrubbing)
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); isDragging.current = true; seekTo(e.touches[0].clientX)
+  }, [seekTo])
+  const handleTouchMove  = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); if (isDragging.current) seekTo(e.touches[0].clientX)
+  }, [seekTo])
+  const handleTouchEnd   = useCallback(() => { isDragging.current = false }, [])
 
   // ── Exports ─────────────────────────────────────────────────────────────────
   const downloadPng = () => {
@@ -399,11 +415,18 @@ export default function AudioWaveformVisualizer() {
                   <div className="relative rounded-xl overflow-hidden border border-border" style={{ minHeight: 160 }}>
                     <canvas
                       ref={canvasRef}
-                      className="w-full h-40 cursor-pointer"
-                      onClick={handleCanvasClick}
+                      className="w-full h-40 cursor-pointer select-none"
+                      style={{ touchAction: "none" }}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseLeave}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                       role="img"
                       tabIndex={0}
-                      aria-label={`Waveform for ${filename}. Duration: ${fmtTime(duration)}. Click to seek.`}
+                      aria-label={`Waveform for ${filename}. Duration: ${fmtTime(duration)}. Tap or drag to seek.`}
                     />
                   </div>
 
@@ -462,7 +485,7 @@ export default function AudioWaveformVisualizer() {
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Getting started</p>
             <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
               <li>Upload an audio file by clicking the upload area or dragging a file onto it.</li>
-              <li>The waveform appears on the right. Click any point on the waveform to seek to that position.</li>
+              <li>The waveform appears on the right. Click or drag anywhere on the waveform to seek to that position. On touchscreens, slide your finger across the waveform to scrub.</li>
               <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Space</kbd> or click the play button to start or pause playback. The red line shows your current position.</li>
               <li>Adjust the <span className="text-foreground font-medium">Waveform Settings</span> to change the style, bar width, and colors, then export as PNG or SVG.</li>
             </ol>
