@@ -98,7 +98,7 @@ function magicErase(canvas: HTMLCanvasElement, clientX: number, clientY: number,
   ctx.putImageData(imageData, 0, 0)
 }
 
-// Box blur on alpha channel only — feathers the transparent edge
+// Box blur on alpha channel only, feathers the transparent edge
 function smoothEdgeAlpha(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext("2d")!
   const { width, height } = canvas
@@ -187,7 +187,6 @@ export function BackgroundRemover() {
   const [brushSize, setBrushSize]         = useState(20)
   const [restoreActive, setRestoreActive] = useState(false)
   const [removalMethod, setRemovalMethod] = useState<RemovalMethod>("auto")
-  const [hasApplied, setHasApplied]       = useState(false)
   const [smoothing, setSmoothing]         = useState(false)
   const [smoothApplied, setSmoothApplied] = useState(false)
 
@@ -217,7 +216,7 @@ export function BackgroundRemover() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     const url = URL.createObjectURL(f)
     setObjectUrl(url); setFileName(f.name); setFileSize(f.size)
-    setError(null); setHasApplied(false); setSmoothApplied(false); setRestoreActive(false)
+    setError(null); setSmoothApplied(false); setRestoreActive(false)
     setPhase("canvas")
     const img = new Image()
     img.onload = () => {
@@ -231,7 +230,7 @@ export function BackgroundRemover() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     setObjectUrl(null); setImageEl(null); setError(null)
     setPhase("idle"); setPickingColor(false); setActiveTab("input")
-    setHasApplied(false); setSmoothApplied(false); setRestoreActive(false)
+    setSmoothApplied(false); setRestoreActive(false)
     originalDataRef.current = null
     announceToScreenReader("Image removed. Ready for new upload.")
   }, [objectUrl])
@@ -247,7 +246,6 @@ export function BackgroundRemover() {
       ctx.drawImage(img, 0, 0)
       originalDataRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
       setPhase("canvas")
-      setHasApplied(true)
       setSmoothApplied(false)
       setActiveTab("output")
       announceToScreenReader("Background removed. Canvas updated.")
@@ -279,13 +277,6 @@ export function BackgroundRemover() {
     drawResultToCanvas(removeColorBg(imageEl, targetColor, tolerance))
   }, [imageEl, targetColor, tolerance, drawResultToCanvas])
 
-  const applyResult = useCallback(() => {
-    setHasApplied(true)
-    setSmoothApplied(false)
-    setActiveTab("output")
-    announceToScreenReader("Applied. Use Smooth Edge to soften the cut, or download.")
-  }, [])
-
   const resetCanvas = useCallback(() => {
     if (!imageEl || !canvasRef.current) return
     const canvas = canvasRef.current
@@ -293,7 +284,7 @@ export function BackgroundRemover() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(imageEl, 0, 0)
     originalDataRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    setHasApplied(false); setSmoothApplied(false)
+    setSmoothApplied(false)
     announceToScreenReader("Canvas reset to original image.")
   }, [imageEl])
 
@@ -319,7 +310,7 @@ export function BackgroundRemover() {
     announceToScreenReader("Download started. Saving as PNG with transparent background.")
   }, [fileName])
 
-  // Repair brush — shared helper used by all methods when restoreActive is true
+  // Repair brush, shared helper used by all methods when restoreActive is true
   const runRestoreBrush = useCallback((canvas: HTMLCanvasElement, clientX: number, clientY: number) => {
     if (!originalDataRef.current) return
     const ctx = canvas.getContext("2d")!
@@ -347,7 +338,7 @@ export function BackgroundRemover() {
     ctx.putImageData(curr, 0, 0)
   }, [brushSize])
 
-  // Unified canvas interaction — restoreActive overrides the current method
+  // Unified canvas interaction. restoreActive overrides the current method.
   const handleCanvasInteract = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -396,16 +387,15 @@ export function BackgroundRemover() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") {
         e.preventDefault()
         if (removalMethod === "auto" && imageEl && !isProc) { if (isMobile) processMobile(); else processDesktop() }
-        else if ((removalMethod === "magic" || removalMethod === "brush") && imageEl) applyResult()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "F") { e.preventDefault(); if (hasApplied && !smoothing) handleApplySmoothEdge() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "F") { e.preventDefault(); if (imageEl && !smoothing) handleApplySmoothEdge() }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Z") { e.preventDefault(); if (imageEl) { setRestoreActive(v => !v); announceToScreenReader(restoreActive ? "Repair mode off" : "Repair mode on. Paint to restore pixels.") } }
       if (e.key === "Escape" && pickingColor) { e.preventDefault(); setPickingColor(false); announceToScreenReader("Color picking cancelled") }
       if (e.key === "Escape" && restoreActive) { e.preventDefault(); setRestoreActive(false); announceToScreenReader("Repair mode off") }
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
-  }, [phase, imageEl, isMobile, removalMethod, processMobile, processDesktop, applyResult, hasApplied, smoothing, handleApplySmoothEdge, pickingColor, download, restoreActive])
+  }, [phase, imageEl, isMobile, removalMethod, processMobile, processDesktop, smoothing, handleApplySmoothEdge, pickingColor, download, restoreActive])
 
   const isProcessing = phase === "loading-model" || phase === "processing"
   const canvasActive = phase === "canvas" && !!imageEl
@@ -417,24 +407,20 @@ export function BackgroundRemover() {
       {/* Desktop top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Background Remover</span>
-        <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()} disabled={isProcessing} aria-label="Upload image">
-          <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
-          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
-        </Button>
         {imageEl && (
           <Button
             size="sm"
             variant={restoreActive ? "default" : "outline"}
             onClick={() => setRestoreActive(v => !v)}
             aria-pressed={restoreActive}
-            aria-label={restoreActive ? "Disable repair mode" : "Enable repair mode — paint to bring back erased pixels"}
+            aria-label={restoreActive ? "Disable repair mode" : "Enable repair mode"}
           >
             <Paintbrush className="h-4 w-4 mr-1" aria-hidden="true" />
             {restoreActive ? "Repairing…" : "Repair"}
             <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${restoreActive ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+Z</kbd>
           </Button>
         )}
-        {hasApplied && (
+        {imageEl && (
           <Button size="sm" variant="outline" onClick={handleApplySmoothEdge} disabled={smoothing || smoothApplied} aria-label="Smooth the cut edge">
             {smoothing
               ? <><span className="mr-1.5 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Smoothing...</>
@@ -452,25 +438,19 @@ export function BackgroundRemover() {
           <ShortcutsModal
             pageName="Background Remover"
             shortcuts={[
-              { keys: ["Ctrl", "Shift", "Enter"], description: removalMethod === "auto" ? "Remove background" : "Apply" },
-              { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+              { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background (Auto mode)" },
               { keys: ["Ctrl", "Shift", "Z"], description: "Toggle repair mode" },
               { keys: ["Ctrl", "Shift", "F"], description: "Smooth edge" },
               { keys: ["Ctrl", "Shift", "S"], description: "Download" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
             ]}
           />
-          {removalMethod === "auto" ? (
+          {removalMethod === "auto" && (
             <Button size="sm" onClick={isMobile ? processMobile : processDesktop} disabled={!imageEl || isProcessing} aria-label={isProcessing ? "Processing" : "Remove background"}>
               {isProcessing
                 ? <><span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />{phase === "loading-model" ? `Loading... ${progress}%` : "Removing..."}</>
-                : <><Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />Remove Bg<kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd></>
+                : <><Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />Remove Background<kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd></>
               }
-            </Button>
-          ) : (
-            <Button size="sm" onClick={applyResult} disabled={!imageEl} aria-label="Apply and enable smooth edge">
-              {removalMethod === "magic" ? <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" /> : <Eraser className="mr-2 h-4 w-4" aria-hidden="true" />}
-              Apply
-              <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd>
             </Button>
           )}
         </div>
@@ -551,21 +531,21 @@ export function BackgroundRemover() {
               {removalMethod === "auto" && (
                 <div className={`rounded-lg border px-3 py-2.5 text-xs space-y-1 ${isMobile ? "border-amber-500/20 bg-amber-500/5" : "border-blue-500/20 bg-blue-500/5"}`}>
                   {isMobile
-                    ? <><p className="font-medium text-amber-700 dark:text-amber-400">Lightweight Mode — mobile</p><p className="text-muted-foreground">Removes solid backgrounds by color. For complex images, try on desktop.</p></>
-                    : <><p className="font-medium text-blue-700 dark:text-blue-400">AI Mode — desktop</p><p className="text-muted-foreground">Downloads a ~40 MB AI model on first use (cached after that). Removes any background automatically.</p></>
+                    ? <><p className="font-medium text-amber-700 dark:text-amber-400">Lightweight Mode on mobile</p><p className="text-muted-foreground">Removes solid backgrounds by color. For complex images try on desktop.</p></>
+                    : <><p className="font-medium text-blue-700 dark:text-blue-400">AI Mode on desktop</p><p className="text-muted-foreground">Downloads a ~40 MB AI model on first use and caches it. Removes any background automatically.</p></>
                   }
                 </div>
               )}
               {removalMethod === "magic" && (
                 <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 px-3 py-2.5 text-xs space-y-1">
-                  <p className="font-medium text-violet-700 dark:text-violet-400">Magic Eraser — paint by color</p>
-                  <p className="text-muted-foreground">Paint over background. The brush samples the color at its tip and only removes matching pixels — safe to brush near foreground objects.</p>
+                  <p className="font-medium text-violet-700 dark:text-violet-400">Magic Eraser, paint by color</p>
+                  <p className="text-muted-foreground">Paint over the background. The brush samples the color at its tip and only removes matching pixels. It is safe to brush near foreground objects.</p>
                 </div>
               )}
               {removalMethod === "brush" && (
                 <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-3 py-2.5 text-xs space-y-1">
-                  <p className="font-medium text-green-700 dark:text-green-400">Manual Brush — erase or restore</p>
-                  <p className="text-muted-foreground">Paint to erase any area. Use the Repair button in the header to bring pixels back at any time.</p>
+                  <p className="font-medium text-green-700 dark:text-green-400">Manual Brush. Erase freely, repair at any time.</p>
+                  <p className="text-muted-foreground">Paint to erase any area. Use the Repair button in the header to bring erased pixels back at any time.</p>
                 </div>
               )}
 
@@ -701,9 +681,9 @@ export function BackgroundRemover() {
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <span className="text-sm font-medium">
                 {!imageEl ? "Canvas"
-                  : restoreActive ? "Repair — paint to bring pixels back"
-                  : removalMethod === "magic" ? "Magic Eraser — paint to remove by color"
-                  : removalMethod === "brush" ? "Brush Eraser — paint to erase"
+                  : restoreActive ? "Repair. Paint to bring pixels back."
+                  : removalMethod === "magic" ? "Magic Eraser. Paint to remove by color."
+                  : removalMethod === "brush" ? "Brush Eraser. Paint to erase."
                   : "Canvas"}
               </span>
               {imageEl && (
@@ -738,13 +718,9 @@ export function BackgroundRemover() {
                           : "Paint to erase. Use the Repair button in the header to fix mistakes."}
                     </p>
                   )}
-                  {removalMethod === "auto" && canvasActive && !hasApplied && (
-                    <p className="text-xs text-muted-foreground">Original image — click <span className="text-foreground font-medium">Remove Background</span> to process.</p>
-                  )}
-                  {hasApplied && (
+                  {removalMethod === "auto" && canvasActive && !isProcessing && (
                     <p className="text-xs text-muted-foreground">
-                      Result ready.{!smoothApplied && " Click "}{!smoothApplied && <><span className="text-foreground font-medium">Smooth Edge</span> in the toolbar to soften the cut.</>}
-                      {smoothApplied && " Smooth edge applied."}
+                      {!smoothApplied ? "Click Remove Background to process, then download. Smooth Edge softens the cut." : "Smooth edge applied. Download when ready."}
                     </p>
                   )}
                   <div className="rounded-lg overflow-hidden border border-border" style={CHECKER}>
@@ -792,8 +768,8 @@ export function BackgroundRemover() {
                   <li>Upload an image. The original appears on the canvas immediately.</li>
                   <li>Choose a removal method: <span className="text-foreground font-medium">Auto</span>, <span className="text-foreground font-medium">Magic Eraser</span>, or <span className="text-foreground font-medium">Brush</span>. You can switch between them freely without losing canvas edits.</li>
                   <li>Paint or process. The canvas updates live as you work.</li>
-                  <li>Click <span className="text-foreground font-medium">Apply</span> (or wait for Auto to finish) to unlock <span className="text-foreground font-medium">Smooth Edge</span> in the toolbar.</li>
-                  <li>Optionally apply Smooth Edge, then download as PNG.</li>
+                  <li>Optionally click <span className="text-foreground font-medium">Smooth Edge</span> in the header to soften the cut edge.</li>
+                  <li>Click <span className="text-foreground font-medium">Download</span> to save as PNG with a transparent background.</li>
                 </ol>
               </div>
               <div className="space-y-1.5">
@@ -822,7 +798,7 @@ export function BackgroundRemover() {
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Smooth Edge</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
                   <li>Applies a soft blur to the transparent edge, removing hard pixel-level jaggedness.</li>
-                  <li>Available after clicking Apply or after Auto removal completes.</li>
+                  <li>Available as soon as an image is loaded. Works on any canvas state.</li>
                   <li>Use <span className="text-foreground font-medium">Reset</span> to start over from the original image.</li>
                 </ul>
               </div>
@@ -840,24 +816,11 @@ export function BackgroundRemover() {
         <Button size="sm" variant="outline" className="h-11 px-4" onClick={() => inputRef.current?.click()} disabled={isProcessing} aria-label="Upload image">
           <Upload className="h-4 w-4" aria-hidden="true" />
         </Button>
-        {removalMethod === "brush" && imageEl && (
+        {(removalMethod === "brush" || removalMethod === "magic") && imageEl && (
           <>
             <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.max(5, s - 10))} aria-label="Smaller brush"><Minus className="h-4 w-4" aria-hidden="true" /></Button>
             <span className="text-xs text-muted-foreground font-mono w-7 text-center shrink-0" aria-live="polite">{brushSize}</span>
             <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.min(100, s + 10))} aria-label="Larger brush"><Plus className="h-4 w-4" aria-hidden="true" /></Button>
-            <Button size="sm" className="h-11 flex-1" onClick={applyResult} disabled={!imageEl} aria-label="Apply">
-              <Eraser className="h-4 w-4 mr-1" aria-hidden="true" />Apply
-            </Button>
-          </>
-        )}
-        {removalMethod === "magic" && imageEl && (
-          <>
-            <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.max(5, s - 10))} aria-label="Smaller brush"><Minus className="h-4 w-4" aria-hidden="true" /></Button>
-            <span className="text-xs text-muted-foreground font-mono w-7 text-center shrink-0">{brushSize}</span>
-            <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.min(100, s + 10))} aria-label="Larger brush"><Plus className="h-4 w-4" aria-hidden="true" /></Button>
-            <Button size="sm" className="h-11 flex-1" onClick={applyResult} disabled={!imageEl} aria-label="Apply magic eraser">
-              <Sparkles className="h-4 w-4 mr-1" aria-hidden="true" />Apply
-            </Button>
           </>
         )}
         {removalMethod === "auto" && (
@@ -868,7 +831,7 @@ export function BackgroundRemover() {
             }
           </Button>
         )}
-        {hasApplied && (
+        {imageEl && (
           <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={handleApplySmoothEdge} disabled={smoothing || smoothApplied} aria-label="Smooth edge">
             {smoothing ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" /> : <Feather className="h-4 w-4" aria-hidden="true" />}
           </Button>
