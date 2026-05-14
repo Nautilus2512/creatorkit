@@ -475,7 +475,7 @@ export function BackgroundRemover() {
         </div>
         {/* Row 2: Repair + Smooth Edge tool buttons — only shown when image is loaded */}
         {imageEl && (
-          <div className="flex items-center gap-2 px-4 pb-2">
+          <div role="group" aria-label="Canvas editing tools" className="flex items-center gap-2 px-4 pb-2">
             <button
               onClick={() => setRestoreActive(v => !v)}
               aria-pressed={restoreActive}
@@ -526,20 +526,20 @@ export function BackgroundRemover() {
               {/* Method selector */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Removal Method</Label>
-                <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
+                <div role="radiogroup" aria-label="Removal method" className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
                   <button onClick={() => setRemovalMethod("auto")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors ${removalMethod === "auto" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    aria-pressed={removalMethod === "auto"} aria-label="Auto removal">
+                    role="radio" aria-checked={removalMethod === "auto"} aria-label="Auto removal"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${removalMethod === "auto" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
                     <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />Auto
                   </button>
                   <button onClick={() => setRemovalMethod("magic")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors border-l border-border ${removalMethod === "magic" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    aria-pressed={removalMethod === "magic"} aria-label="Magic eraser">
+                    role="radio" aria-checked={removalMethod === "magic"} aria-label="Magic eraser"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors border-l border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${removalMethod === "magic" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
                     <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />Magic
                   </button>
                   <button onClick={() => setRemovalMethod("brush")}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors border-l border-border ${removalMethod === "brush" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                    aria-pressed={removalMethod === "brush"} aria-label="Manual brush">
+                    role="radio" aria-checked={removalMethod === "brush"} aria-label="Manual brush"
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors border-l border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${removalMethod === "brush" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
                     <Eraser className="h-3.5 w-3.5" aria-hidden="true" />Brush
                   </button>
                 </div>
@@ -590,7 +590,7 @@ export function BackgroundRemover() {
                         <p className="text-xs text-muted-foreground">{imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}</p>
                       </div>
                       <button onClick={clearImage} disabled={isProcessing} aria-label="Remove image"
-                        className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1">
+                        className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1">
                         <X className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </div>
@@ -646,7 +646,7 @@ export function BackgroundRemover() {
                       <div className="h-9 w-9 rounded-md border-2 border-border shrink-0" style={{ backgroundColor: toHex(targetColor) }} role="img" aria-label={`Selected color ${toHex(targetColor)}`} />
                       <button
                         onClick={() => { setPickingColor(v => !v); announceToScreenReader(pickingColor ? "Color picking disabled" : "Tap the background in the canvas to pick its color.") }}
-                        className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${pickingColor ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}
+                        className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${pickingColor ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}
                         aria-pressed={pickingColor}>
                         <Pipette className="h-3.5 w-3.5" aria-hidden="true" />{pickingColor ? "Click canvas →" : "Pick from image"}
                       </button>
@@ -705,7 +705,7 @@ export function BackgroundRemover() {
                   : "Canvas"}
               </span>
               {imageEl && (
-                <button onClick={resetCanvas} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded px-1" aria-label="Reset canvas to original image">
+                <button onClick={resetCanvas} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded px-1" aria-label="Reset canvas to original image">
                   <RotateCcw className="h-3 w-3" aria-hidden="true" />Reset
                 </button>
               )}
@@ -730,14 +730,14 @@ export function BackgroundRemover() {
                   {canInteractOnCanvas && (
                     <p className="text-xs text-muted-foreground" aria-live="polite">
                       {restoreActive
-                        ? "Repair mode — paint to bring back erased pixels from the reference state."
+                        ? "Repair mode. Paint to bring back erased pixels from the reference state."
                         : removalMethod === "magic"
                           ? "Paint over background areas to erase by color. Only the color under your brush tip is removed."
                           : "Paint to erase. Use the Repair button in the header to fix mistakes."}
                     </p>
                   )}
                   {removalMethod === "auto" && canvasActive && !isProcessing && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground" aria-live="polite">
                       {!smoothApplied ? "Click Remove Background to process, then download. Smooth Edge softens the cut." : "Smooth edge applied. Download when ready."}
                     </p>
                   )}
@@ -760,7 +760,7 @@ export function BackgroundRemover() {
                         const color = samplePixel(imageEl, (e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height)
                         setTargetColor(color); setPickingColor(false)
                       } : undefined}
-                      aria-label="Editing canvas"
+                      aria-label={pickingColor && removalMethod === "auto" && isMobile ? "Color picker. Tap background area to select its color." : "Editing canvas"}
                     />
                   </div>
                 </div>
