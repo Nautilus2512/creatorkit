@@ -185,7 +185,7 @@ export function BackgroundRemover() {
   const [activeTab, setActiveTab]         = useState<"input" | "output">("input")
   const [guideOpen, setGuideOpen]         = useState(false)
   const [brushSize, setBrushSize]         = useState(20)
-  const [brushMode, setBrushMode]         = useState<"erase" | "restore">("erase")
+  const [restoreActive, setRestoreActive] = useState(false)
   const [removalMethod, setRemovalMethod] = useState<RemovalMethod>("auto")
   const [hasApplied, setHasApplied]       = useState(false)
   const [smoothing, setSmoothing]         = useState(false)
@@ -217,7 +217,7 @@ export function BackgroundRemover() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     const url = URL.createObjectURL(f)
     setObjectUrl(url); setFileName(f.name); setFileSize(f.size)
-    setError(null); setHasApplied(false); setSmoothApplied(false)
+    setError(null); setHasApplied(false); setSmoothApplied(false); setRestoreActive(false)
     setPhase("canvas")
     const img = new Image()
     img.onload = () => {
@@ -231,7 +231,7 @@ export function BackgroundRemover() {
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     setObjectUrl(null); setImageEl(null); setError(null)
     setPhase("idle"); setPickingColor(false); setActiveTab("input")
-    setHasApplied(false); setSmoothApplied(false)
+    setHasApplied(false); setSmoothApplied(false); setRestoreActive(false)
     originalDataRef.current = null
     announceToScreenReader("Image removed. Ready for new upload.")
   }, [objectUrl])
@@ -319,11 +319,41 @@ export function BackgroundRemover() {
     announceToScreenReader("Download started. Saving as PNG with transparent background.")
   }, [fileName])
 
-  // Unified canvas interaction — routes to magic or brush based on method
+  // Restore brush — shared helper used by all methods when restoreActive is true
+  const runRestoreBrush = useCallback((canvas: HTMLCanvasElement, clientX: number, clientY: number) => {
+    if (!originalDataRef.current) return
+    const ctx = canvas.getContext("2d")!
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const x = (clientX - rect.left) * scaleX
+    const y = (clientY - rect.top) * scaleY
+    const r = brushSize * Math.max(scaleX, scaleY)
+    const orig = originalDataRef.current
+    const curr = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const ri = Math.ceil(r)
+    for (let dy = -ri; dy <= ri; dy++) {
+      for (let dx = -ri; dx <= ri; dx++) {
+        if (dx * dx + dy * dy <= r * r) {
+          const px = Math.round(x + dx), py = Math.round(y + dy)
+          if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+            const i = (py * canvas.width + px) * 4
+            curr.data[i] = orig.data[i]; curr.data[i + 1] = orig.data[i + 1]
+            curr.data[i + 2] = orig.data[i + 2]; curr.data[i + 3] = orig.data[i + 3]
+          }
+        }
+      }
+    }
+    ctx.putImageData(curr, 0, 0)
+  }, [brushSize])
+
+  // Unified canvas interaction — restoreActive overrides the current method
   const handleCanvasInteract = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
-    if (removalMethod === "magic") {
+    if (restoreActive) {
+      runRestoreBrush(canvas, clientX, clientY)
+    } else if (removalMethod === "magic") {
       magicErase(canvas, clientX, clientY, brushSize, tolerance)
     } else if (removalMethod === "brush") {
       const ctx = canvas.getContext("2d")!
@@ -333,35 +363,15 @@ export function BackgroundRemover() {
       const x = (clientX - rect.left) * scaleX
       const y = (clientY - rect.top) * scaleY
       const r = brushSize * Math.max(scaleX, scaleY)
-      if (brushMode === "erase") {
-        ctx.save()
-        ctx.globalCompositeOperation = "destination-out"
-        ctx.beginPath()
-        ctx.arc(x, y, r, 0, Math.PI * 2)
-        ctx.fillStyle = "rgba(0,0,0,1)"
-        ctx.fill()
-        ctx.restore()
-      } else {
-        if (!originalDataRef.current) return
-        const orig = originalDataRef.current
-        const curr = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const ri = Math.ceil(r)
-        for (let dy = -ri; dy <= ri; dy++) {
-          for (let dx = -ri; dx <= ri; dx++) {
-            if (dx * dx + dy * dy <= r * r) {
-              const px = Math.round(x + dx), py = Math.round(y + dy)
-              if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
-                const i = (py * canvas.width + px) * 4
-                curr.data[i] = orig.data[i]; curr.data[i + 1] = orig.data[i + 1]
-                curr.data[i + 2] = orig.data[i + 2]; curr.data[i + 3] = orig.data[i + 3]
-              }
-            }
-          }
-        }
-        ctx.putImageData(curr, 0, 0)
-      }
+      ctx.save()
+      ctx.globalCompositeOperation = "destination-out"
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fillStyle = "rgba(0,0,0,1)"
+      ctx.fill()
+      ctx.restore()
     }
-  }, [removalMethod, brushSize, tolerance, brushMode])
+  }, [removalMethod, brushSize, tolerance, restoreActive, runRestoreBrush])
 
   const handleCanvasMouseDown  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { if (removalMethod === "auto") return; isDraggingOnCanvas.current = true;  handleCanvasInteract(e.clientX, e.clientY) }, [removalMethod, handleCanvasInteract])
   const handleCanvasMouseMove  = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => { if (isDraggingOnCanvas.current) handleCanvasInteract(e.clientX, e.clientY) }, [handleCanvasInteract])
@@ -397,7 +407,7 @@ export function BackgroundRemover() {
 
   const isProcessing = phase === "loading-model" || phase === "processing"
   const canvasActive = phase === "canvas" && !!imageEl
-  const canInteractOnCanvas = canvasActive && removalMethod !== "auto"
+  const canInteractOnCanvas = canvasActive && (restoreActive || removalMethod !== "auto")
 
   return (
     <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Background Remover application">
@@ -409,6 +419,18 @@ export function BackgroundRemover() {
           <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
           <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
         </Button>
+        {imageEl && (
+          <Button
+            size="sm"
+            variant={restoreActive ? "default" : "outline"}
+            onClick={() => setRestoreActive(v => !v)}
+            aria-pressed={restoreActive}
+            aria-label={restoreActive ? "Disable restore mode" : "Enable restore mode — paint to bring back erased pixels"}
+          >
+            <Paintbrush className="h-4 w-4 mr-1" aria-hidden="true" />
+            {restoreActive ? "Restoring…" : "Restore"}
+          </Button>
+        )}
         {hasApplied && (
           <Button size="sm" variant="outline" onClick={handleApplySmoothEdge} disabled={smoothing || smoothApplied} aria-label="Smooth the cut edge">
             {smoothing
@@ -455,6 +477,16 @@ export function BackgroundRemover() {
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">Background Remover</h2>
           <div className="flex items-center gap-1.5">
+            {imageEl && (
+              <button
+                onClick={() => setRestoreActive(v => !v)}
+                className={`rounded p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors ${restoreActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+                aria-pressed={restoreActive}
+                aria-label={restoreActive ? "Disable restore mode" : "Enable restore mode"}
+              >
+                <Paintbrush className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
             <ShortcutsModal
               pageName="Background Remover"
               shortcuts={[
@@ -572,29 +604,13 @@ export function BackgroundRemover() {
 
               {/* Brush controls (Brush mode) */}
               {removalMethod === "brush" && imageEl && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Brush Mode</Label>
-                    <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
-                      <button onClick={() => setBrushMode("erase")}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors ${brushMode === "erase" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                        aria-pressed={brushMode === "erase"}>
-                        <Eraser className="h-3.5 w-3.5" aria-hidden="true" />Erase
-                      </button>
-                      <button onClick={() => setBrushMode("restore")}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 transition-colors border-l border-border ${brushMode === "restore" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                        aria-pressed={brushMode === "restore"}>
-                        <Paintbrush className="h-3.5 w-3.5" aria-hidden="true" />Restore
-                      </button>
-                    </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Brush Size</Label>
+                    <span className="text-xs text-muted-foreground font-mono">{brushSize}px</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Brush Size</Label>
-                      <span className="text-xs text-muted-foreground font-mono">{brushSize}px</span>
-                    </div>
-                    <Slider min={5} max={100} step={1} value={[brushSize]} onValueChange={([v]) => setBrushSize(v)} aria-label="Brush size" />
-                  </div>
+                  <Slider min={5} max={100} step={1} value={[brushSize]} onValueChange={([v]) => setBrushSize(v)} aria-label="Brush size" />
+                  <p className="text-xs text-muted-foreground">Paint to erase. Use the <span className="text-foreground font-medium">Restore</span> button in the header to switch to restore mode.</p>
                 </div>
               )}
 
@@ -680,7 +696,11 @@ export function BackgroundRemover() {
             role="region" aria-label="Canvas">
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <span className="text-sm font-medium">
-                {!imageEl ? "Canvas" : removalMethod === "magic" ? "Magic Eraser — paint to remove by color" : removalMethod === "brush" ? `Brush — ${brushMode === "erase" ? "erasing" : "restoring"}` : "Canvas"}
+                {!imageEl ? "Canvas"
+                  : restoreActive ? "Restore — paint to bring pixels back"
+                  : removalMethod === "magic" ? "Magic Eraser — paint to remove by color"
+                  : removalMethod === "brush" ? "Brush Eraser — paint to erase"
+                  : "Canvas"}
               </span>
               {imageEl && (
                 <button onClick={resetCanvas} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded px-1" aria-label="Reset canvas to original image">
@@ -707,7 +727,11 @@ export function BackgroundRemover() {
                   )}
                   {canInteractOnCanvas && (
                     <p className="text-xs text-muted-foreground" aria-live="polite">
-                      {removalMethod === "magic" ? "Paint over background areas to erase by color. Only the color under your brush tip is removed." : brushMode === "erase" ? "Paint to erase. Switch to Restore to bring pixels back." : "Paint to restore erased pixels."}
+                      {restoreActive
+                        ? "Restore mode — paint to bring back erased pixels from the reference state."
+                        : removalMethod === "magic"
+                          ? "Paint over background areas to erase by color. Only the color under your brush tip is removed."
+                          : "Paint to erase. Use the Restore button in the header to fix mistakes."}
                     </p>
                   )}
                   {removalMethod === "auto" && canvasActive && !hasApplied && (
@@ -814,18 +838,12 @@ export function BackgroundRemover() {
         </Button>
         {removalMethod === "brush" && imageEl && (
           <>
-            <Button size="sm" variant={brushMode === "erase" ? "default" : "outline"} className="h-11 px-3"
-              onClick={() => setBrushMode("erase")} aria-pressed={brushMode === "erase"} aria-label="Erase mode">
-              <Eraser className="h-4 w-4 mr-1" aria-hidden="true" />Erase
-            </Button>
-            <Button size="sm" variant={brushMode === "restore" ? "default" : "outline"} className="h-11 px-3"
-              onClick={() => setBrushMode("restore")} aria-pressed={brushMode === "restore"} aria-label="Restore mode">
-              <Paintbrush className="h-4 w-4 mr-1" aria-hidden="true" />Restore
-            </Button>
             <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.max(5, s - 10))} aria-label="Smaller brush"><Minus className="h-4 w-4" aria-hidden="true" /></Button>
             <span className="text-xs text-muted-foreground font-mono w-7 text-center shrink-0" aria-live="polite">{brushSize}</span>
             <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.min(100, s + 10))} aria-label="Larger brush"><Plus className="h-4 w-4" aria-hidden="true" /></Button>
-            <Button size="sm" className="h-11 flex-1" onClick={applyResult} disabled={!imageEl} aria-label="Apply">Apply</Button>
+            <Button size="sm" className="h-11 flex-1" onClick={applyResult} disabled={!imageEl} aria-label="Apply">
+              <Eraser className="h-4 w-4 mr-1" aria-hidden="true" />Apply
+            </Button>
           </>
         )}
         {removalMethod === "magic" && imageEl && (
