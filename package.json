@@ -53,6 +53,7 @@
     "input-otp": "1.4.2",
     "js-yaml": "^4.1.1",
     "jszip": "^3.10.1",
+    "lamejs": "^1.2.1",
     "lucide-react": "^0.564.0",
     "marked": "^18.0.3",
     "mathjs": "^15.2.0",

@@ -140,6 +140,9 @@ importers:
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
+      lamejs:
+        specifier: ^1.2.1
+        version: 1.2.1
       lucide-react:
         specifier: ^0.564.0
         version: 0.564.0(react@19.2.5)
@@ -1807,6 +1810,9 @@ packages:
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
 
+  lamejs@1.2.1:
+    resolution: {integrity: sha512-s7bxvjvYthw6oPLCm5pFxvA84wUROODB8jEO2+CE1adhKgrIvVOlmMgY8zyugxGrvRaDHNJanOiS21/emty6dQ==}
+
   lie@3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
 
@@ -2319,6 +2325,9 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-strict@1.0.1:
+    resolution: {integrity: sha512-IeiWvvEXfW5ltKVMkxq6FvNf2LojMKvB2OCeja6+ct24S1XOmQw2dGr2JyndwACWAGJva9B7yPHwAmeA9QCqAQ==}
 
   use-sync-external-store@1.6.0:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
@@ -3768,6 +3777,10 @@ snapshots:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
 
+  lamejs@1.2.1:
+    dependencies:
+      use-strict: 1.0.1
+
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
@@ -4278,6 +4291,8 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.14
+
+  use-strict@1.0.1: {}
 
   use-sync-external-store@1.6.0(react@19.2.5):
     dependencies:
