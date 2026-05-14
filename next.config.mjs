@@ -42,6 +42,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob:",
               "font-src 'self' https://fonts.gstatic.com",
+              "media-src 'self' blob:",
               "worker-src blob:",
               // Line 46, update connect-src:
               "connect-src 'self' blob: https://vitals.vercel-insights.com https://huggingface.co https://*.huggingface.co https://hf.co https://*.hf.co https://cdn.jsdelivr.net https://unpkg.com",
