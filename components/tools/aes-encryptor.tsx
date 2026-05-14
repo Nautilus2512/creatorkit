@@ -143,16 +143,40 @@ export default function AesEncryptor() {
       return
     }
     
-    // Ctrl+Shift+X to swap (changed from S to avoid Windows screenshot collision)
+    // Ctrl+Shift+E — switch to Encrypt mode
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
+      e.preventDefault()
+      e.stopPropagation()
+      setMode("encrypt")
+      setInput("")
+      setOutput("")
+      setError("")
+      announceToScreenReader("Switched to encrypt mode")
+      return
+    }
+
+    // Ctrl+Shift+L — switch to Decrypt mode
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") {
+      e.preventDefault()
+      e.stopPropagation()
+      setMode("decrypt")
+      setInput("")
+      setOutput("")
+      setError("")
+      announceToScreenReader("Switched to decrypt mode")
+      return
+    }
+
+    // Ctrl+Shift+X — swap input/output
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "x") {
       e.preventDefault()
       e.stopPropagation()
       swap()
       return
     }
-    
-    // Ctrl+Shift+C to copy output
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") {
+
+    // Ctrl+Shift+V — copy output (Ctrl+Shift+C conflicts with DevTools Inspector)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v") {
       e.preventDefault()
       e.stopPropagation()
       if (output) {
@@ -184,9 +208,11 @@ export default function AesEncryptor() {
         <span className="text-sm font-semibold shrink-0 mr-1">AES Encrypt / Decrypt</span>
         <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("encrypt")} aria-pressed={mode === "encrypt"} aria-label="Encrypt mode">
           <Lock className="h-4 w-4 mr-1" aria-hidden="true" />Encrypt
+          <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "encrypt" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+E</kbd>
         </Button>
         <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("decrypt")} aria-pressed={mode === "decrypt"} aria-label="Decrypt mode">
           <Unlock className="h-4 w-4 mr-1" aria-hidden="true" />Decrypt
+          <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "decrypt" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+L</kbd>
         </Button>
         <Button variant="outline" size="sm" onClick={swap} disabled={!output} aria-label="Swap input and output">
           <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
@@ -208,9 +234,11 @@ export default function AesEncryptor() {
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal pageName="AES Encrypt / Decrypt" shortcuts={[
+            { keys: ["Ctrl", "Shift", "E"], description: "Switch to Encrypt mode" },
+            { keys: ["Ctrl", "Shift", "L"], description: "Switch to Decrypt mode" },
             { keys: ["Ctrl", "Enter"], description: "Run Encrypt / Decrypt" },
             { keys: ["Ctrl", "Shift", "X"], description: "Swap input/output" },
-            { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+            { keys: ["Ctrl", "Shift", "V"], description: "Copy output" },
           ]} />
           <Button size="sm" onClick={run} disabled={!input.trim() || !passphrase.trim() || loading} aria-label={mode === "encrypt" ? "Encrypt text" : "Decrypt text"}>
             {loading ? <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Working…</>
@@ -251,62 +279,101 @@ export default function AesEncryptor() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left — Input */}
-        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Input text">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium" id="input-label">{mode === "encrypt" ? "Plaintext" : "Encrypted Text (Base64)"}</span>
-          </div>
-          <Textarea
-            value={input}
-            onChange={(e) => { setInput(e.target.value); setOutput(""); setError("") }}
-            placeholder={mode === "encrypt" ? "Enter the text to encrypt..." : "Paste the encrypted base64 string..."}
-            className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono p-4"
-            aria-labelledby="input-label"
-            aria-describedby="input-hint"
-          />
-          <span id="input-hint" className="sr-only">{mode === "encrypt" ? "Enter text to encrypt" : "Paste base64 encrypted text to decrypt"}</span>
-        </div>
-
-        {/* Right — Output */}
-        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Output result">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-medium" id="output-label">{mode === "encrypt" ? "Encrypted Output (Base64)" : "Decrypted Text"}</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={copy} 
-              disabled={!output}
-              aria-label="Copy output to clipboard"
-            >
-              {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-              {copied ? "Copied!" : "Copy"}<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
-            </Button>
-          </div>
-          {error ? (
-            <div className="flex-1 p-4" role="alert" aria-live="assertive">
-              <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex flex-col md:flex-row min-h-[500px] rounded-xl border border-border overflow-hidden">
+          {/* Left — Input */}
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Input text">
+            <div className="shrink-0 border-b border-border px-4 py-3">
+              <span className="text-sm font-medium" id="input-label">{mode === "encrypt" ? "Plaintext" : "Encrypted Text (Base64)"}</span>
             </div>
-          ) : (
             <Textarea
-              value={output}
-              readOnly
-              placeholder={`Output will appear here after clicking ${mode === "encrypt" ? "Encrypt" : "Decrypt"}...`}
-              className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono bg-muted/10 p-4"
-              aria-labelledby="output-label"
-              aria-live="polite"
+              value={input}
+              onChange={(e) => { setInput(e.target.value); setOutput(""); setError("") }}
+              placeholder={mode === "encrypt" ? "Enter the text to encrypt..." : "Paste the encrypted base64 string..."}
+              className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono p-4"
+              aria-labelledby="input-label"
+              aria-describedby="input-hint"
             />
-          )}
-          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-3 flex-wrap" role="contentinfo">
-            <span>AES-256-GCM</span>
-            <span>PBKDF2-SHA256 · 100k iterations</span>
-            <span>Random salt + IV per encryption</span>
+            <span id="input-hint" className="sr-only">{mode === "encrypt" ? "Enter text to encrypt" : "Paste base64 encrypted text to decrypt"}</span>
+          </div>
+
+          {/* Right — Output */}
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Output result">
+            <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+              <span className="text-sm font-medium" id="output-label">{mode === "encrypt" ? "Encrypted Output (Base64)" : "Decrypted Text"}</span>
+              <Button variant="ghost" size="sm" onClick={copy} disabled={!output} aria-label="Copy output to clipboard">
+                {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+                {copied ? "Copied!" : "Copy"}<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
+              </Button>
+            </div>
+            {error ? (
+              <div className="flex-1 p-4" role="alert" aria-live="assertive">
+                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>
+              </div>
+            ) : (
+              <Textarea
+                value={output}
+                readOnly
+                placeholder={`Output will appear here after clicking ${mode === "encrypt" ? "Encrypt" : "Decrypt"}...`}
+                className="flex-1 resize-none border-0 rounded-none text-sm focus-visible:ring-0 font-mono bg-muted/10 p-4"
+                aria-labelledby="output-label"
+                aria-live="polite"
+              />
+            )}
+            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-3 flex-wrap" role="contentinfo">
+              <span>AES-256-GCM</span>
+              <span>PBKDF2-SHA256 · 100k iterations</span>
+              <span>Random salt + IV per encryption</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Spacer so panels don't hide behind the fixed mobile bar */}
-      <div className="md:hidden shrink-0 h-[60px]" aria-hidden="true" />
+        {/* Usage guide */}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <h3 className="font-semibold text-sm">How to use AES Encrypt / Decrypt</h3>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Encrypting a message</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Make sure <span className="text-foreground font-medium">Encrypt</span> mode is selected in the toolbar.</li>
+              <li>Type or paste your message into the <span className="text-foreground font-medium">Plaintext</span> panel on the left.</li>
+              <li>Enter a <span className="text-foreground font-medium">Passphrase</span>. This is the secret key used to lock the message. Keep it safe, because without it the message cannot be decrypted.</li>
+              <li>Click <span className="text-foreground font-medium">Encrypt</span> (or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd>). The encrypted text appears on the right as a Base64 string.</li>
+              <li>Copy the output and share it. The encrypted string is safe to send over any channel.</li>
+            </ol>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Decrypting a message</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Switch to <span className="text-foreground font-medium">Decrypt</span> mode, or use the <span className="text-foreground font-medium">Swap</span> button if the encrypted output is already shown.</li>
+              <li>Paste the encrypted Base64 string into the input panel.</li>
+              <li>Enter the <span className="text-foreground font-medium">same passphrase</span> used during encryption.</li>
+              <li>Click <span className="text-foreground font-medium">Decrypt</span>. The original message will appear in the output panel.</li>
+            </ol>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How the encryption works</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This tool uses <span className="text-foreground font-medium">AES-256-GCM</span>, the same standard used by banks and governments. Your passphrase is never used directly as a key. Instead, it goes through <span className="text-foreground font-medium">PBKDF2-SHA256</span> with 100,000 iterations to derive a strong 256-bit key. A unique random salt and IV are generated for every single encryption, so the same plaintext and passphrase will produce a different ciphertext each time. Everything runs in your browser and nothing is ever sent to a server.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Passphrase tips</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+              <li>Use a long passphrase. A random sentence of 4–6 words is far stronger than a short complex password.</li>
+              <li>Never share your passphrase over the same channel as the encrypted message.</li>
+              <li>There is no passphrase recovery. If you forget it, the message cannot be decrypted.</li>
+              <li>The output Base64 string contains the encrypted data, salt, and IV. It is safe to store or transmit publicly.</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Spacer so content doesn't hide behind the fixed mobile bar */}
+        <div className="md:hidden h-[60px]" aria-hidden="true" />
+      </div>
 
       {/* Mobile: bottom action bar — fixed to viewport bottom */}
       <div
