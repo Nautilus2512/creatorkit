@@ -13,6 +13,10 @@ export type ShortcutsModalProps = {
   shortcuts: ShortcutItem[]
 }
 
+// Module-level flag: when the first handler fires for a given keypress,
+// it sets this true so any other mounted instance skips that same keypress.
+let _keyHandled = false
+
 export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
   const [open, setOpen] = useState(false)
 
@@ -20,6 +24,9 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
     const handler = (e: KeyboardEvent) => {
       const tag = (document.activeElement as HTMLElement)?.tagName
       if (e.key === "?" && !e.ctrlKey && !e.metaKey && tag !== "INPUT" && tag !== "TEXTAREA") {
+        if (_keyHandled) return
+        _keyHandled = true
+        setTimeout(() => { _keyHandled = false }, 0)
         e.preventDefault()
         setOpen(prev => !prev)
       }
@@ -31,24 +38,32 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
 
   return (
     <>
-      {/* Fixed button bottom right */}
+      {/* Inline button — renders wherever placed in the action bar */}
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="fixed bottom-5 right-5 z-50 hidden md:flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur-sm transition-colors hover:border-primary/50 hover:text-foreground"
+        aria-label="Show keyboard shortcuts"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       >
-        <Keyboard className="h-3.5 w-3.5" />
-        <span>Shortcuts · {pageName}</span>
-        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd>
+        <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
+        <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">?</kbd>
       </button>
 
       {/* Modal overlay */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-end p-5 sm:items-center sm:justify-center">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-end p-5 sm:items-center sm:justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Keyboard shortcuts for ${pageName}`}
+        >
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setOpen(false)}
+            aria-hidden="true"
           />
 
           {/* Modal */}
@@ -61,9 +76,10 @@ export function ShortcutsModal({ pageName, shortcuts }: ShortcutsModalProps) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-md p-1 hover:bg-muted"
+                className="rounded-md p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Close shortcuts panel"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
