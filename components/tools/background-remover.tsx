@@ -461,27 +461,45 @@ export function BackgroundRemover() {
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">Background Remover</h2>
           <div className="flex items-center gap-1.5">
-            {imageEl && (
-              <button
-                onClick={() => setRestoreActive(v => !v)}
-                className={`rounded p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors ${restoreActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
-                aria-pressed={restoreActive}
-                aria-label={restoreActive ? "Disable repair mode" : "Enable repair mode"}
-              >
-                <Paintbrush className="h-4 w-4" aria-hidden="true" />
-              </button>
-            )}
             <ShortcutsModal
               pageName="Background Remover"
               shortcuts={[
-                { keys: ["Ctrl", "Shift", "Enter"], description: removalMethod === "auto" ? "Remove background" : "Apply" },
-                { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+                { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background (Auto mode)" },
+                { keys: ["Ctrl", "Shift", "Z"], description: "Toggle repair mode" },
                 { keys: ["Ctrl", "Shift", "F"], description: "Smooth edge" },
                 { keys: ["Ctrl", "Shift", "S"], description: "Download" },
+                { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
               ]}
             />
           </div>
         </div>
+        {/* Row 2: Repair + Smooth Edge tool buttons — only shown when image is loaded */}
+        {imageEl && (
+          <div className="flex items-center gap-2 px-4 pb-2">
+            <button
+              onClick={() => setRestoreActive(v => !v)}
+              aria-pressed={restoreActive}
+              aria-label={restoreActive ? "Disable repair mode" : "Enable repair mode"}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                restoreActive ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Paintbrush className="h-3.5 w-3.5" aria-hidden="true" />
+              {restoreActive ? "Repairing…" : "Repair"}
+            </button>
+            <button
+              onClick={handleApplySmoothEdge}
+              disabled={smoothing || smoothApplied}
+              aria-label="Smooth the cut edge"
+              className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {smoothing
+                ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Smoothing...</>
+                : <><Feather className="h-3.5 w-3.5" aria-hidden="true" />{smoothApplied ? "Smoothed ✓" : "Smooth Edge"}</>
+              }
+            </button>
+          </div>
+        )}
         <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
             className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
@@ -662,7 +680,7 @@ export function BackgroundRemover() {
                       style={{ width: phase === "loading-model" ? `${progress}%` : "100%", animation: phase === "processing" ? "pulse 1.5s ease-in-out infinite" : "none" }} />
                   </div>
                   {phase === "loading-model" && progress < 5 && (
-                    <p className="text-xs text-muted-foreground">First use — downloading ~40 MB AI model. Cached after this.</p>
+                    <p className="text-xs text-muted-foreground">First use. Downloading ~40 MB AI model. Cached after this and never downloaded again.</p>
                   )}
                 </div>
               )}
@@ -783,7 +801,7 @@ export function BackgroundRemover() {
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Magic Eraser</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
                   <li>Paint over background areas. The brush samples the color at its center tip and removes only matching pixels within the brush radius.</li>
-                  <li>Dragging near a foreground object is safe — the brush stops erasing it because the tip detects a different color.</li>
+                  <li>Dragging near a foreground object is safe. The brush stops erasing it because the tip detects a different color.</li>
                   <li>Adjust Brush Size and Color Tolerance for control. Use a smaller brush near edges.</li>
                 </ul>
               </div>
@@ -810,37 +828,22 @@ export function BackgroundRemover() {
         <div className="md:hidden h-[60px]" aria-hidden="true" />
       </div>
 
-      {/* Mobile bottom action bar */}
+      {/* Mobile bottom action bar — Remove Background (auto) + Download only */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-        <Button size="sm" variant="outline" className="h-11 px-4" onClick={() => inputRef.current?.click()} disabled={isProcessing} aria-label="Upload image">
-          <Upload className="h-4 w-4" aria-hidden="true" />
-        </Button>
-        {(removalMethod === "brush" || removalMethod === "magic") && imageEl && (
-          <>
-            <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.max(5, s - 10))} aria-label="Smaller brush"><Minus className="h-4 w-4" aria-hidden="true" /></Button>
-            <span className="text-xs text-muted-foreground font-mono w-7 text-center shrink-0" aria-live="polite">{brushSize}</span>
-            <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={() => setBrushSize(s => Math.min(100, s + 10))} aria-label="Larger brush"><Plus className="h-4 w-4" aria-hidden="true" /></Button>
-          </>
-        )}
-        {removalMethod === "auto" && (
-          <Button size="sm" className="h-11 flex-1" onClick={isMobile ? processMobile : processDesktop} disabled={!imageEl || isProcessing} aria-label="Remove background">
+        {removalMethod === "auto" ? (
+          <Button size="sm" className="h-11 flex-1" onClick={processMobile} disabled={!imageEl || isProcessing} aria-label="Remove background">
             {isProcessing
               ? <><span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />{phase === "loading-model" ? `Loading... ${progress}%` : "Removing..."}</>
               : <><Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />Remove Background</>
             }
           </Button>
+        ) : (
+          <div className="flex-1" />
         )}
-        {imageEl && (
-          <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={handleApplySmoothEdge} disabled={smoothing || smoothApplied} aria-label="Smooth edge">
-            {smoothing ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" /> : <Feather className="h-4 w-4" aria-hidden="true" />}
-          </Button>
-        )}
-        {imageEl && (
-          <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={download} aria-label="Download">
-            <Download className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        )}
+        <Button size="sm" variant="outline" className="h-11 px-5" onClick={download} disabled={!imageEl} aria-label="Download as PNG">
+          <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download
+        </Button>
       </div>
     </div>
   )
