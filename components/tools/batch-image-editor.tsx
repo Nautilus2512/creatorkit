@@ -173,28 +173,72 @@ export default function BatchImageEditor() {
     return () => window.removeEventListener("keydown", handleKeyDown, true)
   }, [images.length, loading, process, clearAll])
 
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between" role="banner">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight" id="batch-title">Batch Image Editor</h2>
-          <p className="text-muted-foreground" id="batch-description">Apply the same edits to multiple images and download as a ZIP. All in your browser. Press ? for keyboard shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Batch Image Resizer</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Batch Image Editor"
+            shortcuts={[
+              { keys: ["Ctrl", "O"], description: "Add images" },
+              { keys: ["Ctrl", "Enter"], description: "Process and download ZIP" },
+              { keys: ["Ctrl", "Shift", "C"], description: "Clear all images" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between controls" },
+              { keys: ["Enter"], description: "Activate focused button" },
+              { keys: ["Space"], description: "Activate focused button" },
+            ]}
+          />
+          <Button
+            size="sm"
+            onClick={process}
+            disabled={!images.length || loading}
+            aria-label={loading ? `Processing ${progress} percent complete` : done ? "Processing done" : `Process ${images.length} images`}
+          >
+            {loading ? <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" /> : done ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {loading ? `Processing… ${progress}%` : done ? "Done!" : `Download All`}
+          </Button>
         </div>
-        <Button 
-          onClick={process} 
-          disabled={!images.length || loading}
-          aria-label={loading ? `Processing ${progress} percent complete` : done ? "Processing done" : `Process ${images.length} images`}
-        >
-          {loading ? <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" /> : done ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
-          {loading ? `Processing… ${progress}%` : done ? "Done!" : `Process ${images.length} image${images.length !== 1 ? "s" : ""}`}
-          {!loading && !done && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>}
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Batch Image Resizer</h2>
+          <ShortcutsModal
+            pageName="Batch Image Editor"
+            shortcuts={[
+              { keys: ["Ctrl", "O"], description: "Add images" },
+              { keys: ["Ctrl", "Enter"], description: "Process and download ZIP" },
+              { keys: ["Ctrl", "Shift", "C"], description: "Clear all images" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between controls" },
+              { keys: ["Enter"], description: "Activate focused button" },
+              { keys: ["Space"], description: "Activate focused button" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Settings
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Settings */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Edit settings">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Edit settings">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Edit Settings</span>
           </div>
@@ -316,7 +360,7 @@ export default function BatchImageEditor() {
         </div>
 
         {/* Right — Images */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Image gallery">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Image gallery">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium" aria-live="polite" aria-atomic="true">{images.length} image{images.length !== 1 ? "s" : ""}</h3>
             <div className="flex gap-2">
@@ -404,19 +448,23 @@ export default function BatchImageEditor() {
           </div>
         </div>
       </div>
+
+      {/* Mobile bottom action bar */}
+      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          className="h-11 px-4"
+          onClick={process}
+          disabled={!images.length || loading}
+          aria-label={loading ? `Processing ${progress} percent complete` : done ? "Processing done" : `Process ${images.length} images`}
+        >
+          {loading ? <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" /> : done ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+          {loading ? `Processing… ${progress}%` : done ? "Done!" : "Download All"}
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="Batch Image Editor"
-      shortcuts={[
-        { keys: ["Ctrl", "O"], description: "Add images" },
-        { keys: ["Ctrl", "Enter"], description: "Process and download ZIP" },
-        { keys: ["Ctrl", "Shift", "C"], description: "Clear all images" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-        { keys: ["Space"], description: "Activate focused button" },
-      ]}
-    />
     </>
   )
 }

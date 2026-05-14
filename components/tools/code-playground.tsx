@@ -111,7 +111,7 @@ ${html}
 </html>`)
     zip.file("style.css", css)
     zip.file("script.js", js)
-    
+
     const blob = await zip.generateAsync({ type: "blob" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -193,7 +193,7 @@ ${html}
           }
         }
       }
-      
+
       // Escape to focus editor
       if (e.key === "Escape" && activeTab !== 'preview') {
         const textarea = document.querySelector(`textarea[data-tab="${activeTab}"]`) as HTMLTextAreaElement
@@ -205,83 +205,103 @@ ${html}
   }, [switchTab, downloadFiles, updatePreview, autoRun, activeTab])
 
   return (
-    <>
-    <ShortcutsModal
-      pageName="Code Playground"
-      shortcuts={[
-        { keys: ["Ctrl", "1"], description: "Switch to HTML editor" },
-        { keys: ["Ctrl", "2"], description: "Switch to CSS editor" },
-        { keys: ["Ctrl", "3"], description: "Switch to JS editor" },
-        { keys: ["Ctrl", "4"], description: "Switch to Preview" },
-        { keys: ["Ctrl", "R"], description: "Run code (when auto-run is off)" },
-        { keys: ["Ctrl", "S"], description: "Download files as ZIP" },
-        { keys: ["Ctrl", "Shift", "R"], description: "Reset to defaults" },
-        { keys: ["Escape"], description: "Focus current editor" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-      ]}
-    />
-    <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight" id="playground-title">Code Playground</h2>
-        <p className="text-muted-foreground" id="playground-description">Write and preview HTML, CSS, and JavaScript live in your browser. Press Ctrl+1/2/3/4 to switch editors. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+      {/* Compact top toolbar */}
+      <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Code Playground controls">
+        <div className="flex items-center gap-1" role="tablist" aria-label="Editor tabs">
+          <button
+            onClick={() => switchTab('html')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+              activeTab === 'html' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'html'}
+            aria-label="HTML editor"
+          >
+            <FileCode className="h-4 w-4 text-orange-500" aria-hidden="true" />
+            HTML<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+1</kbd>
+          </button>
+          <button
+            onClick={() => switchTab('css')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+              activeTab === 'css' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'css'}
+            aria-label="CSS editor"
+          >
+            <FileType className="h-4 w-4 text-blue-500" aria-hidden="true" />
+            CSS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+2</kbd>
+          </button>
+          <button
+            onClick={() => switchTab('js')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+              activeTab === 'js' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'js'}
+            aria-label="JavaScript editor"
+          >
+            <Code className="h-4 w-4 text-yellow-500" aria-hidden="true" />
+            JS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+3</kbd>
+          </button>
+          <button
+            onClick={() => switchTab('preview')}
+            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+              activeTab === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'preview'}
+            aria-label="Preview"
+          >
+            <Eye className="h-4 w-4" aria-hidden="true" />
+            Preview<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+4</kbd>
+          </button>
+        </div>
+        <div className="shrink-0 flex items-center gap-2 ml-2">
+          <Button
+            size="sm"
+            onClick={updatePreview}
+            disabled={autoRun}
+            aria-label={autoRun ? "Auto-run is enabled" : "Run code preview"}
+          >
+            <Play className="h-4 w-4 mr-1" aria-hidden="true" />
+            Run{!autoRun && <kbd className="ml-1.5 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+R</kbd>}
+          </Button>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoRun}
+              onChange={toggleAutoRun}
+              className="rounded border-border focus:ring-2 focus:ring-primary"
+              aria-label="Toggle auto-run"
+            />
+            Auto-run
+          </label>
+        </div>
+        <div className="ml-auto shrink-0">
+          <ShortcutsModal
+            pageName="Code Playground"
+            shortcuts={[
+              { keys: ["Ctrl", "1"], description: "Switch to HTML editor" },
+              { keys: ["Ctrl", "2"], description: "Switch to CSS editor" },
+              { keys: ["Ctrl", "3"], description: "Switch to JS editor" },
+              { keys: ["Ctrl", "4"], description: "Switch to Preview" },
+              { keys: ["Ctrl", "R"], description: "Run code (when auto-run is off)" },
+              { keys: ["Ctrl", "S"], description: "Download files as ZIP" },
+              { keys: ["Ctrl", "Shift", "R"], description: "Reset to defaults" },
+              { keys: ["Escape"], description: "Focus current editor" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between controls" },
+            ]}
+          />
+        </div>
       </div>
-      <div className="grid grid-rows-1 gap-4 md:grid-cols-2 flex-1 min-h-0">
-      {/* Left panel - Editors */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0" role="region" aria-label="Code editors">
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Tab bar */}
-          <div className="flex items-center gap-1 p-2 border-b border-border bg-muted/30" role="tablist" aria-label="Editor tabs">
-            <button
-              onClick={() => switchTab('html')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                activeTab === 'html' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
-              role="tab"
-              aria-selected={activeTab === 'html'}
-              aria-label="HTML editor"
-            >
-              <FileCode className="h-4 w-4 text-orange-500" aria-hidden="true" />
-              HTML<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+1</kbd>
-            </button>
-            <button
-              onClick={() => switchTab('css')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                activeTab === 'css' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
-              role="tab"
-              aria-selected={activeTab === 'css'}
-              aria-label="CSS editor"
-            >
-              <FileType className="h-4 w-4 text-blue-500" aria-hidden="true" />
-              CSS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+2</kbd>
-            </button>
-            <button
-              onClick={() => switchTab('js')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                activeTab === 'js' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
-              role="tab"
-              aria-selected={activeTab === 'js'}
-              aria-label="JavaScript editor"
-            >
-              <Code className="h-4 w-4 text-yellow-500" aria-hidden="true" />
-              JS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+3</kbd>
-            </button>
-            <button
-              onClick={() => switchTab('preview')}
-              className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                activeTab === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              }`}
-              role="tab"
-              aria-selected={activeTab === 'preview'}
-              aria-label="Preview"
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-              Preview<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+4</kbd>
-            </button>
-          </div>
 
+      {/* Canvas/workspace */}
+      <div className="flex-1 min-h-0 overflow-hidden flex">
+        {/* Left panel - Editors */}
+        <div className="flex flex-col overflow-hidden border-r border-border bg-card min-h-0 w-full md:w-1/2" role="region" aria-label="Code editors">
           {/* Editor area */}
           <div className="flex-1 overflow-hidden" role="tabpanel" aria-label={`${activeTab === 'html' ? 'HTML' : activeTab === 'css' ? 'CSS' : activeTab === 'js' ? 'JavaScript' : 'Preview'} editor`}>
             {activeTab === 'html' && (
@@ -325,84 +345,63 @@ ${html}
           </div>
         </div>
 
-        {/* Toolbar */}
-        <div className="shrink-0 border-t border-border p-3 flex items-center justify-between" role="toolbar" aria-label="Editor toolbar">
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              onClick={updatePreview} 
-              disabled={autoRun}
-              aria-label={autoRun ? "Auto-run is enabled" : "Run code preview"}
+        {/* Right panel - Preview */}
+        <div className="hidden md:flex flex-col overflow-hidden bg-card min-h-0 flex-1" role="region" aria-label="Live preview">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <span className="text-sm font-medium">Live Preview</span>
+            </div>
+            <button
+              onClick={clearAll}
+              className="text-xs text-muted-foreground hover:text-red-500 flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-destructive rounded px-2 py-1"
+              aria-label="Clear all code"
             >
-              <Play className="h-4 w-4 mr-1" aria-hidden="true" />
-              Run{!autoRun && <kbd className="ml-1.5 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+R</kbd>}
-            </Button>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={autoRun}
-                onChange={toggleAutoRun}
-                className="rounded border-border focus:ring-2 focus:ring-primary"
-                aria-label="Toggle auto-run"
-              />
-              Auto-run
-            </label>
+              <Trash2 className="h-3 w-3" aria-hidden="true" />
+              Clear all
+            </button>
           </div>
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={downloadFiles}
-              aria-label="Download files as ZIP"
-              title="Download files"
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only">Download</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={reset}
-              aria-label="Reset code to defaults"
-              title="Reset to defaults (Ctrl+Shift+R)"
-            >
-              <RotateCcw className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only">Reset</span>
-            </Button>
+          <div className="flex-1 bg-white">
+            <iframe
+              ref={iframeRef}
+              srcDoc={srcDoc}
+              className="w-full h-full border-0"
+              sandbox="allow-scripts"
+              title="Code preview"
+              aria-label="Preview of your HTML, CSS and JavaScript code"
+            />
           </div>
         </div>
       </div>
 
-      {/* Right panel - Preview */}
-      <div className="hidden md:flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0" role="region" aria-label="Live preview">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <span className="text-sm font-medium">Live Preview</span>
-          </div>
-          <button
-            onClick={clearAll}
-            className="text-xs text-muted-foreground hover:text-red-500 flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-destructive rounded px-2 py-1"
-            aria-label="Clear all code"
-          >
-            <Trash2 className="h-3 w-3" aria-hidden="true" />
-            Clear all
-          </button>
-        </div>
-        <div className="flex-1 bg-white">
-          <iframe
-            ref={iframeRef}
-            srcDoc={srcDoc}
-            className="w-full h-full border-0"
-            sandbox="allow-scripts"
-            title="Code preview"
-            aria-label="Preview of your HTML, CSS and JavaScript code"
-          />
-        </div>
-      </div>
+      {/* Bottom action bar */}
+      <div
+        className="shrink-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-11 md:h-9"
+          onClick={reset}
+          aria-label="Reset code to defaults"
+          title="Reset to defaults (Ctrl+Shift+R)"
+        >
+          <RotateCcw className="h-4 w-4 mr-1" aria-hidden="true" />
+          Reset
+        </Button>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          className="h-11 md:h-9"
+          onClick={downloadFiles}
+          aria-label="Download files as ZIP"
+        >
+          <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+          Download ZIP
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+S</kbd>
+        </Button>
       </div>
     </div>
-    </>
   )
 }

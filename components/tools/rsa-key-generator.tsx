@@ -30,12 +30,19 @@ async function generatePair(keySize: KeySize) {
   }
 }
 
+const shortcuts = [
+  { keys: ["Ctrl", "Shift", "G"], description: "Generate new keys" },
+  { keys: ["Ctrl", "Shift", "P"], description: "Copy public key" },
+  { keys: ["Ctrl", "Shift", "L"], description: "Copy private key" },
+]
+
 export default function RsaKeyGenerator() {
   const [keySize, setKeySize] = useState<KeySize>(2048)
   const [keys, setKeys] = useState<{ publicKey: string; privateKey: string } | null>(null)
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const announceToScreenReader = useCallback((message: string) => {
     setAnnouncement(message)
@@ -45,11 +52,11 @@ export default function RsaKeyGenerator() {
   const generate = useCallback(async () => {
     setGenerating(true)
     setKeys(null)
-    try { 
+    try {
       const newKeys = await generatePair(keySize)
       setKeys(newKeys)
       announceToScreenReader(`${keySize}-bit key pair generated successfully`)
-    } catch (e) { 
+    } catch (e) {
       console.error(e)
       announceToScreenReader("Error generating key pair")
     }
@@ -106,12 +113,6 @@ export default function RsaKeyGenerator() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [generating, keys, generate, copy])
 
-  const shortcuts = [
-    { keys: ["Ctrl", "Shift", "G"], description: "Generate new keys" },
-    { keys: ["Ctrl", "Shift", "P"], description: "Copy public key" },
-    { keys: ["Ctrl", "Shift", "L"], description: "Copy private key" },
-  ]
-
   const placeholder = (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
       <Key className="h-12 w-12 opacity-15" />
@@ -122,133 +123,182 @@ export default function RsaKeyGenerator() {
   )
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
+    <>
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">RSA Key Generator</h2>
-          <p className="text-muted-foreground">Generate RSA-OAEP key pairs in PEM format. Nothing leaves your browser.</p>
-        </div>
-        <ShortcutsModal pageName="RSA Key Generator" shortcuts={shortcuts} />
-      </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1" role="group" aria-label="Key size selection">
-          {([2048, 4096] as KeySize[]).map(size => (
-            <button
-              key={size}
-              onClick={() => handleKeySizeChange(size)}
-              role="radio"
-              aria-checked={keySize === size}
-              aria-label={`${size}-bit key size`}
-              className={`text-sm px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${keySize === size ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+      <div className="flex h-full flex-col">
+
+        {/* DESKTOP: top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+          <span className="text-sm font-semibold shrink-0 mr-1">RSA Key Generator</span>
+          <div className="flex items-center gap-1" role="group" aria-label="Key size selection">
+            {([2048, 4096] as KeySize[]).map(size => (
+              <button
+                key={size}
+                onClick={() => handleKeySizeChange(size)}
+                role="radio"
+                aria-checked={keySize === size}
+                aria-label={`${size}-bit key size`}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${keySize === size ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              >
+                {size}-bit
+              </button>
+            ))}
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="RSA Key Generator" shortcuts={shortcuts} />
+            <Button
+              size="sm"
+              onClick={generate}
+              disabled={generating}
+              aria-label={generating ? "Generating key pair, please wait" : "Generate new RSA key pair"}
             >
-              {size}-bit
+              <RefreshCw className={`h-4 w-4 mr-1 ${generating ? "animate-spin" : ""}`} />
+              {generating ? "Generating..." : "Generate Keys"}
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+            </Button>
+          </div>
+        </div>
+
+        {/* MOBILE: compact header + tab switcher */}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <h2 className="text-base font-semibold">RSA Key Generator</h2>
+            <ShortcutsModal pageName="RSA Key Generator" shortcuts={shortcuts} />
+          </div>
+          <div className="flex" role="tablist">
+            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Public Key
             </button>
-          ))}
+            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Private Key
+            </button>
+          </div>
         </div>
-        <Button 
-          onClick={generate} 
-          disabled={generating}
-          aria-label={generating ? "Generating key pair, please wait" : "Generate new RSA key pair"}
+
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+          {/* Left — Public Key */}
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Public key">
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Public Key</span>
+                  <Badge variant="secondary" className="text-xs" aria-label="Safe to share">Safe to share</Badge>
+                </div>
+                {keys && (
+                  <div className="flex gap-1" role="group" aria-label="Public key actions">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copy(keys.publicKey, "pub")}
+                      aria-label={copied === "pub" ? "Public key copied to clipboard" : "Copy public key"}
+                      className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      {copied === "pub" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                      <span>{copied === "pub" ? "Copied!" : "Copy"}</span>
+                      <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+P</kbd>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => download(keys.publicKey, "public.pem")}
+                      aria-label="Download public key as public.pem"
+                      className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      <span>public.pem</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {keys
+                ? <pre
+                    className="flex-1 overflow-auto p-4 text-xs font-mono bg-muted/10 whitespace-pre-wrap break-all leading-relaxed"
+                    aria-label="Public key content"
+                    tabIndex={0}
+                  >{keys.publicKey}</pre>
+                : <div role="status" aria-live="polite">{placeholder}</div>
+              }
+            </div>
+
+          {/* Right — Private Key */}
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Private key">
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Private Key</span>
+                  <Badge variant="destructive" className="text-xs" aria-label="Keep secret">Keep secret</Badge>
+                </div>
+                {keys && (
+                  <div className="flex gap-1" role="group" aria-label="Private key actions">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copy(keys.privateKey, "priv")}
+                      aria-label={copied === "priv" ? "Private key copied to clipboard" : "Copy private key"}
+                      className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      {copied === "priv" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                      <span>{copied === "priv" ? "Copied!" : "Copy"}</span>
+                      <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => download(keys.privateKey, "private.pem")}
+                      aria-label="Download private key as private.pem"
+                      className="focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      <span>private.pem</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {keys
+                ? <pre
+                    className="flex-1 overflow-auto p-4 text-xs font-mono bg-muted/10 whitespace-pre-wrap break-all leading-relaxed"
+                    aria-label="Private key content - keep secret"
+                    tabIndex={0}
+                  >{keys.privateKey}</pre>
+                : <div role="status" aria-live="polite">{placeholder}</div>
+              }
+          </div>
+        </div>
+
+        {/* MOBILE: bottom action bar */}
+        <div
+          className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
-          <RefreshCw className={`h-4 w-4 mr-1 ${generating ? "animate-spin" : ""}`} />
-          <span>{generating ? "Generating..." : "Generate Keys"}</span>
-          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+G</kbd>
-        </Button>
-        <span className="ml-auto text-xs text-muted-foreground">RSA-OAEP-SHA256 · PKCS#8 · Nothing leaves your browser</span>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-        {/* Left — Public Key */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Public key">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Public Key</span>
-              <Badge variant="secondary" className="text-xs" aria-label="Safe to share">Safe to share</Badge>
-            </div>
-            {keys && (
-              <div className="flex gap-1" role="group" aria-label="Public key actions">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => copy(keys.publicKey, "pub")}
-                  aria-label={copied === "pub" ? "Public key copied to clipboard" : "Copy public key"}
-                  className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  {copied === "pub" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  <span>{copied === "pub" ? "Copied!" : "Copy"}</span>
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+P</kbd>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => download(keys.publicKey, "public.pem")}
-                  aria-label="Download public key as public.pem"
-                  className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  <span>public.pem</span>
-                </Button>
-              </div>
-            )}
+          <div className="flex items-center gap-1 mr-auto" role="group" aria-label="Key size selection">
+            {([2048, 4096] as KeySize[]).map(size => (
+              <button
+                key={size}
+                onClick={() => handleKeySizeChange(size)}
+                role="radio"
+                aria-checked={keySize === size}
+                aria-label={`${size}-bit key size`}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 ${keySize === size ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              >
+                {size}-bit
+              </button>
+            ))}
           </div>
-          {keys
-            ? <pre 
-                className="flex-1 overflow-auto p-4 text-xs font-mono bg-muted/10 whitespace-pre-wrap break-all leading-relaxed" 
-                aria-label="Public key content"
-                tabIndex={0}
-              >{keys.publicKey}</pre>
-            : <div role="status" aria-live="polite">{placeholder}</div>
-          }
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={generate}
+            disabled={generating}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${generating ? "animate-spin" : ""}`} />
+            {generating ? "Generating..." : "Generate"}
+          </Button>
         </div>
 
-        {/* Right — Private Key */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Private key">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Private Key</span>
-              <Badge variant="destructive" className="text-xs" aria-label="Keep secret">Keep secret</Badge>
-            </div>
-            {keys && (
-              <div className="flex gap-1" role="group" aria-label="Private key actions">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => copy(keys.privateKey, "priv")}
-                  aria-label={copied === "priv" ? "Private key copied to clipboard" : "Copy private key"}
-                  className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  {copied === "priv" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  <span>{copied === "priv" ? "Copied!" : "Copy"}</span>
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => download(keys.privateKey, "private.pem")}
-                  aria-label="Download private key as private.pem"
-                  className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  <span>private.pem</span>
-                </Button>
-              </div>
-            )}
-          </div>
-          {keys
-            ? <pre 
-                className="flex-1 overflow-auto p-4 text-xs font-mono bg-muted/10 whitespace-pre-wrap break-all leading-relaxed" 
-                aria-label="Private key content - keep secret"
-                tabIndex={0}
-              >{keys.privateKey}</pre>
-            : <div role="status" aria-live="polite">{placeholder}</div>
-          }
-        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -426,53 +426,90 @@ export default function CvMaker() {
     return () => window.removeEventListener("keydown", handleKeyDown, true)
   }, [setTmpl, addExp, addEdu, addProj, handlePrint, handleClear])
 
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between flex-wrap gap-2" role="banner">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight" id="cv-title">CV Maker</h2>
-          <p className="text-sm text-muted-foreground" id="cv-description">Your data is saved locally in your browser and never uploaded. Press 1/2 for templates, Ctrl+E/D/K/P to add items, Ctrl+Shift+D to download. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">CV Maker</span>
+        <div className="flex items-center gap-1" role="radiogroup" aria-label="CV template">
+          {(["classic", "modern"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTmpl(t)}
+              className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${template === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              role="radio"
+              aria-checked={template === t}
+              aria-label={`${t} template (press ${t === 'classic' ? '1' : '2'})`}
+            >
+              {t}<kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{t === 'classic' ? '1' : '2'}</kbd>
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleClear}
-            className={`text-xs px-2.5 py-1 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-destructive ${
-              confirmingClear
-                ? "border-destructive text-destructive bg-destructive/10 font-medium"
-                : "border-border text-muted-foreground hover:border-destructive/60 hover:text-destructive"
-            }`}
-            aria-label={confirmingClear ? "Confirm clear all data" : "Clear all CV data (Ctrl+Shift+X)"}
-          >
-            {confirmingClear ? "Confirm clear?" : "Clear data"}{!confirmingClear && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+X</kbd>}
-          </button>
-          <div className="flex items-center gap-1" role="radiogroup" aria-label="CV template">
-            {(["classic", "modern"] as const).map(t => (
-              <button 
-                key={t} 
-                onClick={() => setTmpl(t)}
-                className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${template === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                role="radio"
-                aria-checked={template === t}
-                aria-label={`${t} template (press ${t === 'classic' ? '1' : '2'})`}
-              >
-                {t}<kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{t === 'classic' ? '1' : '2'}</kbd>
-              </button>
-            ))}
-          </div>
-          <Button 
-            size="sm" 
-            onClick={handlePrint}
-            aria-label="Download PDF (Ctrl+Shift+D)"
-          >
-            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download PDF<kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground text-primary px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="CV Maker"
+            shortcuts={[
+              { keys: ["1"], description: "Classic template" },
+              { keys: ["2"], description: "Modern template" },
+              { keys: ["Ctrl", "E"], description: "Add experience" },
+              { keys: ["Ctrl", "D"], description: "Add education" },
+              { keys: ["Ctrl", "K"], description: "Focus skills input" },
+              { keys: ["Ctrl", "P"], description: "Add project" },
+              { keys: ["Ctrl", "Shift", "D"], description: "Download PDF" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Clear all data" },
+              { keys: ["Escape"], description: "Focus name input" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between sections" },
+              { keys: ["Enter"], description: "Add skill when in skill input" },
+            ]}
+          />
+          <Button size="sm" onClick={handlePrint} aria-label="Download PDF (Ctrl+Shift+D)">
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download PDF
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">CV Maker</h2>
+          <ShortcutsModal
+            pageName="CV Maker"
+            shortcuts={[
+              { keys: ["1"], description: "Classic template" },
+              { keys: ["2"], description: "Modern template" },
+              { keys: ["Ctrl", "E"], description: "Add experience" },
+              { keys: ["Ctrl", "D"], description: "Add education" },
+              { keys: ["Ctrl", "K"], description: "Focus skills input" },
+              { keys: ["Ctrl", "P"], description: "Add project" },
+              { keys: ["Ctrl", "Shift", "D"], description: "Download PDF" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Clear all data" },
+              { keys: ["Escape"], description: "Focus name input" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between sections" },
+              { keys: ["Enter"], description: "Add skill when in skill input" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Form
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Form */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="CV editor form">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="CV editor form">
           <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium">Edit CV</span></div>
           <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-3">
@@ -812,7 +849,7 @@ export default function CvMaker() {
         </div>
 
         {/* Right — Live preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="CV preview">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="CV preview">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Preview</span>
             {cv.personal.name && (
@@ -828,24 +865,16 @@ export default function CvMaker() {
           </div>
         </div>
       </div>
+
+      {/* Mobile bottom action bar */}
+      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={handlePrint} aria-label="Download PDF">
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />Download PDF
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="CV Maker"
-      shortcuts={[
-        { keys: ["1"], description: "Classic template" },
-        { keys: ["2"], description: "Modern template" },
-        { keys: ["Ctrl", "E"], description: "Add experience" },
-        { keys: ["Ctrl", "D"], description: "Add education" },
-        { keys: ["Ctrl", "K"], description: "Focus skills input" },
-        { keys: ["Ctrl", "P"], description: "Add project" },
-        { keys: ["Ctrl", "Shift", "D"], description: "Download PDF" },
-        { keys: ["Ctrl", "Shift", "X"], description: "Clear all data" },
-        { keys: ["Escape"], description: "Focus name input" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between sections" },
-        { keys: ["Enter"], description: "Add skill when in skill input" },
-      ]}
-    />
     </>
   )
 }

@@ -114,6 +114,7 @@ export function FileChecksumVerifier() {
   const [results, setResults] = useState<{ algo: Algo; hash: string }[]>([])
   const [computing, setComputing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [copiedAlgo, setCopiedAlgo] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -186,14 +187,47 @@ export function FileChecksumVerifier() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">File Checksum Verifier</h2>
-        <p className="text-muted-foreground">Verify file integrity · 100% in-browser</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">File Checksum Verifier</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="File Checksum Verifier" shortcuts={[
+            { keys: ["Ctrl", "Enter"], description: "Compute hash" },
+            { keys: ["Ctrl", "O"], description: "Open file picker" },
+          ]} />
+          <Button size="sm" onClick={compute} disabled={!file || computing}>
+            {computing ? (
+              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Computing…</>
+            ) : (
+              <><Hash className="h-4 w-4 mr-1" aria-hidden="true" />Compute Hash</>
+            )}
+          </Button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">File Checksum Verifier</h2>
+          <ShortcutsModal pageName="File Checksum Verifier" shortcuts={[{ keys: ["Ctrl", "Enter"], description: "Compute hash" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Results
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
       {/* Left panel — options */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+      <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           <div className="space-y-2">
@@ -291,36 +325,15 @@ export function FileChecksumVerifier() {
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-border p-4 space-y-2">
-          <Button
-              className="w-full"
-              onClick={compute}
-              disabled={!file || computing}
-              aria-label={computing ? "Computing hash, please wait" : `Compute hash using ${Array.from(selectedAlgos).join(", ")}`}
-            >
-            {computing ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" />
-                Computing…
-              </>
-            ) : (
-              <>
-                <Hash className="mr-2 h-4 w-4" />
-                Compute Hash{selectedAlgos.size > 1 ? "es" : ""}
-              </>
-            )}
-          </Button>
-          {error && (
-            <div className="flex items-center gap-1.5 text-xs text-red-500">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              {error}
-            </div>
-          )}
-        </div>
+        {error && (
+          <div className="shrink-0 px-4 pb-3 flex items-center gap-1.5 text-xs text-red-500">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{error}
+          </div>
+        )}
       </div>
 
       {/* Right panel — results */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+      <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
         <div className="flex-1 overflow-y-auto p-4">
           {results.length === 0 ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
@@ -402,15 +415,19 @@ export function FileChecksumVerifier() {
       </div>
 
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={() => { compute(); setActiveTab("output") }} disabled={!file || computing}>
+          {computing ? "Computing…" : <><Hash className="h-4 w-4 mr-1.5" aria-hidden="true" />Compute Hash</>}
+        </Button>
+      </div>
+
     </div>
-    <ShortcutsModal
-      pageName="File Checksum Verifier"
-      shortcuts={[
-        { keys: ["Ctrl", "Enter"], description: "Compute hash" },
-        { keys: ["Ctrl", "O"], description: "Open file picker" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }

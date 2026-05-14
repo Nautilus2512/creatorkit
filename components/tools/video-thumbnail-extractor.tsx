@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download, Grid, Clock } from "lucide-react"
@@ -41,6 +41,7 @@ export default function VideoThumbnailExtractor() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const announceToScreenReader = useCallback((message: string) => {
@@ -85,6 +86,7 @@ export default function VideoThumbnailExtractor() {
     setThumbs(results)
     setLoading(false); setProgress(0)
     announceToScreenReader(`Extracted ${results.length} frames`)
+    setActiveTab("output")
   }, [duration, mode, gridCount, interval, announceToScreenReader])
 
   const downloadAll = useCallback(async () => {
@@ -157,34 +159,99 @@ export default function VideoThumbnailExtractor() {
   ]
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
 
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Video Thumbnail Extractor</h2>
-          <p className="text-muted-foreground">Extract frames from any video as JPG images. Runs entirely in your browser.</p>
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Video Thumbnail Extractor</span>
+        <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Extraction options">
+          <div className="flex items-center gap-2" role="radiogroup" aria-label="Extraction mode">
+            <Label className="text-xs text-muted-foreground" id="mode-label">Mode:</Label>
+            <button
+              onClick={() => changeMode("grid")}
+              role="radio"
+              aria-checked={mode === "grid"}
+              aria-labelledby="mode-label"
+              title="Grid mode (Ctrl+Shift+G)"
+              className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "grid" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+              <Grid className="h-3 w-3" aria-hidden="true" />
+              <span>Grid</span>
+              <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+                <span>G</span>
+              </kbd>
+            </button>
+            <button
+              onClick={() => changeMode("interval")}
+              role="radio"
+              aria-checked={mode === "interval"}
+              aria-labelledby="mode-label"
+              title="Interval mode (Ctrl+Shift+I)"
+              className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "interval" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+              <Clock className="h-3 w-3" aria-hidden="true" />
+              <span>Interval</span>
+              <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+                <span>I</span>
+              </kbd>
+            </button>
+          </div>
+          {mode === "grid" ? (
+            <div className="flex items-center gap-3">
+              <Label className="text-xs text-muted-foreground" id="frames-label">Frames:</Label>
+              <Slider
+                value={[gridCount]}
+                onValueChange={([v]) => {
+                  setGridCount(v)
+                  announceToScreenReader(`Set to ${v} frames`)
+                }}
+                min={3}
+                max={24}
+                step={1}
+                className="w-28"
+                aria-label={`Number of frames: ${gridCount}`}
+              />
+              <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{gridCount}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Label className="text-xs text-muted-foreground" id="interval-label">Every:</Label>
+              <Slider
+                value={[interval]}
+                onValueChange={([v]) => {
+                  setIntervalSec(v)
+                  announceToScreenReader(`Set interval to ${v} seconds`)
+                }}
+                min={1}
+                max={60}
+                step={1}
+                className="w-28"
+                aria-label={`Extract frame every ${interval} seconds`}
+              />
+              <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{interval}s</span>
+            </div>
+          )}
+          {duration > 0 && <span className="text-xs text-muted-foreground" aria-live="polite">Duration: {fmtTime(duration)}</span>}
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={extract} 
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Video Thumbnail Extractor" shortcuts={shortcuts} />
+          <Button
+            size="sm"
+            onClick={extract}
             disabled={!videoUrl || loading}
             aria-label={loading ? `Extracting frames: ${progress}%` : "Extract frames from video"}
-            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {loading ? `Extracting… ${progress}%` : "Extract Frames"}
-            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
+            {videoUrl && !loading && (
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
+            )}
           </Button>
           {thumbs.length > 0 && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={downloadAll}
               aria-label="Download all thumbnails as ZIP"
-              className="focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Download ZIP</span>
@@ -192,80 +259,35 @@ export default function VideoThumbnailExtractor() {
             </Button>
           )}
         </div>
-        <ShortcutsModal pageName="Video Thumbnail Extractor" shortcuts={shortcuts} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Extraction options">
-        <div className="flex items-center gap-2" role="radiogroup" aria-label="Extraction mode">
-          <Label className="text-xs text-muted-foreground" id="mode-label">Mode:</Label>
-          <button 
-            onClick={() => changeMode("grid")}
-            role="radio"
-            aria-checked={mode === "grid"}
-            aria-labelledby="mode-label"
-            title="Grid mode (Ctrl+Shift+G)"
-            className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "grid" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-            <Grid className="h-3 w-3" aria-hidden="true" />
-            <span>Grid</span>
-            <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
-              <span>G</span>
-            </kbd>
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Video Thumbnail Extractor</h2>
+          <ShortcutsModal pageName="Video Thumbnail Extractor" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
           </button>
-          <button 
-            onClick={() => changeMode("interval")}
-            role="radio"
-            aria-checked={mode === "interval"}
-            aria-labelledby="mode-label"
-            title="Interval mode (Ctrl+Shift+I)"
-            className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "interval" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-            <Clock className="h-3 w-3" aria-hidden="true" />
-            <span>Interval</span>
-            <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
-              <span>I</span>
-            </kbd>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Thumbnails
           </button>
         </div>
-        {mode === "grid" ? (
-          <div className="flex items-center gap-3">
-            <Label className="text-xs text-muted-foreground" id="frames-label">Frames:</Label>
-            <Slider 
-              value={[gridCount]} 
-              onValueChange={([v]) => {
-                setGridCount(v)
-                announceToScreenReader(`Set to ${v} frames`)
-              }} 
-              min={3} 
-              max={24} 
-              step={1} 
-              className="w-28" 
-              aria-label={`Number of frames: ${gridCount}`}
-            />
-            <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{gridCount}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Label className="text-xs text-muted-foreground" id="interval-label">Every:</Label>
-            <Slider 
-              value={[interval]} 
-              onValueChange={([v]) => {
-                setIntervalSec(v)
-                announceToScreenReader(`Set interval to ${v} seconds`)
-              }} 
-              min={1} 
-              max={60} 
-              step={1} 
-              className="w-28" 
-              aria-label={`Extract frame every ${interval} seconds`}
-            />
-            <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{interval}s</span>
-          </div>
-        )}
-        {duration > 0 && <span className="text-xs text-muted-foreground" aria-live="polite">Duration: {fmtTime(duration)}</span>}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Video */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Video panel">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Video panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="video-label">Video</span>
           </div>
@@ -297,7 +319,7 @@ export default function VideoThumbnailExtractor() {
         </div>
 
         {/* Right — Thumbnails */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Thumbnails panel">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Thumbnails panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="thumbnails-label">{thumbs.length > 0 ? `${thumbs.length} frames extracted` : "Frames"}</span>
           </div>
@@ -309,9 +331,9 @@ export default function VideoThumbnailExtractor() {
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {thumbs.map((thumb) => (
-                  <div 
-                    key={thumb.time} 
-                    className="group relative rounded-lg border border-border overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50" 
+                  <div
+                    key={thumb.time}
+                    className="group relative rounded-lg border border-border overflow-hidden cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                     onClick={() => downloadOne(thumb)}
                     role="listitem"
                     aria-label={`Download frame at ${fmtTime(thumb.time)}`}
@@ -331,6 +353,35 @@ export default function VideoThumbnailExtractor() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Mobile bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        {thumbs.length > 0 ? (
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={downloadAll}
+            aria-label="Download all thumbnails as ZIP"
+          >
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+            Download ZIP
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={extract}
+            disabled={!videoUrl || loading}
+            aria-label={loading ? `Extracting frames: ${progress}%` : "Extract frames from video"}
+          >
+            {loading ? `Extracting… ${progress}%` : "Extract Frames"}
+          </Button>
+        )}
       </div>
     </div>
   )

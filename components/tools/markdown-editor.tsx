@@ -82,6 +82,7 @@ export function MarkdownEditor() {
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const editorRef = useRef<HTMLTextAreaElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const isUndoingRef = useRef(false)
@@ -301,256 +302,326 @@ export function MarkdownEditor() {
   }, [markdown, downloadMarkdown, copyMarkdown, announceToScreenReader])
 
   return (
-    <>
+    <div className="flex h-full flex-col">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      <ShortcutsModal
-        pageName="Markdown Editor"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "S"], description: "Download markdown" },
-          { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
-          { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
-          { keys: ["Ctrl", "Shift", "B"], description: "Bold text" },
-          { keys: ["Ctrl", "Shift", "I"], description: "Italic text" },
-          { keys: ["Ctrl", "Z"], description: "Undo" },
-          { keys: ["Ctrl", "Y"], description: "Redo" },
-          { keys: ["?"], description: "Show keyboard shortcuts" },
-        ]}
-      />
-      <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between shrink-0 flex-wrap gap-2">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Markdown Editor</h2>
-            <p className="text-muted-foreground">Write and preview markdown with live rendering</p>
-          </div>
-          <div className="flex items-center gap-2" role="group" aria-label="Editor actions">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Markdown Editor</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setSyncScroll(!syncScroll); announceToScreenReader(syncScroll ? "Scroll sync disabled" : "Scroll sync enabled") }}
+            title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-pressed={syncScroll}
+            aria-label="Toggle scroll sync"
+          >
+            {syncScroll ? <Link2 className="h-3 w-3 mr-1" aria-hidden="true" /> : <Link2Off className="h-3 w-3 mr-1" aria-hidden="true" />}
+            {syncScroll ? "Sync Scroll" : "Free Scroll"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyMarkdown}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label={copied ? "Copied to clipboard" : "Copy markdown to clipboard"}
+          >
+            {copied ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadMarkdown}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label="Download markdown file"
+          >
+            <Download className="h-3 w-3 mr-1" aria-hidden="true" />Download
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+          </Button>
+          <div className="relative">
+            <input
+              type="file"
+              accept=".md,.txt"
+              onChange={uploadMarkdown}
+              className="hidden"
+              id="upload-md"
+              ref={fileInputRef}
+              aria-label="Upload markdown file"
+            />
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { setSyncScroll(!syncScroll); announceToScreenReader(syncScroll ? "Scroll sync disabled" : "Scroll sync enabled") }}
-              title={syncScroll ? "Disable scroll sync" : "Enable scroll sync"}
+              asChild
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-pressed={syncScroll}
-              aria-label="Toggle scroll sync"
             >
-              {syncScroll ? <Link2 className="h-3 w-3 mr-1" aria-hidden="true" /> : <Link2Off className="h-3 w-3 mr-1" aria-hidden="true" />}
-              {syncScroll ? "Sync Scroll" : "Free Scroll"}
+              <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1" role="button" aria-label="Upload markdown file">
+                <Upload className="h-3 w-3" aria-hidden="true" />Upload<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+              </label>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={copyMarkdown}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label={copied ? "Copied to clipboard" : "Copy markdown to clipboard"}
-            >
-              {copied ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
-              {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+C</kbd>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={downloadMarkdown}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label="Download markdown file"
-            >
-              <Download className="h-3 w-3 mr-1" aria-hidden="true" />Download
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
-            </Button>
-            <div className="relative">
-              <input 
-                type="file" 
-                accept=".md,.txt" 
-                onChange={uploadMarkdown} 
-                className="hidden" 
-                id="upload-md"
-                ref={fileInputRef}
-                aria-label="Upload markdown file"
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1" role="button" aria-label="Upload markdown file">
-                  <Upload className="h-3 w-3" aria-hidden="true" />Upload<kbd className="ml-1 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
-                </label>
-              </Button>
-            </div>
           </div>
+          <ShortcutsModal
+            pageName="Markdown Editor"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "S"], description: "Download markdown" },
+              { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+              { keys: ["Ctrl", "Shift", "B"], description: "Bold text" },
+              { keys: ["Ctrl", "Shift", "I"], description: "Italic text" },
+              { keys: ["Ctrl", "Z"], description: "Undo" },
+              { keys: ["Ctrl", "Y"], description: "Redo" },
+              { keys: ["?"], description: "Show keyboard shortcuts" },
+            ]}
+          />
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-          {/* Left card — Editor */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="editor-panel-label">
-            <div className="sr-only" id="editor-panel-label">Markdown Editor</div>
-            {/* Toolbar */}
-            <div 
-              className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30"
-              role="toolbar"
-              aria-label="Formatting tools"
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Markdown Editor</h2>
+          <ShortcutsModal
+            pageName="Markdown Editor"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "S"], description: "Download markdown" },
+              { keys: ["Ctrl", "Shift", "C"], description: "Copy markdown" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+              { keys: ["Ctrl", "Shift", "B"], description: "Bold text" },
+              { keys: ["Ctrl", "Shift", "I"], description: "Italic text" },
+              { keys: ["Ctrl", "Z"], description: "Undo" },
+              { keys: ["Ctrl", "Y"], description: "Redo" },
+              { keys: ["?"], description: "Show keyboard shortcuts" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Editor
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Preview
+          </button>
+        </div>
+      </div>
+
+      {/* Panels */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* Left/Editor Panel */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="editor-panel-label">
+          <div className="sr-only" id="editor-panel-label">Markdown Editor</div>
+          {/* Toolbar */}
+          <div
+            className="shrink-0 flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30"
+            role="toolbar"
+            aria-label="Formatting tools"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { undo(); announceToScreenReader("Undo") }}
+              disabled={historyIndex <= 0}
+              title="Undo (Ctrl+Z)"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Undo"
+              aria-disabled={historyIndex <= 0}
             >
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { undo(); announceToScreenReader("Undo") }}
-                disabled={historyIndex <= 0} 
-                title="Undo (Ctrl+Z)"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Undo"
-                aria-disabled={historyIndex <= 0}
-              >
-                <Undo className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { redo(); announceToScreenReader("Redo") }}
-                disabled={historyIndex >= history.length - 1} 
-                title="Redo (Ctrl+Y)"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Redo"
-                aria-disabled={historyIndex >= history.length - 1}
-              >
-                <Redo className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("**", "**"); announceToScreenReader("Bold applied") }}
-                title="Bold (Ctrl+Shift+B)"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Bold"
-              >
-                <Bold className="h-3 w-3" aria-hidden="true" />
-                <kbd className="sr-only">Ctrl+Shift+B</kbd>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("*", "*"); announceToScreenReader("Italic applied") }}
-                title="Italic (Ctrl+Shift+I)"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Italic"
-              >
-                <Italic className="h-3 w-3" aria-hidden="true" />
-                <kbd className="sr-only">Ctrl+Shift+I</kbd>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("~~", "~~"); announceToScreenReader("Strikethrough applied") }}
-                title="Strikethrough"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Strikethrough"
-              >
-                <Strikethrough className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("# ", ""); announceToScreenReader("Heading added") }}
-                title="Heading"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add heading"
-              >
-                <Hash className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("`", "`"); announceToScreenReader("Inline code added") }}
-                title="Inline code"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add inline code"
-              >
-                <Quote className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("> ", ""); announceToScreenReader("Blockquote added") }}
-                title="Quote"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add blockquote"
-              >
-                <Code className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("- ", ""); announceToScreenReader("Unordered list added") }}
-                title="Unordered list"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add unordered list"
-              >
-                <List className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("1. ", ""); announceToScreenReader("Ordered list added") }}
-                title="Ordered list"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add ordered list"
-              >
-                <ListOrdered className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("[", "](url)"); announceToScreenReader("Link template added") }}
-                title="Link"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add link"
-              >
-                <Link className="h-3 w-3" aria-hidden="true" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => { insertText("![", "](url)"); announceToScreenReader("Image template added") }}
-                title="Image"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add image"
-              >
-                <Image className="h-3 w-3" aria-hidden="true" />
-              </Button>
-            </div>
-            {/* Editor */}
-            <div className="flex-1 min-h-0" role="textbox" aria-label="Markdown editor">
-              <Textarea
-                ref={editorRef}
-                value={markdown}
-                onChange={(e) => { setMarkdownWithHistory(e.target.value); announceToScreenReader("Editor content updated") }}
-                placeholder="Write your markdown here..."
-                className="w-full h-full resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
-                aria-label="Markdown editor input"
-              />
-            </div>
+              <Undo className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { redo(); announceToScreenReader("Redo") }}
+              disabled={historyIndex >= history.length - 1}
+              title="Redo (Ctrl+Y)"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Redo"
+              aria-disabled={historyIndex >= history.length - 1}
+            >
+              <Redo className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("**", "**"); announceToScreenReader("Bold applied") }}
+              title="Bold (Ctrl+Shift+B)"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Bold"
+            >
+              <Bold className="h-3 w-3" aria-hidden="true" />
+              <kbd className="sr-only">Ctrl+Shift+B</kbd>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("*", "*"); announceToScreenReader("Italic applied") }}
+              title="Italic (Ctrl+Shift+I)"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Italic"
+            >
+              <Italic className="h-3 w-3" aria-hidden="true" />
+              <kbd className="sr-only">Ctrl+Shift+I</kbd>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("~~", "~~"); announceToScreenReader("Strikethrough applied") }}
+              title="Strikethrough"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Strikethrough"
+            >
+              <Strikethrough className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("# ", ""); announceToScreenReader("Heading added") }}
+              title="Heading"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add heading"
+            >
+              <Hash className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("`", "`"); announceToScreenReader("Inline code added") }}
+              title="Inline code"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add inline code"
+            >
+              <Quote className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("> ", ""); announceToScreenReader("Blockquote added") }}
+              title="Quote"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add blockquote"
+            >
+              <Code className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("- ", ""); announceToScreenReader("Unordered list added") }}
+              title="Unordered list"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add unordered list"
+            >
+              <List className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("1. ", ""); announceToScreenReader("Ordered list added") }}
+              title="Ordered list"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add ordered list"
+            >
+              <ListOrdered className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("[", "](url)"); announceToScreenReader("Link template added") }}
+              title="Link"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add link"
+            >
+              <Link className="h-3 w-3" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { insertText("![", "](url)"); announceToScreenReader("Image template added") }}
+              title="Image"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              aria-label="Add image"
+            >
+              <Image className="h-3 w-3" aria-hidden="true" />
+            </Button>
           </div>
-
-          {/* Right card — Preview */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-panel-label">
-            <div className="shrink-0 border-b border-border px-4 py-3 bg-muted/30">
-              <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
-            </div>
-            <div
-              ref={previewRef}
-              className="flex-1 overflow-y-auto p-4 prose prose-sm max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: html }}
-              role="document"
-              aria-label="Markdown preview"
+          {/* Editor */}
+          <div className="flex-1 min-h-0" role="textbox" aria-label="Markdown editor">
+            <Textarea
+              ref={editorRef}
+              value={markdown}
+              onChange={(e) => { setMarkdownWithHistory(e.target.value); announceToScreenReader("Editor content updated") }}
+              placeholder="Write your markdown here..."
+              className="w-full h-full resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+              aria-label="Markdown editor input"
             />
           </div>
         </div>
+
+        {/* Right/Preview Panel */}
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="preview-panel-label">
+          <div className="shrink-0 border-b border-border px-4 py-3 bg-muted/30">
+            <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
+          </div>
+          <div
+            ref={previewRef}
+            className="flex-1 overflow-y-auto p-4 prose prose-sm max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: html }}
+            role="document"
+            aria-label="Markdown preview"
+          />
+        </div>
       </div>
-    </>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { undo(); announceToScreenReader("Undo") }}
+          disabled={historyIndex <= 0}
+          aria-label="Undo"
+          className="h-11 px-3"
+        >
+          <Undo className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { redo(); announceToScreenReader("Redo") }}
+          disabled={historyIndex >= history.length - 1}
+          aria-label="Redo"
+          className="h-11 px-3"
+        >
+          <Redo className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={copyMarkdown} aria-label={copied ? "Copied to clipboard" : "Copy markdown"}>
+          {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy"}
+        </Button>
+        <Button size="sm" className="h-11 px-4" onClick={downloadMarkdown} aria-label="Download markdown file">
+          <Download className="h-4 w-4 mr-1" aria-hidden="true" />Save
+        </Button>
+      </div>
+    </div>
   )
 }

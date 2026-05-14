@@ -41,6 +41,7 @@ export default function BorderRadiusVisualizer() {
   const [linked, setLinked] = useState(false)
   const [boxColor, setBoxColor] = useState("#6366f1")
   const [copied, setCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const setAll = useCallback((v: number) => { setTl(v); setTr(v); setBr(v); setBl(v) }, [])
 
@@ -130,45 +131,59 @@ export default function BorderRadiusVisualizer() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between flex-wrap gap-2" role="banner">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight" id="border-radius-title">Border Radius Visualizer</h2>
-          <p className="text-muted-foreground" id="border-radius-description">Build CSS border-radius values visually and copy the code. Press ? for keyboard shortcuts. Number keys 0-9 apply presets.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Border radius controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Border Radius Visualizer</span>
+        <div className="flex items-center gap-1" role="radiogroup" aria-label="Unit">
+          {(["px", "%"] as const).map(u => (
+            <button key={u} onClick={() => toggleUnit(u)} role="radio" aria-checked={unit === u} aria-label={`Unit: ${u}`}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${unit === u ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+              {u}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1" role="radiogroup" aria-label="Unit selection">
-            {(["px", "%"] as const).map(u => (
-              <button 
-                key={u} 
-                onClick={() => toggleUnit(u)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${unit === u ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
-                role="radio"
-                aria-checked={unit === u}
-                aria-label={`Set unit to ${u}`}
-              >{u}</button>
-            ))}
-          </div>
-          <button
-            onClick={toggleLinked}
-            className={`text-xs px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${linked ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
-            aria-label={linked ? "Unlink corners" : "Link corners"}
-            aria-pressed={linked}
-            title="Link corners so they move together"
-          >
-            {linked ? "🔒 Linked" : "🔓 Unlinked"}
-            <span className="sr-only">. Press Control plus L to toggle</span>
-          </button>
+        <button onClick={toggleLinked} aria-label={linked ? "Unlink corners" : "Link corners"} aria-pressed={linked}
+          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${linked ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+          {linked ? "🔒 Linked" : "🔓 Unlinked"}
+        </button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Border Radius Visualizer" shortcuts={[
+            { keys: ["0-9"], description: "Apply presets" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+            { keys: ["Ctrl", "Shift", "U"], description: "Toggle unit" },
+            { keys: ["Ctrl", "Shift", "L"], description: "Toggle linked" },
+          ]} />
           <Button variant="outline" size="sm" onClick={copy} aria-label="Copy CSS to clipboard">
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-            {copied ? "Copied!" : "Copy CSS"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            {copied ? "Copied!" : "Copy CSS"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Border Radius</h2>
+          <ShortcutsModal pageName="Border Radius Visualizer" shortcuts={[{ keys: ["0-9"], description: "Apply presets" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Controls
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Border radius controls">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Border radius controls">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Controls</span>
           </div>
@@ -232,7 +247,7 @@ export default function BorderRadiusVisualizer() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Preview and CSS output">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Preview and CSS output">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Preview</span>
           </div>
@@ -268,20 +283,25 @@ export default function BorderRadiusVisualizer() {
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center gap-1" role="radiogroup">
+          {(["px", "%"] as const).map(u => (
+            <button key={u} onClick={() => toggleUnit(u)} className={`h-11 px-3 text-xs rounded-md border ${unit === u ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>{u}</button>
+          ))}
+        </div>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" className="h-11 px-4" onClick={copy} aria-label="Copy CSS">
+          {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy CSS"}
+        </Button>
+      </div>
+
     </div>
-    <ShortcutsModal
-      pageName="Border Radius Visualizer"
-      shortcuts={[
-        { keys: ["0-9"], description: "Apply presets (1=Square, 2=Rounded, etc.)" },
-        { keys: ["Ctrl", "C"], description: "Copy CSS" },
-        { keys: ["Ctrl", "U"], description: "Toggle unit (px/%)" },
-        { keys: ["Ctrl", "L"], description: "Toggle linked corners" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-        { keys: ["Space"], description: "Activate focused button" },
-      ]}
-    />
     </>
   )
 }

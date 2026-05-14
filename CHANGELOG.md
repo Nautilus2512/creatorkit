@@ -1,5 +1,125 @@
 # CreatorKit Changelog
 
+---
+
+## All Tools by Category (71 Total)
+
+### Security (7 tools)
+- Metadata Remover — Strip location, device info, timestamps from images, PDFs, audio
+- Password Generator — Cryptographically secure passwords
+- QR Code Generator — URL, text, email, phone, Wi-Fi
+- File Checksum Verifier — MD5, SHA-1, SHA-256, SHA-512
+- AES Encrypt / Decrypt — AES-256-GCM with PBKDF2-SHA256
+- RSA Key Generator — RSA-OAEP 2048/4096-bit key pairs
+- TOTP / 2FA Generator — RFC 6238 compatible
+
+### Image & Visual (9 tools)
+- Image Resizer — 40+ sizes across 12 platforms
+- Image Compressor — JPEG, WebP, PNG with quality control
+- Image Format Converter — JPEG, PNG, WebP, AVIF conversion
+- Image Watermark Adder — Text watermarks with position/size
+- Image to Text — AI OCR 100% in-browser
+- Screenshot to Mockup — Device frames with custom backgrounds
+- Background Remover — AI-powered (desktop) / color removal (mobile)
+- Image Grid / Collage — 2×2, 3×3, 1×3, 3×1 layouts
+- Color Palette Extractor — Dominant colors with percentages
+
+### Design (9 tools)
+- Design Token Generator — Brand colors to CSS/Tailwind/JSON
+- Favicon Generator — 6 sizes + site.webmanifest
+- Color Converter — HEX, RGB, HSL, OKLCH with picker
+- Gradient Generator — Linear, radial, conic gradients
+- Box Shadow Generator — Multiple layers, inset support
+- Border Radius Visualizer — Per-corner sliders with presets
+- Font Pairer — 70 Google Fonts, 14 curated pairings
+- OG Image Generator — 4 templates, 1200×630 PNG
+- Pixel → REM Converter — px/rem with reference table
+
+### Productivity (13 tools)
+- Anki Flashcards — SM-2 algorithm, local storage
+- Whiteboard Drawing — Pen, shapes, text, PNG export
+- Markdown Editor — Live preview, scroll sync, file upload
+- Notes — Multiple notes, auto-save, word count
+- Word & Character Counter — Words, chars, sentences, paragraphs
+- CV Maker — Classic/Modern templates, PDF export
+- Invoice Generator — Multi-currency, line items, PDF export
+- Pomodoro Timer — 25/5/15 cycles, Web Audio bell
+- Game Controller Tester — Gamepad API, real-time states
+- Doc Scanner — Perspective warp, brightness/contrast
+- Electrical Calculator — Ohm's Law, AC reactance, three-phase
+- Engineering Calculator — DEG/RAD trig, constants, memory
+- Math Calculator — REPL-style, variables, matrices
+
+### Media (7 tools)
+- BPM Detector — Audio tempo detection
+- Audio Converter — MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS
+- Voice Recorder — MediaRecorder API, WebM export
+- Audio Waveform Visualizer — Web Audio API, seek controls
+- Screen Recorder — getDisplayMedia, mic mixing
+- Video Thumbnail Extractor — Grid/interval mode, ZIP download
+- Video Compressor — ffmpeg.wasm, quality presets
+
+### PDF (5 tools)
+- PDF Compressor — Quality settings, size targets
+- PDF Merger & Splitter — Merge/split by page ranges
+- Image to PDF — A4, Letter, fit options
+- PDF Organizer — Reorder, delete, thumbnails
+- PDF to Image — Adjustable resolution, ZIP export
+
+### Developer (17 tools)
+- Code Playground — HTML/CSS/JS live editor
+- Text Compare — Diff highlighting, export options
+- Regex Tester — Real-time matching, pattern library
+- JSON Formatter — Validate, format, minify
+- CSV ↔ JSON Converter — Table preview, file upload
+- Text Case Converter — Upper, lower, title, camel, snake, kebab
+- UUID Generator — Single/bulk v4 generation
+- Base64 Encoder / Decoder — Text and file support
+- URL Encoder / Decoder — encodeURIComponent, encodeURI
+- Lorem Ipsum Generator — Paragraphs, sentences, words
+- Timestamp Converter — Unix, ISO 8601, UTC, local, relative
+- JWT Decoder — Header, payload, expiry inspection
+- HTML Entity Encoder / Decoder — Special characters
+- CSS Minifier — Whitespace, comments, byte savings
+- Cron Expression Generator — Presets, descriptions, next runs
+- XML Formatter — Format, minify, validation
+- YAML ↔ JSON Converter — js-yaml powered
+- JS Formatter — Prettier 2.8.8, 8 languages
+- Markdown → HTML — marked powered
+
+---
+
+## v1.64.0 — May 2026
+### Layout Standardization — All 70 Tools (Desktop + Mobile)
+Complete standardization of layout pattern across all 70 tool components for consistent UX on both desktop and touchscreen devices.
+
+#### Desktop layout
+- Sticky top action bar (`hidden md:flex`) with tool name + primary action buttons always visible without scrolling
+- Side-by-side split panels with `border-r` divider (edge-to-edge, no card borders)
+- `ShortcutsModal` always accessible in the top action bar
+
+#### Mobile layout
+- Compact header + tab switcher at top (Input/Output tabs with `border-b-2` active indicator)
+- Sticky bottom action bar in thumb zone with 44px (`h-11`) touch targets
+- `style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}` for virtual keyboard safe area
+- `<kbd>` labels hidden on mobile to save space
+- Auto-switches to Output tab when primary action completes
+
+#### Structural changes applied to all 70 files
+- Old: `flex h-full flex-col gap-3 p-4` outer wrapper → new: `flex h-full flex-col` (no padding)
+- Old: inline `h2` title + `p` description header → moved to action bars
+- Old: `grid grid-cols-1 lg:grid-cols-2 gap-4` panels → `flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden`
+- Panels lost `rounded-xl border border-border` (edge-to-edge separated by `border-r`)
+- Left panel: `${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden`
+- Right panel: `${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden`
+- Added `const [activeTab, setActiveTab] = useState<"input" | "output">("input")` to all split-panel tools
+- `ShortcutsModal` moved from end/start of fragment to both desktop and mobile action bars
+- Fragment `<>` wrappers replaced with single `<div className="flex h-full flex-col">`
+
+### Build Verification
+- 79/79 pages compiled successfully ✓
+
+---
 
 ## v1.63.0 — May 2026
 ### Keyboard Shortcut Format Standardization

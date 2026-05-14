@@ -59,6 +59,7 @@ export function PasswordGenerator() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [copiedAll, setCopiedAll] = useState(false)
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const announceToScreenReader = useCallback((message: string) => {
     setAnnouncement(message)
@@ -107,25 +108,45 @@ export function PasswordGenerator() {
   const quantities: (1 | 5 | 10 | 20)[] = [1, 5, 10, 20]
 
   return (
-    <>
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {announcement}
-      </div>
-      <ShortcutsModal
-        pageName="Password Generator"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "G"], description: "Generate passwords" },
-        ]}
-      />
-      <div className="flex h-full flex-col gap-3 p-4">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Password Generator</h2>
-          <p className="text-muted-foreground">Cryptographically secure · 100% in-browser</p>
+    <div className="flex h-full flex-col">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Password generator controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Password Generator</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Password Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "G"], description: "Generate passwords" }]} />
+          <Button size="sm" onClick={generate} disabled={!charset} aria-label={quantity > 1 ? `Generate ${quantity} passwords` : "Generate password"}>
+            <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
+            Generate{quantity > 1 ? ` ${quantity}` : ""}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+          </Button>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      </div>
+
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Password Generator</h2>
+          <ShortcutsModal pageName="Password Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "G"], description: "Generate passwords" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Options
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Passwords
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left panel — options */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="options-label">
-          <div className="flex-1 overflow-y-auto p-4 space-y-6" id="options-label">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="options-label">
+          <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="options-label">Options</span></div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
             <div className="space-y-3" role="group" aria-labelledby="length-label">
               <div className="flex items-center justify-between">
@@ -133,23 +154,17 @@ export function PasswordGenerator() {
                 <span className="text-sm font-mono font-medium tabular-nums w-8 text-right" aria-live="polite">{length}</span>
               </div>
               <Slider
-                min={8}
-                max={128}
-                step={1}
-                value={[length]}
+                min={8} max={128} step={1} value={[length]}
                 onValueChange={([v]) => { setLength(v); announceToScreenReader(`Length set to ${v}`) }}
                 aria-label={`Password length: ${length} characters`}
                 className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>8</span>
-                <span>128</span>
-              </div>
+              <div className="flex justify-between text-xs text-muted-foreground"><span>8</span><span>128</span></div>
             </div>
 
             <div className="space-y-3" role="group" aria-labelledby="charset-label">
               <Label className="text-sm font-medium" id="charset-label">Character sets</Label>
-              <div className="space-y-2.5" role="group" aria-label="Character set options">
+              <div className="space-y-2.5">
                 {[
                   { label: "Uppercase (A–Z)", value: uppercase, set: setUppercase, key: "uppercase" },
                   { label: "Lowercase (a–z)", value: lowercase, set: setLowercase, key: "lowercase" },
@@ -158,13 +173,7 @@ export function PasswordGenerator() {
                 ].map(({ label, value, set, key }) => (
                   <div key={key} className="flex items-center justify-between">
                     <Label className="text-sm text-muted-foreground font-normal cursor-pointer" htmlFor={`switch-${key}`}>{label}</Label>
-                    <Switch 
-                      checked={value} 
-                      onCheckedChange={(checked) => { set(checked); announceToScreenReader(`${label} ${checked ? "enabled" : "disabled"}`) }} 
-                      id={`switch-${key}`}
-                      className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      aria-label={label}
-                    />
+                    <Switch checked={value} onCheckedChange={(checked) => { set(checked); announceToScreenReader(`${label} ${checked ? "enabled" : "disabled"}`) }} id={`switch-${key}`} aria-label={label} />
                   </div>
                 ))}
               </div>
@@ -177,12 +186,7 @@ export function PasswordGenerator() {
                   <Label className="text-sm text-muted-foreground font-normal" htmlFor="switch-ambiguous">Exclude similar characters</Label>
                   <p className="text-xs text-muted-foreground/60">Removes l, 1, I, O, 0</p>
                 </div>
-                <Switch 
-                  checked={excludeAmbiguous} 
-                  onCheckedChange={(checked) => { setExcludeAmbiguous(checked); announceToScreenReader(checked ? "Exclude similar characters enabled" : "Exclude similar characters disabled") }}
-                  id="switch-ambiguous"
-                  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                />
+                <Switch checked={excludeAmbiguous} onCheckedChange={(checked) => { setExcludeAmbiguous(checked); announceToScreenReader(checked ? "Exclude similar enabled" : "Exclude similar disabled") }} id="switch-ambiguous" />
               </div>
             </div>
 
@@ -190,44 +194,30 @@ export function PasswordGenerator() {
               <Label className="text-sm font-medium" id="quantity-label">Quantity</Label>
               <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Password quantity">
                 {quantities.map(q => (
-                  <button
-                    key={q}
-                    onClick={() => { setQuantity(q); announceToScreenReader(`Quantity set to ${q}`) }}
-                    role="radio"
-                    aria-checked={quantity === q}
-                    className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                      quantity === q
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                    }`}
-                  >
+                  <button key={q} onClick={() => { setQuantity(q); announceToScreenReader(`Quantity set to ${q}`) }}
+                    role="radio" aria-checked={quantity === q}
+                    className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${quantity === q ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"}`}>
                     {q}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-
-          <div className="shrink-0 border-t border-border p-4">
-            <Button 
-              className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
-              onClick={generate} 
-              disabled={!charset}
-              aria-label={quantity > 1 ? `Generate ${quantity} passwords` : "Generate password"}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-              Generate{quantity > 1 ? ` ${quantity} Passwords` : " Password"}
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+G</kbd>
-            </Button>
-            {!charset && (
-              <p className="mt-2 text-center text-xs text-red-500" role="alert">Select at least one character set</p>
-            )}
+            {!charset && <p className="text-center text-xs text-red-500" role="alert">Select at least one character set</p>}
           </div>
         </div>
 
         {/* Right panel — results */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="results-label">
-          <div className="flex-1 overflow-y-auto p-4" id="results-label">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="results-label">
+          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium" id="results-label">Results</span>
+            {passwords.length > 1 && (
+              <Button variant="ghost" size="sm" onClick={copyAll} className="h-7 text-xs" aria-label={copiedAll ? "Copied all passwords" : "Copy all passwords"}>
+                {copiedAll ? <Check className="mr-1.5 h-3 w-3" aria-hidden="true" /> : <Copy className="mr-1.5 h-3 w-3" aria-hidden="true" />}
+                {copiedAll ? "Copied!" : "Copy All"}
+              </Button>
+            )}
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
             {passwords.length === 0 ? (
               <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
                 <div className="rounded-full border border-border bg-muted/50 p-4">
@@ -240,37 +230,15 @@ export function PasswordGenerator() {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Strength:</span>
-                    <span className={`text-xs font-medium ${strength.color}`} role="status" aria-live="polite">{strength.label}</span>
-                  </div>
-                  {passwords.length > 1 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={copyAll} 
-                      className="h-7 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      aria-label={copiedAll ? "Copied all passwords" : "Copy all passwords"}
-                    >
-                      {copiedAll ? <Check className="mr-1.5 h-3 w-3" aria-hidden="true" /> : <Copy className="mr-1.5 h-3 w-3" aria-hidden="true" />}
-                      {copiedAll ? "Copied!" : "Copy All"}
-                    </Button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Strength:</span>
+                  <span className={`text-xs font-medium ${strength.color}`} role="status" aria-live="polite">{strength.label}</span>
                 </div>
                 {passwords.map((pw, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5"
-                    role="listitem"
-                    aria-label={`Password ${i + 1}`}
-                  >
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5" role="listitem" aria-label={`Password ${i + 1}`}>
                     <span className="flex-1 font-mono text-sm break-all select-all">{pw}</span>
-                    <button
-                      onClick={() => copyOne(i)}
-                      aria-label={copiedIndex === i ? "Password copied" : `Copy password ${i + 1}`}
-                      className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    >
+                    <button onClick={() => copyOne(i)} aria-label={copiedIndex === i ? "Password copied" : `Copy password ${i + 1}`}
+                      className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                       {copiedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
                     </button>
                   </div>
@@ -279,9 +247,19 @@ export function PasswordGenerator() {
             )}
           </div>
         </div>
-
-        </div>
       </div>
-    </>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={() => { generate(); setActiveTab("output") }} disabled={!charset} aria-label="Generate passwords">
+          <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />
+          Generate{quantity > 1 ? ` ${quantity}` : ""}
+        </Button>
+      </div>
+    </div>
   )
 }

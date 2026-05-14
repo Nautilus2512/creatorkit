@@ -113,6 +113,7 @@ export default function EngineeringCalculator() {
   const [error, setError]     = useState(false)
   const [mem, setMem]         = useState(0)
   const [rightTab, setRightTab] = useState<RightTab>("graph")
+  const [panelTab, setPanelTab] = useState<"input" | "output">("input")
 
   // ── Graph state ──
   const [graphFn, setGraphFn]     = useState("sin(x)")
@@ -427,19 +428,36 @@ export default function EngineeringCalculator() {
   ]
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Engineering Calculator</h2>
-          <p className="text-muted-foreground">Scientific calculator with graphing, integration, and differentiation.</p>
-        </div>
-        {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+    <div className="flex h-full flex-col">
+
+      {/* ── Desktop: top action bar ── */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0">Engineering Calculator</span>
+        {!ready && <span className="ml-2 text-xs text-muted-foreground">Loading…</span>}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* ── Mobile: compact header + tab switcher ── */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Engineering Calculator</h2>
+          {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel selection">
+          <button role="tab" aria-selected={panelTab === "input"} onClick={() => setPanelTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${panelTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Calculator
+          </button>
+          <button role="tab" aria-selected={panelTab === "output"} onClick={() => setPanelTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${panelTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Graph & Tools
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── Left: Calculator ── */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+        <div className={`${panelTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
           {/* Display */}
           <div className="shrink-0 p-4 bg-muted/20 border-b border-border" role="region" aria-label="Calculator display">
             <div className="flex items-center justify-between mb-2">
@@ -500,7 +518,7 @@ export default function EngineeringCalculator() {
         </div>
 
         {/* ── Right: Tabs ── */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-h-0">
+        <div className={`${panelTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden bg-card`}>
 
           {/* Tab bar */}
           <div className="flex shrink-0 border-b border-border" role="tablist" aria-label="Right panel sections">

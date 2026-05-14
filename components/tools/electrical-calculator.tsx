@@ -39,7 +39,7 @@ function fmt(v: number | null, unit = "", decimals = 4): string {
 
 function ResultRow({ label, value, unit, highlight = false, id }: { label: string; value: number | null; unit?: string; highlight?: boolean; id?: string }) {
   return (
-    <div 
+    <div
       id={id}
       className={`flex items-center justify-between rounded-lg px-3 py-2 ${highlight ? "bg-primary/10 border border-primary/30" : "bg-muted/30 border border-border"}`}
       role="status"
@@ -57,13 +57,13 @@ function FieldRow({ label, value, unit, onChange, placeholder = "0", id, shortcu
     <div className="flex items-center gap-2">
       <Label htmlFor={id} className="text-sm text-muted-foreground w-24 shrink-0">{label}</Label>
       <div className="flex-1 relative">
-        <Input 
+        <Input
           id={id}
-          value={value} 
-          onChange={e => onChange(e.target.value)} 
-          placeholder={placeholder} 
-          className="text-sm font-mono h-8 pr-16" 
-          type="number" 
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="text-sm font-mono h-8 pr-16"
+          type="number"
           aria-label={`${label} in ${unit}`}
         />
         {shortcut && (
@@ -134,8 +134,8 @@ function AcReactance() {
     <div className="space-y-4" role="region" aria-label="AC Reactance calculator">
       <div className="flex gap-1" role="radiogroup" aria-label="Frequency preset">
         {["50", "60"].map((hz, idx) => (
-          <button 
-            key={hz} 
+          <button
+            key={hz}
             onClick={() => setFreq(hz)}
             className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${freq === hz ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
             role="radio"
@@ -146,11 +146,11 @@ function AcReactance() {
           </button>
         ))}
         <div className="relative">
-          <Input 
-            value={freq} 
-            onChange={e => setFreq(e.target.value)} 
-            placeholder="Hz" 
-            className="w-24 h-7 text-xs font-mono" 
+          <Input
+            value={freq}
+            onChange={e => setFreq(e.target.value)}
+            placeholder="Hz"
+            className="w-24 h-7 text-xs font-mono"
             type="number"
             aria-label="Custom frequency in Hertz"
           />
@@ -226,8 +226,8 @@ function ThreePhase() {
     <div className="space-y-4" role="region" aria-label="Three-Phase calculator">
       <div className="flex gap-2" role="radiogroup" aria-label="Circuit configuration">
         {(["star", "delta"] as const).map((c, idx) => (
-          <button 
-            key={c} 
+          <button
+            key={c}
             onClick={() => setCfg(c)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${cfg === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
@@ -307,9 +307,9 @@ function ResistorColorCode() {
         </div>
         <div id={id} className="flex flex-wrap gap-1" role="radiogroup" aria-label={label}>
           {options.map((c, idx) => (
-            <button 
-              key={c.name} 
-              onClick={() => onChange(c.name)} 
+            <button
+              key={c.name}
+              onClick={() => onChange(c.name)}
               title={c.name}
               className={`w-6 h-6 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary ${value === c.name ? "border-primary scale-125" : "border-transparent hover:scale-110"}`}
               style={{ backgroundColor: c.bg, color: c.text }}
@@ -330,8 +330,8 @@ function ResistorColorCode() {
     <div className="space-y-4" role="region" aria-label="Resistor color code calculator">
       <div className="flex gap-2" role="radiogroup" aria-label="Number of bands">
         {[4, 5].map((b, idx) => (
-          <button 
-            key={b} 
+          <button
+            key={b}
             onClick={() => { setBands(b); setSel(b === 4 ? ["Brown","Black","Red","Gold"] : ["Brown","Black","Black","Red","Gold"]) }}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${bands === b ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
@@ -395,8 +395,8 @@ function TimeConstant() {
     <div className="space-y-4" role="region" aria-label="RC/RL time constant calculator">
       <div className="flex gap-2" role="radiogroup" aria-label="Circuit type">
         {(["RC","RL"] as const).map((t, idx) => (
-          <button 
-            key={t} 
+          <button
+            key={t}
             onClick={() => setType(t)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
@@ -431,12 +431,24 @@ function TimeConstant() {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 const TABS = [
-  { id: "ohm",        label: "Ohm's Law",         component: OhmsLaw,        shortcut: "1" },
-  { id: "ac",         label: "AC Reactance",       component: AcReactance,     shortcut: "2" },
-  { id: "power",      label: "Power",              component: PowerCalc,       shortcut: "3" },
-  { id: "3phase",     label: "Three-Phase",        component: ThreePhase,      shortcut: "4" },
+  { id: "ohm",        label: "Ohm's Law",         component: OhmsLaw,           shortcut: "1" },
+  { id: "ac",         label: "AC Reactance",       component: AcReactance,       shortcut: "2" },
+  { id: "power",      label: "Power",              component: PowerCalc,         shortcut: "3" },
+  { id: "3phase",     label: "Three-Phase",        component: ThreePhase,        shortcut: "4" },
   { id: "colors",     label: "Resistor Colors",    component: ResistorColorCode, shortcut: "5" },
-  { id: "timeconst",  label: "RC/RL τ",            component: TimeConstant,     shortcut: "6" },
+  { id: "timeconst",  label: "RC/RL τ",            component: TimeConstant,      shortcut: "6" },
+]
+
+const shortcuts = [
+  { keys: ["1"], description: "Ohm's Law calculator" },
+  { keys: ["2"], description: "AC Reactance calculator" },
+  { keys: ["3"], description: "Power calculator" },
+  { keys: ["4"], description: "Three-Phase calculator" },
+  { keys: ["5"], description: "Resistor Colors calculator" },
+  { keys: ["6"], description: "RC/RL Time Constant calculator" },
+  { keys: ["Escape"], description: "Blur focused input" },
+  { keys: ["?"], description: "Toggle this shortcuts panel" },
+  { keys: ["Tab"], description: "Navigate between controls" },
 ]
 
 export default function ElectricalCalculator() {
@@ -467,7 +479,7 @@ export default function ElectricalCalculator() {
           }, 100)
         }
       }
-      
+
       // Escape to blur any focused input
       if (e.key === "Escape") {
         const activeElement = document.activeElement as HTMLElement
@@ -482,67 +494,86 @@ export default function ElectricalCalculator() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight" id="electrical-title">Electrical Engineering Calculator</h2>
-        <p className="text-muted-foreground" id="electrical-description">Circuit calculations per IEC/IEEE standards — SI units throughout. Press 1-6 to switch calculators. Press ? for shortcuts.</p>
-      </div>
+      <div className="flex h-full flex-col">
 
-      <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
-        {/* Tab sidebar */}
-        <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-48 h-full" role="region" aria-label="Calculator selection">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Calculators</span>
-            <span className="ml-2 text-[10px] text-muted-foreground/60">(1-6)</span>
+        {/* DESKTOP: top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+          <span className="text-sm font-semibold shrink-0 mr-1">Electrical Calculator</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="Electrical Calculator" shortcuts={shortcuts} />
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5" role="tablist" aria-label="Available calculators">
+        </div>
+
+        {/* MOBILE: compact header */}
+        <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
+          <h2 className="text-base font-semibold">Electrical Calculator</h2>
+          <ShortcutsModal pageName="Electrical Calculator" shortcuts={shortcuts} />
+        </div>
+
+        {/* Content (scrollable) */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 10rem)" }}>
+            {/* Tab sidebar */}
+            <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-48" role="region" aria-label="Calculator selection">
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Calculators</span>
+                <span className="ml-2 text-[10px] text-muted-foreground/60">(1-6)</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 space-y-0.5" role="tablist" aria-label="Available calculators">
+                {TABS.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTabWithAnnounce(t.id)}
+                    className={`w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                      tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                    role="tab"
+                    aria-selected={tab === t.id}
+                    aria-label={`${t.label} (press ${t.shortcut})`}
+                    title={`Press ${t.shortcut} to switch`}
+                  >
+                    {t.label}<kbd className="ml-auto float-right rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-foreground" aria-hidden="true">{t.shortcut}</kbd>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="Calculator content">
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
+                <span className="font-semibold text-sm">{TABS.find(t => t.id === tab)?.label}</span>
+                <Badge variant="outline" className="text-xs">IEC / IEEE</Badge>
+                <span className="ml-auto text-[10px] text-muted-foreground">Press <kbd className="px-1 border rounded text-[9px]">Tab</kbd> to navigate</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                <div className="max-w-lg space-y-4">
+                  <TabComponent />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MOBILE: bottom action bar — minimal, no primary action needed */}
+        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+          <div className="flex-1 overflow-x-auto flex gap-1" role="tablist" aria-label="Available calculators">
             {TABS.map(t => (
-              <button 
-                key={t.id} 
+              <button
+                key={t.id}
                 onClick={() => setTabWithAnnounce(t.id)}
-                className={`w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
-                  tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
+                className={`shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
                 role="tab"
                 aria-selected={tab === t.id}
-                aria-label={`${t.label} (press ${t.shortcut})`}
-                title={`Press ${t.shortcut} to switch`}
+                aria-label={t.label}
               >
-                {t.label}<kbd className="ml-auto float-right rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-foreground" aria-hidden="true">{t.shortcut}</kbd>
+                {t.shortcut}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label="Calculator content">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2">
-            <span className="font-semibold text-sm">{TABS.find(t => t.id === tab)?.label}</span>
-            <Badge variant="outline" className="text-xs">IEC / IEEE</Badge>
-            <span className="ml-auto text-[10px] text-muted-foreground">Press <kbd className="px-1 border rounded text-[9px]">Tab</kbd> to navigate</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="max-w-lg space-y-4">
-              <TabComponent />
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
-    <ShortcutsModal
-      pageName="Electrical Calculator"
-      shortcuts={[
-        { keys: ["1"], description: "Ohm's Law calculator" },
-        { keys: ["2"], description: "AC Reactance calculator" },
-        { keys: ["3"], description: "Power calculator" },
-        { keys: ["4"], description: "Three-Phase calculator" },
-        { keys: ["5"], description: "Resistor Colors calculator" },
-        { keys: ["6"], description: "RC/RL Time Constant calculator" },
-        { keys: ["Escape"], description: "Blur focused input" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-      ]}
-    />
     </>
   )
 }

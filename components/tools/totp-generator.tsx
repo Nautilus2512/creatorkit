@@ -44,6 +44,7 @@ export default function TotpGenerator() {
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const announceToScreenReader = useCallback((message: string) => {
     setAnnouncement(message)
@@ -75,37 +76,32 @@ export default function TotpGenerator() {
     return () => clearInterval(id)
   }, [secret, refresh])
 
-  const copy = useCallback(() => { 
+  const copy = useCallback(() => {
     if (!code) return
-    navigator.clipboard.writeText(code); 
-    setCopied(true); 
+    navigator.clipboard.writeText(code)
+    setCopied(true)
     announceToScreenReader(`Code ${code} copied to clipboard`)
     setTimeout(() => setCopied(false), 2000)
   }, [code, announceToScreenReader])
+
+  const loadDemo = useCallback(() => {
+    setSecret(DEMO_SECRET)
+    setActiveTab("output")
+    announceToScreenReader("Demo secret loaded")
+  }, [announceToScreenReader])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
         switch (e.key.toLowerCase()) {
-          case "c":
-            if (code) {
-              e.preventDefault()
-              copy()
-            }
-            break
-          case "d":
-            if (secret.trim()) {
-              e.preventDefault()
-              setSecret(DEMO_SECRET)
-              announceToScreenReader("Demo secret loaded")
-            }
-            break
+          case "c": if (code) { e.preventDefault(); copy() } break
+          case "d": if (secret.trim()) { e.preventDefault(); loadDemo() } break
         }
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [code, copy, secret])
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [code, copy, secret, loadDemo])
 
   const shortcuts = [
     { keys: ["Ctrl", "Shift", "C"], description: "Copy current code" },
@@ -116,139 +112,136 @@ export default function TotpGenerator() {
   const pct = (timeLeft / 30) * 100
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {announcement}
-      </div>
+    <>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">TOTP / 2FA Generator</h2>
-          <p className="text-muted-foreground">Generate TOTP codes from a base32 secret. Compatible with Google Authenticator. Nothing leaves your browser.</p>
-        </div>
-        <ShortcutsModal pageName="TOTP Generator" shortcuts={shortcuts} />
-      </div>
+      <div className="flex h-full flex-col">
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-        {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Secret key input">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Secret Key</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="secret-input" className="text-sm">Base32 Secret (from your 2FA setup screen)</Label>
-              <Input
-                id="secret-input"
-                value={secret}
-                onChange={(e) => { setSecret(e.target.value.toUpperCase().replace(/\s/g, "")); announceToScreenReader("Secret updated") }}
-                placeholder="JBSWY3DPEHPK3PXP"
-                className="font-mono tracking-widest text-center text-base"
-                aria-describedby="secret-hint"
-              />
-              <span id="secret-hint" className="sr-only">
-                {error ? `Error: ${error}` : "The base32 string shown during 2FA account setup, spaces are ignored"}
-              </span>
-              {error
-                ? <p role="alert" className="text-xs text-destructive">{error}</p>
-                : <p className="text-xs text-muted-foreground">The base32 string shown during 2FA account setup (spaces are ignored)</p>
-              }
-            </div>
-            <Button 
-              variant="outline" 
-              className="w-full focus:outline-none focus:ring-2 focus:ring-primary/50" 
-              onClick={() => { setSecret(DEMO_SECRET); announceToScreenReader("Demo secret loaded") }}
-              aria-label="Load demo secret for testing"
-            >
-              Load Demo Secret
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
+        {/* ── Desktop: top action bar ── */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="TOTP controls">
+          <span className="text-sm font-semibold shrink-0 mr-1">TOTP / 2FA Generator</span>
+          <Button variant="ghost" size="sm" onClick={loadDemo} aria-label="Load demo secret">
+            Load Demo
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+          </Button>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="TOTP Generator" shortcuts={shortcuts} />
+            <Button size="sm" onClick={copy} disabled={!code} aria-label={copied ? "Code copied" : "Copy current TOTP code"}>
+              {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+              {copied ? "Copied!" : "Copy Code"}
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
-            <div className="rounded-lg border border-border bg-muted/20 p-4">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Settings</p>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {[["Algorithm", "HMAC-SHA1"], ["Time step", "30 seconds"], ["Digits", "6"], ["Standard", "RFC 6238"]].map(([k, v]) => (
-                  <div key={k}>
-                    <p className="text-xs text-muted-foreground">{k}</p>
-                    <p className="font-mono font-medium">{v}</p>
-                  </div>
-                ))}
+          </div>
+        </div>
+
+        {/* ── Mobile: compact header + tab switcher ── */}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <h2 className="text-base font-semibold">TOTP / 2FA Generator</h2>
+            <ShortcutsModal pageName="TOTP Generator" shortcuts={shortcuts} />
+          </div>
+          <div className="flex" role="tablist" aria-label="Panel selection">
+            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Secret Key
+            </button>
+            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Current Code
+            </button>
+          </div>
+        </div>
+
+        {/* ── Panels ── */}
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
+          {/* Input panel */}
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
+            role="region" aria-label="Secret key input">
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="secret-input" className="text-sm">Base32 Secret (from your 2FA setup screen)</Label>
+                <Input
+                  id="secret-input"
+                  value={secret}
+                  onChange={(e) => { setSecret(e.target.value.toUpperCase().replace(/\s/g, "")); if (e.target.value) setActiveTab("output"); announceToScreenReader("Secret updated") }}
+                  placeholder="JBSWY3DPEHPK3PXP"
+                  className="font-mono tracking-widest text-center text-base"
+                  aria-describedby="secret-hint"
+                />
+                <span id="secret-hint" className="sr-only">{error ? `Error: ${error}` : "The base32 string shown during 2FA account setup"}</span>
+                {error ? <p role="alert" className="text-xs text-destructive">{error}</p> : <p className="text-xs text-muted-foreground">The base32 string shown during 2FA account setup (spaces are ignored)</p>}
               </div>
+              <Button variant="outline" className="w-full focus:outline-none focus:ring-2 focus:ring-primary/50" onClick={loadDemo} aria-label="Load demo secret for testing">
+                Load Demo Secret
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              </Button>
+              <div className="rounded-lg border border-border bg-muted/20 p-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Settings</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {[["Algorithm", "HMAC-SHA1"], ["Time step", "30 seconds"], ["Digits", "6"], ["Standard", "RFC 6238"]].map(([k, v]) => (
+                    <div key={k}><p className="text-xs text-muted-foreground">{k}</p><p className="font-mono font-medium">{v}</p></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Output panel */}
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
+            role="region" aria-label="TOTP code display">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 gap-8 overflow-y-auto">
+              {code ? (
+                <>
+                  <div className="text-center" role="timer" aria-label={`Current TOTP code: ${code}, expires in ${timeLeft} seconds`}>
+                    <div className={`text-7xl font-bold font-mono tracking-[0.25em] tabular-nums transition-colors ${urgent ? "text-destructive" : ""}`} aria-hidden="true">
+                      {code.slice(0, 3)}&nbsp;{code.slice(3)}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2" aria-live="polite">Valid for {timeLeft} more seconds</p>
+                  </div>
+                  <div className="w-full max-w-xs space-y-1.5" role="group" aria-label="Time remaining">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" aria-hidden="true" />Time remaining</span>
+                      <span className={`font-mono font-medium ${urgent ? "text-destructive" : ""}`}>{timeLeft}s</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={timeLeft} aria-valuemin={0} aria-valuemax={30}>
+                      <div className={`h-full rounded-full transition-[width] duration-1000 ${urgent ? "bg-destructive" : "bg-primary"}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  {nextCode && (
+                    <div className="rounded-lg border border-border px-8 py-4 text-center" role="region" aria-label={`Next code: ${nextCode}`}>
+                      <p className="text-xs text-muted-foreground mb-1">Next code (in {timeLeft}s)</p>
+                      <p className="text-3xl font-mono font-medium tracking-[0.25em]">{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center space-y-3">
+                  <div className="text-7xl font-mono text-muted-foreground/15 tracking-[0.25em]">••• •••</div>
+                  <p className="text-sm text-muted-foreground">Enter a base32 secret to generate codes</p>
+                </div>
+              )}
+            </div>
+            <div className="shrink-0 border-t border-border bg-card/95 px-4 py-2 text-xs text-muted-foreground flex gap-3">
+              <span>TOTP · RFC 6238</span><span>HMAC-SHA1 · 30s · 6 digits</span>
             </div>
           </div>
         </div>
 
-        {/* Right — Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="TOTP code display">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Current Code</span>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center p-8 gap-8">
-            {code ? (
-              <>
-                <div className="text-center" role="timer" aria-label={`Current TOTP code: ${code}, expires in ${timeLeft} seconds`}>
-                  <div 
-                    className={`text-7xl font-bold font-mono tracking-[0.25em] tabular-nums transition-colors ${urgent ? "text-destructive" : ""}`}
-                    aria-hidden="true"
-                  >
-                    {code.slice(0, 3)}&nbsp;{code.slice(3)}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2" aria-live="polite">Valid for {timeLeft} more seconds</p>
-                </div>
-                <div className="w-full max-w-xs space-y-1.5" role="group" aria-label="Time remaining">
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" aria-hidden="true" />Time remaining</span>
-                    <span className={`font-mono font-medium ${urgent ? "text-destructive" : ""}`} aria-label={`${timeLeft} seconds remaining`}>{timeLeft}s</span>
-                  </div>
-                  <div 
-                    className="h-2 rounded-full bg-muted overflow-hidden" 
-                    role="progressbar" 
-                    aria-valuenow={timeLeft} 
-                    aria-valuemin={0} 
-                    aria-valuemax={30}
-                    aria-label="Code validity progress"
-                  >
-                    <div 
-                      className={`h-full rounded-full transition-[width] duration-1000 ${urgent ? "bg-destructive" : "bg-primary"}`} 
-                      style={{ width: `${pct}%` }} 
-                    />
-                  </div>
-                </div>
-                <Button 
-                  onClick={copy} 
-                  size="lg" 
-                  className="w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  aria-label={copied ? "Code copied to clipboard" : "Copy current TOTP code"}
-                >
-                  {copied ? <Check className="h-5 w-5 mr-2" /> : <Copy className="h-5 w-5 mr-2" />}
-                  <span>{copied ? "Copied!" : "Copy Code"}</span>
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
-                </Button>
-                {nextCode && (
-                  <div 
-                    className="rounded-lg border border-border px-8 py-4 text-center" 
-                    role="region" 
-                    aria-label={`Next code preview: ${nextCode}`}
-                  >
-                    <p className="text-xs text-muted-foreground mb-1">Next code (in {timeLeft}s)</p>
-                    <p className="text-3xl font-mono font-medium tracking-[0.25em]" aria-label={`Next code will be ${nextCode}`}>
-                      {nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
-                    </p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center space-y-3">
-                <div className="text-7xl font-mono text-muted-foreground/15 tracking-[0.25em]">••• •••</div>
-                <p className="text-sm text-muted-foreground">Enter a base32 secret to generate codes</p>
-              </div>
-            )}
-          </div>
-          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-3">
-            <span>TOTP · RFC 6238</span>
-            <span>HMAC-SHA1 · 30s · 6 digits</span>
-          </div>
+        {/* ── Mobile: bottom action bar ── */}
+        <div
+          className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <Button variant="ghost" size="sm" className="h-11 px-3 text-xs" onClick={loadDemo}>Demo</Button>
+          <div className="flex-1" />
+          <Button size="sm" className="h-11 px-4" onClick={copy} disabled={!code} aria-label={copied ? "Copied!" : "Copy code"}>
+            {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy Code"}
+          </Button>
         </div>
+
       </div>
-    </div>
+    </>
   )
 }

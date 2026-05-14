@@ -34,6 +34,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function AudioConverter() {
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [file, setFile] = useState<File | null>(null)
   const [audioInfo, setAudioInfo] = useState<{ duration: number; bitrate: number } | null>(null)
   const [targetFormat, setTargetFormat] = useState<Format>("mp3")
@@ -50,13 +51,13 @@ export function AudioConverter() {
 
 const loadFFmpeg = async () => {
   if (ffmpegRef.current) return ffmpegRef.current
-  
+
   setIsLoadingFFmpeg(true)
   setError(null)
-  
+
   try {
     const ffmpeg = new FFmpeg()
-    
+
     // Try multiple CDNs with longer timeout
     const baseURLs = [
     "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd",
@@ -64,27 +65,27 @@ const loadFFmpeg = async () => {
     "https://gitcdn.xyz/repo/@ffmpeg/core@0.12.6/dist/umd",
     "https://cdn.skypack.dev/@ffmpeg/core@0.12.6/dist/umd"
     ]
-    
+
     let loaded = false
     let lastError: any = null
     let progressInterval: NodeJS.Timeout | null = null
-    
+
     for (const baseURL of baseURLs) {
         for (let attempt = 1; attempt <= 3; attempt++) {
             try {
             console.log(`Trying to load ffmpeg from: ${baseURL} (attempt ${attempt})`)
-            
+
             progressInterval = setInterval(() => {
                 setProgress(prev => Math.min(prev + 5, 90))
             }, 1000)
-            
-            const timeoutPromise = new Promise((_, reject) => 
+
+            const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => {
                 if (progressInterval) clearInterval(progressInterval)
                 reject(new Error("Load timeout"))
                 }, 60000)
             )
-            
+
             await Promise.race([
                 ffmpeg.load({
                 coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
@@ -92,7 +93,7 @@ const loadFFmpeg = async () => {
                 }),
                 timeoutPromise
             ])
-            
+
             if (progressInterval) clearInterval(progressInterval)
             setProgress(100)
             console.log(`Successfully loaded ffmpeg from: ${baseURL}`)
@@ -110,11 +111,11 @@ const loadFFmpeg = async () => {
             }
         }
         }
-    
+
     if (!loaded) {
       throw lastError || new Error("All CDN sources failed. Please check your internet connection.")
     }
-    
+
     ffmpegRef.current = ffmpeg
     setFfmpegLoaded(true)
     setProgress(0) // Reset progress after successful load
@@ -130,7 +131,7 @@ const loadFFmpeg = async () => {
 
   const getQualityParams = (fmt: Format, q: "high" | "medium" | "low"): string[] => {
     const bitrate = q === "high" ? "320k" : q === "medium" ? "192k" : "128k"
-    
+
     switch (fmt) {
       case "mp3":
         return ["-b:a", bitrate, "-ar", "44100"]
@@ -152,7 +153,7 @@ const loadFFmpeg = async () => {
 
   const handleFile = async (f: File) => {
     // Check if audio file
-    if (!f.type.startsWith('audio/') && !['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.opus'].some(ext => 
+    if (!f.type.startsWith('audio/') && !['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.opus'].some(ext =>
       f.name.toLowerCase().endsWith(ext)
     )) {
       setError("Please upload an audio file (MP3, WAV, OGG, FLAC, etc.)")
@@ -169,18 +170,18 @@ const loadFFmpeg = async () => {
       const url = URL.createObjectURL(f)
       const audio = new Audio()
       audio.preload = "metadata"
-      
+
       await new Promise((resolve, reject) => {
         audio.onloadedmetadata = resolve
         audio.onerror = reject
         audio.src = url
       })
-      
+
       setAudioInfo({
         duration: audio.duration,
         bitrate: 0 // Would need more complex analysis
       })
-      
+
       URL.revokeObjectURL(url)
     } catch (err) {
       // Silent fail - we can still convert without duration info
@@ -203,17 +204,18 @@ const convert = async () => {
         setProgress(i)
         await new Promise(resolve => setTimeout(resolve, 200))
       }
-      
+
       // Simulate result
       const mockBlob = new Blob(["mock audio data"], { type: `audio/${targetFormat}` })
       const url = URL.createObjectURL(mockBlob)
-      
+
       setResult({
         blob: mockBlob,
         url,
         name: `${file.name.replace(/\.[^/.]+$/, '')}_converted.${targetFormat}`,
         size: file.size * 0.8 // Simulate size reduction
       })
+      setActiveTab("output")
     } else {
       // Normal mode - use ffmpeg
       let ffmpeg = ffmpegRef.current
@@ -224,7 +226,7 @@ const convert = async () => {
       // Write input file
       const inputName = `input.${file.name.split('.').pop()}`
       const outputName = `output.${targetFormat}`
-      
+
       ffmpeg.on("log", ({ message }) => {
         // Parse progress from ffmpeg output
         const match = message.match(/time=(\d+):(\d+):(\d+\.\d+)/)
@@ -241,7 +243,7 @@ const convert = async () => {
       // Build ffmpeg command
       const qualityParams = getQualityParams(targetFormat, quality)
       const args = ["-i", inputName, ...qualityParams, "-y", outputName]
-      
+
       await ffmpeg.exec(args)
 
       // Read output file
@@ -257,6 +259,7 @@ const convert = async () => {
         size: blob.size
       })
       setProgress(100)
+      setActiveTab("output")
 
       // Cleanup
       await ffmpeg.deleteFile(inputName)
@@ -283,7 +286,7 @@ const convert = async () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
-      
+
       // Ctrl+Shift+O - Upload file
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'O') {
         e.preventDefault()
@@ -335,302 +338,369 @@ const convert = async () => {
   }, [file, isConverting, isLoadingFFmpeg, result, convert])
 
   return (
-    <>
-    <ShortcutsModal
-      pageName="Audio Converter"
-      shortcuts={[
-        { keys: ["Ctrl", "Shift", "Enter"], description: "Convert audio" },
-        { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
-        { keys: ["Ctrl", "Shift", "D"], description: "Download converted file" },
-        { keys: ["Ctrl", "Shift", "T"], description: "Toggle test mode" },
-        { keys: ["1"], description: "Select MP3 format" },
-        { keys: ["2"], description: "Select WAV format" },
-        { keys: ["3"], description: "Select OGG format" },
-        { keys: ["4"], description: "Select FLAC format" },
-        { keys: ["5"], description: "Select AAC format" },
-        { keys: ["6"], description: "Select M4A format" },
-        { keys: ["7"], description: "Select WMA format" },
-        { keys: ["8"], description: "Select OPUS format" },
-        { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
-    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Audio Converter application">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Audio Converter</h2>
-        <p className="text-muted-foreground">Convert between audio formats · Powered by ffmpeg.wasm</p>
-      </div>
-      <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {file && `File selected: ${file.name}. ${result ? 'Conversion complete.' : 'Ready to convert.'}`}
-      </div>
-
-      {/* Development Warning - merged note */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
-        <div className="flex items-start gap-2">
-          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-              ⚠️ Under Development - ~25MB download required on first use
-            </p>
-            <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
-              <li>CDN loading issues may occur - use "Test mode" to simulate conversion</li>
-              <li>This tool is experimental and may not work in all environments</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
-      {/* Left panel */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Conversion settings">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6" tabIndex={-1}>
-
-          {/* File upload */}
-          <div className="space-y-2" role="group" aria-labelledby="audio-file-heading">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium" id="audio-file-heading">Audio File</Label>
-              <span className="text-xs text-muted-foreground"><kbd className="px-1 rounded bg-muted font-mono">Ctrl+Shift+O</kbd> upload</span>
-            </div>
-            <div
-              onClick={() => inputRef.current?.click()}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
-              role="button"
-              tabIndex={0}
-              className="relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Upload audio file. Click or press Enter to browse."
-            >
-              <input
-                ref={inputRef}
-                type="file"
-                accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-                aria-hidden="true"
-              />
-              {file ? (
-                <div className="flex items-center gap-3 px-4 w-full">
-                  <FileAudio className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-medium" id="selected-file-name">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatBytes(file.size)}
-                      {audioInfo?.duration && ` · ${formatDuration(audioInfo.duration)}`}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null) }}
-                    className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    aria-label="Remove selected file"
-                    title="Remove file"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              ) : (
-                
-                <div className="flex flex-col items-center gap-2 text-center px-4">
-                  <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-                  <p className="text-sm font-medium">Drop audio file here or click to browse</p>
-                  <p className="text-xs text-muted-foreground">MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</p>
-                </div>
-              )}
-            </div>
-            <span className="sr-only">Supported formats: MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</span>
-          </div>
-
-          {/* Conversion settings */}
-          <div className="space-y-4">
-            <div className="space-y-2" role="group" aria-labelledby="format-heading">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium" id="format-heading">Target Format</Label>
-                <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">1-8</kbd> to select</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-heading" aria-describedby="format-help">
-                {FORMATS.map((fmt, index) => (
-                  <button
-                    key={fmt.value}
-                    onClick={() => setTargetFormat(fmt.value)}
-                    className={`p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
-                      targetFormat === fmt.value
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    role="radio"
-                    aria-checked={targetFormat === fmt.value}
-                    aria-label={`${fmt.label}: ${fmt.desc}. Press ${index + 1} to select.`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{fmt.label}</span>
-                      <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{index + 1}</kbd>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{fmt.desc}</div>
-                  </button>
-                ))}
-              </div>
-              <span id="format-help" className="sr-only">Select target audio format using number keys 1 through 8</span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
-              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={testMode}
-                  onChange={(e) => setTestMode(e.target.checked)}
-                  className="rounded border-border"
-                  aria-label="Enable test mode to skip ffmpeg loading"
-                />
-                <span className="text-xs">Test mode <kbd className="px-1 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+T</kbd></span>
-              </label>
-            </div>
-
-            <div className="space-y-2" role="group" aria-labelledby="quality-heading">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium" id="quality-heading">Quality</Label>
-                <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">Q</kbd> to cycle</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-heading" aria-describedby="quality-help">
-                {[
-                  { value: "high", label: "High", desc: "320kbps / Best" },
-                  { value: "medium", label: "Medium", desc: "192kbps / Good" },
-                  { value: "low", label: "Low", desc: "128kbps / Small" },
-                ].map((q) => (
-                  <button
-                    key={q.value}
-                    onClick={() => setQuality(q.value as "high" | "medium" | "low")}
-                    className={`p-2 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
-                      quality === q.value
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    role="radio"
-                    aria-checked={quality === q.value}
-                    aria-label={`${q.label} quality: ${q.desc}`}
-                  >
-                    <div className="font-medium">{q.label}</div>
-                    <div className="text-xs text-muted-foreground">{q.desc}</div>
-                  </button>
-                ))}
-              </div>
-              <span id="quality-help" className="sr-only">Press Q to cycle through quality levels: High, Medium, Low</span>
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-xs text-red-500" role="alert" aria-live="assertive">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
-            </div>
-          )}
-
-        </div>
-
-        <div className="shrink-0 border-t border-border p-4">
-          {isLoadingFFmpeg && (
-            <div className="mb-3" role="status" aria-live="polite" aria-label="Loading ffmpeg">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                <span>Loading ffmpeg.wasm...</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={50} aria-valuemin={0} aria-valuemax={100} aria-label="Loading progress">
-                <div className="bg-primary h-2 rounded-full animate-pulse w-1/2"></div>
-              </div>
-            </div>
-          )}
-          
-          {isConverting && (
-            <div className="mb-3" role="status" aria-live="polite" aria-label="Converting audio">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Converting...</span>
-                <span aria-live="polite">{progress}%</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion progress">
-                <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
-              </div>
-            </div>
-          )}
-
-          <Button 
-            className="w-full" 
-            onClick={convert}
-            disabled={!file || isConverting || isLoadingFFmpeg}
-            aria-label={isConverting ? "Converting audio, please wait" : isLoadingFFmpeg ? "Loading ffmpeg" : file ? "Convert audio file" : "Upload a file to convert"}
+    <div className="flex h-full flex-col" role="main" aria-label="Audio Converter application">
+      {/* Desktop top bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Audio Converter</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Audio Converter"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "Enter"], description: "Convert audio" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+              { keys: ["Ctrl", "Shift", "D"], description: "Download converted file" },
+              { keys: ["Ctrl", "Shift", "T"], description: "Toggle test mode" },
+              { keys: ["1"], description: "Select MP3 format" },
+              { keys: ["2"], description: "Select WAV format" },
+              { keys: ["3"], description: "Select OGG format" },
+              { keys: ["4"], description: "Select FLAC format" },
+              { keys: ["5"], description: "Select AAC format" },
+              { keys: ["6"], description: "Select M4A format" },
+              { keys: ["7"], description: "Select WMA format" },
+              { keys: ["8"], description: "Select OPUS format" },
+              { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+          <Button
+            onClick={result ? download : convert}
+            disabled={result ? false : (!file || isConverting || isLoadingFFmpeg)}
+            aria-label={result ? `Download ${targetFormat.toUpperCase()}` : isConverting ? "Converting audio, please wait" : isLoadingFFmpeg ? "Loading ffmpeg" : file ? "Convert audio file" : "Upload a file to convert"}
           >
-            {isConverting ? (
+            {result ? (
+              <>
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+                Download {targetFormat.toUpperCase()}
+              </>
+            ) : isConverting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                <span>Converting...</span>
+                Converting...
               </>
             ) : isLoadingFFmpeg ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                <span>Loading...</span>
+                Loading...
               </>
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Convert Audio <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-xs">Ctrl+Enter</kbd></span>
+                Convert Audio
               </>
             )}
           </Button>
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]">
-        <div className="flex-1 overflow-y-auto p-4">
-          {!result ? (
-            <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-3 text-center">
-              <div className="rounded-full border border-border bg-muted/50 p-4">
-                <Music className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">No converted audio yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Upload and convert to see result</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-5 space-y-4">
-                <div className="text-center">
-                  <p className="text-4xl font-bold text-green-600 dark:text-green-400">✓</p>
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">Conversion Complete</p>
-                </div>
-                
-                <audio controls className="w-full">
-                  <source src={result.url} type={`audio/${targetFormat}`} />
-                  Your browser does not support the audio element.
-                </audio>
+      {/* Mobile header */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-2">
+          <span className="text-sm font-semibold">Audio Converter</span>
+          <ShortcutsModal
+            pageName="Audio Converter"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "Enter"], description: "Convert audio" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+              { keys: ["Ctrl", "Shift", "D"], description: "Download converted file" },
+              { keys: ["Ctrl", "Shift", "T"], description: "Toggle test mode" },
+              { keys: ["1"], description: "Select MP3 format" },
+              { keys: ["2"], description: "Select WAV format" },
+              { keys: ["3"], description: "Select OGG format" },
+              { keys: ["4"], description: "Select FLAC format" },
+              { keys: ["5"], description: "Select AAC format" },
+              { keys: ["6"], description: "Select M4A format" },
+              { keys: ["7"], description: "Select WMA format" },
+              { keys: ["8"], description: "Select OPUS format" },
+              { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel tabs">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+          >
+            Upload
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+          >
+            Result
+          </button>
+        </div>
+      </div>
 
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Original</p>
-                    <p className="text-sm font-semibold">{formatBytes(file?.size || 0)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Converted</p>
-                    <p className="text-sm font-semibold">{formatBytes(result.size)}</p>
-                  </div>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {file && `File selected: ${file.name}. ${result ? 'Conversion complete.' : 'Ready to convert.'}`}
+      </div>
+
+      {/* Panels wrapper */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* Left panel */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Conversion settings">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6" tabIndex={-1}>
+
+            {/* Development Warning */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                    ⚠️ Under Development - ~25MB download required on first use
+                  </p>
+                  <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
+                    <li>CDN loading issues may occur - use "Test mode" to simulate conversion</li>
+                    <li>This tool is experimental and may not work in all environments</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* File upload */}
+            <div className="space-y-2" role="group" aria-labelledby="audio-file-heading">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium" id="audio-file-heading">Audio File</Label>
+                <span className="text-xs text-muted-foreground"><kbd className="px-1 rounded bg-muted font-mono">Ctrl+Shift+O</kbd> upload</span>
+              </div>
+              <div
+                onClick={() => inputRef.current?.click()}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click() }}
+                role="button"
+                tabIndex={0}
+                className="relative flex min-h-[100px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label="Upload audio file. Click or press Enter to browse."
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.ogg,.flac,.aac,.m4a,.wma,.opus"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                  aria-hidden="true"
+                />
+                {file ? (
+                  <div className="flex items-center gap-3 px-4 w-full">
+                    <FileAudio className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-sm font-medium" id="selected-file-name">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatBytes(file.size)}
+                        {audioInfo?.duration && ` · ${formatDuration(audioInfo.duration)}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null) }}
+                      className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      aria-label="Remove selected file"
+                      title="Remove file"
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-center px-4">
+                    <Upload className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                    <p className="text-sm font-medium">Drop audio file here or click to browse</p>
+                    <p className="text-xs text-muted-foreground">MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</p>
+                  </div>
+                )}
+              </div>
+              <span className="sr-only">Supported formats: MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS</span>
+            </div>
+
+            {/* Conversion settings */}
+            <div className="space-y-4">
+              <div className="space-y-2" role="group" aria-labelledby="format-heading">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium" id="format-heading">Target Format</Label>
+                  <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">1-8</kbd> to select</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="format-heading" aria-describedby="format-help">
+                  {FORMATS.map((fmt, index) => (
+                    <button
+                      key={fmt.value}
+                      onClick={() => setTargetFormat(fmt.value)}
+                      className={`p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
+                        targetFormat === fmt.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      role="radio"
+                      aria-checked={targetFormat === fmt.value}
+                      aria-label={`${fmt.label}: ${fmt.desc}. Press ${index + 1} to select.`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{fmt.label}</span>
+                        <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{index + 1}</kbd>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{fmt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+                <span id="format-help" className="sr-only">Select target audio format using number keys 1 through 8</span>
+              </div>
+
+              <div className="flex items-center gap-2 mb-4">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={testMode}
+                    onChange={(e) => setTestMode(e.target.checked)}
+                    className="rounded border-border"
+                    aria-label="Enable test mode to skip ffmpeg loading"
+                  />
+                  <span className="text-xs">Test mode <kbd className="px-1 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+T</kbd></span>
+                </label>
+              </div>
+
+              <div className="space-y-2" role="group" aria-labelledby="quality-heading">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium" id="quality-heading">Quality</Label>
+                  <span className="text-xs text-muted-foreground">Press <kbd className="px-1 rounded bg-muted font-mono">Q</kbd> to cycle</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="quality-heading" aria-describedby="quality-help">
+                  {[
+                    { value: "high", label: "High", desc: "320kbps / Best" },
+                    { value: "medium", label: "Medium", desc: "192kbps / Good" },
+                    { value: "low", label: "Low", desc: "128kbps / Small" },
+                  ].map((q) => (
+                    <button
+                      key={q.value}
+                      onClick={() => setQuality(q.value as "high" | "medium" | "low")}
+                      className={`p-2 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary ${
+                        quality === q.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      role="radio"
+                      aria-checked={quality === q.value}
+                      aria-label={`${q.label} quality: ${q.desc}`}
+                    >
+                      <div className="font-medium">{q.label}</div>
+                      <div className="text-xs text-muted-foreground">{q.desc}</div>
+                    </button>
+                  ))}
+                </div>
+                <span id="quality-help" className="sr-only">Press Q to cycle through quality levels: High, Medium, Low</span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-xs text-red-500" role="alert" aria-live="assertive">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {isLoadingFFmpeg && (
+              <div role="status" aria-live="polite" aria-label="Loading ffmpeg">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  <span>Loading ffmpeg.wasm...</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={50} aria-valuemin={0} aria-valuemax={100} aria-label="Loading progress">
+                  <div className="bg-primary h-2 rounded-full animate-pulse w-1/2"></div>
+                </div>
+              </div>
+            )}
+
+            {isConverting && (
+              <div role="status" aria-live="polite" aria-label="Converting audio">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Converting...</span>
+                  <span aria-live="polite">{progress}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion progress">
+                  <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {result && (
-          <div className="shrink-0 border-t border-border p-4">
-            <Button 
-              className="w-full" 
-              onClick={download}
-              aria-label={`Download converted audio file in ${targetFormat.toUpperCase()} format`}
-            >
-              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              <span>Download {targetFormat.toUpperCase()} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-xs">Ctrl+D</kbd></span>
-            </Button>
+        {/* Right panel */}
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Conversion result">
+          <div className="flex-1 overflow-y-auto p-4">
+            {!result ? (
+              <div className="flex h-full min-h-[150px] flex-col items-center justify-center gap-3 text-center">
+                <div className="rounded-full border border-border bg-muted/50 p-4">
+                  <Music className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">No converted audio yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Upload and convert to see result</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-5 space-y-4">
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-green-600 dark:text-green-400">✓</p>
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">Conversion Complete</p>
+                  </div>
+
+                  <audio controls className="w-full">
+                    <source src={result.url} type={`audio/${targetFormat}`} />
+                    Your browser does not support the audio element.
+                  </audio>
+
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Original</p>
+                      <p className="text-sm font-semibold">{formatBytes(file?.size || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Converted</p>
+                      <p className="text-sm font-semibold">{formatBytes(result.size)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Mobile bottom bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button
+          className="flex-1 h-11"
+          onClick={result ? download : convert}
+          disabled={result ? false : (!file || isConverting || isLoadingFFmpeg)}
+          aria-label={result ? `Download ${targetFormat.toUpperCase()}` : isConverting ? "Converting audio, please wait" : isLoadingFFmpeg ? "Loading ffmpeg" : file ? "Convert audio file" : "Upload a file to convert"}
+        >
+          {result ? (
+            <>
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              Download {targetFormat.toUpperCase()}
+            </>
+          ) : isConverting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              Converting...
+            </>
+          ) : isLoadingFFmpeg ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              Loading...
+            </>
+          ) : (
+            <>
+              <Play className="mr-2 h-4 w-4" aria-hidden="true" />
+              Convert Audio
+            </>
+          )}
+        </Button>
       </div>
     </div>
-    </>
   )
 }

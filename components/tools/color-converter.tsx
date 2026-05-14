@@ -106,6 +106,7 @@ export default function ColorConverter() {
   const [pickerValue, setPickerValue] = useState("#3b82f6")
   const [color, setColor] = useState<{ r: number; g: number; b: number } | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const applyColor = useCallback((rgb: { r: number; g: number; b: number } | null, rawInput: string) => {
     setColor(rgb)
@@ -186,15 +187,43 @@ export default function ColorConverter() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight" id="converter-title">Color Converter</h2>
-        <p className="text-muted-foreground" id="converter-description">Convert between HEX, RGB, HSL, and OKLCH color formats. Press 1-4 to copy formats. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Color Converter</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Color Converter" shortcuts={[
+            { keys: ["1"], description: "Copy HEX" },
+            { keys: ["2"], description: "Copy RGB" },
+            { keys: ["3"], description: "Copy HSL" },
+            { keys: ["4"], description: "Copy OKLCH" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy all formats" },
+          ]} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Color Converter</h2>
+          <ShortcutsModal pageName="Color Converter" shortcuts={[{ keys: ["1-4"], description: "Copy formats" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Color Input
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            All Formats
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Color input">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Color input">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Color Input</span>
           </div>
@@ -242,7 +271,7 @@ export default function ColorConverter() {
         </div>
 
         {/* Right Panel — Formats */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Color formats">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Color formats">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">All Formats</span>
             {color && (
@@ -293,20 +322,7 @@ export default function ColorConverter() {
         </div>
       </div>
     </div>
-    <ShortcutsModal
-      pageName="Color Converter"
-      shortcuts={[
-        { keys: ["1"], description: "Copy HEX format" },
-        { keys: ["2"], description: "Copy RGB format" },
-        { keys: ["3"], description: "Copy HSL format" },
-        { keys: ["4"], description: "Copy OKLCH format" },
-        { keys: ["Ctrl", "C"], description: "Copy all formats" },
-        { keys: ["Escape"], description: "Focus color input" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-      ]}
-    />
     </>
   )
+
 }

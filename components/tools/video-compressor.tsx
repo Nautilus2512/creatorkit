@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download } from "lucide-react"
@@ -31,6 +31,7 @@ export default function VideoCompressor() {
   const [stage, setStage] = useState("")
   const [error, setError] = useState("")
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const ffmpegRef = useRef<any>(null)
 
   const announceToScreenReader = useCallback((message: string) => {
@@ -89,6 +90,7 @@ export default function VideoCompressor() {
       setOutputUrl(URL.createObjectURL(blob))
       setStage("")
       announceToScreenReader(`Compression complete: ${fmtBytes(blob.size)}`)
+      setActiveTab("output")
     } catch (err: any) {
       setError("Compression failed. Try a smaller file or different format.")
       announceToScreenReader("Compression failed")
@@ -165,48 +167,73 @@ export default function VideoCompressor() {
   const savings = file && outputSize ? Math.round((1 - outputSize / file.size) * 100) : 0
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Video Compressor</h2>
-          <p className="text-muted-foreground">Compress videos using ffmpeg.wasm. Runs entirely in your browser — no uploads.</p>
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Video Compressor</span>
+        <div className="flex flex-wrap items-center gap-3" role="group" aria-label="Quality preset selection">
+          <Label className="text-xs text-muted-foreground" id="preset-label">Quality:</Label>
+          {(Object.entries(PRESETS) as [Preset, typeof PRESETS[Preset]][]).map(([key, { label, hint }], index) => (
+            <button
+              key={key}
+              onClick={() => changePreset(key)}
+              role="radio"
+              aria-checked={preset === key}
+              aria-label={`${label}: ${hint}`}
+              title={`${hint} (Ctrl+Shift+${index + 1})`}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary/50 ${preset === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+              <span className="font-medium">{label}</span>
+              <kbd className="ml-1.5 rounded border border-border bg-muted px-1 text-[9px]">Ctrl+Shift+{index + 1}</kbd>
+            </button>
+          ))}
         </div>
-        <ShortcutsModal pageName="Video Compressor" shortcuts={shortcuts} />
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Video Compressor" shortcuts={shortcuts} />
+          <Button
+            size="sm"
+            onClick={compress}
+            disabled={!file || loading}
+            aria-label={loading ? `Compressing: ${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress video"}
+          >
+            {loading ? `${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress Video"}
+            {file && !loading && (
+              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {outputUrl && (
-        <Button size="sm" onClick={download} className="focus:outline-none focus:ring-2 focus:ring-primary/50 self-start" aria-label="Download compressed video">
-          <Download className="h-4 w-4 mr-1" aria-hidden="true" />
-          <span>Download MP4</span>
-          <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
-        </Button>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3" role="group" aria-label="Quality preset selection">
-        <Label className="text-xs text-muted-foreground" id="preset-label">Quality preset:</Label>
-        {(Object.entries(PRESETS) as [Preset, typeof PRESETS[Preset]][]).map(([key, { label, hint }], index) => (
-          <button 
-            key={key} 
-            onClick={() => changePreset(key)}
-            role="radio"
-            aria-checked={preset === key}
-            aria-label={`${label}: ${hint}`}
-            title={`${hint} (Ctrl+Shift+${index + 1})`}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary/50 ${preset === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-            <span className="font-medium">{label}</span>
-            <span className="ml-1 opacity-70">— {hint}</span>
-            <kbd className="ml-1.5 rounded border border-border bg-muted px-1 text-[9px]">Ctrl+Shift+{index + 1}</kbd>
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Video Compressor</h2>
+          <ShortcutsModal pageName="Video Compressor" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
           </button>
-        ))}
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Result
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input video panel">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Input video panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <h3 className="text-sm font-medium" id="original-label">Original{file ? ` — ${fmtBytes(file.size)}` : ""}</h3>
             <label className="cursor-pointer">
@@ -218,21 +245,12 @@ export default function VideoCompressor() {
           </div>
           {videoUrl ? (
             <div className="flex-1 flex flex-col p-4 gap-3 min-h-0">
-              <video 
-                src={videoUrl} 
-                controls 
-                className="flex-1 w-full object-contain rounded-lg border border-border min-h-0 bg-black" 
+              <video
+                src={videoUrl}
+                controls
+                className="flex-1 w-full object-contain rounded-lg border border-border min-h-0 bg-black"
                 aria-label="Original video preview"
               />
-              <Button 
-                onClick={compress} 
-                disabled={loading} 
-                className="shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                aria-label={loading ? `Compressing: ${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress video"}
-              >
-                {loading ? `${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress Video"}
-                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
-              </Button>
             </div>
           ) : (
             <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-4 rounded-xl hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50" role="button" tabIndex={0} aria-label="Upload video file">
@@ -245,7 +263,7 @@ export default function VideoCompressor() {
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Compressed output panel">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Compressed output panel">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <h3 className="text-sm font-medium" id="compressed-label">
               {outputUrl ? `Compressed — ${fmtBytes(outputSize)}` : "Compressed Output"}
@@ -258,10 +276,10 @@ export default function VideoCompressor() {
             </div>
           ) : outputUrl ? (
             <div className="flex-1 flex flex-col p-4 gap-3 min-h-0">
-              <video 
-                src={outputUrl} 
-                controls 
-                className="flex-1 w-full object-contain rounded-lg border border-border min-h-0 bg-black" 
+              <video
+                src={outputUrl}
+                controls
+                className="flex-1 w-full object-contain rounded-lg border border-border min-h-0 bg-black"
                 aria-label="Compressed video preview"
               />
               <Button onClick={download} variant="outline" className="shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50" aria-label="Download compressed MP4">
@@ -289,6 +307,35 @@ export default function VideoCompressor() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        {outputUrl ? (
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={download}
+            aria-label="Download compressed video"
+          >
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+            Download MP4
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={compress}
+            disabled={!file || loading}
+            aria-label={loading ? `Compressing: ${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress video"}
+          >
+            {loading ? `${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress Video"}
+          </Button>
+        )}
       </div>
     </div>
   )

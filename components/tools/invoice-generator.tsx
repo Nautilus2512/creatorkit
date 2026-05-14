@@ -99,6 +99,7 @@ function Field({ label, value, onChange, placeholder = "", type = "text" }: { la
 export default function InvoiceGenerator() {
   const [form, setForm] = useState<Form>(DEFAULT)
   const [downloaded, setDownloaded] = useState(false)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const printedRef = useRef(false)
 
   useEffect(() => {
@@ -165,170 +166,201 @@ export default function InvoiceGenerator() {
   }, [printInvoice, reset])
 
   return (
-    <>
-      <ShortcutsModal
-        pageName="Invoice Generator"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "P"], description: "Print / Preview invoice" },
-          { keys: ["Ctrl", "Shift", "R"], description: "Reset form" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
-      <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Invoice Generator tool">
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Invoice Generator</h2>
-            <p className="text-muted-foreground">Create professional invoices. Saved locally — never uploaded. Press ? for shortcuts.</p>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => reset()}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
-              aria-label="Clear all invoice data"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Clear
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+R</kbd>
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={() => printInvoice()}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label={downloaded ? "Invoice ready for printing" : "Print or download invoice as PDF"}
-            >
-              {downloaded ? <FileCheck className="h-3.5 w-3.5 mr-1.5" /> : <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />}
-              {downloaded ? "Ready!" : "Download / Print"}
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+P</kbd>
-            </Button>
-          </div>
+    <div className="flex h-full flex-col">
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Invoice Generator</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => reset()}
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+          aria-label="Clear all invoice data"
+        >
+          <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Clear
+          <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+        </Button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Invoice Generator"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "P"], description: "Print / Preview invoice" },
+              { keys: ["Ctrl", "Shift", "R"], description: "Reset form" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+          <Button
+            size="sm"
+            onClick={() => printInvoice()}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            aria-label={downloaded ? "Invoice ready for printing" : "Print or download invoice as PDF"}
+          >
+            {downloaded ? <FileCheck className="h-3.5 w-3.5 mr-1.5" /> : <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />}
+            {downloaded ? "Ready!" : "Download / Print"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+P</kbd>
+          </Button>
         </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Invoice Generator</h2>
+          <ShortcutsModal
+            pageName="Invoice Generator"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "P"], description: "Print / Preview invoice" },
+              { keys: ["Ctrl", "Shift", "R"], description: "Reset form" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Form
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Preview
+          </button>
+        </div>
+      </div>
+
+      {/* Panels */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Form */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="form-panel-label">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="form-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="form-panel-label">Invoice Details</span>
           </div>
           <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-5" role="form" aria-label="Invoice form">
+            <div className="p-4 space-y-5" role="form" aria-label="Invoice form">
 
-            {/* From */}
-            <div className="space-y-2" role="group" aria-labelledby="from-label">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="from-label">From (Your Business)</p>
-              <Field label="Business / Your Name" value={form.fromName} onChange={v => { set("fromName", v); announceToScreenReader("Business name updated") }} placeholder="Acme Corp" />
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground" htmlFor="from-address">Address</Label>
-                <Textarea id="from-address" value={form.fromAddress} onChange={e => { set("fromAddress", e.target.value); announceToScreenReader("From address updated") }} placeholder="123 Main St&#10;City, State ZIP&#10;Country" rows={3} className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="Email" value={form.fromEmail} onChange={v => { set("fromEmail", v); announceToScreenReader("From email updated") }} placeholder="hello@acme.com" />
-                <Field label="Phone" value={form.fromPhone} onChange={v => { set("fromPhone", v); announceToScreenReader("From phone updated") }} placeholder="+1 555-0100" />
-              </div>
-            </div>
-
-            {/* To */}
-            <div className="space-y-2" role="group" aria-labelledby="to-label">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="to-label">Bill To (Client)</p>
-              <Field label="Client Name / Company" value={form.toName} onChange={v => { set("toName", v); announceToScreenReader("Client name updated") }} placeholder="Client Name" />
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground" htmlFor="to-address">Address</Label>
-                <Textarea id="to-address" value={form.toAddress} onChange={e => { set("toAddress", e.target.value); announceToScreenReader("Client address updated") }} placeholder="456 Client Ave&#10;City, State ZIP" rows={2} className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
-              </div>
-              <Field label="Client Email" value={form.toEmail} onChange={v => { set("toEmail", v); announceToScreenReader("Client email updated") }} placeholder="client@example.com" />
-            </div>
-
-            {/* Invoice details */}
-            <div className="space-y-2" role="group" aria-labelledby="invoice-details-label">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="invoice-details-label">Invoice Details</p>
-              <div className="grid grid-cols-3 gap-2">
-                <Field label="Invoice #" value={form.invoiceNum} onChange={v => { set("invoiceNum", v); announceToScreenReader(`Invoice number ${v}`) }} />
-                <Field label="Date" value={form.date} onChange={v => { set("date", v); announceToScreenReader(`Invoice date set to ${v}`) }} type="date" />
-                <Field label="Due Date" value={form.dueDate} onChange={v => { set("dueDate", v); announceToScreenReader(`Due date set to ${v}`) }} type="date" />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+              {/* From */}
+              <div className="space-y-2" role="group" aria-labelledby="from-label">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="from-label">From (Your Business)</p>
+                <Field label="Business / Your Name" value={form.fromName} onChange={v => { set("fromName", v); announceToScreenReader("Business name updated") }} placeholder="Acme Corp" />
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground" htmlFor="currency-select">Currency</Label>
-                  <select 
-                    id="currency-select"
-                    value={form.currency} 
-                    onChange={e => { set("currency", e.target.value); announceToScreenReader(`${e.target.value} currency selected`) }}
-                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    aria-label="Select currency"
-                  >
-                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <Label className="text-xs text-muted-foreground" htmlFor="from-address">Address</Label>
+                  <Textarea id="from-address" value={form.fromAddress} onChange={e => { set("fromAddress", e.target.value); announceToScreenReader("From address updated") }} placeholder="123 Main St&#10;City, State ZIP&#10;Country" rows={3} className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
                 </div>
-                <Field label="Tax Rate (%)" value={form.taxRate} onChange={v => { set("taxRate", v); announceToScreenReader(`Tax rate ${v} percent`) }} placeholder="0" type="number" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Email" value={form.fromEmail} onChange={v => { set("fromEmail", v); announceToScreenReader("From email updated") }} placeholder="hello@acme.com" />
+                  <Field label="Phone" value={form.fromPhone} onChange={v => { set("fromPhone", v); announceToScreenReader("From phone updated") }} placeholder="+1 555-0100" />
+                </div>
               </div>
-            </div>
 
-            {/* Items */}
-            <div className="space-y-2" role="group" aria-labelledby="line-items-label">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="line-items-label">Line Items</p>
-              <div className="space-y-2" role="list" aria-label="Invoice line items">
-                {form.items.map((item, idx) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_60px_80px_32px] gap-1.5 items-start" role="listitem" aria-label={`Item ${idx + 1}: ${item.description || 'Empty'}`}>
-                    <div className="space-y-0.5">
-                      {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`desc-${item.id}`}>Description</Label>}
-                      <Input id={`desc-${item.id}`} value={item.description} onChange={e => { updateItem(item.id, "description", e.target.value); announceToScreenReader("Item description updated") }} placeholder="Service or product" className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
-                    </div>
-                    <div className="space-y-0.5">
-                      {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`qty-${item.id}`}>Qty</Label>}
-                      <Input id={`qty-${item.id}`} type="number" value={item.qty} onChange={e => { updateItem(item.id, "qty", e.target.value); announceToScreenReader(`Quantity ${e.target.value}`) }} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" min="0" />
-                    </div>
-                    <div className="space-y-0.5">
-                      {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`price-${item.id}`}>Unit Price</Label>}
-                      <Input id={`price-${item.id}`} type="number" value={item.price} onChange={e => { updateItem(item.id, "price", e.target.value); announceToScreenReader(`Unit price ${e.target.value}`) }} placeholder="0.00" className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" min="0" step="0.01" />
-                    </div>
-                    <div className={idx === 0 ? "pt-5" : ""}>
-                      <button 
-                        onClick={() => { removeItem(item.id); announceToScreenReader("Line item removed") }} 
-                        className="h-8 w-8 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
-                        aria-label={`Remove ${item.description || 'item ' + (idx + 1)}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
+              {/* To */}
+              <div className="space-y-2" role="group" aria-labelledby="to-label">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="to-label">Bill To (Client)</p>
+                <Field label="Client Name / Company" value={form.toName} onChange={v => { set("toName", v); announceToScreenReader("Client name updated") }} placeholder="Client Name" />
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground" htmlFor="to-address">Address</Label>
+                  <Textarea id="to-address" value={form.toAddress} onChange={e => { set("toAddress", e.target.value); announceToScreenReader("Client address updated") }} placeholder="456 Client Ave&#10;City, State ZIP" rows={2} className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
+                </div>
+                <Field label="Client Email" value={form.toEmail} onChange={v => { set("toEmail", v); announceToScreenReader("Client email updated") }} placeholder="client@example.com" />
+              </div>
+
+              {/* Invoice details */}
+              <div className="space-y-2" role="group" aria-labelledby="invoice-details-label">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="invoice-details-label">Invoice Details</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <Field label="Invoice #" value={form.invoiceNum} onChange={v => { set("invoiceNum", v); announceToScreenReader(`Invoice number ${v}`) }} />
+                  <Field label="Date" value={form.date} onChange={v => { set("date", v); announceToScreenReader(`Invoice date set to ${v}`) }} type="date" />
+                  <Field label="Due Date" value={form.dueDate} onChange={v => { set("dueDate", v); announceToScreenReader(`Due date set to ${v}`) }} type="date" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground" htmlFor="currency-select">Currency</Label>
+                    <select
+                      id="currency-select"
+                      value={form.currency}
+                      onChange={e => { set("currency", e.target.value); announceToScreenReader(`${e.target.value} currency selected`) }}
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label="Select currency"
+                    >
+                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
                   </div>
-                ))}
+                  <Field label="Tax Rate (%)" value={form.taxRate} onChange={v => { set("taxRate", v); announceToScreenReader(`Tax rate ${v} percent`) }} placeholder="0" type="number" />
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => { addItem(); announceToScreenReader("New line item added") }} 
-                className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Add new line item"
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Add Line Item
-              </Button>
-            </div>
 
-            {/* Notes */}
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground" htmlFor="notes-input">Notes / Payment Terms</Label>
-              <Textarea 
-                id="notes-input"
-                value={form.notes} 
-                onChange={e => { set("notes", e.target.value); announceToScreenReader("Notes updated") }} 
-                placeholder="Payment due within 30 days. Thank you for your business!" 
-                rows={3} 
-                className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
-                aria-label="Invoice notes"
-              />
+              {/* Items */}
+              <div className="space-y-2" role="group" aria-labelledby="line-items-label">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="line-items-label">Line Items</p>
+                <div className="space-y-2" role="list" aria-label="Invoice line items">
+                  {form.items.map((item, idx) => (
+                    <div key={item.id} className="grid grid-cols-[1fr_60px_80px_32px] gap-1.5 items-start" role="listitem" aria-label={`Item ${idx + 1}: ${item.description || 'Empty'}`}>
+                      <div className="space-y-0.5">
+                        {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`desc-${item.id}`}>Description</Label>}
+                        <Input id={`desc-${item.id}`} value={item.description} onChange={e => { updateItem(item.id, "description", e.target.value); announceToScreenReader("Item description updated") }} placeholder="Service or product" className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
+                      </div>
+                      <div className="space-y-0.5">
+                        {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`qty-${item.id}`}>Qty</Label>}
+                        <Input id={`qty-${item.id}`} type="number" value={item.qty} onChange={e => { updateItem(item.id, "qty", e.target.value); announceToScreenReader(`Quantity ${e.target.value}`) }} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" min="0" />
+                      </div>
+                      <div className="space-y-0.5">
+                        {idx === 0 && <Label className="text-xs text-muted-foreground" htmlFor={`price-${item.id}`}>Unit Price</Label>}
+                        <Input id={`price-${item.id}`} type="number" value={item.price} onChange={e => { updateItem(item.id, "price", e.target.value); announceToScreenReader(`Unit price ${e.target.value}`) }} placeholder="0.00" className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" min="0" step="0.01" />
+                      </div>
+                      <div className={idx === 0 ? "pt-5" : ""}>
+                        <button
+                          onClick={() => { removeItem(item.id); announceToScreenReader("Line item removed") }}
+                          className="h-8 w-8 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                          aria-label={`Remove ${item.description || 'item ' + (idx + 1)}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { addItem(); announceToScreenReader("New line item added") }}
+                  className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Add new line item"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Add Line Item
+                </Button>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground" htmlFor="notes-input">Notes / Payment Terms</Label>
+                <Textarea
+                  id="notes-input"
+                  value={form.notes}
+                  onChange={e => { set("notes", e.target.value); announceToScreenReader("Notes updated") }}
+                  placeholder="Payment due within 30 days. Thank you for your business!"
+                  rows={3}
+                  className="text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  aria-label="Invoice notes"
+                />
+              </div>
             </div>
-          </div>
           </div>
         </div>
 
         {/* Right — Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-panel-label">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="preview-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="preview-panel-label">Preview</span>
             <span className="text-xs text-muted-foreground" aria-live="polite">Auto-saved locally</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div 
+            <div
               className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6 md:p-8 font-sans text-sm text-foreground"
               role="img"
               aria-label={`Invoice preview: ${form.fromName || 'Your Business'} to ${form.toName || 'Client'}. Invoice number ${form.invoiceNum}. Total: ${fmt(total, currency)}`}
@@ -402,7 +434,32 @@ export default function InvoiceGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => reset()}
+          className="h-11 px-3"
+          aria-label="Clear all invoice data"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          className="h-11 px-4"
+          onClick={() => printInvoice()}
+          aria-label={downloaded ? "Invoice ready for printing" : "Print or download invoice as PDF"}
+        >
+          {downloaded ? <FileCheck className="h-4 w-4 mr-1.5" /> : <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {downloaded ? "Ready!" : "Download / Print"}
+        </Button>
+      </div>
     </div>
-    </>
   )
 }

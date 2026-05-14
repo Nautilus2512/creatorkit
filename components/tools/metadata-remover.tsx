@@ -64,6 +64,14 @@ function stripMp3Id3(buffer: ArrayBuffer): ArrayBuffer {
   return buffer.slice(start, end)
 }
 
+const shortcuts = [
+  { keys: ["Ctrl", "O"], description: "Open file upload" },
+  { keys: ["Ctrl", "Enter"], description: "Clean all files" },
+  { keys: ["Ctrl", "D"], description: "Download all as ZIP" },
+  { keys: ["Ctrl", "E"], description: "Export metadata as CSV" },
+  { keys: ["Ctrl", "Backspace"], description: "Clear all files" },
+  { keys: ["?"], description: "Toggle this shortcuts panel" },
+]
 
 export function MetadataRemover() {
   const [files, setFiles] = useState<File[]>([])
@@ -75,6 +83,7 @@ export function MetadataRemover() {
   const [pdfOpts, setPdfOpts] = useState<PdfRemoveOptions>({ author: true, title: true, creator: true, producer: true, subject: true, keywords: true })
   const [officeOpts, setOfficeOpts] = useState<OfficeRemoveOptions>({ creator: true, lastModifiedBy: true, dates: true, company: true, description: true })
   const [audioOpts, setAudioOpts] = useState<AudioRemoveOptions>({ title: false, artist: false, album: false, year: false, genre: false, comment: true, composer: false, coverArt: true })
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const uploadRef = useRef<HTMLInputElement>(null)
 
   const keyForFile = (file: File) => `${file.name}-${file.lastModified}-${file.size}`
@@ -294,7 +303,6 @@ export function MetadataRemover() {
     audio: files.filter(f => getCategory(f) === "audio"),
   }), [files])
 
-  const selectedCountLabel = `${files.length} file${files.length !== 1 ? "s" : ""}`
   const toggleImg = (k: keyof ImageRemoveOptions) => setImgOpts(p => ({ ...p, [k]: !p[k] }))
   const togglePdf = (k: keyof PdfRemoveOptions) => setPdfOpts(p => ({ ...p, [k]: !p[k] }))
   const toggleOffice = (k: keyof OfficeRemoveOptions) => setOfficeOpts(p => ({ ...p, [k]: !p[k] }))
@@ -337,253 +345,282 @@ export function MetadataRemover() {
 
   return (
     <>
-      <div className="flex h-full flex-col space-y-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Metadata Remover</h2>
-          <p className="text-muted-foreground">Remove metadata from images, PDFs, Office documents, and audio files. 100% client-side.</p>
-        </div>
+      <div className="flex h-full flex-col">
 
-        {/* Mobile warning — hidden on desktop */}
-        <div className="md:hidden rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
-          <p className="font-medium">Best experienced on desktop</p>
-          <p className="mt-0.5 text-xs opacity-80">This tool loads multiple processing libraries that may crash on mobile devices with limited RAM. You can still try, but a desktop browser is recommended.</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-
-          {/* LEFT PANEL */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
-            <div className="shrink-0 border-b border-border px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Privacy Protection</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                <span>Image: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF</span>
-                <span>Document: PDF, DOCX, XLSX, PPTX</span>
-                <span>Audio: MP3</span>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <FileDropzone ref={uploadRef} accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
-
-              {files.length > 0 && (
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="flex gap-3">
-                    {byCategory.image.length > 0 && <span>{byCategory.image.length} image{byCategory.image.length > 1 ? "s" : ""}</span>}
-                    {byCategory.pdf.length > 0 && <span>{byCategory.pdf.length} PDF{byCategory.pdf.length > 1 ? "s" : ""}</span>}
-                    {byCategory.office.length > 0 && <span>{byCategory.office.length} doc{byCategory.office.length > 1 ? "s" : ""}</span>}
-                    {byCategory.audio.length > 0 && <span>{byCategory.audio.length} audio</span>}
+        {/* DESKTOP: top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+          <span className="text-sm font-semibold shrink-0 mr-1">Metadata Remover</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="Metadata Remover" shortcuts={shortcuts} />
+            {files.length > 0 && (
+              <Button
+                size="sm"
+                onClick={removeMetadata}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Processing...
                   </span>
-                  <button type="button" onClick={() => { setFiles([]); setProcessedFiles([]); setErrors([]) }} className="hover:text-destructive">Clear all</button>
-                </div>
-              )}
-
-              {byCategory.image.length > 0 && (
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  <p className="text-xs font-medium flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Image EXIF Fields</p>
-                  <div className="grid gap-1.5">
-                    <CheckRow checked={imgOpts.gps} onChange={() => toggleImg("gps")} icon={<MapPin className="h-3.5 w-3.5 text-muted-foreground" />} label="GPS Location" />
-                    <CheckRow checked={imgOpts.device} onChange={() => toggleImg("device")} icon={<Camera className="h-3.5 w-3.5 text-muted-foreground" />} label="Device (Make & Model)" />
-                    <CheckRow checked={imgOpts.date} onChange={() => toggleImg("date")} icon={<Calendar className="h-3.5 w-3.5 text-muted-foreground" />} label="Date & Time" />
-                    <CheckRow checked={imgOpts.software} onChange={() => toggleImg("software")} icon={<Cpu className="h-3.5 w-3.5 text-muted-foreground" />} label="Software" />
-                    <CheckRow checked={imgOpts.lens} onChange={() => toggleImg("lens")} icon={<Aperture className="h-3.5 w-3.5 text-muted-foreground" />} label="Lens Info" />
-                    <CheckRow checked={imgOpts.exposure} onChange={() => toggleImg("exposure")} icon={<Clock className="h-3.5 w-3.5 text-muted-foreground" />} label="Exposure & ISO" />
-                  </div>
-                </div>
-              )}
-
-              {byCategory.pdf.length > 0 && (
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  <p className="text-xs font-medium flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> PDF Metadata Fields</p>
-                  <div className="grid gap-1.5">
-                    <CheckRow checked={pdfOpts.author} onChange={() => togglePdf("author")} label="Author" />
-                    <CheckRow checked={pdfOpts.title} onChange={() => togglePdf("title")} label="Title" />
-                    <CheckRow checked={pdfOpts.creator} onChange={() => togglePdf("creator")} label="Creator (software)" />
-                    <CheckRow checked={pdfOpts.producer} onChange={() => togglePdf("producer")} label="Producer (library)" />
-                    <CheckRow checked={pdfOpts.subject} onChange={() => togglePdf("subject")} label="Subject" />
-                    <CheckRow checked={pdfOpts.keywords} onChange={() => togglePdf("keywords")} label="Keywords" />
-                  </div>
-                </div>
-              )}
-
-              {byCategory.office.length > 0 && (
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  <p className="text-xs font-medium flex items-center gap-1"><File className="h-3.5 w-3.5" /> Office Document Fields</p>
-                  <div className="grid gap-1.5">
-                    <CheckRow checked={officeOpts.creator} onChange={() => toggleOffice("creator")} label="Creator / Author" />
-                    <CheckRow checked={officeOpts.lastModifiedBy} onChange={() => toggleOffice("lastModifiedBy")} label="Last Modified By" />
-                    <CheckRow checked={officeOpts.dates} onChange={() => toggleOffice("dates")} label="Created & Modified Dates" />
-                    <CheckRow checked={officeOpts.company} onChange={() => toggleOffice("company")} label="Company" />
-                    <CheckRow checked={officeOpts.description} onChange={() => toggleOffice("description")} label="Description" />
-                  </div>
-                </div>
-              )}
-
-              {byCategory.audio.length > 0 && (
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  <p className="text-xs font-medium flex items-center gap-1"><Music className="h-3.5 w-3.5" /> Audio Tag Fields</p>
-                  <div className="rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2 text-xs text-green-600 dark:text-green-400">
-                    ✓ All audio formats fully supported — metadata will be permanently removed
-                  </div>
-                  <div className="grid gap-1.5">
-                    <CheckRow checked={audioOpts.title} onChange={() => toggleAudio("title")} label="Title" />
-                    <CheckRow checked={audioOpts.artist} onChange={() => toggleAudio("artist")} label="Artist" />
-                    <CheckRow checked={audioOpts.album} onChange={() => toggleAudio("album")} label="Album" />
-                    <CheckRow checked={audioOpts.year} onChange={() => toggleAudio("year")} label="Year" />
-                    <CheckRow checked={audioOpts.genre} onChange={() => toggleAudio("genre")} label="Genre" />
-                    <CheckRow checked={audioOpts.comment} onChange={() => toggleAudio("comment")} label="Comment" />
-                    <CheckRow checked={audioOpts.composer} onChange={() => toggleAudio("composer")} label="Composer" />
-                    <CheckRow checked={audioOpts.coverArt} onChange={() => toggleAudio("coverArt")} label="Cover Art" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
-              {files.length > 0 ? (
-                <div className="flex gap-2">
-                  <Button onClick={removeMetadata} disabled={isProcessing} className="flex-1">
-                    {isProcessing ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {"Processing..."}
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-between w-full">
-                        <span>Clean {selectedCountLabel}</span>
-                        <kbd className="ml-2 rounded border border-primary-foreground/30 px-1 text-[10px] opacity-50">Ctrl+Enter</kbd>
-                      </span>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={exportReport} disabled={Object.keys(metaByFile).length === 0}>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>CSV</span>
-                    <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+E</kbd>
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground text-center">Upload files to get started</p>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT PANEL */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
-            <div className="shrink-0 border-b border-border px-4 py-3">
-              <span className="text-sm font-medium">Detected Metadata</span>
-              <p className="text-xs text-muted-foreground">Preview of fields found before cleanup.</p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {files.length === 0 && (
-                <div className="flex h-full items-center justify-center">
-                  <p className="text-sm text-muted-foreground">Upload files on the left to see metadata here.</p>
-                </div>
-              )}
-
-              {files.map((file, idx) => {
-                const m = metaByFile[keyForFile(file)]
-                const p = processedFiles.find(x => x.originalName === file.name)
-                const cat = getCategory(file)
-                return (
-                  <div key={`${file.name}-${idx}`} className="space-y-2 rounded-lg border border-border p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium">{file.name}</p>
-                      {p && <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">Cleaned</span>}
-                    </div>
-                    {cat === "image" && m?.image && (
-                      <div className="grid gap-0.5">
-                        <DiffRow label="GPS" value={m.image.gps} removed={!!p && imgOpts.gps} kept={!!p && !imgOpts.gps} />
-                        <DiffRow label="Device" value={m.image.device} removed={!!p && imgOpts.device} kept={!!p && !imgOpts.device} />
-                        <DiffRow label="Date" value={m.image.date} removed={!!p && imgOpts.date} kept={!!p && !imgOpts.date} />
-                        <DiffRow label="Software" value={m.image.software} removed={!!p && imgOpts.software} kept={!!p && !imgOpts.software} />
-                        <DiffRow label="Lens" value={m.image.lens} removed={!!p && imgOpts.lens} kept={!!p && !imgOpts.lens} />
-                        <DiffRow label="Exposure" value={m.image.exposure} removed={!!p && imgOpts.exposure} kept={!!p && !imgOpts.exposure} />
-                        <DiffRow label="ISO" value={m.image.iso} removed={!!p && imgOpts.exposure} kept={!!p && !imgOpts.exposure} />
-                      </div>
-                    )}
-                    {cat === "pdf" && m?.pdf && (
-                      <div className="grid gap-0.5">
-                        <DiffRow label="Author" value={m.pdf.author} removed={!!p && pdfOpts.author} kept={!!p && !pdfOpts.author} />
-                        <DiffRow label="Title" value={m.pdf.title} removed={!!p && pdfOpts.title} kept={!!p && !pdfOpts.title} />
-                        <DiffRow label="Creator" value={m.pdf.creator} removed={!!p && pdfOpts.creator} kept={!!p && !pdfOpts.creator} />
-                        <DiffRow label="Producer" value={m.pdf.producer} removed={!!p && pdfOpts.producer} kept={!!p && !pdfOpts.producer} />
-                        <DiffRow label="Subject" value={m.pdf.subject} removed={!!p && pdfOpts.subject} kept={!!p && !pdfOpts.subject} />
-                        <DiffRow label="Keywords" value={m.pdf.keywords} removed={!!p && pdfOpts.keywords} kept={!!p && !pdfOpts.keywords} />
-                      </div>
-                    )}
-                    {cat === "office" && m?.office && (
-                      <div className="grid gap-0.5">
-                        <DiffRow label="Creator" value={m.office.creator} removed={!!p && officeOpts.creator} kept={!!p && !officeOpts.creator} />
-                        <DiffRow label="Modified By" value={m.office.lastModifiedBy} removed={!!p && officeOpts.lastModifiedBy} kept={!!p && !officeOpts.lastModifiedBy} />
-                        <DiffRow label="Created" value={m.office.created} removed={!!p && officeOpts.dates} kept={!!p && !officeOpts.dates} />
-                        <DiffRow label="Modified" value={m.office.modified} removed={!!p && officeOpts.dates} kept={!!p && !officeOpts.dates} />
-                        <DiffRow label="Company" value={m.office.company} removed={!!p && officeOpts.company} kept={!!p && !officeOpts.company} />
-                        <DiffRow label="Description" value={m.office.description} removed={!!p && officeOpts.description} kept={!!p && !officeOpts.description} />
-                      </div>
-                    )}
-                    {cat === "audio" && m?.audio && (
-                      <div className="grid gap-0.5">
-                        <DiffRow label="Title" value={m.audio.title} removed={!!p && audioOpts.title} kept={!!p && !audioOpts.title} />
-                        <DiffRow label="Artist" value={m.audio.artist} removed={!!p && audioOpts.artist} kept={!!p && !audioOpts.artist} />
-                        <DiffRow label="Album" value={m.audio.album} removed={!!p && audioOpts.album} kept={!!p && !audioOpts.album} />
-                        <DiffRow label="Year" value={m.audio.year} removed={!!p && audioOpts.year} kept={!!p && !audioOpts.year} />
-                        <DiffRow label="Genre" value={m.audio.genre} removed={!!p && audioOpts.genre} kept={!!p && !audioOpts.genre} />
-                        <DiffRow label="Comment" value={m.audio.comment} removed={!!p && audioOpts.comment} kept={!!p && !audioOpts.comment} />
-                        <DiffRow label="Composer" value={m.audio.composer} removed={!!p && audioOpts.composer} kept={!!p && !audioOpts.composer} />
-                        <DiffRow label="Cover Art" value={m.audio.coverArt} removed={!!p && audioOpts.coverArt} kept={!!p && !audioOpts.coverArt} />
-                      </div>
-                    )}
-                    {p && (
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadFile(p.url, p.name)}>
-                        <Download className="mr-1 h-3.5 w-3.5" /> Download {p.name}
-                      </Button>
-                    )}
-                  </div>
-                )
-              })}
-
-              {errors.length > 0 && (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                  <p className="text-xs font-medium text-destructive mb-1">Processing Issues</p>
-                  <ul className="list-disc pl-4 space-y-0.5 text-xs text-muted-foreground">
-                    {errors.map((e, i) => <li key={i}>{e}</li>)}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {processedFiles.length > 0 && (
-              <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                    {processedFiles.length} file{processedFiles.length > 1 ? "s" : ""} cleaned
-                  </span>
-                  <Button variant="outline" size="sm" onClick={downloadAllZip}>
-                    <Download className="mr-2 h-3.5 w-3.5" /> Download ZIP
-                    <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+D</kbd>
-                  </Button>
-                </div>
-              </div>
+                ) : (
+                  <>
+                    Remove &amp; Download
+                    <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
-      </div>
 
-      <ShortcutsModal
-        pageName="Metadata Remover"
-        shortcuts={[
-          { keys: ["Ctrl", "O"], description: "Open file upload" },
-          { keys: ["Ctrl", "Enter"], description: "Clean all files" },
-          { keys: ["Ctrl", "D"], description: "Download all as ZIP" },
-          { keys: ["Ctrl", "E"], description: "Export metadata as CSV" },
-          { keys: ["Ctrl", "Backspace"], description: "Clear all files" },
-          { keys: ["?"], description: "Toggle this shortcuts panel" },
-        ]}
-      />
+        {/* MOBILE: compact header + tab switcher */}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <h2 className="text-base font-semibold">Metadata Remover</h2>
+            <ShortcutsModal pageName="Metadata Remover" shortcuts={shortcuts} />
+          </div>
+          <div className="flex" role="tablist">
+            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Upload
+            </button>
+            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Results
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile warning */}
+        <div className="md:hidden shrink-0 rounded-lg border border-amber-500/40 bg-amber-500/10 mx-3 mt-2 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
+          <p className="font-medium">Best experienced on desktop</p>
+          <p className="mt-0.5 text-xs opacity-80">This tool loads multiple processing libraries that may crash on mobile.</p>
+        </div>
+
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+          {/* LEFT PANEL */}
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Privacy Protection</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>Image: JPG, PNG, WEBP, TIFF, HEIC, BMP, GIF</span>
+                  <span>Document: PDF, DOCX, XLSX, PPTX</span>
+                  <span>Audio: MP3</span>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <FileDropzone ref={uploadRef} accept={ACCEPT_STRING} onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
+
+                {files.length > 0 && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex gap-3">
+                      {byCategory.image.length > 0 && <span>{byCategory.image.length} image{byCategory.image.length > 1 ? "s" : ""}</span>}
+                      {byCategory.pdf.length > 0 && <span>{byCategory.pdf.length} PDF{byCategory.pdf.length > 1 ? "s" : ""}</span>}
+                      {byCategory.office.length > 0 && <span>{byCategory.office.length} doc{byCategory.office.length > 1 ? "s" : ""}</span>}
+                      {byCategory.audio.length > 0 && <span>{byCategory.audio.length} audio</span>}
+                    </span>
+                    <button type="button" onClick={() => { setFiles([]); setProcessedFiles([]); setErrors([]) }} className="hover:text-destructive">Clear all</button>
+                  </div>
+                )}
+
+                {byCategory.image.length > 0 && (
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Image EXIF Fields</p>
+                    <div className="grid gap-1.5">
+                      <CheckRow checked={imgOpts.gps} onChange={() => toggleImg("gps")} icon={<MapPin className="h-3.5 w-3.5 text-muted-foreground" />} label="GPS Location" />
+                      <CheckRow checked={imgOpts.device} onChange={() => toggleImg("device")} icon={<Camera className="h-3.5 w-3.5 text-muted-foreground" />} label="Device (Make & Model)" />
+                      <CheckRow checked={imgOpts.date} onChange={() => toggleImg("date")} icon={<Calendar className="h-3.5 w-3.5 text-muted-foreground" />} label="Date & Time" />
+                      <CheckRow checked={imgOpts.software} onChange={() => toggleImg("software")} icon={<Cpu className="h-3.5 w-3.5 text-muted-foreground" />} label="Software" />
+                      <CheckRow checked={imgOpts.lens} onChange={() => toggleImg("lens")} icon={<Aperture className="h-3.5 w-3.5 text-muted-foreground" />} label="Lens Info" />
+                      <CheckRow checked={imgOpts.exposure} onChange={() => toggleImg("exposure")} icon={<Clock className="h-3.5 w-3.5 text-muted-foreground" />} label="Exposure & ISO" />
+                    </div>
+                  </div>
+                )}
+
+                {byCategory.pdf.length > 0 && (
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> PDF Metadata Fields</p>
+                    <div className="grid gap-1.5">
+                      <CheckRow checked={pdfOpts.author} onChange={() => togglePdf("author")} label="Author" />
+                      <CheckRow checked={pdfOpts.title} onChange={() => togglePdf("title")} label="Title" />
+                      <CheckRow checked={pdfOpts.creator} onChange={() => togglePdf("creator")} label="Creator (software)" />
+                      <CheckRow checked={pdfOpts.producer} onChange={() => togglePdf("producer")} label="Producer (library)" />
+                      <CheckRow checked={pdfOpts.subject} onChange={() => togglePdf("subject")} label="Subject" />
+                      <CheckRow checked={pdfOpts.keywords} onChange={() => togglePdf("keywords")} label="Keywords" />
+                    </div>
+                  </div>
+                )}
+
+                {byCategory.office.length > 0 && (
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium flex items-center gap-1"><File className="h-3.5 w-3.5" /> Office Document Fields</p>
+                    <div className="grid gap-1.5">
+                      <CheckRow checked={officeOpts.creator} onChange={() => toggleOffice("creator")} label="Creator / Author" />
+                      <CheckRow checked={officeOpts.lastModifiedBy} onChange={() => toggleOffice("lastModifiedBy")} label="Last Modified By" />
+                      <CheckRow checked={officeOpts.dates} onChange={() => toggleOffice("dates")} label="Created & Modified Dates" />
+                      <CheckRow checked={officeOpts.company} onChange={() => toggleOffice("company")} label="Company" />
+                      <CheckRow checked={officeOpts.description} onChange={() => toggleOffice("description")} label="Description" />
+                    </div>
+                  </div>
+                )}
+
+                {byCategory.audio.length > 0 && (
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium flex items-center gap-1"><Music className="h-3.5 w-3.5" /> Audio Tag Fields</p>
+                    <div className="rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2 text-xs text-green-600 dark:text-green-400">
+                      ✓ All audio formats fully supported — metadata will be permanently removed
+                    </div>
+                    <div className="grid gap-1.5">
+                      <CheckRow checked={audioOpts.title} onChange={() => toggleAudio("title")} label="Title" />
+                      <CheckRow checked={audioOpts.artist} onChange={() => toggleAudio("artist")} label="Artist" />
+                      <CheckRow checked={audioOpts.album} onChange={() => toggleAudio("album")} label="Album" />
+                      <CheckRow checked={audioOpts.year} onChange={() => toggleAudio("year")} label="Year" />
+                      <CheckRow checked={audioOpts.genre} onChange={() => toggleAudio("genre")} label="Genre" />
+                      <CheckRow checked={audioOpts.comment} onChange={() => toggleAudio("comment")} label="Comment" />
+                      <CheckRow checked={audioOpts.composer} onChange={() => toggleAudio("composer")} label="Composer" />
+                      <CheckRow checked={audioOpts.coverArt} onChange={() => toggleAudio("coverArt")} label="Cover Art" />
+                    </div>
+                  </div>
+                )}
+
+                {files.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center">Upload files to get started</p>
+                )}
+              </div>
+            </div>
+
+          {/* RIGHT PANEL */}
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <span className="text-sm font-medium">Detected Metadata</span>
+                <p className="text-xs text-muted-foreground">Preview of fields found before cleanup.</p>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {files.length === 0 && (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-sm text-muted-foreground">Upload files on the left to see metadata here.</p>
+                  </div>
+                )}
+
+                {files.map((file, idx) => {
+                  const m = metaByFile[keyForFile(file)]
+                  const p = processedFiles.find(x => x.originalName === file.name)
+                  const cat = getCategory(file)
+                  return (
+                    <div key={`${file.name}-${idx}`} className="space-y-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{file.name}</p>
+                        {p && <span className="shrink-0 rounded-full bg-green-500/10 px-2 py-0.5 text-xs text-green-500">Cleaned</span>}
+                      </div>
+                      {cat === "image" && m?.image && (
+                        <div className="grid gap-0.5">
+                          <DiffRow label="GPS" value={m.image.gps} removed={!!p && imgOpts.gps} kept={!!p && !imgOpts.gps} />
+                          <DiffRow label="Device" value={m.image.device} removed={!!p && imgOpts.device} kept={!!p && !imgOpts.device} />
+                          <DiffRow label="Date" value={m.image.date} removed={!!p && imgOpts.date} kept={!!p && !imgOpts.date} />
+                          <DiffRow label="Software" value={m.image.software} removed={!!p && imgOpts.software} kept={!!p && !imgOpts.software} />
+                          <DiffRow label="Lens" value={m.image.lens} removed={!!p && imgOpts.lens} kept={!!p && !imgOpts.lens} />
+                          <DiffRow label="Exposure" value={m.image.exposure} removed={!!p && imgOpts.exposure} kept={!!p && !imgOpts.exposure} />
+                          <DiffRow label="ISO" value={m.image.iso} removed={!!p && imgOpts.exposure} kept={!!p && !imgOpts.exposure} />
+                        </div>
+                      )}
+                      {cat === "pdf" && m?.pdf && (
+                        <div className="grid gap-0.5">
+                          <DiffRow label="Author" value={m.pdf.author} removed={!!p && pdfOpts.author} kept={!!p && !pdfOpts.author} />
+                          <DiffRow label="Title" value={m.pdf.title} removed={!!p && pdfOpts.title} kept={!!p && !pdfOpts.title} />
+                          <DiffRow label="Creator" value={m.pdf.creator} removed={!!p && pdfOpts.creator} kept={!!p && !pdfOpts.creator} />
+                          <DiffRow label="Producer" value={m.pdf.producer} removed={!!p && pdfOpts.producer} kept={!!p && !pdfOpts.producer} />
+                          <DiffRow label="Subject" value={m.pdf.subject} removed={!!p && pdfOpts.subject} kept={!!p && !pdfOpts.subject} />
+                          <DiffRow label="Keywords" value={m.pdf.keywords} removed={!!p && pdfOpts.keywords} kept={!!p && !pdfOpts.keywords} />
+                        </div>
+                      )}
+                      {cat === "office" && m?.office && (
+                        <div className="grid gap-0.5">
+                          <DiffRow label="Creator" value={m.office.creator} removed={!!p && officeOpts.creator} kept={!!p && !officeOpts.creator} />
+                          <DiffRow label="Modified By" value={m.office.lastModifiedBy} removed={!!p && officeOpts.lastModifiedBy} kept={!!p && !officeOpts.lastModifiedBy} />
+                          <DiffRow label="Created" value={m.office.created} removed={!!p && officeOpts.dates} kept={!!p && !officeOpts.dates} />
+                          <DiffRow label="Modified" value={m.office.modified} removed={!!p && officeOpts.dates} kept={!!p && !officeOpts.dates} />
+                          <DiffRow label="Company" value={m.office.company} removed={!!p && officeOpts.company} kept={!!p && !officeOpts.company} />
+                          <DiffRow label="Description" value={m.office.description} removed={!!p && officeOpts.description} kept={!!p && !officeOpts.description} />
+                        </div>
+                      )}
+                      {cat === "audio" && m?.audio && (
+                        <div className="grid gap-0.5">
+                          <DiffRow label="Title" value={m.audio.title} removed={!!p && audioOpts.title} kept={!!p && !audioOpts.title} />
+                          <DiffRow label="Artist" value={m.audio.artist} removed={!!p && audioOpts.artist} kept={!!p && !audioOpts.artist} />
+                          <DiffRow label="Album" value={m.audio.album} removed={!!p && audioOpts.album} kept={!!p && !audioOpts.album} />
+                          <DiffRow label="Year" value={m.audio.year} removed={!!p && audioOpts.year} kept={!!p && !audioOpts.year} />
+                          <DiffRow label="Genre" value={m.audio.genre} removed={!!p && audioOpts.genre} kept={!!p && !audioOpts.genre} />
+                          <DiffRow label="Comment" value={m.audio.comment} removed={!!p && audioOpts.comment} kept={!!p && !audioOpts.comment} />
+                          <DiffRow label="Composer" value={m.audio.composer} removed={!!p && audioOpts.composer} kept={!!p && !audioOpts.composer} />
+                          <DiffRow label="Cover Art" value={m.audio.coverArt} removed={!!p && audioOpts.coverArt} kept={!!p && !audioOpts.coverArt} />
+                        </div>
+                      )}
+                      {p && (
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadFile(p.url, p.name)}>
+                          <Download className="mr-1 h-3.5 w-3.5" /> Download {p.name}
+                        </Button>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {processedFiles.length > 0 && (
+                  <div className="rounded-lg border border-border bg-card/95 px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                        {processedFiles.length} file{processedFiles.length > 1 ? "s" : ""} cleaned
+                      </span>
+                      <Button variant="outline" size="sm" onClick={downloadAllZip}>
+                        <Download className="mr-2 h-3.5 w-3.5" /> Download ZIP
+                        <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+D</kbd>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {errors.length > 0 && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                    <p className="text-xs font-medium text-destructive mb-1">Processing Issues</p>
+                    <ul className="list-disc pl-4 space-y-0.5 text-xs text-muted-foreground">
+                      {errors.map((e, i) => <li key={i}>{e}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+          </div>
+        </div>
+
+        {/* MOBILE: bottom action bar */}
+        <div
+          className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex-1" />
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={removeMetadata}
+            disabled={isProcessing || files.length === 0}
+          >
+            {isProcessing ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              "Remove & Download"
+            )}
+          </Button>
+        </div>
+
+      </div>
     </>
   )
 }

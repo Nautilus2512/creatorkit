@@ -48,6 +48,7 @@ export default function MathEvaluator() {
   const [copied, setCopied]   = useState<string | null>(null)
   const [ready, setReady]     = useState(false)
   const [announcement, setAnnouncement] = useState("")
+  const [panelTab, setPanelTab] = useState<"input" | "output">("input")
   const scopeRef  = useRef<Record<string, unknown>>({})
   const inputRef  = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -123,38 +124,52 @@ export default function MathEvaluator() {
   }, [resetScope, evaluate])
 
 return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {announcement}
-      </div>
-      <ShortcutsModal
-        pageName="Math Calculator"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "Enter"], description: "Evaluate expression" },
-          { keys: ["Ctrl", "Shift", "R"], description: "Reset variables and history" },
-          { keys: ["Ctrl", "Shift", "E"], description: "Evaluate (same as Enter)" },
-        ]}
-      />
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Math Calculator</h2>
-          <p className="text-muted-foreground">Evaluate expressions, assign variables, convert units. Powered by mathjs.</p>
+  <>
+    <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
+
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Math Calculator</span>
+        {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Math Calculator" shortcuts={[
+            { keys: ["Ctrl", "Shift", "Enter"], description: "Evaluate expression" },
+            { keys: ["Ctrl", "Shift", "R"], description: "Reset variables and history" },
+            { keys: ["Ctrl", "Shift", "E"], description: "Evaluate (same as Enter)" },
+          ]} />
+          <Button variant="outline" size="sm" onClick={resetScope} aria-label="Reset variables and history">
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Reset
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+          </Button>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={resetScope}
-          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          aria-label="Reset variables and history"
-        >
-          <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Reset
-          <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+R</kbd>
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Math Calculator</h2>
+          <ShortcutsModal pageName="Math Calculator" shortcuts={[
+            { keys: ["Ctrl", "Shift", "Enter"], description: "Evaluate expression" },
+            { keys: ["Ctrl", "Shift", "R"], description: "Reset" },
+          ]} />
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel selection">
+          <button role="tab" aria-selected={panelTab === "input"} onClick={() => setPanelTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${panelTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Calculator
+          </button>
+          <button role="tab" aria-selected={panelTab === "output"} onClick={() => setPanelTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${panelTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Variables & Examples
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left: history + input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+        <div className={`${panelTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
           {/* History */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2 font-mono text-sm" role="log" aria-label="Calculation history" aria-live="polite">
             {history.length === 0 && (
@@ -222,7 +237,7 @@ return (
         </div>
 
         {/* Right: variables + examples */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="variables-label">
+        <div className={`${panelTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="variables-label">
           {/* Variables */}
           <div className="p-4 border-b border-border">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3" id="variables-label">Variables</p>
@@ -265,5 +280,6 @@ return (
         </div>
       </div>
     </div>
+  </>
   )
 }

@@ -398,18 +398,76 @@ export function DesignTokenGenerator() {
     </div>
   )
 
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+
   return (
     <>
-      <div className="flex h-full flex-col space-y-3">
-        <div role="banner">
-          <h2 className="text-2xl font-semibold tracking-tight" id="design-token-title">Design Token Generator</h2>
-          <p className="text-muted-foreground" id="design-token-description">Generate a complete design system from your brand colors. Press Ctrl+1/2/3 to open color pickers, Ctrl+C to copy CSS, Ctrl+L/D for preview modes. Press ? for shortcuts.</p>
+      <div className="flex h-full flex-col">
+
+        {/* Desktop top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+          <span className="text-sm font-semibold shrink-0 mr-1">Design Token Generator</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal
+              pageName="Design Token Generator"
+              shortcuts={[
+                { keys: ["Ctrl", "1"], description: "Open primary color picker" },
+                { keys: ["Ctrl", "2"], description: "Open secondary color picker" },
+                { keys: ["Ctrl", "3"], description: "Open accent color picker" },
+                { keys: ["Ctrl", "C"], description: "Copy CSS tokens" },
+                { keys: ["Ctrl", "L"], description: "Switch to light preview" },
+                { keys: ["Ctrl", "D"], description: "Switch to dark preview" },
+                { keys: ["Escape"], description: "Close color picker" },
+                { keys: ["?"], description: "Toggle this shortcuts panel" },
+                { keys: ["Tab"], description: "Navigate between controls" },
+              ]}
+            />
+            <Button
+              size="sm"
+              onClick={() => copyToClipboard(generateCSS(), "css", "CSS tokens")}
+              aria-label="Copy CSS tokens (Ctrl+C)"
+            >
+              {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
+              Copy Tokens
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+        {/* Mobile: compact header + tab switcher */}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <h2 className="text-base font-semibold">Design Token Generator</h2>
+            <ShortcutsModal
+              pageName="Design Token Generator"
+              shortcuts={[
+                { keys: ["Ctrl", "1"], description: "Open primary color picker" },
+                { keys: ["Ctrl", "2"], description: "Open secondary color picker" },
+                { keys: ["Ctrl", "3"], description: "Open accent color picker" },
+                { keys: ["Ctrl", "C"], description: "Copy CSS tokens" },
+                { keys: ["Ctrl", "L"], description: "Switch to light preview" },
+                { keys: ["Ctrl", "D"], description: "Switch to dark preview" },
+                { keys: ["Escape"], description: "Close color picker" },
+                { keys: ["?"], description: "Toggle this shortcuts panel" },
+                { keys: ["Tab"], description: "Navigate between controls" },
+              ]}
+            />
+          </div>
+          <div className="flex" role="tablist">
+            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Settings
+            </button>
+            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Tokens
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
 
           {/* LEFT PANEL */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Brand colors and palette editor">
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Brand colors and palette editor">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Palette className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -486,23 +544,10 @@ export function DesignTokenGenerator() {
               </div>
             </div>
 
-            {/* Sticky Action Bar */}
-            <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3">
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => copyToClipboard(generateCSS(), "css", "CSS tokens")}
-                aria-label="Copy CSS tokens (Ctrl+C)"
-              >
-                {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
-                Copy CSS
-                <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>
-              </Button>
-            </div>
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Live preview and export">
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Live preview and export">
             <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium">Live Preview & Export</span>
@@ -631,22 +676,22 @@ export function DesignTokenGenerator() {
             </div>
           </div>
         </div>
-      </div>
 
-      <ShortcutsModal
-        pageName="Design Token Generator"
-        shortcuts={[
-          { keys: ["Ctrl", "1"], description: "Open primary color picker" },
-          { keys: ["Ctrl", "2"], description: "Open secondary color picker" },
-          { keys: ["Ctrl", "3"], description: "Open accent color picker" },
-          { keys: ["Ctrl", "C"], description: "Copy CSS tokens" },
-          { keys: ["Ctrl", "L"], description: "Switch to light preview" },
-          { keys: ["Ctrl", "D"], description: "Switch to dark preview" },
-          { keys: ["Escape"], description: "Close color picker" },
-          { keys: ["?"], description: "Toggle this shortcuts panel" },
-          { keys: ["Tab"], description: "Navigate between controls" },
-        ]}
-      />
+        {/* Mobile bottom action bar */}
+        <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+          <div className="flex-1" />
+          <Button
+            size="sm"
+            className="h-11 px-4"
+            onClick={() => copyToClipboard(generateCSS(), "css", "CSS tokens")}
+            aria-label="Copy CSS tokens"
+          >
+            {copiedKey === "css" ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Copy className="mr-2 h-4 w-4" aria-hidden="true" />}
+            Copy
+          </Button>
+        </div>
+      </div>
     </>
   )
 }

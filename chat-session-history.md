@@ -530,9 +530,94 @@ When implementing keyboard shortcuts in CreatorKit tools, avoid these browser de
 
 ---
 
-## All Tools List
+## All Tools List (71 Total)
 
-### Currently Live (80+ tools)
+### Security (7 tools)
+- **Metadata Remover** — Strip location, device info, timestamps from images, PDFs, audio
+- **Password Generator** — Cryptographically secure passwords
+- **QR Code Generator** — URL, text, email, phone, Wi-Fi
+- **File Checksum Verifier** — MD5, SHA-1, SHA-256, SHA-512
+- **AES Encrypt / Decrypt** — AES-256-GCM with PBKDF2-SHA256
+- **RSA Key Generator** — RSA-OAEP 2048/4096-bit key pairs
+- **TOTP / 2FA Generator** — RFC 6238 compatible
+
+### Image & Visual (9 tools)
+- **Image Resizer** — 40+ sizes across 12 platforms
+- **Image Compressor** — JPEG, WebP, PNG with quality control
+- **Image Format Converter** — JPEG, PNG, WebP, AVIF conversion
+- **Image Watermark Adder** — Text watermarks with position/size
+- **Image to Text** — AI OCR 100% in-browser
+- **Screenshot to Mockup** — Device frames with custom backgrounds
+- **Background Remover** — AI-powered (desktop) / color removal (mobile)
+- **Image Grid / Collage** — 2×2, 3×3, 1×3, 3×1 layouts
+- **Color Palette Extractor** — Dominant colors with percentages
+
+### Design (9 tools)
+- **Design Token Generator** — Brand colors to CSS/Tailwind/JSON
+- **Favicon Generator** — 6 sizes + site.webmanifest
+- **Color Converter** — HEX, RGB, HSL, OKLCH with picker
+- **Gradient Generator** — Linear, radial, conic gradients
+- **Box Shadow Generator** — Multiple layers, inset support
+- **Border Radius Visualizer** — Per-corner sliders with presets
+- **Font Pairer** — 70 Google Fonts, 14 curated pairings
+- **OG Image Generator** — 4 templates, 1200×630 PNG
+- **Pixel → REM Converter** — px/rem with reference table
+
+### Productivity (13 tools)
+- **Anki Flashcards** — SM-2 algorithm, local storage
+- **Whiteboard Drawing** — Pen, shapes, text, PNG export
+- **Markdown Editor** — Live preview, scroll sync, file upload
+- **Notes** — Multiple notes, auto-save, word count
+- **Word & Character Counter** — Words, chars, sentences, paragraphs
+- **CV Maker** — Classic/Modern templates, PDF export
+- **Invoice Generator** — Multi-currency, line items, PDF export
+- **Pomodoro Timer** — 25/5/15 cycles, Web Audio bell
+- **Game Controller Tester** — Gamepad API, real-time states
+- **Doc Scanner** — Perspective warp, brightness/contrast
+- **Electrical Calculator** — Ohm's Law, AC reactance, three-phase
+- **Engineering Calculator** — DEG/RAD trig, constants, memory
+- **Math Calculator** — REPL-style, variables, matrices
+
+### Media (7 tools)
+- **BPM Detector** — Audio tempo detection
+- **Audio Converter** — MP3, WAV, OGG, FLAC, AAC, M4A, WMA, OPUS
+- **Voice Recorder** — MediaRecorder API, WebM export
+- **Audio Waveform Visualizer** — Web Audio API, seek controls
+- **Screen Recorder** — getDisplayMedia, mic mixing
+- **Video Thumbnail Extractor** — Grid/interval mode, ZIP download
+- **Video Compressor** — ffmpeg.wasm, quality presets
+
+### PDF (5 tools)
+- **PDF Compressor** — Quality settings, size targets
+- **PDF Merger & Splitter** — Merge/split by page ranges
+- **Image to PDF** — A4, Letter, fit options
+- **PDF Organizer** — Reorder, delete, thumbnails
+- **PDF to Image** — Adjustable resolution, ZIP export
+
+### Developer (17 tools)
+- **Code Playground** — HTML/CSS/JS live editor
+- **Text Compare** — Diff highlighting, export options
+- **Regex Tester** — Real-time matching, pattern library
+- **JSON Formatter** — Validate, format, minify
+- **CSV ↔ JSON Converter** — Table preview, file upload
+- **Text Case Converter** — Upper, lower, title, camel, snake, kebab
+- **UUID Generator** — Single/bulk v4 generation
+- **Base64 Encoder / Decoder** — Text and file support
+- **URL Encoder / Decoder** — encodeURIComponent, encodeURI
+- **Lorem Ipsum Generator** — Paragraphs, sentences, words
+- **Timestamp Converter** — Unix, ISO 8601, UTC, local, relative
+- **JWT Decoder** — Header, payload, expiry inspection
+- **HTML Entity Encoder / Decoder** — Special characters
+- **CSS Minifier** — Whitespace, comments, byte savings
+- **Cron Expression Generator** — Presets, descriptions, next runs
+- **XML Formatter** — Format, minify, validation
+- **YAML ↔ JSON Converter** — js-yaml powered
+- **JS Formatter** — Prettier 2.8.8, 8 languages
+- **Markdown → HTML** — marked powered
+
+---
+
+### Currently Live (71 tools)
 
 All tools now include:
 - Screen reader announcements (aria-live regions)
@@ -542,28 +627,20 @@ All tools now include:
 - Proper role and aria attributes
 - ShortcutsModal component for reference
 
+### v1.63.0 Achievements
+
+This session standardized keyboard shortcut display format across 17 tools:
+- Converted 40+ shortcuts from `<span>Ctrl</span><span>Shift</span><span>X</span>` to `Ctrl+Shift+X` format
+- Fixed build error in video-compressor.tsx
+- Build verified: 79/79 pages compiled successfully
+
 ### v1.62.0 Achievements
 
 This session added:
 - 4 more tools with full accessibility (anki-card, audio-converter, audio-waveform-visualizer, background-remover)
 - Fixed keyboard shortcut conflicts in 18+ tools
 - Removed em dashes from 13 tool page descriptions
-- Total 80+ tools with accessibility features
-
-### Coming Soon
-
-- Additional tools planned based on user feedback
-
-### Long-term Roadmap
-
-| Category | Example Tools |
-|----------|---------------|
-| Image & Visual | Compressor, Format Converter, Background Remover, Color Picker, Watermark Adder |
-| Text & Document | Markdown Editor, Word Counter, Text Diff, Lorem Ipsum Generator |
-| Design & Branding | Favicon Generator, Font Pairer, Gradient Generator |
-| Privacy & Security | Password Generator, Password Strength Checker, Hash Generator |
-| Audio & Video | Audio Converter, Waveform Visualizer |
-| Developer Utilities | JSON Formatter, Base64 Encoder, URL Encoder, Regex Tester |
+- Total 71 tools with accessibility features
 
 ---
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm build *)",
+      "Bash(powershell -command \"Get-Content notes.tsx | Select-Object -Last 80\")",
+      "Bash(powershell -command \"Get-Content gamepad-tester.tsx | Select-Object -Last 60\")"
+    ]
+  }
+}

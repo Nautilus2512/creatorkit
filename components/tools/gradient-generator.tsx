@@ -47,6 +47,7 @@ export default function GradientGenerator() {
   ])
   const [copied, setCopied] = useState(false)
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const sorted = [...stops].sort((a, b) => a.position - b.position)
   const stopsStr = sorted.map(s => `${s.color} ${s.position}%`).join(", ")
@@ -105,23 +106,46 @@ export default function GradientGenerator() {
   }, [])
 
   return (
-    <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Gradient Generator</h2>
-          <p className="text-muted-foreground">Build CSS gradients visually and copy the code instantly. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Gradient Generator</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Gradient Generator" shortcuts={[
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+            { keys: ["Ctrl", "Shift", "T"], description: "Cycle gradient type" },
+            { keys: ["Ctrl", "Shift", "N"], description: "Add color stop" },
+          ]} />
+          <Button variant="outline" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
+            {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy CSS"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={copy} aria-label={copied ? "CSS copied to clipboard" : "Copy CSS to clipboard"}>
-          {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-          {copied ? "Copied!" : "Copy CSS"}
-          {!copied && <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>}
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Gradient Generator</h2>
+          <ShortcutsModal pageName="Gradient Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Controls
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Controls</span>
           </div>
@@ -179,13 +203,13 @@ export default function GradientGenerator() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium" id="starting-angle-label">Starting Angle</Label>
                 <div className="flex items-center gap-3">
-                  <Input 
-                    type="number" 
-                    value={angle} 
-                    min={0} 
-                    max={360} 
-                    onChange={(e) => setAngle(parseInt(e.target.value) || 0)} 
-                    className="w-20 font-mono" 
+                  <Input
+                    type="number"
+                    value={angle}
+                    min={0}
+                    max={360}
+                    onChange={(e) => setAngle(parseInt(e.target.value) || 0)}
+                    className="w-20 font-mono"
                     aria-label="Starting angle in degrees"
                     aria-describedby="starting-angle-label"
                   />
@@ -210,28 +234,28 @@ export default function GradientGenerator() {
                     className="w-10 h-10 rounded border border-border cursor-pointer p-0.5 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     aria-label={`Stop ${stop.position}% color picker`}
                   />
-                  <Input 
-                    value={stop.color} 
-                    onChange={(e) => updateStop(stop.id, "color", e.target.value)} 
-                    className="w-28 font-mono text-sm shrink-0" 
+                  <Input
+                    value={stop.color}
+                    onChange={(e) => updateStop(stop.id, "color", e.target.value)}
+                    className="w-28 font-mono text-sm shrink-0"
                     aria-label={`Stop ${stop.position}% hex color`}
                   />
                   <div className="flex-1 min-w-0">
-                    <Slider 
-                      value={[stop.position]} 
-                      onValueChange={([v]) => updateStop(stop.id, "position", v)} 
-                      min={0} 
-                      max={100} 
+                    <Slider
+                      value={[stop.position]}
+                      onValueChange={([v]) => updateStop(stop.id, "position", v)}
+                      min={0}
+                      max={100}
                       step={1}
                       aria-label={`Stop ${stop.position}% position`}
                     />
                   </div>
                   <span className="text-xs font-mono w-9 text-right shrink-0" aria-label={`${stop.position} percent`}>{stop.position}%</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => removeStop(stop.id)} 
-                    disabled={stops.length <= 2} 
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeStop(stop.id)}
+                    disabled={stops.length <= 2}
                     className="shrink-0 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
                     aria-label={`Remove stop at ${stop.position}%`}
                   >
@@ -244,41 +268,46 @@ export default function GradientGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Preview</span>
           </div>
           <div className="flex-1 p-4 flex flex-col gap-4 min-h-0">
-            <div 
-              className="flex-1 rounded-xl border border-border shadow-inner min-h-0" 
+            <div
+              className="flex-1 rounded-xl border border-border shadow-inner min-h-0"
               style={{ background: cssValue }}
               role="img"
               aria-label={`Gradient preview showing ${type} gradient with ${stops.length} color stops`}
             />
           </div>
-          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 space-y-2" role="region" aria-labelledby="css-output-label">
+          <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium" id="css-output-label">CSS Output</Label>
-              <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied to clipboard" : "Copy CSS code"}>
+              <Label className="text-sm font-medium">CSS Output</Label>
+              <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
                 {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                 {copied ? "Copied!" : "Copy"}
-                {!copied && <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>}
+                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             </div>
             <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed" aria-live="polite">{css}</pre>
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button variant="outline" size="sm" className="h-11 px-3" onClick={addStop} aria-label="Add color stop">
+          <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />Add Stop
+        </Button>
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={copy} aria-label="Copy CSS">
+          {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy CSS"}
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="Gradient Generator"
-      shortcuts={[
-        { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
-        { keys: ["Ctrl", "Shift", "T"], description: "Cycle gradient type" },
-        { keys: ["Ctrl", "Shift", "N"], description: "Add color stop" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
-    </>
   )
 }

@@ -174,16 +174,71 @@ export function FaviconGenerator() {
 
   const hasPreviews = Object.keys(previews).length > 0
 
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+
   return (
     <>
-    <div className="flex flex-1 min-h-0 flex-col gap-3 p-4">
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight">Favicon Generator</h2>
-        <p className="text-muted-foreground">All sizes + manifest · 100% in-browser<br/><span className="text-xs">Press Ctrl+Shift+O to upload · Ctrl+Shift+D to download</span></p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Favicon Generator</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Favicon Generator"
+            shortcuts={[
+              { keys: ["Ctrl", "O"], description: "Upload image" },
+              { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
+              { keys: ["1"], description: "Switch to image mode" },
+              { keys: ["2"], description: "Switch to text mode" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+          <Button
+            size="sm"
+            onClick={downloadAll}
+            disabled={!hasPreviews || isProcessing}
+            aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
+          >
+            {downloaded ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+            {downloaded ? "Downloaded!" : "Download"}
+          </Button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Favicon Generator</h2>
+          <ShortcutsModal
+            pageName="Favicon Generator"
+            shortcuts={[
+              { keys: ["Ctrl", "O"], description: "Upload image" },
+              { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
+              { keys: ["1"], description: "Switch to image mode" },
+              { keys: ["2"], description: "Switch to text mode" },
+              { keys: ["?"], description: "Toggle this panel" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
       {/* Left panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+      <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Upload & Settings</span>
+        </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
           {/* Mode toggle */}
@@ -364,7 +419,10 @@ export function FaviconGenerator() {
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0">
+      <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Preview</span>
+        </div>
         <div className="flex-1 overflow-y-auto p-4" role="region" aria-label="Favicon preview">
           {!hasPreviews ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center">
@@ -405,36 +463,26 @@ export function FaviconGenerator() {
           )}
         </div>
 
-        <div className="shrink-0 border-t border-border p-4">
-          <Button 
-            className="w-full" 
-            onClick={downloadAll} 
-            disabled={!hasPreviews || isProcessing}
-            aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
-          >
-            {downloaded ? <Check className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" />}
-            {downloaded ? "Downloaded!" : "Download favicons.zip"}
-            {!downloaded && (
-              <kbd className="ml-auto rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
-                Ctrl+D
-              </kbd>
-            )}
-          </Button>
-        </div>
       </div>
 
       </div>
+
+      {/* Mobile bottom action bar */}
+      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          className="h-11 px-4"
+          onClick={downloadAll}
+          disabled={!hasPreviews || isProcessing}
+          aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
+        >
+          {downloaded ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+          {downloaded ? "Downloaded!" : "Download"}
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="Favicon Generator"
-      shortcuts={[
-        { keys: ["Ctrl", "O"], description: "Upload image" },
-        { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
-        { keys: ["1"], description: "Switch to image mode" },
-        { keys: ["2"], description: "Switch to text mode" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }

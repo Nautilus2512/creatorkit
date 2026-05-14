@@ -27,6 +27,13 @@ interface JsonError {
   message: string
 }
 
+const shortcuts = [
+  { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+  { keys: ["Ctrl", "Shift", "S"], description: "Download JSON" },
+  { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+  { keys: ["?"], description: "Toggle this panel" },
+]
+
 export default function JsonFormatter() {
   const [jsonInput, setJsonInput] = useState("")
   const [formattedJson, setFormattedJson] = useState("")
@@ -36,6 +43,7 @@ export default function JsonFormatter() {
   const [showMinified, setShowMinified] = useState(false)
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -110,6 +118,7 @@ export default function JsonFormatter() {
       const content = ev.target?.result as string
       setJsonInput(content)
       announceToScreenReader(`${file.name} uploaded`)
+      setActiveTab("output")
     }
     reader.readAsText(file)
     e.target.value = ""
@@ -138,22 +147,12 @@ export default function JsonFormatter() {
 
   return (
     <>
-      <ShortcutsModal
-        pageName="JSON Formatter"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
-          { keys: ["Ctrl", "Shift", "S"], description: "Download JSON" },
-          { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
-          { keys: ["?"], description: "Toggle this panel" },
-        ]}
-      />
-      <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="JSON Formatter tool">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">JSON Formatter</h2>
-          <p className="text-muted-foreground">Format, validate, and minify JSON. Press ? for shortcuts.</p>
-        </div>
+      <div className="flex h-full flex-col">
 
-        <div className="flex items-center gap-3">
+        {/* DESKTOP: top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="JSON Formatter controls">
+          <span className="text-sm font-semibold shrink-0 mr-1">JSON Formatter</span>
+          <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
           <div className="flex items-center gap-2" role="group" aria-label="Output format">
             <Switch id="minified" checked={showMinified} onCheckedChange={(v) => { setShowMinified(v); announceToScreenReader(v ? "Minified output" : "Formatted output") }} />
             <Label htmlFor="minified" className="text-sm flex items-center gap-1">
@@ -161,6 +160,23 @@ export default function JsonFormatter() {
               {showMinified ? "Minified" : "Formatted"}
             </Label>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { fileInputRef.current?.click(); announceToScreenReader("File upload dialog opened") }}
+            aria-label="Upload JSON file"
+          >
+            <FileJson className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Upload
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleFileUpload}
+            aria-label="Select JSON file"
+          />
           {jsonInput.trim() && (
             isValid ? (
               <Badge variant="default" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-300" role="status" aria-live="polite">
@@ -175,108 +191,113 @@ export default function JsonFormatter() {
           {error && (
             <span className="text-xs text-destructive" role="alert" aria-live="assertive">Line {error.line}, Col {error.column}: {error.message}</span>
           )}
-        </div>
+          {isValid && (
+            <span className="text-xs text-muted-foreground" aria-live="polite">
+              {showMinified ? `${minifiedJson.length} chars` : `${formattedJson.split('\n').length} lines`}
+            </span>
+          )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-        {/* Left Panel — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="input-panel-label">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileJson className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm font-medium" id="input-panel-label">JSON Input</span>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => { fileInputRef.current?.click(); announceToScreenReader("File upload dialog opened") }}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label="Upload JSON file"
-            >
-              <FileJson className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Upload
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
+          {/* RIGHT: primary output actions + ShortcutsModal */}
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="JSON Formatter" shortcuts={shortcuts} />
+            <Button variant="outline" size="sm" onClick={() => copy()} disabled={!isValid} aria-label={copied ? "Copied to clipboard" : "Copy formatted JSON"}>
+              {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+              {copied ? "Copied!" : "Copy"}
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept=".json,application/json" 
-              className="hidden" 
-              onChange={handleFileUpload}
-              aria-label="Select JSON file"
-            />
+            <Button size="sm" onClick={() => download()} disabled={!isValid} aria-label={downloaded ? "File downloaded" : "Download JSON file"}>
+              {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+              {downloaded ? "Saved!" : "Download"}
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            </Button>
           </div>
-          <Textarea
-            value={jsonInput}
-            onChange={(e) => { setJsonInput(e.target.value); announceToScreenReader("Input updated") }}
-            placeholder="Paste or type your JSON here..."
-            className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            spellCheck={false}
-            aria-label="JSON input"
-            id="json-input"
-          />
         </div>
 
-        {/* Right Panel — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="output-panel-label">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {showMinified ? <Minimize2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" /> : <Maximize2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
-              <span className="text-sm font-medium" id="output-panel-label">{showMinified ? "Minified" : "Formatted"} Output</span>
-              {isValid && (
-                <span className="text-xs text-muted-foreground" aria-live="polite">
-                  {showMinified ? `${minifiedJson.length} chars` : `${formattedJson.split('\n').length} lines`}
-                </span>
+        {/* MOBILE: compact header + tab switcher */}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <h2 className="text-base font-semibold">JSON Formatter</h2>
+            <ShortcutsModal pageName="JSON Formatter" shortcuts={shortcuts} />
+          </div>
+          <div className="flex" role="tablist" aria-label="Panel selection">
+            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              JSON Input
+            </button>
+            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              Output
+            </button>
+          </div>
+        </div>
+
+        {/* PANELS */}
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
+          {/* Input panel */}
+          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
+            role="region" aria-label="JSON Input" aria-labelledby="input-panel-label">
+            <div className="flex-1 overflow-y-auto">
+              <Textarea
+                value={jsonInput}
+                onChange={(e) => { setJsonInput(e.target.value); announceToScreenReader("Input updated") }}
+                placeholder="Paste or type your JSON here..."
+                className="h-full resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                spellCheck={false}
+                aria-label="JSON input"
+                id="json-input"
+              />
+            </div>
+          </div>
+
+          {/* Output panel */}
+          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
+            role="region" aria-label="Output" aria-labelledby="output-panel-label">
+            <div className="flex-1 overflow-y-auto">
+              {isValid ? (
+                <Textarea
+                  value={showMinified ? minifiedJson : formattedJson}
+                  readOnly
+                  className="h-full resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
+                  spellCheck={false}
+                  aria-label="Formatted JSON output"
+                />
+              ) : error ? (
+                <div className="flex-1 p-4 text-destructive text-sm font-mono" role="alert">
+                  <AlertCircle className="h-4 w-4 mb-2" aria-hidden="true" />
+                  <div>JSON Error at Line {error.line}, Column {error.column}:</div>
+                  <div className="mt-1">{error.message}</div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2 h-full" role="status">
+                  <FileJson className="h-12 w-12 opacity-30" aria-hidden="true" />
+                  <p className="text-sm">Enter JSON to see formatted output</p>
+                </div>
               )}
             </div>
-            <div className="flex gap-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => copy()} 
-                disabled={!isValid}
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label={copied ? "Copied to clipboard" : "Copy formatted JSON"}
-              >
-                {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-                {copied ? "Copied!" : "Copy"}
-                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+C</kbd>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => download()} 
-                disabled={!isValid}
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label={downloaded ? "File downloaded" : "Download JSON file"}
-              >
-                {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
-                {downloaded ? "Saved!" : "Download"}
-                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
-              </Button>
-            </div>
           </div>
-          {isValid ? (
-            <Textarea
-              value={showMinified ? minifiedJson : formattedJson}
-              readOnly
-              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
-              spellCheck={false}
-              aria-label="Formatted JSON output"
-            />
-          ) : error ? (
-            <div className="flex-1 p-4 text-destructive text-sm font-mono" role="alert">
-              <AlertCircle className="h-4 w-4 mb-2" aria-hidden="true" />
-              <div>JSON Error at Line {error.line}, Column {error.column}:</div>
-              <div className="mt-1">{error.message}</div>
-            </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2" role="status">
-              <FileJson className="h-12 w-12 opacity-30" aria-hidden="true" />
-              <p className="text-sm">Enter JSON to see formatted output</p>
-            </div>
-          )}
+
         </div>
+
+        {/* MOBILE: bottom action bar */}
+        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+          <div className="flex items-center gap-1.5">
+            <Switch id="minified-mobile" checked={showMinified} onCheckedChange={(v) => { setShowMinified(v); announceToScreenReader(v ? "Minified output" : "Formatted output") }} />
+            <Label htmlFor="minified-mobile" className="text-xs">{showMinified ? "Mini" : "Fmt"}</Label>
+          </div>
+          <div className="flex-1" />
+          <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => copy()} disabled={!isValid}>
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <span className="ml-1 text-xs">{copied ? "Copied!" : "Copy"}</span>
+          </Button>
+          <Button size="sm" className="h-11 px-3" onClick={() => download()} disabled={!isValid}>
+            {downloaded ? <FileCheck className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            <span className="ml-1 text-xs">Save</span>
+          </Button>
+        </div>
+
       </div>
-    </div>
     </>
   )
 }

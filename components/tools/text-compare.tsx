@@ -1,8 +1,8 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { 
-  GitCompare, FileText, Upload, Download, Copy, Check, 
+import {
+  GitCompare, FileText, Upload, Download, Copy, Check,
   ArrowRightLeft, Eye, EyeOff, Search, X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,7 +30,7 @@ interface DiffResult {
 const computeDiff = (leftText: string, rightText: string): DiffResult => {
   const leftLines = leftText.split('\n')
   const rightLines = rightText.split('\n')
-  
+
   const result: DiffResult = {
     leftLines: [],
     rightLines: [],
@@ -38,7 +38,7 @@ const computeDiff = (leftText: string, rightText: string): DiffResult => {
   }
 
   // Simple diff implementation
-  const matrix: number[][] = Array(leftLines.length + 1).fill(null).map(() => 
+  const matrix: number[][] = Array(leftLines.length + 1).fill(null).map(() =>
     Array(rightLines.length + 1).fill(0)
   )
 
@@ -112,6 +112,7 @@ export function TextCompare() {
   const [announcement, setAnnouncement] = useState("")
   const leftFileRef = useRef<HTMLInputElement>(null)
   const rightFileRef = useRef<HTMLInputElement>(null)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const announceToScreenReader = useCallback((message: string) => {
     setAnnouncement(message)
@@ -268,13 +269,13 @@ export function TextCompare() {
     const bgColor = line.type === 'added' ? 'bg-green-50 dark:bg-green-950/30' :
                    line.type === 'removed' ? 'bg-red-50 dark:bg-red-950/30' :
                    line.type === 'unchanged' ? '' : 'bg-gray-50 dark:bg-gray-950/30'
-    
+
     const textColor = line.type === 'added' ? 'text-green-700 dark:text-green-400' :
                      line.type === 'removed' ? 'text-red-700 dark:text-red-400' :
                      line.type === 'unchanged' ? 'text-foreground' : 'text-gray-600 dark:text-gray-400'
 
-    const prefix = line.type === 'added' ? '+' : 
-                  line.type === 'removed' ? '-' : 
+    const prefix = line.type === 'added' ? '+' :
+                  line.type === 'removed' ? '-' :
                   line.type === 'unchanged' ? ' ' : '~'
 
     return (
@@ -295,152 +296,110 @@ export function TextCompare() {
   }
 
   return (
-    <>
-    <div aria-live="polite" aria-atomic="true" className="sr-only">
-      {announcement}
-    </div>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Text Compare</h2>
-          <p className="text-muted-foreground">Compare text and files with visual diff highlighting</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <ShortcutsModal pageName="Text Compare" shortcuts={shortcuts} />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={swapTexts}
-            aria-label="Swap original and modified text"
-            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <ArrowRightLeft className="h-3 w-3 mr-1" />
-            <span>Swap</span>
-            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={clearAll}
-            aria-label="Clear all text"
-            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <X className="h-3 w-3 mr-1" />
-            <span>Clear</span>
-            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+X</kbd>
-          </Button>
-          <div className="h-4 w-px bg-border" />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={copyDiff} 
-            disabled={!diffResult}
-            aria-label={copied ? "Diff copied to clipboard" : "Copy diff to clipboard"}
-            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            {copied ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-            <span>{copied ? 'Copied!' : 'Copy Diff'}</span>
-            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={downloadDiff} 
-            disabled={!diffResult}
-            aria-label="Download diff"
-            className="focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <Download className="h-3 w-3 mr-1" />
-            <span>Download</span>
-            <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
-          </Button>
-        </div>
-      </div>
+    <div className="flex h-full flex-col">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
-      <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Diff display options">
-        {[
-          { label: "Line Numbers", checked: showLineNumbers, set: setShowLineNumbers, id: "line-numbers" },
-          { label: "Show Whitespace", checked: showWhitespace, set: setShowWhitespace, id: "show-whitespace" },
-          { label: "Ignore Case", checked: ignoreCase, set: setIgnoreCase, id: "ignore-case" },
-          { label: "Ignore Whitespace", checked: ignoreWhitespace, set: setIgnoreWhitespace, id: "ignore-whitespace" },
-        ].map(({ label, checked, set, id }) => (
-          <label key={id} className="flex items-center gap-1.5 text-xs cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={checked} 
-              onChange={(e) => { set(e.target.checked); announceToScreenReader(`${label} ${e.target.checked ? 'enabled' : 'disabled'}`) }} 
-              className="rounded focus:outline-none focus:ring-2 focus:ring-primary/50"
-              aria-label={label}
-            />
-            {label}
-          </label>
-        ))}
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 flex-wrap border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Text compare controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Text Compare</span>
+        <button onClick={swapTexts} aria-label="Swap original and modified"
+          className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 transition-colors flex items-center gap-1">
+          <ArrowRightLeft className="h-3 w-3" aria-hidden="true" />Swap <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+        </button>
+        <button onClick={clearAll} aria-label="Clear all text"
+          className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 transition-colors flex items-center gap-1">
+          <X className="h-3 w-3" aria-hidden="true" />Clear <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+        </button>
+        <div className="flex flex-wrap items-center gap-3 text-xs" role="group" aria-label="Display options">
+          {[
+            { label: "Line Nums", checked: showLineNumbers, set: setShowLineNumbers, id: "ln" },
+            { label: "Whitespace", checked: showWhitespace, set: setShowWhitespace, id: "ws" },
+            { label: "Ignore Case", checked: ignoreCase, set: setIgnoreCase, id: "ic" },
+            { label: "Ignore WS", checked: ignoreWhitespace, set: setIgnoreWhitespace, id: "iw" },
+          ].map(({ label, checked, set, id }) => (
+            <label key={id} className="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" checked={checked} onChange={(e) => { set(e.target.checked); announceToScreenReader(`${label} ${e.target.checked ? "on" : "off"}`) }} className="rounded" aria-label={label} />{label}
+            </label>
+          ))}
+        </div>
         {diffResult && (
-          <div className="flex items-center gap-3 text-xs ml-auto" role="status" aria-live="polite">
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.additions} additions`}>+{diffResult.stats.additions}</span></span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.deletions} deletions`}>-{diffResult.stats.deletions}</span></span>
-            <span className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-400 rounded" aria-hidden="true" /><span aria-label={`${diffResult.stats.unchanged} unchanged`}>{diffResult.stats.unchanged}</span></span>
+          <div className="flex items-center gap-3 text-xs" role="status" aria-live="polite">
+            <span className="text-green-600">+{diffResult.stats.additions}</span>
+            <span className="text-red-500">-{diffResult.stats.deletions}</span>
+            <span className="text-muted-foreground">{diffResult.stats.unchanged} unchanged</span>
           </div>
         )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Text Compare" shortcuts={shortcuts} />
+          <Button variant="outline" size="sm" onClick={copyDiff} disabled={!diffResult} aria-label="Copy diff">
+            {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy Diff"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+          </Button>
+          <Button variant="outline" size="sm" onClick={downloadDiff} disabled={!diffResult} aria-label="Download diff">
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-        {/* Left Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Original text panel">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Text Compare</h2>
+          <ShortcutsModal pageName="Text Compare" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Original
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Modified
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Panel — Original */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Original text panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Original</span>
             <div>
               <input ref={leftFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => { handleFileUpload('left', e); announceToScreenReader("File uploaded to original") }} className="hidden" id="left-file" aria-hidden="true" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="left-file" className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded" aria-label="Upload file to original text">
-                  <Upload className="h-3 w-3" />
-                </label>
+                <label htmlFor="left-file" className="cursor-pointer" aria-label="Upload file to original text"><Upload className="h-3 w-3" /></label>
               </Button>
             </div>
           </div>
-          <Textarea 
-            value={leftText} 
-            onChange={(e) => { setLeftText(e.target.value); announceToScreenReader("Original text updated") }} 
-            placeholder="Enter original text here..." 
-            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
-            aria-label="Original text input"
-          />
+          <Textarea value={leftText} onChange={(e) => { setLeftText(e.target.value); announceToScreenReader("Original text updated") }} placeholder="Enter original text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" aria-label="Original text input" />
         </div>
 
-        {/* Right Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Modified text panel">
+        {/* Right Panel — Modified + Diff */}
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Modified text panel">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Modified</span>
             <div>
               <input ref={rightFileRef} type="file" accept=".txt,.md,.js,.ts,.jsx,.tsx,.css,.html,.json,.xml,.csv" onChange={(e) => { handleFileUpload('right', e); announceToScreenReader("File uploaded to modified") }} className="hidden" id="right-file" aria-hidden="true" />
               <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="right-file" className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded" aria-label="Upload file to modified text">
-                  <Upload className="h-3 w-3" />
-                </label>
+                <label htmlFor="right-file" className="cursor-pointer" aria-label="Upload file to modified text"><Upload className="h-3 w-3" /></label>
               </Button>
             </div>
           </div>
-          <Textarea 
-            value={rightText} 
-            onChange={(e) => { setRightText(e.target.value); announceToScreenReader("Modified text updated") }} 
-            placeholder="Enter modified text here..." 
-            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
-            aria-label="Modified text input"
-          />
+          <Textarea value={rightText} onChange={(e) => { setRightText(e.target.value); announceToScreenReader("Modified text updated") }} placeholder="Enter modified text here..." className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4" aria-label="Modified text input" />
           {diffResult && (diffResult.stats.additions > 0 || diffResult.stats.deletions > 0) && (
             <div className="shrink-0 border-t border-border" role="region" aria-label="Diff view">
               <div className="flex items-center justify-between px-4 py-2 bg-muted/30">
                 <span className="text-xs font-medium">Diff View</span>
-                <span className="text-xs text-muted-foreground" aria-label={`${diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines`}>
-                  {diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines
-                </span>
+                <span className="text-xs text-muted-foreground">{diffResult.stats.additions + diffResult.stats.deletions + diffResult.stats.unchanged} total lines</span>
               </div>
               <div className="max-h-48 overflow-y-auto" role="log" aria-label="Diff results">
                 <div className="flex">
-                  <div className="w-1/2 border-r border-border" role="list" aria-label="Original lines changes">
+                  <div className="w-1/2 border-r border-border" role="list" aria-label="Original lines">
                     {diffResult.leftLines.map((line, index) => <div key={index} role="listitem">{renderLine(line, 'left')}</div>)}
                   </div>
-                  <div className="w-1/2" role="list" aria-label="Modified lines changes">
+                  <div className="w-1/2" role="list" aria-label="Modified lines">
                     {diffResult.rightLines.map((line, index) => <div key={index} role="listitem">{renderLine(line, 'right')}</div>)}
                   </div>
                 </div>
@@ -449,7 +408,27 @@ export function TextCompare() {
           )}
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <button onClick={swapTexts} aria-label="Swap texts" className="h-11 px-2.5 rounded-md border border-border text-muted-foreground">
+          <ArrowRightLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button onClick={clearAll} aria-label="Clear all" className="h-11 px-2.5 rounded-md border border-border text-muted-foreground">
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" className="h-11 px-3" onClick={copyDiff} disabled={!diffResult} aria-label="Copy diff">
+          {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy Diff"}
+        </Button>
+        <Button variant="outline" size="sm" className="h-11 px-3" onClick={downloadDiff} disabled={!diffResult} aria-label="Download diff">
+          <Download className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
     </div>
-    </>
   )
 }

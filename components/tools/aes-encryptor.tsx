@@ -73,6 +73,7 @@ export default function AesEncryptor() {
   const [output, setOutput] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [copied, setCopied] = useState(false)
   const [showPass, setShowPass] = useState(false)
 
@@ -176,92 +177,83 @@ export default function AesEncryptor() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight" id="aes-title">AES Encrypt / Decrypt</h2>
-        <p className="text-muted-foreground" id="aes-description">AES-256-GCM with PBKDF2 key derivation. Nothing leaves your browser. Press ? for keyboard shortcuts.</p>
-      </div>
+    <div className="flex h-full flex-col">
 
-      <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Encryption controls">
-        <Button 
-          variant={mode === "encrypt" ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => switchMode("encrypt")}
-          aria-pressed={mode === "encrypt"}
-          aria-label="Switch to encrypt mode"
-        >
+      {/* Desktop: top action bar (full toolbar) */}
+      <div className="hidden md:flex shrink-0 items-center flex-wrap gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="AES encryption controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">AES Encrypt / Decrypt</span>
+        <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("encrypt")} aria-pressed={mode === "encrypt"} aria-label="Encrypt mode">
           <Lock className="h-4 w-4 mr-1" aria-hidden="true" />Encrypt
         </Button>
-        <Button 
-          variant={mode === "decrypt" ? "default" : "outline"} 
-          size="sm" 
-          onClick={() => switchMode("decrypt")}
-          aria-pressed={mode === "decrypt"}
-          aria-label="Switch to decrypt mode"
-        >
+        <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" onClick={() => switchMode("decrypt")} aria-pressed={mode === "decrypt"} aria-label="Decrypt mode">
           <Unlock className="h-4 w-4 mr-1" aria-hidden="true" />Decrypt
         </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={swap} 
-          disabled={!output}
-          aria-label="Swap input and output"
-        >
-          <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+        <Button variant="outline" size="sm" onClick={swap} disabled={!output} aria-label="Swap input and output">
+          <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
+          <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
         </Button>
-        <div className="flex items-center gap-2 ml-2 flex-1 min-w-0">
-          <Label htmlFor="passphrase" className="text-sm font-medium shrink-0">Passphrase</Label>
-          <div className="relative flex-1 max-w-sm">
-            <Input
-              id="passphrase"
-              type={showPass ? "text" : "password"}
-              value={passphrase}
+        <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-sm">
+          <Label htmlFor="passphrase-d" className="text-sm font-medium shrink-0">Passphrase</Label>
+          <div className="relative flex-1">
+            <Input id="passphrase-d" type={showPass ? "text" : "password"} value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                  e.preventDefault()
-                  run()
-                }
-              }}
-              placeholder="Enter a strong passphrase..."
-              className="font-mono pr-10"
-              aria-label="Passphrase input"
-              aria-describedby="passphrase-help"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded p-0.5"
-              onClick={() => {
-                setShowPass(p => !p)
-                announceToScreenReader(showPass ? 'Passphrase hidden' : 'Passphrase visible')
-              }}
-              aria-label={showPass ? "Hide passphrase" : "Show passphrase"}
-              aria-pressed={showPass}
-              tabIndex={0}
-            >
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run() } }}
+              placeholder="Enter a strong passphrase…" className="font-mono pr-10 h-8 text-sm" aria-label="Passphrase" />
+            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded p-0.5"
+              onClick={() => { setShowPass(p => !p); announceToScreenReader(showPass ? "Passphrase hidden" : "Passphrase visible") }}
+              aria-label={showPass ? "Hide passphrase" : "Show passphrase"} aria-pressed={showPass}>
               {showPass ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
-          <span id="passphrase-help" className="sr-only">Press Ctrl+Enter to run encryption or decryption</span>
-          <Button 
-            onClick={run} 
-            disabled={!input.trim() || !passphrase.trim() || loading} 
-            size="sm"
-            aria-label={mode === "encrypt" ? "Encrypt text" : "Decrypt text"}
-          >
-            {loading ? (
-              <><span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Working...</>
-            ) : (
-              <>{mode === "encrypt" ? "Encrypt" : "Decrypt"}<kbd className="ml-1.5 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>
-            )}
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="AES Encrypt / Decrypt" shortcuts={[
+            { keys: ["Ctrl", "Enter"], description: "Run Encrypt / Decrypt" },
+            { keys: ["Ctrl", "Shift", "X"], description: "Swap input/output" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+          ]} />
+          <Button size="sm" onClick={run} disabled={!input.trim() || !passphrase.trim() || loading} aria-label={mode === "encrypt" ? "Encrypt text" : "Decrypt text"}>
+            {loading ? <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Working…</>
+              : <>{mode === "encrypt" ? "Encrypt" : "Decrypt"}<kbd className="ml-1 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + passphrase + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold">AES Encrypt / Decrypt</h2>
+          <div className="flex items-center gap-1.5">
+            <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" className="h-7 text-xs px-2" onClick={() => switchMode("encrypt")} aria-pressed={mode === "encrypt"}>Enc</Button>
+            <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" className="h-7 text-xs px-2" onClick={() => switchMode("decrypt")} aria-pressed={mode === "decrypt"}>Dec</Button>
+          </div>
+        </div>
+        <div className="px-4 pb-2 flex items-center gap-2">
+          <Label htmlFor="passphrase-m" className="text-xs font-medium shrink-0 text-muted-foreground">Pass</Label>
+          <div className="relative flex-1">
+            <Input id="passphrase-m" type={showPass ? "text" : "password"} value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)} placeholder="Passphrase…"
+              className="font-mono pr-8 h-8 text-sm" aria-label="Passphrase" />
+            <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPass(p => !p)} aria-label={showPass ? "Hide" : "Show"}>
+              {showPass ? <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> : <Eye className="h-3.5 w-3.5" aria-hidden="true" />}
+            </button>
+          </div>
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel selection">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            {mode === "encrypt" ? "Plaintext" : "Encrypted"}
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Output
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Input */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Input text">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Input text">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="input-label">{mode === "encrypt" ? "Plaintext" : "Encrypted Text (Base64)"}</span>
           </div>
@@ -277,7 +269,7 @@ export default function AesEncryptor() {
         </div>
 
         {/* Right — Output */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Output result">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Output result">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="output-label">{mode === "encrypt" ? "Encrypted Output (Base64)" : "Decrypted Text"}</span>
             <Button 
@@ -312,19 +304,22 @@ export default function AesEncryptor() {
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button variant="ghost" size="sm" className="h-11 px-2" onClick={swap} disabled={!output} aria-label="Swap">
+          <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={() => { run(); setActiveTab("output") }} disabled={!input.trim() || !passphrase.trim() || loading} aria-label={mode === "encrypt" ? "Encrypt" : "Decrypt"}>
+          {loading ? "Working…" : mode === "encrypt" ? <><Lock className="h-4 w-4 mr-1.5" aria-hidden="true" />Encrypt</> : <><Unlock className="h-4 w-4 mr-1.5" aria-hidden="true" />Decrypt</>}
+        </Button>
+      </div>
+
     </div>
-    <ShortcutsModal
-      pageName="AES Encrypt / Decrypt"
-      shortcuts={[
-        { keys: ["Ctrl", "Enter"], description: "Run Encrypt / Decrypt" },
-        { keys: ["Ctrl", "Shift", "X"], description: "Swap input/output" },
-        { keys: ["Ctrl", "Shift", "C"], description: "Copy output to clipboard" },
-        { keys: ["Escape"], description: "Clear error message" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-      ]}
-    />
     </>
   )
 }

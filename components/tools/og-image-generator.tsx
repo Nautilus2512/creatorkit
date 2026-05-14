@@ -194,6 +194,7 @@ export default function OgImageGenerator() {
   const [secondary, setSecondary] = useState("#8b5cf6")
   const [font, setFont]         = useState<FontId>("sans-serif")
   const [announcement, setAnnouncement] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const announceToScreenReader = useCallback((message: string) => {
     setAnnouncement(message)
@@ -227,34 +228,42 @@ export default function OgImageGenerator() {
   }, [download])
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {announcement}
-      </div>
-      <ShortcutsModal
-        pageName="OG Image Generator"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "S"], description: "Download OG Image" },
-        ]}
-      />
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">OG Image Generator</h2>
-            <p className="text-muted-foreground">Generate Open Graph images for social media. 1200×630 PNG, rendered in your browser.</p>
-          </div>
-          <Button 
-            onClick={download}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            aria-label="Download OG Image as PNG"
-          >
-            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download PNG
-            <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
+    <div className="flex h-full flex-col">
+      <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">OG Image Generator</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="OG Image Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "S"], description: "Download OG Image" }]} />
+          <Button size="sm" onClick={download} aria-label="Download OG Image as PNG">
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download PNG
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">OG Image Generator</h2>
+          <ShortcutsModal pageName="OG Image Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "S"], description: "Download PNG" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Settings
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="settings-label">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="settings-label">
           <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="settings-label">Settings</span></div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
@@ -383,7 +392,7 @@ export default function OgImageGenerator() {
         </div>
 
         {/* Preview */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-labelledby="preview-label">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="preview-label">
           <div className="shrink-0 border-b border-border px-4 py-3"><span className="text-sm font-medium" id="preview-label">Preview</span></div>
           <div className="flex-1 overflow-auto p-6 flex items-center justify-center bg-muted/20">
             <div className="w-full max-w-4xl space-y-3">
@@ -401,6 +410,18 @@ export default function OgImageGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={download} aria-label="Download OG Image as PNG">
+          <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download PNG
+        </Button>
+      </div>
+
     </div>
   )
 }

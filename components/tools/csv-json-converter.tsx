@@ -30,6 +30,7 @@ export default function CsvJsonConverter() {
   const [mode, setMode] = useState<'csv-to-json' | 'json-to-csv'>('csv-to-json')
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const setModeWithAnnounce = useCallback((newMode: 'csv-to-json' | 'json-to-csv') => {
     setMode(newMode)
@@ -39,8 +40,10 @@ export default function CsvJsonConverter() {
   useEffect(() => {
     if (mode === 'csv-to-json' && csvInput) {
       convertCsvToJson()
+      setActiveTab("output")
     } else if (mode === 'json-to-csv' && jsonInput) {
       convertJsonToCsv()
+      setActiveTab("output")
     }
   }, [csvInput, jsonInput, mode])
 
@@ -230,174 +233,136 @@ export default function CsvJsonConverter() {
   }, [mode, jsonOutput, csvOutput, copyToClipboard, downloadFile, setModeWithAnnounce])
 
   return (
-    <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between flex-wrap gap-2" role="banner">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight" id="converter-title">CSV ↔ JSON Converter</h2>
-          <p className="text-muted-foreground" id="converter-description">Convert between CSV and JSON formats. Press Tab to switch mode, Ctrl+O to upload, Ctrl+C to copy, Ctrl+S to download. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 flex-wrap border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">CSV ↔ JSON Converter</span>
+        <div className="flex items-center gap-1" role="radiogroup" aria-label="Conversion mode">
+          <button onClick={() => setModeWithAnnounce('csv-to-json')} role="radio" aria-checked={mode === 'csv-to-json'}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${mode === 'csv-to-json' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+            <FileSpreadsheet className="h-3 w-3" aria-hidden="true" />CSV→JSON <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">1</kbd>
+          </button>
+          <button onClick={() => setModeWithAnnounce('json-to-csv')} role="radio" aria-checked={mode === 'json-to-csv'}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${mode === 'json-to-csv' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+            <FileJson className="h-3 w-3" aria-hidden="true" />JSON→CSV <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">2</kbd>
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={mode === 'csv-to-json' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setModeWithAnnounce('csv-to-json')}
-            role="radio"
-            aria-checked={mode === 'csv-to-json'}
-            aria-label="CSV to JSON mode (press 1)"
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-1" aria-hidden="true" />CSV to JSON<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">1</kbd>
+        <label className="cursor-pointer">
+          <input type="file" id="file-upload" accept=".csv,.json" onChange={handleFileUpload} className="hidden" aria-label="Upload CSV or JSON file" />
+          <Button variant="outline" size="sm" asChild aria-label="Upload file">
+            <span className="flex items-center gap-1"><Upload className="h-3 w-3" aria-hidden="true" />Upload <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></span>
           </Button>
-          <Button 
-            variant={mode === 'json-to-csv' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setModeWithAnnounce('json-to-csv')}
-            role="radio"
-            aria-checked={mode === 'json-to-csv'}
-            aria-label="JSON to CSV mode (press 2)"
-          >
-            <FileJson className="h-4 w-4 mr-1" aria-hidden="true" />JSON to CSV<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">2</kbd>
-          </Button>
-          <div className="h-4 w-px bg-border" role="separator" aria-hidden="true" />
-          <>
-            <input 
-              type="file" 
-              id="file-upload"
-              accept=".csv,.json" 
-              onChange={handleFileUpload} 
-              className="hidden" 
-              aria-label="Upload CSV or JSON file"
-            />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                const fileInput = document.getElementById('file-upload') as HTMLInputElement
-                fileInput?.click()
-              }}
-              aria-label="Upload CSV or JSON file"
-            >
-              <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+O</kbd>
-            </Button>
-          </>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={copyToClipboard} 
-            disabled={!csvOutput && !jsonOutput}
-            aria-label="Copy converted output"
-          >
+        </label>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="CSV ↔ JSON Converter" shortcuts={[
+            { keys: ["1"], description: "CSV to JSON mode" },
+            { keys: ["2"], description: "JSON to CSV mode" },
+            { keys: ["Tab"], description: "Switch mode" },
+            { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+            { keys: ["Ctrl", "Shift", "S"], description: "Download output" },
+          ]} />
+          <Button variant="outline" size="sm" onClick={copyToClipboard} disabled={!(mode === 'csv-to-json' ? jsonOutput : csvOutput)} aria-label="Copy output">
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-            {copied ? "Copied!" : "Copy"}{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>}
+            {copied ? "Copied!" : "Copy"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={downloadFile} 
-            disabled={!csvOutput && !jsonOutput}
-            aria-label="Download converted file"
-          >
-            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download{(csvOutput || jsonOutput) && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+S</kbd>}
+          <Button variant="outline" size="sm" onClick={downloadFile} disabled={!(mode === 'csv-to-json' ? jsonOutput : csvOutput)} aria-label="Download output">
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>
 
-      {error && (
-        <div 
-          className="flex items-center gap-2 text-destructive text-sm rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
-          role="alert"
-          aria-live="assertive"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">CSV ↔ JSON</h2>
+          <ShortcutsModal pageName="CSV ↔ JSON Converter" shortcuts={[
+            { keys: ["1"], description: "CSV to JSON" },
+            { keys: ["2"], description: "JSON to CSV" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+          ]} />
         </div>
-      )}
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Input
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Output
+          </button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 overflow-hidden">
-        {/* Left Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label={mode === 'csv-to-json' ? 'CSV Input' : 'JSON Input'}>
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-medium flex items-center gap-2">
-              {mode === 'csv-to-json' ? <FileSpreadsheet className="h-4 w-4" aria-hidden="true" /> : <FileJson className="h-4 w-4" aria-hidden="true" />}
-              {mode === 'csv-to-json' ? 'CSV Input' : 'JSON Input'}
-            </span>
-            <Badge 
-              variant="outline" 
-              className="text-xs"
-              role="status"
-              aria-live="polite"
-              aria-label={mode === 'csv-to-json' ? `${csvInput.split('\n').filter(l => l.trim()).length} rows` : `${(() => { try { return JSON.parse(jsonInput || '[]').length } catch { return 0 } })()} objects`}
-            >
-              {mode === 'csv-to-json'
-                ? `${csvInput.split('\n').filter(l => l.trim()).length} rows`
-                : jsonInput ? `${(() => { try { return JSON.parse(jsonInput || '[]').length } catch { return 0 } })()} objects` : ''}
-            </Badge>
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Panel — Input */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Input panel">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">{mode === 'csv-to-json' ? 'CSV Input' : 'JSON Input'}</span>
           </div>
           <Textarea
             id="input-textarea"
             value={mode === 'csv-to-json' ? csvInput : jsonInput}
-            onChange={(e) => mode === 'csv-to-json' ? setCsvInput(e.target.value) : setJsonInput(e.target.value)}
-            placeholder={mode === 'csv-to-json' ? "Enter CSV data (comma-separated values)..." : "Enter JSON array..."}
-            className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4"
+            onChange={(e) => { if (mode === 'csv-to-json') { setCsvInput(e.target.value) } else { setJsonInput(e.target.value) } }}
+            placeholder={mode === 'csv-to-json' ? "Paste CSV here...\nname,age,city\nAlice,30,Paris" : "Paste JSON array here...\n[{\"name\": \"Alice\", \"age\": 30}]"}
+            className="flex-1 resize-none border-0 rounded-none font-mono text-sm p-4 focus-visible:ring-0"
             spellCheck={false}
-            aria-label={mode === 'csv-to-json' ? 'CSV input data' : 'JSON input array'}
+            aria-label={mode === 'csv-to-json' ? 'CSV input' : 'JSON input'}
           />
         </div>
 
-        {/* Right Panel */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card h-full" role="region" aria-label={mode === 'csv-to-json' ? 'JSON Output' : 'CSV Output'}>
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-medium flex items-center gap-2">
-              {mode === 'csv-to-json' ? <FileJson className="h-4 w-4" aria-hidden="true" /> : <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />}
-              {mode === 'csv-to-json' ? 'JSON Output' : 'CSV Output'}
-            </span>
-            {(mode === 'csv-to-json' ? jsonOutput : csvOutput) && (
-              <Badge 
-                variant="outline" 
-                className="text-xs"
-                role="status"
-                aria-live="polite"
-              >
-                Ready to copy
-              </Badge>
-            )}
+        {/* Right Panel — Output */}
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Output panel">
+          <div className="shrink-0 border-b border-border px-4 py-3">
+            <span className="text-sm font-medium">{mode === 'csv-to-json' ? 'JSON Output' : 'CSV Output'}</span>
           </div>
-          {(mode === 'csv-to-json' ? jsonOutput : csvOutput) ? (
+          {error ? (
+            <div className="flex-1 flex items-center justify-center p-6" role="alert" aria-live="assertive">
+              <div className="flex items-center gap-2 text-destructive text-sm">
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {error}
+              </div>
+            </div>
+          ) : (
             <Textarea
               id="output-textarea"
               value={mode === 'csv-to-json' ? jsonOutput : csvOutput}
               readOnly
-              className="flex-1 resize-none border-0 rounded-none focus-visible:ring-0 font-mono text-sm p-4 bg-muted/10"
+              placeholder="Output will appear here automatically..."
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm p-4 bg-muted/10 focus-visible:ring-0"
               spellCheck={false}
-              aria-label={mode === 'csv-to-json' ? 'Converted JSON output' : 'Converted CSV output'}
+              aria-label={mode === 'csv-to-json' ? 'JSON output' : 'CSV output'}
               aria-live="polite"
               aria-atomic="true"
             />
-          ) : (
-            <div 
-              className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2"
-              role="note"
-            >
-              {mode === 'csv-to-json' ? <FileJson className="h-12 w-12 opacity-30" aria-hidden="true" /> : <FileSpreadsheet className="h-12 w-12 opacity-30" aria-hidden="true" />}
-              <p className="text-sm">{mode === 'csv-to-json' ? 'Enter CSV to see JSON output' : 'Enter JSON to see CSV output'}</p>
-            </div>
           )}
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center gap-1">
+          <button onClick={() => setModeWithAnnounce('csv-to-json')}
+            className={`h-11 px-3 text-xs rounded-md border ${mode === 'csv-to-json' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+            CSV→JSON
+          </button>
+          <button onClick={() => setModeWithAnnounce('json-to-csv')}
+            className={`h-11 px-3 text-xs rounded-md border ${mode === 'json-to-csv' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+            JSON→CSV
+          </button>
+        </div>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" className="h-11 px-4" onClick={copyToClipboard} disabled={!(mode === 'csv-to-json' ? jsonOutput : csvOutput)} aria-label="Copy output">
+          {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy"}
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="CSV JSON Converter"
-      shortcuts={[
-        { keys: ["1"], description: "CSV to JSON mode" },
-        { keys: ["2"], description: "JSON to CSV mode" },
-        { keys: ["Tab"], description: "Switch conversion mode" },
-        { keys: ["Ctrl", "O"], description: "Upload file" },
-        { keys: ["Ctrl", "C"], description: "Copy converted output" },
-        { keys: ["Ctrl", "S"], description: "Download file" },
-        { keys: ["Escape"], description: "Focus input textarea" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-      ]}
-    />
-    </>
   )
 }

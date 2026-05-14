@@ -134,48 +134,42 @@ export default function Notes() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      <ShortcutsModal
-        pageName="Notes"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "A"], description: "Create new note" },
-          { keys: ["Ctrl", "Shift", "S"], description: "Save current note" },
-          { keys: ["Ctrl", "Shift", "D"], description: "Delete current note" },
-        ]}
-      />
-      <div className="flex h-full flex-col gap-3 p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Notes</h2>
-            <p className="text-muted-foreground">Quick notes saved to your browser's localStorage.</p>
-          </div>
-          <div className="flex items-center gap-2" role="group" aria-label="Note actions">
+      <div className="flex h-full flex-col">
+
+        {/* Desktop: top action bar */}
+        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+          <span className="text-sm font-semibold shrink-0 mr-1">Notes</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="Notes" shortcuts={[
+              { keys: ["Ctrl", "Shift", "A"], description: "Create new note" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Save current note" },
+              { keys: ["Ctrl", "Shift", "D"], description: "Delete current note" },
+            ]} />
             {unsaved && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={manualSave}
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                aria-label="Save note"
-              >
+              <Button variant="outline" size="sm" onClick={manualSave} aria-label="Save note">
                 <Save className="h-4 w-4 mr-1" aria-hidden="true" />Save
-                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+S</kbd>
+                <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
               </Button>
             )}
-            <Button 
-              size="sm" 
-              onClick={newNote}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label="Create new note"
-            >
+            <Button size="sm" onClick={newNote} aria-label="Create new note">
               <Plus className="h-4 w-4 mr-1" aria-hidden="true" />New Note
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+A</kbd>
+              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
             </Button>
           </div>
         </div>
 
-        <div className="flex gap-4 flex-1 min-h-0">
+        {/* Mobile: compact header */}
+        <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
+          <h2 className="text-base font-semibold">Notes</h2>
+          <ShortcutsModal pageName="Notes" shortcuts={[
+            { keys: ["Ctrl", "Shift", "A"], description: "Create new note" },
+            { keys: ["Ctrl", "Shift", "S"], description: "Save" },
+          ]} />
+        </div>
+
+        <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
           {/* Sidebar */}
-          <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-56" role="region" aria-labelledby="notes-sidebar-label">
+          <div className="shrink-0 flex flex-col overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card md:w-56" role="region" aria-labelledby="notes-sidebar-label">
             <div className="shrink-0 border-b border-border px-4 py-3">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider" id="notes-sidebar-label">{notes.length} Note{notes.length !== 1 ? "s" : ""}</span>
             </div>
@@ -257,6 +251,23 @@ export default function Notes() {
             <span id="editor-label" className="sr-only">Note editor</span>
           </div>
         </div>
+
+        {/* Mobile: bottom action bar */}
+        <div
+          className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          {unsaved && (
+            <Button variant="outline" size="sm" className="h-11 px-3" onClick={manualSave} aria-label="Save note">
+              <Save className="h-4 w-4" aria-hidden="true" /><span className="ml-1 text-xs">Save</span>
+            </Button>
+          )}
+          <div className="flex-1" />
+          <Button size="sm" className="h-11 px-4" onClick={newNote} aria-label="Create new note">
+            <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />New Note
+          </Button>
+        </div>
+
       </div>
     </>
   )

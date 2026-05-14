@@ -243,43 +243,80 @@ export function BackgroundRemover() {
   }, [download, pickingColor, isMobile, processMobile, processDesktop, phase, imageEl, resultUrl])
 
   const isProcessing = phase === "loading-model" || phase === "processing"
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   return (
-    <>
-    <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Background Remover application">
+    <div className="flex h-full flex-col" role="main" aria-label="Background Remover application">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {imageEl ? `Image loaded: ${fileName}. ${resultUrl ? 'Result ready. Press Ctrl+Shift+S to download.' : 'Press Ctrl+Shift+Enter to remove background.'}` : 'No image loaded. Press Ctrl+Shift+O to upload.'}
       </div>
-      <div role="banner">
-        <h2 className="text-2xl font-semibold tracking-tight" id="page-title">Background Remover</h2>
-        <p className="text-muted-foreground" id="page-description">Remove image backgrounds · 100% in-browser · Press ? for keyboard shortcuts</p>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0 h-full">
-      {/* Left panel - Input & Controls */}
-      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card">
-        {/* Action button at top */}
-        <div className="shrink-0 border-b border-border p-4">
-          <Button 
-            className="w-full" 
-            onClick={isMobile ? processMobile : processDesktop} 
+
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Background Remover</span>
+        <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()} aria-label="Upload image">
+          <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
+        </Button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Background Remover"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload image" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
+            ]}
+          />
+          <Button
+            size="sm"
+            onClick={isMobile ? processMobile : processDesktop}
             disabled={!imageEl || isProcessing}
             aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
-            aria-describedby="remove-bg-shortcut"
           >
             {isProcessing ? (
               <>
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-                <span>{phase === "loading-model" ? `Loading model… ${progress}%` : "Removing background…"}</span>
+                {phase === "loading-model" ? `Loading model… ${progress}%` : "Removing…"}
               </>
             ) : (
               <>
                 <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                <span>Remove Background</span>
-                {!isProcessing && <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="remove-bg-shortcut" aria-hidden="true">Ctrl+Shift+Enter</kbd>}
-                <span className="sr-only">. Press Control plus Enter to start processing</span>
+                Remove Background
               </>
             )}
           </Button>
+        </div>
+      </div>
+
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Background Remover</h2>
+          <ShortcutsModal
+            pageName="Background Remover"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
+              { keys: ["Ctrl", "Shift", "O"], description: "Upload image" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Result
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+      {/* Left panel - Input & Controls */}
+      <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Upload & Settings</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
@@ -473,23 +510,10 @@ export function BackgroundRemover() {
       </div>
 
       {/* Right panel - Output */}
-      <div className="flex flex-col h-full min-h-0 rounded-xl border border-border bg-card" role="region" aria-label="Image preview and results">
-        {/* Action button at top */}
-        {resultUrl && (
-          <div className="shrink-0 border-b border-border p-4">
-            <Button 
-              className="w-full" 
-              onClick={download}
-              aria-label="Download result as PNG with transparent background"
-              aria-describedby="download-shortcut"
-            >
-              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              <span>Download PNG (transparent)</span>
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" id="download-shortcut" aria-hidden="true">Ctrl+Shift+S</kbd>
-              <span className="sr-only">. Press Control plus S to download</span>
-            </Button>
-          </div>
-        )}
+      <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Image preview and results">
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <span className="text-sm font-medium">Result</span>
+        </div>
         <div className="flex-1 overflow-y-auto p-4">
           {!imageEl ? (
             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status" aria-label="Empty state">
@@ -548,20 +572,33 @@ export function BackgroundRemover() {
       </div>
 
       </div>
+
+      {/* Mobile bottom action bar */}
+      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <Button size="sm" variant="outline" className="h-11 px-4" onClick={() => inputRef.current?.click()} aria-label="Upload image">
+          <Upload className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <Button
+          size="sm"
+          className="h-11 px-4 flex-1"
+          onClick={isMobile ? processMobile : processDesktop}
+          disabled={!imageEl || isProcessing}
+          aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
+        >
+          {isProcessing ? (
+            <>
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
+              {phase === "loading-model" ? `Loading… ${progress}%` : "Removing…"}
+            </>
+          ) : (
+            <>
+              <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+              Remove Background
+            </>
+          )}
+        </Button>
+      </div>
     </div>
-    <ShortcutsModal
-      pageName="Background Remover"
-      shortcuts={[
-        { keys: ["Ctrl", "Shift", "O"], description: "Open image file" },
-        { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background (when image loaded)" },
-        { keys: ["Ctrl", "Shift", "S"], description: "Download result (when available)" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-        { keys: ["Space"], description: "Activate focused button" },
-        { keys: ["Escape"], description: "Cancel color picking mode" },
-      ]}
-    />
-    </>
   )
 }

@@ -251,24 +251,77 @@ export default function AudioWaveformVisualizer() {
     }
   }, [waveData, waveColor, backgroundColor, waveStyle, barWidth])
 
-// ...
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+
+  // Auto-switch to output tab when waveform is generated
+  useEffect(() => {
+    if (waveData) setActiveTab("output")
+  }, [waveData])
 
   return (
-    <>
-      <div className="flex h-full flex-col gap-3 p-4" role="main" aria-label="Audio Waveform Visualizer application">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Audio Waveform Visualizer</h2>
-          <p className="text-muted-foreground">Visualize audio waveforms and export high-quality images.</p>
-        </div>
-      </div>
+    <div className="flex h-full flex-col" role="main" aria-label="Audio Waveform Visualizer application">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {waveData ? `Waveform loaded for ${filename}. Duration: ${fmtTime(duration)}. Ready to export.` : 'No audio file loaded. Upload a file to visualize its waveform.'}
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Desktop top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Audio Waveform Visualizer</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal
+            pageName="Audio Waveform Visualizer"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "O"], description: "Open audio file" },
+              { keys: ["Ctrl", "Shift", "E"], description: "Export as PNG image" },
+              { keys: ["Ctrl", "Alt", "E"], description: "Export as SVG vector" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Toggle settings panel" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between controls" },
+              { keys: ["Enter"], description: "Activate focused button" },
+              { keys: ["Space"], description: "Select/activate focused item" },
+              { keys: ["Arrow Left/Right"], description: "Navigate between style options" },
+            ]}
+          />
+          <Button size="sm" onClick={downloadWaveform} disabled={!waveData}>
+            <Download className="h-4 w-4 mr-2" aria-hidden="true" />Download Waveform
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Audio Waveform Visualizer</h2>
+          <ShortcutsModal
+            pageName="Audio Waveform Visualizer"
+            shortcuts={[
+              { keys: ["Ctrl", "Shift", "O"], description: "Open audio file" },
+              { keys: ["Ctrl", "Shift", "E"], description: "Export as PNG image" },
+              { keys: ["Ctrl", "Alt", "E"], description: "Export as SVG vector" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Toggle settings panel" },
+              { keys: ["?"], description: "Toggle this shortcuts panel" },
+              { keys: ["Tab"], description: "Navigate between controls" },
+              { keys: ["Enter"], description: "Activate focused button" },
+              { keys: ["Space"], description: "Select/activate focused item" },
+              { keys: ["Arrow Left/Right"], description: "Navigate between style options" },
+            ]}
+          />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Upload
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Waveform
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
       {/* Left panel - Upload and Settings */}
-      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Audio file upload and settings">
+      <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Audio file upload and settings">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <span className="text-sm font-medium" id="left-panel-heading">Audio File & Settings</span>
         </div>
@@ -478,7 +531,7 @@ export default function AudioWaveformVisualizer() {
       </div>
 
       {/* Right panel - Visualizer */}
-      <div className="flex flex-col rounded-xl border border-border bg-card lg:overflow-hidden lg:max-h-[calc(100vh-220px)]" role="region" aria-label="Waveform visualization">
+      <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Waveform visualization">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <span className="text-sm font-medium" id="right-panel-heading">Waveform Visualizer</span>
         </div>
@@ -535,22 +588,15 @@ export default function AudioWaveformVisualizer() {
         </div>
       </div>
       </div>
+
+      {/* Mobile bottom action bar */}
+      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-4" onClick={downloadWaveform} disabled={!waveData}>
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />Download
+        </Button>
+      </div>
     </div>
-    
-    <ShortcutsModal
-      pageName="Audio Waveform Visualizer"
-      shortcuts={[
-        { keys: ["Ctrl", "Shift", "O"], description: "Open audio file" },
-        { keys: ["Ctrl", "Shift", "E"], description: "Export as PNG image" },
-        { keys: ["Ctrl", "Alt", "E"], description: "Export as SVG vector" },
-        { keys: ["Ctrl", "Shift", "S"], description: "Toggle settings panel" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-        { keys: ["Space"], description: "Select/activate focused item" },
-        { keys: ["Arrow Left/Right"], description: "Navigate between style options" },
-      ]}
-    />
-    </>
   )
 }

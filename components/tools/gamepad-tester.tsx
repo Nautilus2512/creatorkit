@@ -154,21 +154,33 @@ const stickBtns    = [10, 11]
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Game Controller Tester</h2>
-          <p className="text-muted-foreground">Test your gamepad — buttons, axes, and rumble. Uses the browser Gamepad API. Press ? for shortcuts.</p>
-        </div>
-        <div className="flex items-center gap-2" role="status" aria-live="polite">
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0">Game Controller Tester</span>
+        <div className="flex items-center gap-2 ml-2" role="status" aria-live="polite">
           {gamepads.length > 0
-            ? <Badge className="bg-green-500 text-white"><Wifi className="h-3 w-3 mr-1" aria-hidden="true" />{gamepads.length} controller{gamepads.length > 1 ? "s" : ""} detected</Badge>
-            : <Badge variant="secondary"><WifiOff className="h-3 w-3 mr-1" aria-hidden="true" />No controllers</Badge>
-          }
+            ? <Badge className="bg-green-500 text-white"><Wifi className="h-3 w-3 mr-1" aria-hidden="true" />{gamepads.length} controller{gamepads.length > 1 ? "s" : ""}</Badge>
+            : <Badge variant="secondary"><WifiOff className="h-3 w-3 mr-1" aria-hidden="true" />No controllers</Badge>}
+        </div>
+        <div className="ml-auto">
+          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[{ keys: ["C"], description: "Cycle controller" }, { keys: ["?"], description: "Toggle shortcuts panel" }]} />
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card">
+      {/* Mobile: compact header */}
+      <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
+        <h2 className="text-base font-semibold">Game Controller Tester</h2>
+        <div className="flex items-center gap-2">
+          <div role="status" aria-live="polite">
+            {gamepads.length > 0 && <Badge className="bg-green-500 text-white text-xs"><Wifi className="h-3 w-3 mr-1" aria-hidden="true" />{gamepads.length}</Badge>}
+          </div>
+          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[{ keys: ["C"], description: "Cycle controller" }]} />
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-hidden border-t border-border bg-card">
       <div className="h-full overflow-y-auto">
         {/* Safari warning */}
         {isSafari && (
@@ -296,13 +308,6 @@ const stickBtns    = [10, 11]
       </div>
       </div>
     </div>
-    <ShortcutsModal
-      pageName="Game Controller Tester"
-      shortcuts={[
-        { keys: ["C"], description: "Cycle controller" },
-        { keys: ["?"], description: "Toggle this panel" },
-      ]}
-    />
     </>
   )
 }

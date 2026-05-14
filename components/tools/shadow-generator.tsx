@@ -66,6 +66,7 @@ export default function ShadowGenerator() {
   const [bgColor, setBgColor] = useState("#f1f5f9")
   const [boxColor, setBoxColor] = useState("#ffffff")
   const [copied, setCopied] = useState(false)
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   const active = shadows.find(s => s.id === activeId) || shadows[0]
 
@@ -156,26 +157,47 @@ export default function ShadowGenerator() {
 
   return (
     <>
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex items-start justify-between" role="banner">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight" id="shadow-title">Box Shadow Generator</h2>
-          <p className="text-muted-foreground" id="shadow-description">Build CSS box-shadows visually. Supports multiple layered shadows. Use arrow keys to switch layers. Press ? for shortcuts.</p>
+    <div className="flex h-full flex-col">
+
+      {/* Desktop: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Box Shadow Generator</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Shadow Generator" shortcuts={[
+            { keys: ["Ctrl", "N"], description: "Add new shadow layer" },
+            { keys: ["Ctrl", "Delete"], description: "Remove active layer" },
+            { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+            { keys: ["←", "→"], description: "Switch layers" },
+          ]} />
+          <Button variant="outline" size="sm" onClick={copy} aria-label="Copy CSS to clipboard">
+            {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy CSS"}
+            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+          </Button>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={copy}
-          aria-label="Copy CSS to clipboard"
-        >
-          {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-          {copied ? "Copied!" : "Copy CSS"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
+      {/* Mobile: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <h2 className="text-base font-semibold">Box Shadow Generator</h2>
+          <ShortcutsModal pageName="Shadow Generator" shortcuts={[{ keys: ["←", "→"], description: "Switch layers" }]} />
+        </div>
+        <div className="flex" role="tablist">
+          <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Controls
+          </button>
+          <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            Preview
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Left — Controls */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Shadow controls">
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Shadow controls">
           <div className="shrink-0 border-b border-border">
             <div className="flex items-center gap-1 p-2 overflow-x-auto" role="tablist" aria-label="Shadow layers">
               {shadows.map((s, i) => (
@@ -272,7 +294,7 @@ export default function ShadowGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Preview and CSS output">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Preview and CSS output">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium">Preview</span>
             <div className="flex items-center gap-3">
@@ -334,20 +356,20 @@ export default function ShadowGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" className="h-11 px-4" onClick={copy} aria-label="Copy CSS">
+          {copied ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied ? "Copied!" : "Copy CSS"}
+        </Button>
+      </div>
+
     </div>
-    <ShortcutsModal
-      pageName="Shadow Generator"
-      shortcuts={[
-        { keys: ["Ctrl", "N"], description: "Add new shadow layer" },
-        { keys: ["Ctrl", "Delete"], description: "Remove active layer (when 2+ layers)" },
-        { keys: ["Ctrl", "C"], description: "Copy CSS" },
-        { keys: ["←", "→"], description: "Switch between shadow layers" },
-        { keys: ["?"], description: "Toggle this shortcuts panel" },
-        { keys: ["Tab"], description: "Navigate between controls" },
-        { keys: ["Enter"], description: "Activate focused button" },
-        { keys: ["Space"], description: "Activate focused button" },
-      ]}
-    />
     </>
   )
 }

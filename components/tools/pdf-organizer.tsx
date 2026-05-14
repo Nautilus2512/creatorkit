@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { PDFDocument } from "pdf-lib"
@@ -56,8 +56,8 @@ export default function PdfOrganizer() {
       }
       setPages(result)
       announceToScreenReader(`PDF loaded with ${result.length} pages`)
-    } catch (err) { 
-      console.error(err) 
+    } catch (err) {
+      console.error(err)
       announceToScreenReader("Error loading PDF")
     }
     setLoading(false); setProgress(0)
@@ -124,64 +124,55 @@ export default function PdfOrganizer() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      <ShortcutsModal
-        pageName="PDF Organizer"
-        shortcuts={[
-          { keys: ["Ctrl", "Shift", "O"], description: "Open PDF file" },
-          { keys: ["Ctrl", "Shift", "D"], description: "Download organized PDF" },
-        ]}
-      />
-      <div className="flex h-full flex-col gap-3 p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">PDF Organizer</h2>
-            <p className="text-muted-foreground">Reorder and delete PDF pages. All processing happens in your browser.</p>
-          </div>
-          <div className="flex gap-2" role="group" aria-label="File actions">
-            <label>
-              <input 
-                type="file" 
-                accept=".pdf" 
-                className="hidden" 
-                onChange={handleFile} 
-                ref={fileInputRef}
-                aria-label="Select PDF file"
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              >
-                <span 
-                  className="cursor-pointer" 
-                  onClick={openFileDialog}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openFileDialog() }}
-                  aria-label="Open PDF file"
-                >
-                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Open PDF
-                  <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
-                </span>
-              </Button>
-            </label>
-            <Button 
-              onClick={download} 
-              disabled={!pages.length || loading}
+      <div className="flex h-full flex-col">
+        {/* Compact top toolbar */}
+        <div className="shrink-0 flex items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="PDF Organizer controls">
+          <label>
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleFile}
+              ref={fileInputRef}
+              aria-label="Select PDF file"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-              aria-label={loading ? "Saving PDF" : "Download organized PDF"}
             >
-              <Download className="h-4 w-4 mr-1" aria-hidden="true" />
-              {loading ? "Saving..." : "Download PDF"}
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <span
+                className="cursor-pointer"
+                onClick={openFileDialog}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openFileDialog() }}
+                aria-label="Open PDF file"
+              >
+                <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Open PDF
+                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
+              </span>
             </Button>
+          </label>
+          {pages.length > 0 && (
+            <span className="text-sm text-muted-foreground" role="status" aria-live="polite">{pages.length} pages</span>
+          )}
+          <div className="ml-auto shrink-0">
+            <ShortcutsModal
+              pageName="PDF Organizer"
+              shortcuts={[
+                { keys: ["Ctrl", "Shift", "O"], description: "Open PDF file" },
+                { keys: ["Ctrl", "Shift", "D"], description: "Download organized PDF" },
+              ]}
+            />
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card" role="region" aria-label="PDF pages">
+        {/* Canvas/workspace */}
+        <div className="flex-1 min-h-0 overflow-hidden" role="region" aria-label="PDF pages">
           {pages.length === 0 ? (
-            <label 
+            <label
               className="flex flex-col items-center justify-center h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
               onClick={openFileDialog}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openFileDialog() }}
@@ -201,31 +192,31 @@ export default function PdfOrganizer() {
               <p className="text-sm text-muted-foreground mb-4" role="status" aria-live="polite">{pages.length} pages — use arrows to reorder, delete button to remove</p>
               <div className="grid grid-cols-4 gap-4" role="list" aria-label="PDF pages">
                 {pages.map((page, i) => (
-                  <div 
-                    key={`${page.idx}-${i}`} 
+                  <div
+                    key={`${page.idx}-${i}`}
                     className="group relative rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
                     role="listitem"
                     aria-label={`Page ${i + 1}, original page ${page.idx + 1}`}
                   >
                     <img src={page.thumb} alt={`Page ${i + 1}`} className="w-full" />
                     <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-2" role="group" aria-label="Page actions">
-                      <button 
-                        onClick={() => move(i, -1)} 
+                      <button
+                        onClick={() => move(i, -1)}
                         disabled={i === 0}
                         className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
                         aria-label={`Move page ${i + 1} up`}
                       >
                         <ArrowUp className="h-3 w-3 text-white" aria-hidden="true" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => remove(i)}
                         className="p-1.5 bg-red-500/70 rounded hover:bg-red-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
                         aria-label={`Delete page ${i + 1}`}
                       >
                         <Trash2 className="h-3 w-3 text-white" aria-hidden="true" />
                       </button>
-                      <button 
-                        onClick={() => move(i, 1)} 
+                      <button
+                        onClick={() => move(i, 1)}
                         disabled={i === pages.length - 1}
                         className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
                         aria-label={`Move page ${i + 1} down`}
@@ -242,6 +233,25 @@ export default function PdfOrganizer() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Bottom action bar */}
+        <div
+          className="shrink-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex-1" />
+          <Button
+            size="sm"
+            className="h-11 md:h-9"
+            onClick={download}
+            disabled={!pages.length || loading}
+            aria-label={loading ? "Saving PDF" : "Download organized PDF"}
+          >
+            <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+            {loading ? "Saving..." : "Download PDF"}
+            <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+          </Button>
         </div>
       </div>
     </>

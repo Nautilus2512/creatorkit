@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Monitor, Square, Download, Trash2, Play, Pause } from "lucide-react"
@@ -16,6 +16,7 @@ function fmtDur(s: number) {
 }
 
 export default function ScreenRecorder() {
+  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [duration, setDuration] = useState(0)
@@ -63,7 +64,11 @@ export default function ScreenRecorder() {
         const url = URL.createObjectURL(blob)
         const dur = Math.round((Date.now() - startRef.current) / 1000)
         announceToScreenReader(`Recording saved: ${fmtDur(dur)} duration`)
-        setRecordings(prev => [...prev, { id: recId++, url, blob, duration: dur, timestamp: new Date() }])
+        setRecordings(prev => {
+          const updated = [...prev, { id: recId++, url, blob, duration: dur, timestamp: new Date() }]
+          setActiveTab("output")
+          return updated
+        })
       }
 
       displayStream.getVideoTracks()[0].onended = () => stop()
@@ -145,65 +150,85 @@ export default function ScreenRecorder() {
   ]
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Screen Recorder</h2>
-          <p className="text-muted-foreground">Record your screen directly in the browser. Recordings stay on your device.</p>
+      {/* Desktop top bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
+        <span className="text-sm font-semibold shrink-0 mr-1">Screen Recorder</span>
+        <div className="flex items-center gap-2 ml-2">
+          <Switch
+            id="audio-desktop"
+            checked={withAudio}
+            onCheckedChange={(val) => { setWithAudio(val); announceToScreenReader(val ? "Audio recording enabled" : "Audio recording disabled") }}
+            disabled={isRecording}
+            aria-label="Record system and microphone audio"
+          />
+          <Label htmlFor="audio-desktop" className="text-sm cursor-pointer">Record audio</Label>
         </div>
-        <ShortcutsModal pageName="Screen Recorder" shortcuts={shortcuts} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 min-h-0">
-        {/* Left — Recorder */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Screen recorder">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Recorder</span>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
-        <div 
-          className={`w-24 h-24 rounded-full flex items-center justify-center border-4 transition-all ${isRecording ? "border-destructive bg-destructive/10 animate-pulse" : "border-border bg-muted/30"}`}
-          role="status"
-          aria-label={isRecording ? `Recording in progress: ${fmtDur(duration)}` : "Ready to record"}
-        >
-          <Monitor className={`h-10 w-10 ${isRecording ? "text-destructive" : "text-muted-foreground"}`} aria-hidden="true" />
-        </div>
-
-        {isRecording && (
-          <p className="text-2xl font-mono font-bold text-destructive tabular-nums" aria-live="polite" aria-label={`Recording duration: ${fmtDur(duration)}`}>{fmtDur(duration)}</p>
-        )}
-
-        {error && <p role="alert" className="text-xs text-destructive text-center max-w-xs">{error}</p>}
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Switch 
-              id="audio" 
-              checked={withAudio} 
-              onCheckedChange={(val) => { setWithAudio(val); announceToScreenReader(val ? "Audio recording enabled" : "Audio recording disabled") }} 
-              disabled={isRecording}
-              aria-label="Record system and microphone audio"
-            />
-            <Label htmlFor="audio" className="text-sm cursor-pointer">Record audio</Label>
-          </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Screen Recorder" shortcuts={shortcuts} />
           <Button
-            size="lg"
             variant={isRecording ? "destructive" : "default"}
             onClick={isRecording ? stop : start}
-            className="min-w-44 gap-2"
+            className="gap-2"
             aria-label={isRecording ? "Stop recording" : "Start screen recording"}
           >
             {isRecording
-              ? <><Square className="h-5 w-5" /><span>Stop Recording</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd></>
-              : <><Monitor className="h-5 w-5" /><span>Start Recording</span><kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+R</kbd></>
+              ? <><Square className="h-4 w-4" /><span>Stop Recording</span></>
+              : <><Monitor className="h-4 w-4" /><span>Start Recording</span></>
             }
           </Button>
         </div>
       </div>
+
+      {/* Mobile header */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-2">
+          <span className="text-sm font-semibold">Screen Recorder</span>
+          <ShortcutsModal pageName="Screen Recorder" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel tabs">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+          >
+            Record
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+          >
+            Recordings
+          </button>
+        </div>
+      </div>
+
+      {/* Panels wrapper */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* Left — Recorder */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Screen recorder">
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
+            <div
+              className={`w-24 h-24 rounded-full flex items-center justify-center border-4 transition-all ${isRecording ? "border-destructive bg-destructive/10 animate-pulse" : "border-border bg-muted/30"}`}
+              role="status"
+              aria-label={isRecording ? `Recording in progress: ${fmtDur(duration)}` : "Ready to record"}
+            >
+              <Monitor className={`h-10 w-10 ${isRecording ? "text-destructive" : "text-muted-foreground"}`} aria-hidden="true" />
+            </div>
+
+            {isRecording && (
+              <p className="text-2xl font-mono font-bold text-destructive tabular-nums" aria-live="polite" aria-label={`Recording duration: ${fmtDur(duration)}`}>{fmtDur(duration)}</p>
+            )}
+
+            {error && <p role="alert" className="text-xs text-destructive text-center max-w-xs">{error}</p>}
+          </div>
 
           <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground">
             Recordings are in-memory only — download to save. Saved as WebM.
@@ -211,7 +236,7 @@ export default function ScreenRecorder() {
         </div>
 
         {/* Right — Recordings */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card min-w-0" role="region" aria-label="Recordings library">
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Recordings library">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Recordings ({recordings.length})</span>
           </div>
@@ -221,9 +246,9 @@ export default function ScreenRecorder() {
             ) : (
               <div className="divide-y divide-border" role="list">
                 {[...recordings].reverse().map(rec => (
-                  <div 
-                    key={rec.id} 
-                    className="p-4 space-y-3" 
+                  <div
+                    key={rec.id}
+                    className="p-4 space-y-3"
                     role="listitem"
                     aria-label={`Recording ${rec.id}: ${fmtDur(rec.duration)} recorded at ${rec.timestamp.toLocaleTimeString()}`}
                   >
@@ -233,28 +258,28 @@ export default function ScreenRecorder() {
                         <p className="text-xs text-muted-foreground">{rec.timestamp.toLocaleTimeString()} · {fmtDur(rec.duration)}</p>
                       </div>
                       <div className="flex gap-1 shrink-0" role="group" aria-label="Recording actions">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-8 h-8 p-0 focus:outline-none focus:ring-2 focus:ring-primary/50" 
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-8 h-8 p-0 focus:outline-none focus:ring-2 focus:ring-primary/50"
                           onClick={() => togglePlay(rec)}
                           aria-label={playingId === rec.id ? "Pause playback" : "Play recording"}
                         >
                           {playingId === rec.id ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => download(rec)}
                           aria-label={`Download recording ${rec.id}`}
                           className="focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => remove(rec.id)} 
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(rec.id)}
                           className="text-muted-foreground hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive/50"
                           aria-label={`Delete recording ${rec.id}`}
                         >
@@ -263,12 +288,12 @@ export default function ScreenRecorder() {
                       </div>
                     </div>
                     {playingId === rec.id && (
-                      <video 
-                        key={rec.id} 
-                        src={rec.url} 
-                        controls 
-                        autoPlay 
-                        className="w-full rounded-lg border border-border max-h-48 object-contain bg-black" 
+                      <video
+                        key={rec.id}
+                        src={rec.url}
+                        controls
+                        autoPlay
+                        className="w-full rounded-lg border border-border max-h-48 object-contain bg-black"
                         onEnded={() => { setPlayingId(null); announceToScreenReader("Playback finished") }}
                         aria-label={`Video playback for recording ${rec.id}`}
                       />
@@ -279,6 +304,34 @@ export default function ScreenRecorder() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Mobile bottom bar */}
+      <div
+        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-center gap-2">
+          <Switch
+            id="audio-mobile"
+            checked={withAudio}
+            onCheckedChange={(val) => { setWithAudio(val); announceToScreenReader(val ? "Audio recording enabled" : "Audio recording disabled") }}
+            disabled={isRecording}
+            aria-label="Record system and microphone audio"
+          />
+          <Label htmlFor="audio-mobile" className="text-sm cursor-pointer">Audio</Label>
+        </div>
+        <Button
+          className="flex-1 h-11 gap-2"
+          variant={isRecording ? "destructive" : "default"}
+          onClick={isRecording ? stop : start}
+          aria-label={isRecording ? "Stop recording" : "Start screen recording"}
+        >
+          {isRecording
+            ? <><Square className="h-5 w-5" /><span>Stop Recording</span></>
+            : <><Monitor className="h-5 w-5" /><span>Start Recording</span></>
+          }
+        </Button>
       </div>
     </div>
   )
