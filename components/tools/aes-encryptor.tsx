@@ -254,6 +254,13 @@ export default function AesEncryptor() {
           <div className="flex items-center gap-1.5">
             <Button variant={mode === "encrypt" ? "default" : "outline"} size="sm" className="h-7 text-xs px-2" onClick={() => switchMode("encrypt")} aria-pressed={mode === "encrypt"}>Enc</Button>
             <Button variant={mode === "decrypt" ? "default" : "outline"} size="sm" className="h-7 text-xs px-2" onClick={() => switchMode("decrypt")} aria-pressed={mode === "decrypt"}>Dec</Button>
+            <ShortcutsModal pageName="AES Encrypt / Decrypt" shortcuts={[
+              { keys: ["Ctrl", "Shift", "E"], description: "Switch to Encrypt mode" },
+              { keys: ["Ctrl", "Shift", "L"], description: "Switch to Decrypt mode" },
+              { keys: ["Ctrl", "Enter"], description: "Run Encrypt / Decrypt" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Swap input/output" },
+              { keys: ["Ctrl", "Shift", "V"], description: "Copy output" },
+            ]} />
           </div>
         </div>
         <div className="px-4 pb-2 flex items-center gap-2">
