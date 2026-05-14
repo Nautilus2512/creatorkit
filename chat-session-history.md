@@ -788,5 +788,41 @@ Converted 40+ keyboard shortcuts across 17 files from separate `<span>` elements
 
 ---
 
-*Last updated: 2026-05-13*
+---
+
+## Session v1.65.0 (May 2026) — Anki Flashcards Mobile Header & Browse Button Fix
+
+### Changes Made
+
+#### 1. Mobile header layout refactor (`anki-card.tsx`)
+The mobile header was crowded with title + streak stats + History icon + Trash icon + ShortcutsModal all in one row.
+
+**Before:**
+```
+[Anki Flashcards  1d streak  3 total]  [🕐 🗑️ ⌨️ ?]
+```
+
+**After — two rows:**
+```
+Row 1: [Anki Flashcards]               [🕐 🗑️ ⌨️ ?]
+Row 2: [1d streak · 3 total reviewed]               (only shown when history exists)
+```
+
+Implementation: Changed the mobile header `<div>` from `flex items-center justify-between` (single row) to `flex flex-col` (two stacked rows). Stats row uses `pb-2` and renders conditionally on `Object.keys(studyLog).length > 0`.
+
+#### 2. Browse button kbd blackout fix (`anki-card.tsx`)
+The `Ctrl+Shift+Y` keyboard shortcut badge on the Browse button appeared black/opaque when Browse was active.
+
+**Root cause**: Same issue as Study and Add Card buttons — `variant="default"` gives the button a dark primary background, but the `kbd` was using `border-border bg-muted` which rendered as a dark/black box on that dark background.
+
+**Fix**: Made the `kbd` class conditional:
+- Active (dark bg): `border-primary-foreground/30 bg-primary-foreground/20`
+- Inactive (ghost): `border-border bg-muted`
+
+### Commit
+`d20e4d2` — fix: unclutter mobile header and fix Browse kbd blackout in anki-card
+
+---
+
+*Last updated: 2026-05-14*
 *This file should be updated after each development session for future reference.*

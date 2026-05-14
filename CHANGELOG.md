@@ -89,6 +89,24 @@
 
 ---
 
+## v1.65.0 — May 2026
+### Anki Flashcards — Mobile Header & Browse Button Fix
+
+#### Mobile header layout
+- Split the single crowded mobile header row into two rows:
+  - **Row 1**: Tool title ("Anki Flashcards") + action icons (Browse, Clear data, Shortcuts) right-aligned
+  - **Row 2** (conditional): Streak and total-reviewed stats displayed as a smaller secondary line, only shown when study history exists
+- Removes the cramped appearance when title, stats, and icons were all in one row on narrow screens
+
+#### Browse button kbd blackout fix
+- Fixed the `Ctrl+Shift+Y` kbd badge on the Browse button appearing blacked-out when the button is active (`variant="default"`, dark background)
+- Applied the same fix already used on Study and Add Card buttons: `border-primary-foreground/30 bg-primary-foreground/20` when active, `border-border bg-muted` when inactive
+
+#### Files changed
+- `components/tools/anki-card.tsx`
+
+---
+
 ## v1.64.0 — May 2026
 ### Layout Standardization — All 70 Tools (Desktop + Mobile)
 Complete standardization of layout pattern across all 70 tool components for consistent UX on both desktop and touchscreen devices.
