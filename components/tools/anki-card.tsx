@@ -521,16 +521,11 @@ export function AnkiCard() {
                     {studiedCount > 0 ? `Done! ${studiedCount} card${studiedCount > 1 ? "s" : ""} reviewed.` : "All caught up!"}
                   </p>
                   <p className="text-xs text-muted-foreground">No cards due today</p>
-                  <div className="flex gap-2 mt-2" role="group" aria-label="Session actions">
-                    <Button variant="outline" size="sm" onClick={() => setView("add-card")} aria-label="Add card">
-                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+V</kbd>
+                  {dueCards.length > 0 && (
+                    <Button size="sm" className="mt-2" onClick={startStudy} aria-label="Study again">
+                      <RotateCcw className="h-3.5 w-3.5 mr-1" />Study again
                     </Button>
-                    {dueCards.length > 0 && (
-                      <Button size="sm" onClick={startStudy} aria-label="Study again">
-                        <RotateCcw className="h-3.5 w-3.5 mr-1" />Study <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+S</kbd>
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
 
