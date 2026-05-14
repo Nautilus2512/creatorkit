@@ -326,7 +326,7 @@ export function AnkiCard() {
               <>
                 <Button variant={view === "history" ? "default" : "ghost"} size="sm" onClick={() => setView(v => v === "history" ? "empty" : "history")} aria-label="Browse all decks and cards" className={view === "history" ? "" : "text-muted-foreground"}>
                   <History className="h-4 w-4 mr-1" aria-hidden="true" />Browse
-                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Y</kbd>
+                  <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${view === "history" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+Y</kbd>
                 </Button>
                 <Button variant="ghost" size="sm" onClick={clearAllData} aria-label="Clear all decks and study history" className="text-muted-foreground hover:text-destructive">
                   <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear data
@@ -339,39 +339,38 @@ export function AnkiCard() {
         </div>
 
         {/* MOBILE: compact header */}
-        <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-3 min-w-0">
-            <h2 className="text-base font-semibold shrink-0">Anki Flashcards</h2>
-            {Object.keys(studyLog).length > 0 && (
-              <div className="flex items-center gap-2 text-xs" aria-label="Study stats">
-                <span className="text-amber-500 font-medium">{calcStreak(studyLog)}d</span>
-                <span className="text-muted-foreground">streak</span>
-                <span className="text-muted-foreground">{Object.values(studyLog).reduce((a,b)=>a+b,0)} total</span>
-              </div>
-            )}
+        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <h2 className="text-base font-semibold">Anki Flashcards</h2>
+            <div className="flex items-center gap-1.5">
+              {decks.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setView(v => v === "history" ? "empty" : "history")}
+                    className={`rounded p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${view === "history" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                    aria-label="Browse all decks and cards"
+                    aria-pressed={view === "history"}
+                  >
+                    <History className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    onClick={clearAllData}
+                    className="rounded p-1.5 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label="Clear all decks and study history"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </>
+              )}
+              <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {decks.length > 0 && (
-              <>
-                <button
-                  onClick={() => setView(v => v === "history" ? "empty" : "history")}
-                  className={`rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${view === "history" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                  aria-label="Browse all decks and cards"
-                  aria-pressed={view === "history"}
-                >
-                  <History className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  onClick={clearAllData}
-                  className="rounded p-1 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label="Clear all decks and study history"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </>
-            )}
-            <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
-          </div>
+          {Object.keys(studyLog).length > 0 && (
+            <div className="flex items-center gap-3 px-4 pb-2 text-xs" aria-label="Study stats">
+              <span className="text-amber-500 font-medium">{calcStreak(studyLog)}d streak</span>
+              <span className="text-muted-foreground">{Object.values(studyLog).reduce((a,b)=>a+b,0)} total reviewed</span>
+            </div>
+          )}
         </div>
 
         {/* Content (scrollable) */}
