@@ -323,36 +323,6 @@ export function AnkiCard() {
               </Button>
             )}
             <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
-            <button
-              onClick={() => setAddingDeck(v => !v)}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border bg-background hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Create new deck"
-              aria-expanded={addingDeck}
-              aria-controls="new-deck-form"
-            >
-              <Plus className="h-3 w-3" aria-hidden="true" />New Deck
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
-            </button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => activeDeck && setView("add-card")}
-              disabled={!activeDeck}
-              aria-label="Add new card"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
-            </Button>
-            <Button
-              size="sm"
-              onClick={startStudy}
-              disabled={!activeDeck || dueCards.length === 0}
-              aria-label={dueCards.length > 0 ? `Study now: ${dueCards.length} cards due` : "No cards due"}
-            >
-              <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-              Study {dueCards.length > 0 && `(${dueCards.length})`}
-              <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
-            </Button>
           </div>
         </div>
 
@@ -390,6 +360,7 @@ export function AnkiCard() {
                 >
                   <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   Study {dueCards.length > 0 && `(${dueCards.length})`}
+                  <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${view === "study" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
                 </Button>
                 <Button
                   variant={view === "add-card" ? "default" : "outline"}
@@ -398,6 +369,7 @@ export function AnkiCard() {
                   aria-label="Add new card"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
+                  <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${view === "add-card" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+V</kbd>
                 </Button>
               </div>
             )}
