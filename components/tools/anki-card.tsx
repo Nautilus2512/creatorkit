@@ -328,8 +328,17 @@ export function AnkiCard() {
 
         {/* MOBILE: compact header */}
         <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
-          <h2 className="text-base font-semibold">Anki Flashcards</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-base font-semibold shrink-0">Anki Flashcards</h2>
+            {Object.keys(studyLog).length > 0 && (
+              <div className="flex items-center gap-2 text-xs" aria-label="Study stats">
+                <span className="text-amber-500 font-medium">{calcStreak(studyLog)}d</span>
+                <span className="text-muted-foreground">streak</span>
+                <span className="text-muted-foreground">{Object.values(studyLog).reduce((a,b)=>a+b,0)} total</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             {decks.length > 0 && (
               <button
                 onClick={clearAllData}
