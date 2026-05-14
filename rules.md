@@ -601,3 +601,71 @@ The primary responsive split is always at `md:`. Use `lg:` only for grid layouts
 | `flex-col md:flex-row` | Stack vs side-by-side |
 | `px-3 md:px-4` | Tighter mobile padding |
 | `h-11` touch targets | `size="sm"` buttons |
+
+---
+
+## 21. Canvas Tools — Buffer Sizing and Touch Drag
+
+### Canvas buffer sizing (prevent exponential growth)
+
+Never read `canvas.width` to set `canvas.width`. The attribute returns the current pixel buffer size, not the CSS layout size. Multiplying by `devicePixelRatio` on every draw call doubles the buffer each time.
+
+```tsx
+// ❌ Bug — exponential growth on repeated calls
+const { width: W, height: H } = canvas  // reads pixel buffer
+canvas.width  = W * dpr                 // doubles every call
+
+// ✅ Correct — stable CSS layout size
+const W = canvas.clientWidth  || 800
+const H = canvas.clientHeight || 200
+canvas.width  = W * dpr
+canvas.height = H * dpr
+ctx.scale(dpr, dpr)
+```
+
+### Touch drag and mouse drag on canvas
+
+For canvas elements that need click-to-seek or drag-to-scrub (waveform, whiteboard, etc.), replace `onClick` with the full mouse + touch handler set:
+
+```tsx
+const isDragging = useRef(false)
+
+const seekTo = useCallback((clientX: number) => {
+  if (!canvasRef.current) return
+  const rect = canvasRef.current.getBoundingClientRect()
+  const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  // apply seek...
+}, [deps])
+
+// Mouse handlers
+const handleMouseDown  = (e) => { isDragging.current = true;  seekTo(e.clientX) }
+const handleMouseMove  = (e) => { if (isDragging.current) seekTo(e.clientX) }
+const handleMouseUp    = ()  => { isDragging.current = false }
+const handleMouseLeave = ()  => { isDragging.current = false }
+
+// Touch handlers — e.preventDefault() stops page scroll while scrubbing
+const handleTouchStart = (e) => { e.preventDefault(); isDragging.current = true;  seekTo(e.touches[0].clientX) }
+const handleTouchMove  = (e) => { e.preventDefault(); if (isDragging.current) seekTo(e.touches[0].clientX) }
+const handleTouchEnd   = ()  => { isDragging.current = false }
+```
+
+Canvas element:
+```tsx
+<canvas
+  ref={canvasRef}
+  className="w-full h-40 cursor-pointer select-none"
+  style={{ touchAction: "none" }}
+  onMouseDown={handleMouseDown}
+  onMouseMove={handleMouseMove}
+  onMouseUp={handleMouseUp}
+  onMouseLeave={handleMouseLeave}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+/>
+```
+
+- `touchAction: "none"` tells the browser not to handle the touch for scrolling.
+- `e.preventDefault()` in touch handlers blocks the page scroll during the gesture.
+- `select-none` prevents the browser text-selection highlight during a mouse drag.
+- Use a `ref` for `isDragging` (not state) to avoid triggering re-renders on every mouse move.

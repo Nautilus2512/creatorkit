@@ -878,5 +878,89 @@ New file documenting all CreatorKit standards. 20 sections:
 
 ---
 
+---
+
+## Session v1.67.0 (May 2026) — Audio Waveform Visualizer Full Rebuild
+
+### Changes Made
+
+#### 1. Rules compliance audit and fixes (`audio-waveform-visualizer.tsx`)
+
+Ran full rules.md audit. Issues found and fixed:
+
+| Issue | Fix |
+|---|---|
+| Layout edge-to-edge (v1.64 style) | Rebuilt with scrollable `p-4`, panels in `rounded-xl border` card, usage guide below |
+| Mobile bottom bar `shrink-0` | Changed to `fixed bottom-0 left-0 right-0 z-20` |
+| `bg-white/20` on outline buttons (blackout bug) | Changed all to `border-border bg-muted` |
+| `Ctrl+Shift+O` (Bookmarks conflict) | Changed to `Ctrl+Shift+U` |
+| No usage guide | Added usage guide card with steps, export format guide, tips |
+
+#### 2. Audio playback restored
+
+Previously removed because blob URL playback was broken. Root cause was the missing `media-src blob:` CSP directive (fixed in v1.66.0). Playback now works correctly.
+
+**Implementation:**
+- `URL.createObjectURL(file)` → stored in `blobUrlRef`
+- `new Audio(url)` → stored in `audioRef`
+- `timeupdate` listener → `setCurrentTime(audio.currentTime)`
+- `ended` listener → reset to start, set `isPlaying(false)`
+- `togglePlay()` calls `audio.play()` / `audio.pause()`
+- Cleanup: `audio.pause()` + `URL.revokeObjectURL()` on new file load and component unmount
+- Canvas redraws on every `currentTime` change with playhead position
+- `Space` key triggers `togglePlay()`
+
+**Visual playhead:**
+- Red `#ef4444` vertical line at `playPct * canvasWidth`
+- Subtle `rgba(255,255,255,0.12)` overlay on the played region
+- Progress bar below the canvas mirrors the playhead position
+
+#### 3. Canvas drag-to-seek (mouse + touch)
+
+**Problem with click-only:** On touchscreen, a "click" fires after `touchend` and is imprecise. Users expect to drag/scrub the playhead like in Spotify or SoundCloud.
+
+**Solution:**
+```tsx
+const isDragging = useRef(false)
+
+const seekTo = (clientX: number) => {
+  const rect = canvasRef.current!.getBoundingClientRect()
+  const pct = (clientX - rect.left) / rect.width
+  audio.currentTime = pct * duration
+  setCurrentTime(pct * duration)
+}
+
+// Mouse
+onMouseDown → isDragging=true + seekTo
+onMouseMove → if isDragging: seekTo
+onMouseUp / onMouseLeave → isDragging=false
+
+// Touch
+onTouchStart → e.preventDefault() + isDragging=true + seekTo
+onTouchMove  → e.preventDefault() + if isDragging: seekTo
+onTouchEnd   → isDragging=false
+```
+
+Key: `style={{ touchAction: "none" }}` on the canvas + `e.preventDefault()` in touch handlers stop the browser from scrolling the page while the user is scrubbing. `select-none` prevents text-selection highlight during drag.
+
+#### 4. Canvas buffer sizing bug fixed
+
+**Bug:** `drawWaveform` read `canvas.width` (pixel buffer size) then set `canvas.width = W * dpr`. With `dpr=2`, each call doubled the buffer: 300 → 600 → 1200 → 2400 → exponential growth. During playback (`timeupdate` fires ~4 times/sec), this would crash the tab within seconds.
+
+**Fix:** Use `canvas.clientWidth` / `canvas.clientHeight` (CSS layout size, stable) instead:
+```tsx
+// Before (bug)
+const { width: W, height: H } = canvas  // reads buffer, not layout
+// After (fix)
+const W = canvas.clientWidth || 800
+const H = canvas.clientHeight || 200
+```
+
+### Key commits
+- `bf9a561` — refactor: rebuild audio-waveform-visualizer — rules compliance + playback restored
+- `6e72acb` — feat: add drag-to-seek and touch scrubbing to waveform canvas
+
+---
+
 *Last updated: 2026-05-14*
 *This file should be updated after each development session for future reference.*

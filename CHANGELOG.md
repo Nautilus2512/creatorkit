@@ -89,6 +89,41 @@
 
 ---
 
+## v1.67.0 — May 2026
+### Audio Waveform Visualizer — Full Rebuild + Touch Scrubbing
+
+#### Full rebuild (`audio-waveform-visualizer.tsx`)
+
+**Rules compliance fixes:**
+- Layout rebuilt to rules.md standard: scrollable `p-4` wrapper, panels in `rounded-xl border` card, usage guide card below
+- Mobile bottom bar changed from `shrink-0` flow to `fixed bottom-0 z-20` with safe-area inset
+- All `bg-white/20` kbd badges replaced with `border-border bg-muted` (blackout fix on outline buttons)
+- Keyboard shortcut `Ctrl+Shift+O` (Bookmarks conflict in Chrome/Firefox) changed to `Ctrl+Shift+U`
+
+**Audio playback restored** (was previously removed due to broken blob URL playback — now fixed by the CSP `media-src` directive added in v1.66.0):
+- File blob URL created on upload → `new Audio(url)` element with `timeupdate` and `ended` listeners
+- Play/Pause button + progress bar with `currentTime / total` display below the waveform
+- Red playhead line drawn on canvas at current position
+- Played-portion overlay (subtle white wash on the completed section)
+- `Space` key plays/pauses globally
+- Blob URL and audio element cleaned up on new file load and component unmount
+
+**Touch and mouse drag-to-seek:**
+- Canvas replaced `onClick` with full mouse drag: `onMouseDown` → `onMouseMove` → `onMouseUp` / `onMouseLeave`
+- Touch scrubbing: `onTouchStart` / `onTouchMove` / `onTouchEnd` with `e.preventDefault()` to block scroll
+- `style={{ touchAction: "none" }}` on canvas so the browser does not intercept the gesture for scroll
+- `select-none` on canvas prevents text-selection highlight during drag
+- Shared `seekTo(clientX)` helper used by both mouse and touch handlers
+
+**Canvas buffer bug fixed:**
+- `drawWaveform` was reading `canvas.width` (pixel buffer) and multiplying by `dpr` every call, causing exponential buffer growth during playback redraws
+- Fixed to use `canvas.clientWidth` / `canvas.clientHeight` (CSS layout size) instead
+
+#### Files changed
+- `components/tools/audio-waveform-visualizer.tsx`
+
+---
+
 ## v1.66.0 — May 2026
 ### Audio Converter Rebuild, AES Encryptor Improvements, CSP Fix
 
