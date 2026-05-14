@@ -359,7 +359,18 @@ export function AnkiCard() {
         {/* MOBILE: compact header */}
         <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
           <h2 className="text-base font-semibold">Anki Flashcards</h2>
-          <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
+          <div className="flex items-center gap-2">
+            {decks.length > 0 && (
+              <button
+                onClick={clearAllData}
+                className="rounded p-1 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Clear all decks and study history"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+            <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
+          </div>
         </div>
 
         {/* Content (scrollable) */}
@@ -706,42 +717,26 @@ export function AnkiCard() {
           </div>
         </div>
 
-        {/* MOBILE: bottom action bar */}
-        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
-          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-          {decks.length > 0 && view !== "study" && (
-            <Button variant="ghost" size="sm" className="h-11 px-3 text-muted-foreground hover:text-destructive" onClick={clearAllData} aria-label="Clear all decks and study history">
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          )}
-          <div className="flex-1" />
-          {view === "study" && currentCard ? (
-            <>
-              {!isFlipped ? (
-                <Button className="h-11 flex-1" onClick={() => setIsFlipped(true)} aria-label="Show answer">
-                  <Eye className="h-4 w-4 mr-1" aria-hidden="true" />Show Answer
-                </Button>
-              ) : (
-                <>
-                  <button onClick={() => rateCard(0)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-red-500/30 bg-red-500/10 text-red-600 text-xs font-medium" aria-label="Rate as Again — press 1"><span className="text-[9px] font-mono opacity-60">1</span><span>Again</span></button>
-                  <button onClick={() => rateCard(2)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 text-xs font-medium" aria-label="Rate as Hard — press 2"><span className="text-[9px] font-mono opacity-60">2</span><span>Hard</span></button>
-                  <button onClick={() => rateCard(4)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-600 text-xs font-medium" aria-label="Rate as Good — press 3"><span className="text-[9px] font-mono opacity-60">3</span><span>Good</span></button>
-                  <button onClick={() => rateCard(5)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 text-xs font-medium" aria-label="Rate as Easy — press 4"><span className="text-[9px] font-mono opacity-60">4</span><span>Easy</span></button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <Button variant="outline" className="h-11" onClick={() => activeDeck && setView("add-card")} disabled={!activeDeck} aria-label="Add card">
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Card
+        {/* MOBILE: bottom action bar — study mode only */}
+        {view === "study" && currentCard && (
+          <div
+            className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+            style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+          >
+            {!isFlipped ? (
+              <Button className="h-11 flex-1" onClick={() => setIsFlipped(true)} aria-label="Show answer">
+                <Eye className="h-4 w-4 mr-1" aria-hidden="true" />Show Answer
               </Button>
-              <Button className="h-11" onClick={startStudy} disabled={!activeDeck || dueCards.length === 0} aria-label="Study">
-                <BookOpen className="h-4 w-4 mr-1" aria-hidden="true" />
-                Study {dueCards.length > 0 && `(${dueCards.length})`}
-              </Button>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <button onClick={() => rateCard(0)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-red-500/30 bg-red-500/10 text-red-600 text-xs font-medium" aria-label="Rate as Again — press 1"><span className="text-[9px] font-mono opacity-60">1</span><span>Again</span></button>
+                <button onClick={() => rateCard(2)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-orange-500/30 bg-orange-500/10 text-orange-600 text-xs font-medium" aria-label="Rate as Hard — press 2"><span className="text-[9px] font-mono opacity-60">2</span><span>Hard</span></button>
+                <button onClick={() => rateCard(4)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-green-500/30 bg-green-500/10 text-green-600 text-xs font-medium" aria-label="Rate as Good — press 3"><span className="text-[9px] font-mono opacity-60">3</span><span>Good</span></button>
+                <button onClick={() => rateCard(5)} className="h-11 flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md border border-blue-500/30 bg-blue-500/10 text-blue-600 text-xs font-medium" aria-label="Rate as Easy — press 4"><span className="text-[9px] font-mono opacity-60">4</span><span>Easy</span></button>
+              </>
+            )}
+          </div>
+        )}
 
       </div>
     </>
