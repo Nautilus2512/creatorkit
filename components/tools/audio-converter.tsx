@@ -484,10 +484,8 @@ export function AudioConverter() {
                       <Check className="h-5 w-5 text-green-600 dark:text-green-400" aria-hidden="true" />
                       <p className="text-sm font-semibold text-green-600 dark:text-green-400">Conversion Complete</p>
                     </div>
-                    <audio controls preload="auto" className="w-full"
-                      aria-label={`Converted audio: ${result.name}`}>
-                      <source src={result.url} type={MIME[targetFormat]} />
-                    </audio>
+                    <audio controls preload="auto" src={result.url} className="w-full"
+                      aria-label={`Converted audio: ${result.name}`} />
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div>
                         <p className="text-xs text-muted-foreground mb-0.5">Original</p>
