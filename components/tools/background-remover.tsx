@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Wand2, Upload, Download, X, ImageIcon, Pipette, AlertCircle, ChevronDown } from "lucide-react"
+import { Wand2, Upload, Download, X, ImageIcon, Pipette, AlertCircle, ChevronDown, Eraser, Paintbrush, Minus, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -111,7 +111,7 @@ function announceToScreenReader(message: string) {
   setTimeout(() => document.body.removeChild(el), 1000)
 }
 
-type Phase = "idle" | "loading-model" | "processing" | "done"
+type Phase = "idle" | "loading-model" | "processing" | "done" | "editing"
 
 export function BackgroundRemover() {
   const [isMobile, setIsMobile]         = useState(false)
@@ -129,15 +129,38 @@ export function BackgroundRemover() {
   const [pickingColor, setPickingColor] = useState(false)
   const [activeTab, setActiveTab]       = useState<"input" | "output">("input")
   const [guideOpen, setGuideOpen]       = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [brushSize, setBrushSize]       = useState(20)
+  const [brushMode, setBrushMode]       = useState<"erase" | "restore">("erase")
+  const inputRef        = useRef<HTMLInputElement>(null)
+  const editCanvasRef   = useRef<HTMLCanvasElement | null>(null)
+  const originalDataRef = useRef<ImageData | null>(null)
+  const isEditDragging  = useRef(false)
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
   }, [])
 
+  // Auto-switch to output tab when result is ready or editing starts
   useEffect(() => {
-    if (phase === "done") setActiveTab("output")
+    if (phase === "done" || phase === "editing") setActiveTab("output")
   }, [phase])
+
+  // Draw result onto editing canvas when entering edit mode
+  useEffect(() => {
+    if (phase !== "editing" || !resultUrl || !editCanvasRef.current) return
+    const canvas = editCanvasRef.current
+    const ctx = canvas.getContext("2d")!
+    const img = new Image()
+    img.onload = () => {
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      // Store original pixels so restore mode can reference them
+      originalDataRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    }
+    img.src = resultUrl
+  }, [phase, resultUrl])
 
   const handleFile = (f: File) => {
     if (!f.type.startsWith("image/")) {
@@ -165,6 +188,7 @@ export function BackgroundRemover() {
     setObjectUrl(null); setImageEl(null); setResultUrl(null)
     setError(null); setPhase("idle"); setPickingColor(false)
     setActiveTab("input")
+    originalDataRef.current = null
     announceToScreenReader("Image removed. Ready for new upload.")
   }
 
@@ -212,101 +236,244 @@ export function BackgroundRemover() {
     announceToScreenReader("Download started. Saving as PNG with transparent background.")
   }, [resultUrl, fileName])
 
+  // -- Brush editing --
+
+  const paint = useCallback((clientX: number, clientY: number) => {
+    const canvas = editCanvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")!
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const x = (clientX - rect.left) * scaleX
+    const y = (clientY - rect.top) * scaleY
+    const r = brushSize * Math.max(scaleX, scaleY)
+
+    if (brushMode === "erase") {
+      ctx.save()
+      ctx.globalCompositeOperation = "destination-out"
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fillStyle = "rgba(0,0,0,1)"
+      ctx.fill()
+      ctx.restore()
+    } else {
+      if (!originalDataRef.current) return
+      const orig = originalDataRef.current
+      const curr = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const ri = Math.ceil(r)
+      for (let dy = -ri; dy <= ri; dy++) {
+        for (let dx = -ri; dx <= ri; dx++) {
+          if (dx * dx + dy * dy <= r * r) {
+            const px = Math.round(x + dx)
+            const py = Math.round(y + dy)
+            if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+              const i = (py * canvas.width + px) * 4
+              curr.data[i]     = orig.data[i]
+              curr.data[i + 1] = orig.data[i + 1]
+              curr.data[i + 2] = orig.data[i + 2]
+              curr.data[i + 3] = orig.data[i + 3]
+            }
+          }
+        }
+      }
+      ctx.putImageData(curr, 0, 0)
+    }
+  }, [brushSize, brushMode])
+
+  const handleEditMouseDown  = useCallback((e: React.MouseEvent) => { isEditDragging.current = true;  paint(e.clientX, e.clientY) }, [paint])
+  const handleEditMouseMove  = useCallback((e: React.MouseEvent) => { if (isEditDragging.current) paint(e.clientX, e.clientY) }, [paint])
+  const handleEditMouseUp    = useCallback(() => { isEditDragging.current = false }, [])
+  const handleEditTouchStart = useCallback((e: React.TouchEvent) => { e.preventDefault(); isEditDragging.current = true;  paint(e.touches[0].clientX, e.touches[0].clientY) }, [paint])
+  const handleEditTouchMove  = useCallback((e: React.TouchEvent) => { e.preventDefault(); if (isEditDragging.current) paint(e.touches[0].clientX, e.touches[0].clientY) }, [paint])
+  const handleEditTouchEnd   = useCallback(() => { isEditDragging.current = false }, [])
+
+  const enterEditing = useCallback(() => {
+    setBrushMode("erase")
+    setPhase("editing")
+    announceToScreenReader("Edit mode active. Paint to erase or restore areas.")
+  }, [])
+
+  const finishEditing = useCallback(() => {
+    const canvas = editCanvasRef.current
+    if (!canvas) return
+    const newUrl = canvas.toDataURL("image/png")
+    setResultUrl(newUrl)
+    setPhase("done")
+    announceToScreenReader("Edits saved. Result updated.")
+  }, [])
+
+  const cancelEditing = useCallback(() => {
+    setPhase("done")
+    announceToScreenReader("Edit cancelled. Original result restored.")
+  }, [])
+
+  // -- Keyboard shortcuts --
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
       const isProcessingNow = phase === "loading-model" || phase === "processing"
+
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
         e.preventDefault()
-        if (resultUrl) download()
+        if (resultUrl && phase !== "editing") download()
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "U") {
         e.preventDefault()
-        inputRef.current?.click()
+        if (phase !== "editing") inputRef.current?.click()
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") {
         e.preventDefault()
-        if (imageEl && !isProcessingNow) {
+        if (imageEl && !isProcessingNow && phase !== "editing") {
           if (isMobile) processMobile(); else processDesktop()
         }
+        if (phase === "editing") finishEditing()
       }
-      if (e.key === "Escape" && pickingColor) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "E") {
         e.preventDefault()
-        setPickingColor(false)
-        announceToScreenReader("Color picking mode cancelled")
+        if (resultUrl && phase === "done") enterEditing()
+        else if (phase === "editing") finishEditing()
+      }
+      if (e.key === "Escape") {
+        e.preventDefault()
+        if (pickingColor) { setPickingColor(false); announceToScreenReader("Color picking mode cancelled") }
+        if (phase === "editing") cancelEditing()
       }
     }
     window.addEventListener("keydown", h)
     return () => window.removeEventListener("keydown", h)
-  }, [download, pickingColor, isMobile, processMobile, processDesktop, phase, imageEl, resultUrl])
+  }, [download, pickingColor, isMobile, processMobile, processDesktop, phase, imageEl, resultUrl, enterEditing, finishEditing, cancelEditing])
 
   const isProcessing = phase === "loading-model" || phase === "processing"
 
   return (
     <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Background Remover application">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {imageEl
-          ? `Image loaded: ${fileName}. ${resultUrl ? "Result ready. Press Ctrl+Shift+S to download." : "Press Ctrl+Shift+Enter to remove background."}`
-          : "No image loaded. Press Ctrl+Shift+U to upload."}
+        {phase === "editing"
+          ? "Edit mode active. Paint to erase or restore areas. Press Ctrl+Shift+Enter to save."
+          : imageEl
+            ? `Image loaded: ${fileName}. ${resultUrl ? "Result ready. Press Ctrl+Shift+S to download." : "Press Ctrl+Shift+Enter to remove background."}`
+            : "No image loaded. Press Ctrl+Shift+U to upload."}
       </div>
 
       {/* Desktop top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
-        <span className="text-sm font-semibold shrink-0 mr-1">Background Remover</span>
-        <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()} aria-label="Upload image">
-          <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
-          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
-        </Button>
-        {resultUrl && (
-          <Button size="sm" variant="outline" onClick={download} aria-label="Download result as PNG">
-            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
-          </Button>
-        )}
-        <div className="ml-auto flex items-center gap-1.5">
-          <ShortcutsModal
-            pageName="Background Remover"
-            shortcuts={[
-              { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
-              { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
-              { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
-            ]}
-          />
-          <Button
-            size="sm"
-            onClick={isMobile ? processMobile : processDesktop}
-            disabled={!imageEl || isProcessing}
-            aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
-          >
-            {isProcessing ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-                {phase === "loading-model" ? `Loading model... ${progress}%` : "Removing..."}
-              </>
-            ) : (
-              <>
-                <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-                Remove Background
+        {phase === "editing" ? (
+          <>
+            <span className="text-sm font-semibold shrink-0 mr-1">Background Remover</span>
+            <span className="text-xs text-muted-foreground shrink-0">Brush Edit</span>
+            {/* Erase / Restore toggle */}
+            <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium shrink-0">
+              <button
+                onClick={() => setBrushMode("erase")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${brushMode === "erase" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                aria-pressed={brushMode === "erase"}
+                aria-label="Erase mode"
+              >
+                <Eraser className="h-3.5 w-3.5" aria-hidden="true" />Erase
+              </button>
+              <button
+                onClick={() => setBrushMode("restore")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors border-l border-border ${brushMode === "restore" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                aria-pressed={brushMode === "restore"}
+                aria-label="Restore mode"
+              >
+                <Paintbrush className="h-3.5 w-3.5" aria-hidden="true" />Restore
+              </button>
+            </div>
+            {/* Brush size */}
+            <div className="flex items-center gap-2 ml-1">
+              <span className="text-xs text-muted-foreground shrink-0">Size</span>
+              <Slider
+                min={5} max={80} step={1}
+                value={[brushSize]}
+                onValueChange={([v]) => setBrushSize(v)}
+                className="w-28"
+                aria-label="Brush size"
+              />
+              <span className="text-xs text-muted-foreground font-mono w-6 shrink-0">{brushSize}</span>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              <Button size="sm" variant="outline" onClick={cancelEditing} aria-label="Cancel editing and discard changes">
+                Cancel
+              </Button>
+              <Button size="sm" onClick={finishEditing} aria-label="Save edits and return to result">
+                Save Edits
                 <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="text-sm font-semibold shrink-0 mr-1">Background Remover</span>
+            <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()} aria-label="Upload image">
+              <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
+            </Button>
+            {resultUrl && (
+              <>
+                <Button size="sm" variant="outline" onClick={enterEditing} aria-label="Edit result with brush">
+                  <Eraser className="h-4 w-4 mr-1" aria-hidden="true" />Edit
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+                </Button>
+                <Button size="sm" variant="outline" onClick={download} aria-label="Download result as PNG">
+                  <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+                </Button>
               </>
             )}
-          </Button>
-        </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              <ShortcutsModal
+                pageName="Background Remover"
+                shortcuts={[
+                  { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
+                  { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+                  { keys: ["Ctrl", "Shift", "E"], description: "Edit result with brush" },
+                  { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
+                ]}
+              />
+              <Button
+                size="sm"
+                onClick={isMobile ? processMobile : processDesktop}
+                disabled={!imageEl || isProcessing}
+                aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
+                    {phase === "loading-model" ? `Loading model... ${progress}%` : "Removing..."}
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Remove Background
+                    <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Enter</kbd>
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Mobile: compact header + tab switcher */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          <h2 className="text-base font-semibold">Background Remover</h2>
+          <h2 className="text-base font-semibold">
+            {phase === "editing" ? "Brush Edit" : "Background Remover"}
+          </h2>
           <div className="flex items-center gap-1.5">
-            <ShortcutsModal
-              pageName="Background Remover"
-              shortcuts={[
-                { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
-                { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
-                { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
-              ]}
-            />
+            {phase !== "editing" && (
+              <ShortcutsModal
+                pageName="Background Remover"
+                shortcuts={[
+                  { keys: ["Ctrl", "Shift", "Enter"], description: "Remove background" },
+                  { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+                  { keys: ["Ctrl", "Shift", "E"], description: "Edit result with brush" },
+                  { keys: ["Ctrl", "Shift", "S"], description: "Download result" },
+                ]}
+              />
+            )}
           </div>
         </div>
         <div className="flex" role="tablist" aria-label="Panel selection">
@@ -324,7 +491,7 @@ export function BackgroundRemover() {
             onClick={() => setActiveTab("output")}
             className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
           >
-            Result
+            {phase === "editing" ? "Edit" : "Result"}
           </button>
         </div>
       </div>
@@ -407,7 +574,7 @@ export function BackgroundRemover() {
                       </div>
                       <button
                         onClick={clearImage}
-                        disabled={isProcessing}
+                        disabled={isProcessing || phase === "editing"}
                         aria-label="Remove image and start over"
                         className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
                       >
@@ -536,17 +703,46 @@ export function BackgroundRemover() {
             </div>
           </div>
 
-          {/* Right panel - Output */}
+          {/* Right panel - Output / Edit */}
           <div
             className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 bg-card`}
             role="region"
-            aria-label="Image preview and results"
+            aria-label={phase === "editing" ? "Brush editing canvas" : "Image preview and results"}
           >
             <div className="shrink-0 border-b border-border px-4 py-3">
-              <span className="text-sm font-medium">Result</span>
+              <span className="text-sm font-medium">
+                {phase === "editing" ? "Brush Edit — paint to erase or restore" : "Result"}
+              </span>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              {!imageEl ? (
+
+              {phase === "editing" ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
+                    {brushMode === "erase"
+                      ? "Paint over areas to make them transparent."
+                      : "Paint over erased areas to bring them back."}
+                  </p>
+                  <div className="rounded-lg overflow-hidden border border-border" style={CHECKER}>
+                    <canvas
+                      ref={editCanvasRef}
+                      className="w-full h-auto block select-none"
+                      style={{ touchAction: "none", cursor: "crosshair" }}
+                      onMouseDown={handleEditMouseDown}
+                      onMouseMove={handleEditMouseMove}
+                      onMouseUp={handleEditMouseUp}
+                      onMouseLeave={handleEditMouseUp}
+                      onTouchStart={handleEditTouchStart}
+                      onTouchMove={handleEditTouchMove}
+                      onTouchEnd={handleEditTouchEnd}
+                      aria-label="Editing canvas — paint to erase or restore background"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Esc</kbd> to cancel without saving.
+                  </p>
+                </div>
+              ) : !imageEl ? (
                 <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status" aria-label="Empty state">
                   <div className="rounded-full border border-border bg-muted/50 p-4" aria-hidden="true">
                     <Wand2 className="h-6 w-6 text-muted-foreground" />
@@ -600,6 +796,7 @@ export function BackgroundRemover() {
                   </div>
                 </div>
               )}
+
             </div>
           </div>
 
@@ -627,18 +824,27 @@ export function BackgroundRemover() {
                 </ol>
               </div>
               <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Brush editing</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>After removal, click <span className="text-foreground font-medium">Edit</span> to open the brush editor.</li>
+                  <li><span className="text-foreground font-medium">Erase mode</span> paints transparency. Use it to clean up leftover background that the auto removal missed.</li>
+                  <li><span className="text-foreground font-medium">Restore mode</span> brings back pixels that were removed by mistake. It restores from the state right after auto removal.</li>
+                  <li>Adjust brush size with the slider. Larger brushes cover more area quickly. Smaller brushes let you work on fine details.</li>
+                  <li>Click <span className="text-foreground font-medium">Save Edits</span> to apply. Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Esc</kbd> to cancel without saving.</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Desktop — AI mode</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
                   <li>Downloads a ~40 MB AI model on first use. Cached in your browser after that, so it never downloads again.</li>
                   <li>Works on complex backgrounds including hair, fur, and partially transparent objects.</li>
-                  <li>No internet connection needed once the model is cached.</li>
                 </ul>
               </div>
               <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Mobile — lightweight mode</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
                   <li>Tap <span className="text-foreground font-medium">Pick from image</span> then tap the background area to sample its color automatically.</li>
-                  <li>Adjust <span className="text-foreground font-medium">Tolerance</span> to control how many similar shades get removed. Higher values catch more shades. Lower values stay more precise.</li>
+                  <li>Adjust <span className="text-foreground font-medium">Tolerance</span> to control how many similar shades get removed.</li>
                   <li>Works best on images with a solid or near-solid background color.</li>
                 </ul>
               </div>
@@ -657,32 +863,86 @@ export function BackgroundRemover() {
         className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        <Button size="sm" variant="outline" className="h-11 px-4" onClick={() => inputRef.current?.click()} aria-label="Upload image">
-          <Upload className="h-4 w-4" aria-hidden="true" />
-        </Button>
-        <Button
-          size="sm"
-          className="h-11 px-4 flex-1"
-          onClick={isMobile ? processMobile : processDesktop}
-          disabled={!imageEl || isProcessing}
-          aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
-        >
-          {isProcessing ? (
-            <>
-              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-              {phase === "loading-model" ? `Loading... ${progress}%` : "Removing..."}
-            </>
-          ) : (
-            <>
-              <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
-              Remove Background
-            </>
-          )}
-        </Button>
-        {resultUrl && (
-          <Button size="sm" variant="outline" className="h-11 px-4" onClick={download} aria-label="Download result as PNG">
-            <Download className="h-4 w-4" aria-hidden="true" />
-          </Button>
+        {phase === "editing" ? (
+          <>
+            <Button
+              size="sm"
+              variant={brushMode === "erase" ? "default" : "outline"}
+              className="h-11 px-3"
+              onClick={() => setBrushMode("erase")}
+              aria-pressed={brushMode === "erase"}
+              aria-label="Erase mode"
+            >
+              <Eraser className="h-4 w-4 mr-1" aria-hidden="true" />Erase
+            </Button>
+            <Button
+              size="sm"
+              variant={brushMode === "restore" ? "default" : "outline"}
+              className="h-11 px-3"
+              onClick={() => setBrushMode("restore")}
+              aria-pressed={brushMode === "restore"}
+              aria-label="Restore mode"
+            >
+              <Paintbrush className="h-4 w-4 mr-1" aria-hidden="true" />Restore
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-11 w-11 shrink-0"
+              onClick={() => setBrushSize(s => Math.max(5, s - 10))}
+              aria-label="Decrease brush size"
+            >
+              <Minus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <span className="text-xs text-muted-foreground font-mono text-center w-7 shrink-0" aria-live="polite">{brushSize}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-11 w-11 shrink-0"
+              onClick={() => setBrushSize(s => Math.min(80, s + 10))}
+              aria-label="Increase brush size"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button size="sm" className="h-11 flex-1" onClick={finishEditing} aria-label="Save edits">
+              Save
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" variant="outline" className="h-11 px-4" onClick={() => inputRef.current?.click()} aria-label="Upload image">
+              <Upload className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              size="sm"
+              className="h-11 px-4 flex-1"
+              onClick={isMobile ? processMobile : processDesktop}
+              disabled={!imageEl || isProcessing}
+              aria-label={isProcessing ? "Processing in progress" : "Remove background from image"}
+            >
+              {isProcessing ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
+                  {phase === "loading-model" ? `Loading... ${progress}%` : "Removing..."}
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Remove Background
+                </>
+              )}
+            </Button>
+            {resultUrl && (
+              <>
+                <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={enterEditing} aria-label="Edit result with brush">
+                  <Eraser className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <Button size="sm" variant="outline" className="h-11 w-11 shrink-0" onClick={download} aria-label="Download result as PNG">
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
