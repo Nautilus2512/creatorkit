@@ -305,9 +305,12 @@ export default function AesEncryptor() {
         </div>
       </div>
 
-      {/* Mobile: bottom action bar */}
+      {/* Spacer so panels don't hide behind the fixed mobile bar */}
+      <div className="md:hidden shrink-0 h-[60px]" aria-hidden="true" />
+
+      {/* Mobile: bottom action bar — fixed to viewport bottom */}
       <div
-        className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <Button variant="ghost" size="sm" className="h-11 px-2" onClick={swap} disabled={!output} aria-label="Swap">
