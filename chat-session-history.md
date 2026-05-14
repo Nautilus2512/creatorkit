@@ -824,5 +824,59 @@ The `Ctrl+Shift+Y` keyboard shortcut badge on the Browse button appeared black/o
 
 ---
 
+---
+
+## Session v1.66.0 (May 2026) — Audio Converter Rebuild, AES Improvements, CSP Fix
+
+### 1. Audio Converter — full rebuild (`audio-converter.tsx`)
+
+**Problem**: The tool relied entirely on ffmpeg.wasm (~25MB CDN download) for all formats. This caused: CDN failures, long load times, and audio playback not working (blob URL duration = 0:00).
+
+**Root cause of playback bug**: ffmpeg output streams lack seek-index metadata, so `<audio src={blobUrl}>` can't determine duration. Also, the CSP had no `media-src` directive, so browsers silently blocked blob URL playback entirely.
+
+**Solution**:
+- WAV: pure Web Audio API (`AudioContext.decodeAudioData` → PCM → RIFF header written in JS). Zero deps, instant, correct duration.
+- MP3: lamejs (`pnpm add lamejs`). Encodes decoded PCM to MP3. ~100KB, instant, correct duration.
+- OGG/FLAC/AAC/M4A/WMA/OPUS: kept ffmpeg.wasm as fallback — these need a proper encoder library that doesn't exist in pure JS.
+- Format UI split into two labelled groups so users know upfront which formats require a download.
+
+**Other fixes in this file**:
+- Garbled `âœ"` checkmark → `<Check>` icon from lucide
+- Keyboard shortcuts: `O` (Bookmarks) → `U`; `D` (Bookmarks) → `S`; `T` (new tab) removed
+- Layout rebuilt to rules.md: `rounded-xl border` card, scrollable `p-4` wrapper, usage guide
+- Mobile bottom bar: `shrink-0` flow → `fixed bottom-0 z-20`
+- Active tab: `text-primary` → `text-foreground`
+- Warning now conditional (header only, only when ffmpeg format selected)
+- Format kbd numbers: `hidden md:inline`
+
+### 2. CSP fix — `next.config.mjs`
+
+Added `media-src 'self' blob:`. Without this directive, the browser falls back to `default-src 'self'` which blocks blob URLs for `<audio>` and `<video>`. This was silently preventing playback in Audio Converter, Voice Recorder, Screen Recorder, Audio Waveform Visualizer, and Video Compressor.
+
+### 3. AES Encryptor improvements (`aes-encryptor.tsx`)
+
+- New shortcuts: `Ctrl+Shift+E` (encrypt mode), `Ctrl+Shift+L` (decrypt mode)
+- Copy shortcut: `Ctrl+Shift+C` → `Ctrl+Shift+V` (C conflicts with DevTools Inspector in Chrome/Firefox/Edge)
+- Usage guide card added below panels
+- Layout: `rounded-xl border min-h-[500px]` panels card, `p-4 space-y-4` scrollable wrapper
+- Em dashes removed from all guide sentences
+- ShortcutsModal added to mobile header
+
+### 4. rules.md created
+
+New file documenting all CreatorKit standards. 20 sections:
+1. Core Principles, 2. Tech Stack, 3. Desktop Layout, 4. Mobile Layout, 5. Keyboard Shortcuts, 6. Accessibility, 7. Component Patterns, 8. Writing Standards, 9. Color Conventions, 10. File Conventions, 11. Build & Deploy, 12. SSR Hydration, 13. Modal/Portal Pattern, 14. Tool Layout Types, 15. WASM Loading, 16. Stats Display, 17. Copy Pattern, 18. Error Display, 19. Badge Pattern, 20. Responsive Breakpoints
+
+### Key commits
+- `990b373` — refactor: rebuild audio-converter with native WAV/MP3
+- `acfc62d` — fix: hide format kbd number badges on mobile
+- `bac8ba7` — fix: use direct src on audio element for blob URL playback
+- `0fb5ceb` — fix: add media-src blob: to CSP (root cause of silent playback block)
+- `a3b3812` — feat: improve aes-encryptor shortcuts, layout, and usage guide
+- `cbdb5a7` — fix: add ShortcutsModal to aes-encryptor mobile header
+- `c69f0b3` — docs: add CreatorKit standards and rules reference (rules.md)
+
+---
+
 *Last updated: 2026-05-14*
 *This file should be updated after each development session for future reference.*

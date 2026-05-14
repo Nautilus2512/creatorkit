@@ -89,6 +89,51 @@
 
 ---
 
+## v1.66.0 — May 2026
+### Audio Converter Rebuild, AES Encryptor Improvements, CSP Fix
+
+#### Audio Converter — full rebuild (`audio-converter.tsx`)
+- **WAV** now converts instantly using the Web Audio API — no download, no dependencies, correct duration
+- **MP3** now converts instantly using lamejs (~100KB) — no 25MB download, correct duration
+- **OGG, FLAC, AAC, M4A, WMA, OPUS** still use ffmpeg.wasm as a fallback
+- Format selector split into two labelled groups: "Instant — no download" (WAV, MP3) and "Requires ~25MB download" (the rest)
+- Fixed garbled `âœ"` checkmark — replaced with a proper `<Check>` icon
+- Fixed audio playback duration — now read from `AudioBuffer.duration` instead of the blob URL (which never had metadata)
+- Fixed keyboard shortcuts: `Ctrl+Shift+O` (Bookmarks conflict) → `Ctrl+Shift+U`; `Ctrl+Shift+D` (Bookmarks conflict) → `Ctrl+Shift+S`; `Ctrl+Shift+T` (new tab conflict) removed
+- Layout rebuilt to rules.md standard: scrollable wrapper with `p-4`, panels in `rounded-xl border` card, usage guide card below
+- Mobile bottom bar changed from `shrink-0` flow to `fixed bottom-0` with safe-area inset
+- Active tab text corrected from `text-primary` to `text-foreground`
+- Warning notice moved from panel card into the header — conditional, only shown when an ffmpeg format is selected
+- Format kbd number badges hidden on mobile (`hidden md:inline`)
+- ShortcutsModal added to mobile header
+- Installed `lamejs@1.2.1`
+
+#### CSP fix — audio/video blob URL playback (`next.config.mjs`)
+- Added `media-src 'self' blob:` directive
+- Without this, browsers silently block `<audio>` and `<video>` elements from playing blob URLs (fallback to `default-src 'self'` blocks `blob:`)
+- Fixes playback in Audio Converter, Voice Recorder, Audio Waveform Visualizer, Screen Recorder, and Video Compressor
+
+#### AES Encryptor improvements (`aes-encryptor.tsx`)
+- Added `Ctrl+Shift+E` (switch to Encrypt mode) and `Ctrl+Shift+L` (switch to Decrypt mode) shortcuts with conditional kbd badges
+- Fixed copy shortcut from `Ctrl+Shift+C` (DevTools Inspector conflict in all major browsers) to `Ctrl+Shift+V`
+- Added usage guide below panels: encrypting, decrypting, how AES-256-GCM works, passphrase tips
+- Layout updated: panels in `rounded-xl border min-h-[500px]` card, scrollable `p-4` wrapper
+- Removed all em dashes from guide text
+- ShortcutsModal added to mobile header
+
+#### rules.md — CreatorKit standards document created
+- 20 sections covering all repeated patterns: layout, shortcuts, accessibility, component patterns, writing standards, color conventions, SSR hydration, portal modals, tool layout types, WASM loading, stats display, copy pattern, error display, badges, responsive breakpoints
+
+#### Files changed
+- `components/tools/audio-converter.tsx`
+- `components/tools/aes-encryptor.tsx`
+- `components/tools/anki-card.tsx`
+- `next.config.mjs`
+- `rules.md` (created)
+- `package.json` + `pnpm-lock.yaml` (lamejs added)
+
+---
+
 ## v1.65.0 — May 2026
 ### Anki Flashcards — Mobile Header & Browse Button Fix
 

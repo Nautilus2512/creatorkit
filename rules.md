@@ -382,6 +382,9 @@ useEffect(() => {
 - Push to `main` branch deploys automatically to Vercel.
 - Do not force-push to `main`.
 
+### CSP requirements for media tools
+Any tool that creates a blob URL and plays it in an `<audio>` or `<video>` element requires `media-src 'self' blob:` in the CSP. Without this directive, browsers fall back to `default-src 'self'` which silently blocks blob URL playback — the player renders but shows `0:00 / 0:00` and refuses to load. This directive is already present in `next.config.mjs` and covers all media tools.
+
 ---
 
 ## 12. SSR / Hydration Safety
