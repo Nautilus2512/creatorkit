@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { Textarea } from "@/components/ui/textarea"
@@ -100,7 +100,7 @@ export default function WordCounter() {
             >
               <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Clear</span>
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
             </Button>
           </div>
         </div>

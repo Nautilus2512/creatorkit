@@ -340,7 +340,7 @@ export default function AudioWaveformVisualizer() {
                   variant="outline"
                   aria-label="Browse for audio files"
                 >
-                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />Browse <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+                  <Upload className="h-4 w-4 mr-2" aria-hidden="true" />Browse <kbd className="ml-1 hidden md:inline px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
                 </Button>
               </div>
               
@@ -417,7 +417,7 @@ export default function AudioWaveformVisualizer() {
                 aria-expanded={showSettings}
               >
                 <Settings className="h-4 w-4 mr-2" aria-hidden="true" />
-                {showSettings ? 'Hide' : 'Show'} <kbd className="ml-1 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+                {showSettings ? 'Hide' : 'Show'} <kbd className="ml-1 hidden md:inline px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
               </Button>
             </div>
             
@@ -559,7 +559,7 @@ export default function AudioWaveformVisualizer() {
                   aria-label="Export waveform as PNG image"
                   disabled={!waveData}
                 >
-                  <Image className="h-4 w-4 mr-2" aria-hidden="true" />Export PNG <kbd className="ml-2 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+                  <Image className="h-4 w-4 mr-2" aria-hidden="true" />Export PNG <kbd className="ml-2 hidden md:inline px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
                 </Button>
                 <Button 
                   onClick={downloadWaveformSVG} 
@@ -568,7 +568,7 @@ export default function AudioWaveformVisualizer() {
                   aria-label="Export waveform as SVG vector image"
                   disabled={!waveData}
                 >
-                  <Download className="h-4 w-4 mr-2" aria-hidden="true" />Export SVG <kbd className="ml-2 px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Alt+E</kbd>
+                  <Download className="h-4 w-4 mr-2" aria-hidden="true" />Export SVG <kbd className="ml-2 hidden md:inline px-1 rounded bg-white/20 font-mono text-[10px]" aria-hidden="true">Ctrl+Alt+E</kbd>
                 </Button>
               </div>
 

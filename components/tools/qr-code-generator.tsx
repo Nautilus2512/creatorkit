@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Download, Check, QrCode, Wifi, Mail, Phone, Link, Type } from "lucide-react"
@@ -150,7 +150,7 @@ export function QrCodeGenerator() {
             >
               {downloaded ? <Check className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
               {downloaded ? "Downloaded!" : "Download PNG"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

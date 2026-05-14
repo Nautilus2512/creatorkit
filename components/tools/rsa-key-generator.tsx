@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Download, RefreshCw, Key } from "lucide-react"
@@ -157,7 +157,7 @@ export default function RsaKeyGenerator() {
             >
               <RefreshCw className={`h-4 w-4 mr-1 ${generating ? "animate-spin" : ""}`} />
               {generating ? "Generating..." : "Generate Keys"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
             </Button>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function RsaKeyGenerator() {
                     >
                       {copied === "pub" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                       <span>{copied === "pub" ? "Copied!" : "Copy"}</span>
-                      <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+P</kbd>
+                      <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+P</kbd>
                     </Button>
                     <Button
                       variant="ghost"
@@ -242,7 +242,7 @@ export default function RsaKeyGenerator() {
                     >
                       {copied === "priv" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                       <span>{copied === "priv" ? "Copied!" : "Copy"}</span>
-                      <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>
+                      <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>
                     </Button>
                     <Button
                       variant="ghost"

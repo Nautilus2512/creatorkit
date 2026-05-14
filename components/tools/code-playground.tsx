@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Play, RotateCcw, Download, Code, FileCode, FileType, Eye, Trash2 } from "lucide-react"
@@ -219,7 +219,7 @@ ${html}
             aria-label="HTML editor"
           >
             <FileCode className="h-4 w-4 text-orange-500" aria-hidden="true" />
-            HTML<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+1</kbd>
+            HTML<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+1</kbd>
           </button>
           <button
             onClick={() => switchTab('css')}
@@ -231,7 +231,7 @@ ${html}
             aria-label="CSS editor"
           >
             <FileType className="h-4 w-4 text-blue-500" aria-hidden="true" />
-            CSS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+2</kbd>
+            CSS<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+2</kbd>
           </button>
           <button
             onClick={() => switchTab('js')}
@@ -243,7 +243,7 @@ ${html}
             aria-label="JavaScript editor"
           >
             <Code className="h-4 w-4 text-yellow-500" aria-hidden="true" />
-            JS<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+3</kbd>
+            JS<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+3</kbd>
           </button>
           <button
             onClick={() => switchTab('preview')}
@@ -255,7 +255,7 @@ ${html}
             aria-label="Preview"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
-            Preview<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+4</kbd>
+            Preview<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+4</kbd>
           </button>
         </div>
         <div className="shrink-0 flex items-center gap-2 ml-2">
@@ -266,7 +266,7 @@ ${html}
             aria-label={autoRun ? "Auto-run is enabled" : "Run code preview"}
           >
             <Play className="h-4 w-4 mr-1" aria-hidden="true" />
-            Run{!autoRun && <kbd className="ml-1.5 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+R</kbd>}
+            Run{!autoRun && <kbd className="ml-1.5 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+R</kbd>}
           </Button>
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input

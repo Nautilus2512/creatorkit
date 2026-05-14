@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -304,11 +304,11 @@ export function TextCompare() {
         <span className="text-sm font-semibold shrink-0 mr-1">Text Compare</span>
         <button onClick={swapTexts} aria-label="Swap original and modified"
           className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 transition-colors flex items-center gap-1">
-          <ArrowRightLeft className="h-3 w-3" aria-hidden="true" />Swap <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+          <ArrowRightLeft className="h-3 w-3" aria-hidden="true" />Swap <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
         </button>
         <button onClick={clearAll} aria-label="Clear all text"
           className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 transition-colors flex items-center gap-1">
-          <X className="h-3 w-3" aria-hidden="true" />Clear <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+          <X className="h-3 w-3" aria-hidden="true" />Clear <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
         </button>
         <div className="flex flex-wrap items-center gap-3 text-xs" role="group" aria-label="Display options">
           {[
@@ -334,11 +334,11 @@ export function TextCompare() {
           <Button variant="outline" size="sm" onClick={copyDiff} disabled={!diffResult} aria-label="Copy diff">
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy Diff"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
           <Button variant="outline" size="sm" onClick={downloadDiff} disabled={!diffResult} aria-label="Download diff">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
           </Button>
         </div>
       </div>

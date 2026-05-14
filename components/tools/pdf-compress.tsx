@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { FileDown, Upload, X, Download, AlertCircle, Settings, AlertTriangle, Info } from "lucide-react"
@@ -309,7 +309,7 @@ export function PDFCompress() {
                 <>
                   <FileDown className="mr-1 h-4 w-4" aria-hidden="true" />
                   Compress
-                  <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
                 </>
               )}
             </Button>
@@ -322,7 +322,7 @@ export function PDFCompress() {
               >
                 <Download className="mr-1 h-4 w-4" aria-hidden="true" />
                 Download
-                <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
               </Button>
             )}
           </div>

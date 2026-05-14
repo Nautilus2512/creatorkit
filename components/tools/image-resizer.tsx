@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { Download, CheckCircle2, ChevronDown, Plus, X, Crop } from "lucide-react"
@@ -361,7 +361,7 @@ export function ImageResizer() {
               {downloaded ? <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
               {downloaded ? "Downloaded!" : "Download All as ZIP"}
               {!downloaded && (
-                <kbd className="ml-2 rounded border border-border/30 bg-muted/30 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+                <kbd className="ml-2 hidden md:inline rounded border border-border/30 bg-muted/30 px-1.5 text-[10px] opacity-60" aria-hidden="true">
                   Ctrl+Shift+D
                 </kbd>
               )}
@@ -549,7 +549,7 @@ export function ImageResizer() {
                 {isProcessing ? "Processing..." : (
                   <span className="flex items-center justify-between w-full">
                     <span>Generate {selectedPresetList.length} Selected</span>
-                    <kbd className="ml-2 rounded border border-primary-foreground/30 px-1 text-[10px] opacity-50" aria-hidden="true">Ctrl+Enter</kbd>
+                    <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 px-1 text-[10px] opacity-50" aria-hidden="true">Ctrl+Enter</kbd>
                   </span>
                 )}
               </Button>

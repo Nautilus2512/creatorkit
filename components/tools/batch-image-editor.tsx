@@ -371,7 +371,7 @@ export default function BatchImageEditor() {
                   onClick={clearAll}
                   aria-label="Clear all images"
                 >
-                  Clear all{images.length > 0 && <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>}
+                  Clear all{images.length > 0 && <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>}
                 </Button>
               )}
               <>
@@ -393,7 +393,7 @@ export default function BatchImageEditor() {
                   }}
                   aria-label="Add images"
                 >
-                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Add Images <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd>
+                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Add Images <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd>
                 </Button>
               </>
             </div>

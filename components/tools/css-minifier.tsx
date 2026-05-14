@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Download, Upload } from "lucide-react"
@@ -179,7 +179,7 @@ export default function CssMinifier() {
             aria-label="Load example CSS"
           >
             Load Example
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
           </Button>
           <>
             <input
@@ -200,7 +200,7 @@ export default function CssMinifier() {
               aria-label="Upload CSS file"
             >
               <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
             </Button>
           </>
           {input && (
@@ -231,11 +231,11 @@ export default function CssMinifier() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy minified CSS"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download minified CSS as file">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

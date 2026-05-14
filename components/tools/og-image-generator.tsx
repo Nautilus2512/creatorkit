@@ -238,7 +238,7 @@ export default function OgImageGenerator() {
           <ShortcutsModal pageName="OG Image Generator" shortcuts={[{ keys: ["Ctrl", "Shift", "S"], description: "Download OG Image" }]} />
           <Button size="sm" onClick={download} aria-label="Download OG Image as PNG">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download PNG
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>

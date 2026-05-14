@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Monitor, Smartphone, Laptop, Tablet, Upload, Download, X, ImageIcon } from "lucide-react"
@@ -264,7 +264,7 @@ export function ScreenshotToMockup() {
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />
             Download
             {imageEl && (
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+D</kbd>
             )}
           </Button>
         </div>
@@ -440,7 +440,7 @@ export function ScreenshotToMockup() {
               >
                 <Download className="h-4 w-4" />
                 <span>Download PNG</span>
-                <kbd className="ml-auto rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
+                <kbd className="ml-auto hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
               </Button>
             </div>
           )}

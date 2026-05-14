@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Copy, Download, Check } from "lucide-react"
@@ -93,11 +93,11 @@ export default function TextCaseConverter() {
             <Button variant="outline" size="sm" onClick={() => copyToClipboard(input)} disabled={!input} aria-label="Copy input text">
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button variant="outline" size="sm" onClick={() => downloadFile(input, "text.txt")} disabled={!input} aria-label="Download input text">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

@@ -241,17 +241,17 @@ export default function CsvJsonConverter() {
         <div className="flex items-center gap-1" role="radiogroup" aria-label="Conversion mode">
           <button onClick={() => setModeWithAnnounce('csv-to-json')} role="radio" aria-checked={mode === 'csv-to-json'}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${mode === 'csv-to-json' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-            <FileSpreadsheet className="h-3 w-3" aria-hidden="true" />CSV→JSON <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">1</kbd>
+            <FileSpreadsheet className="h-3 w-3" aria-hidden="true" />CSV→JSON <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">1</kbd>
           </button>
           <button onClick={() => setModeWithAnnounce('json-to-csv')} role="radio" aria-checked={mode === 'json-to-csv'}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${mode === 'json-to-csv' ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-            <FileJson className="h-3 w-3" aria-hidden="true" />JSON→CSV <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">2</kbd>
+            <FileJson className="h-3 w-3" aria-hidden="true" />JSON→CSV <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">2</kbd>
           </button>
         </div>
         <label className="cursor-pointer">
           <input type="file" id="file-upload" accept=".csv,.json" onChange={handleFileUpload} className="hidden" aria-label="Upload CSV or JSON file" />
           <Button variant="outline" size="sm" asChild aria-label="Upload file">
-            <span className="flex items-center gap-1"><Upload className="h-3 w-3" aria-hidden="true" />Upload <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></span>
+            <span className="flex items-center gap-1"><Upload className="h-3 w-3" aria-hidden="true" />Upload <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></span>
           </Button>
         </label>
         <div className="ml-auto flex items-center gap-1.5">
@@ -266,11 +266,11 @@ export default function CsvJsonConverter() {
           <Button variant="outline" size="sm" onClick={copyToClipboard} disabled={!(mode === 'csv-to-json' ? jsonOutput : csvOutput)} aria-label="Copy output">
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
           <Button variant="outline" size="sm" onClick={downloadFile} disabled={!(mode === 'csv-to-json' ? jsonOutput : csvOutput)} aria-label="Download output">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>

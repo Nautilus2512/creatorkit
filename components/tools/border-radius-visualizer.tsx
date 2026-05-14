@@ -158,7 +158,7 @@ export default function BorderRadiusVisualizer() {
           <Button variant="outline" size="sm" onClick={copy} aria-label="Copy CSS to clipboard">
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy CSS"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
         </div>
       </div>
@@ -200,7 +200,7 @@ export default function BorderRadiusVisualizer() {
                     aria-label={`${label} preset (key ${shortcut})`}
                     title={`Press ${shortcut} key`}
                   >
-                    {label} <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>
+                    {label} <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>
                   </button>
                 ))}
               </div>
@@ -275,7 +275,7 @@ export default function BorderRadiusVisualizer() {
                   aria-labelledby="css-output-label"
                 >
                   {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-                  {copied ? "Copied!" : "Copy"}<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                  {copied ? "Copied!" : "Copy"}<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
                 </Button>
               </div>
               <pre className="rounded-lg border border-border bg-muted/20 p-4 text-sm font-mono" aria-live="polite" aria-atomic="true">{css}</pre>

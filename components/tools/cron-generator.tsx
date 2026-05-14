@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
@@ -230,7 +230,7 @@ export default function CronGenerator() {
                 aria-checked={expr === e}
                 aria-label={shortcut ? `${label} (press ${shortcut})` : label}
               >
-                {label}{shortcut && <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>}
+                {label}{shortcut && <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>}
               </button>
             ))}
           </div>
@@ -241,7 +241,7 @@ export default function CronGenerator() {
             <Button variant="outline" size="sm" onClick={copy} aria-label="Copy cron expression">
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy Expression"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           </div>
         </div>

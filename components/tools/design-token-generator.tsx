@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Copy, Check, Moon, Sun, Palette } from "lucide-react"
@@ -146,7 +146,7 @@ function ColorPicker({ label, value, onChange, shortcut, id }: { label: string; 
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm" id={`color-label-${label.toLowerCase()}`}>{label}{shortcut && <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{shortcut}</kbd>}</Label>
+      <Label className="text-sm" id={`color-label-${label.toLowerCase()}`}>{label}{shortcut && <kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{shortcut}</kbd>}</Label>
 
       {/* Color swatch trigger */}
       <button
@@ -567,7 +567,7 @@ export function DesignTokenGenerator() {
                   aria-selected={previewMode === "light"}
                 >
                   <Sun className="h-4 w-4" aria-hidden="true" />
-                  <kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">L</kbd>
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">L</kbd>
                 </button>
                 <button 
                   type="button" 
@@ -582,7 +582,7 @@ export function DesignTokenGenerator() {
                   aria-selected={previewMode === "dark"}
                 >
                   <Moon className="h-4 w-4" aria-hidden="true" />
-                  <kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">D</kbd>
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">D</kbd>
                 </button>
               </div>
             </div>
@@ -644,7 +644,7 @@ export function DesignTokenGenerator() {
                       aria-label="Copy CSS tokens (Ctrl+C)"
                     >
                       {copiedKey === "css" ? <Check className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="mr-2 h-3.5 w-3.5" aria-hidden="true" />}
-                      Copy CSS <kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>
+                      Copy CSS <kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">Ctrl+Shift+C</kbd>
                     </Button>
                   </TabsContent>
                   <TabsContent value="tailwind" className="space-y-2" role="tabpanel" aria-label="Tailwind export">

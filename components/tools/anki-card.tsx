@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Brain, Plus, Trash2, BookOpen, RotateCcw, Eye } from "lucide-react"
@@ -308,7 +308,7 @@ export function AnkiCard() {
               aria-controls="new-deck-form"
             >
               <Plus className="h-3 w-3" aria-hidden="true" />New Deck
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
             </button>
             <Button
               variant="outline"
@@ -318,7 +318,7 @@ export function AnkiCard() {
               aria-label="Add new card"
             >
               <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
             </Button>
             <Button
               size="sm"
@@ -328,7 +328,7 @@ export function AnkiCard() {
             >
               <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
               Study {dueCards.length > 0 && `(${dueCards.length})`}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>
@@ -356,7 +356,7 @@ export function AnkiCard() {
                 >
                   <BookOpen className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   Study {dueCards.length > 0 && `(${dueCards.length})`}
-                  <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+                  <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+S</kbd>
                 </Button>
                 <Button
                   variant={view === "add-card" ? "default" : "outline"}
@@ -365,7 +365,7 @@ export function AnkiCard() {
                   aria-label="Add new card"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Add Card
-                  <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+A</kbd>
+                  <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]" aria-hidden="true">Ctrl+Shift+A</kbd>
                 </Button>
               </div>
             )}
@@ -382,7 +382,7 @@ export function AnkiCard() {
                     aria-expanded={addingDeck}
                     aria-controls="new-deck-form"
                   >
-                    <Plus className="h-3 w-3" aria-hidden="true" />New <kbd className="ml-1 px-1 rounded bg-muted font-mono text-[9px]">Ctrl+Shift+N</kbd>
+                    <Plus className="h-3 w-3" aria-hidden="true" />New <kbd className="ml-1 hidden md:inline px-1 rounded bg-muted font-mono text-[9px]">Ctrl+Shift+N</kbd>
                   </button>
                 </div>
 
@@ -397,7 +397,7 @@ export function AnkiCard() {
                       className="text-sm h-8"
                       aria-label="Enter deck name"
                     />
-                    <Button size="sm" onClick={createDeck} disabled={!newDeckName.trim()} className="h-8 px-3">Add <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]">Enter</kbd></Button>
+                    <Button size="sm" onClick={createDeck} disabled={!newDeckName.trim()} className="h-8 px-3">Add <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Enter</kbd></Button>
                   </div>
                 )}
 
@@ -491,11 +491,11 @@ export function AnkiCard() {
                   <p className="text-xs text-muted-foreground">No cards due today</p>
                   <div className="flex gap-2 mt-2" role="group" aria-label="Session actions">
                     <Button variant="outline" size="sm" onClick={() => setView("add-card")} aria-label="Add card">
-                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+A</kbd>
+                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+A</kbd>
                     </Button>
                     {dueCards.length > 0 && (
                       <Button size="sm" onClick={startStudy} aria-label="Study again">
-                        <RotateCcw className="h-3.5 w-3.5 mr-1" />Study <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+S</kbd>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1" />Study <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Shift+S</kbd>
                       </Button>
                     )}
                   </div>
@@ -537,7 +537,7 @@ export function AnkiCard() {
                       size="sm"
                       aria-label="Add card to deck"
                     >
-                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Enter</kbd>
+                      <Plus className="h-3.5 w-3.5 mr-1" />Add Card <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Ctrl+Enter</kbd>
                     </Button>
                   </div>
 
@@ -581,7 +581,7 @@ export function AnkiCard() {
 
                     {!isFlipped ? (
                       <Button className="w-full" size="sm" onClick={() => setIsFlipped(true)} aria-label="Show answer">
-                        <Eye className="h-3.5 w-3.5 mr-1" />Show Answer <kbd className="ml-1.5 px-1 rounded bg-white/20 font-mono text-[9px]">Space</kbd>
+                        <Eye className="h-3.5 w-3.5 mr-1" />Show Answer <kbd className="ml-1.5 hidden md:inline px-1 rounded bg-white/20 font-mono text-[9px]">Space</kbd>
                       </Button>
                     ) : (
                       <div className="w-full space-y-2" role="group" aria-label="Rate recall">

@@ -445,7 +445,7 @@ export default function CvMaker() {
               aria-checked={template === t}
               aria-label={`${t} template (press ${t === 'classic' ? '1' : '2'})`}
             >
-              {t}<kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{t === 'classic' ? '1' : '2'}</kbd>
+              {t}<kbd className="ml-1 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">{t === 'classic' ? '1' : '2'}</kbd>
             </button>
           ))}
         </div>
@@ -664,7 +664,7 @@ export default function CvMaker() {
                 className="w-full"
                 aria-label="Add experience entry (Ctrl+E)"
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Experience<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+E</kbd>
+                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Experience<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+E</kbd>
               </Button>
             </Section>
             </div>
@@ -739,7 +739,7 @@ export default function CvMaker() {
                 className="w-full"
                 aria-label="Add education entry (Ctrl+D)"
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Education<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+D</kbd>
+                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Education<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+D</kbd>
               </Button>
             </Section>
             </div>
@@ -762,7 +762,7 @@ export default function CvMaker() {
                   onClick={addSkill}
                   aria-label="Add skill"
                 >
-                  Add<kbd className="ml-1 rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Enter</kbd>
+                  Add<kbd className="ml-1 hidden md:inline rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Enter</kbd>
                 </Button>
               </div>
               {cv.skills.length > 0 && (
@@ -839,7 +839,7 @@ export default function CvMaker() {
                 className="w-full"
                 aria-label="Add project entry (Ctrl+P)"
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Project<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+P</kbd>
+                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Project<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px]" aria-hidden="true">Ctrl+P</kbd>
               </Button>
             </Section>
             </div>

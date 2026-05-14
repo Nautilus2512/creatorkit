@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Music2, Upload, X, AlertCircle } from "lucide-react"
@@ -143,7 +143,7 @@ export function BPMDetector() {
             {isProcessing ? (
               <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Processing…</>
             ) : (
-              <><Music2 className="h-4 w-4 mr-1" aria-hidden="true" />Detect BPM<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>
+              <><Music2 className="h-4 w-4 mr-1" aria-hidden="true" />Detect BPM<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>
             )}
           </Button>
         </div>

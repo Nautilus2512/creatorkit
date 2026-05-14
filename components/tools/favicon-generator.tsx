@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Download, Check, Upload, Type } from "lucide-react"
@@ -260,7 +260,7 @@ export function FaviconGenerator() {
                 >
                   {m === "image" ? <Upload className="h-3.5 w-3.5" /> : <Type className="h-3.5 w-3.5" />}
                   {m === "image" ? "Upload Image" : "Text / Emoji"}
-                  <kbd className="ml-1 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
+                  <kbd className="ml-1 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
                 </button>
               ))}
             </div>

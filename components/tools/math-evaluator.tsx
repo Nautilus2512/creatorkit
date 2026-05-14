@@ -141,7 +141,7 @@ return (
           ]} />
           <Button variant="outline" size="sm" onClick={resetScope} aria-label="Reset variables and history">
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Reset
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
           </Button>
         </div>
       </div>
@@ -230,7 +230,7 @@ return (
                 aria-label="Evaluate expression"
               >
                 Evaluate
-                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Enter</kbd>
+                <kbd className="ml-2 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Enter</kbd>
               </Button>
             </div>
           </div>

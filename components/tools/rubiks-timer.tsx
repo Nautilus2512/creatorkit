@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { RefreshCw, Trash2 } from "lucide-react"
@@ -318,7 +318,7 @@ export default function RubiksTimer() {
           <ShortcutsModal pageName="Rubik's Timer" shortcuts={shortcuts} />
           <Button variant="outline" size="sm" onClick={() => { setScramble(genScramble()); announceToScreenReader("New scramble generated") }} disabled={phase === "running" || isInspPhase} aria-label="Generate new scramble">
             <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />New Scramble
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>

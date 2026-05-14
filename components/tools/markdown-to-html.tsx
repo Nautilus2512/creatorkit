@@ -140,12 +140,12 @@ export default function MarkdownToHtml() {
           <Button variant="outline" size="sm" onClick={copy} disabled={!html} aria-label={copied ? "HTML copied" : "Copy HTML"}>
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy HTML"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
           <Button variant="outline" size="sm" onClick={download} disabled={!html} aria-label={downloaded ? "Downloaded" : "Download HTML"}>
             {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
             {downloaded ? "Saved!" : ".html"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>
@@ -179,12 +179,12 @@ export default function MarkdownToHtml() {
             <span className="text-sm font-medium" id="markdown-panel-label">Markdown</span>
             <div className="flex gap-1">
               <Button variant="ghost" size="sm" onClick={() => { setInput(EXAMPLE); announceToScreenReader("Example loaded") }} aria-label="Load example markdown">
-                Example <kbd className="ml-1 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+E</kbd>
+                Example <kbd className="ml-1 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+E</kbd>
               </Button>
               <label className="cursor-pointer">
                 <input type="file" accept=".md,.txt,.markdown" className="hidden" onChange={handleFile} ref={fileInputRef} aria-label="Upload markdown file" />
                 <Button variant="ghost" size="sm" asChild aria-label="Upload markdown file">
-                  <span className="flex items-center gap-1"><Upload className="h-4 w-4" aria-hidden="true" />Upload<kbd className="ml-1 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd></span>
+                  <span className="flex items-center gap-1"><Upload className="h-4 w-4" aria-hidden="true" />Upload<kbd className="ml-1 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd></span>
                 </Button>
               </label>
             </div>

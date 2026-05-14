@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import yaml from "js-yaml"
@@ -178,7 +178,7 @@ export default function YamlConverter() {
               className="focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <span>YAML → JSON</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Y</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Y</kbd>
             </Button>
             <Button
               variant={mode === "json-to-yaml" ? "default" : "outline"}
@@ -188,7 +188,7 @@ export default function YamlConverter() {
               className="focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <span>JSON → YAML</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+J</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+J</kbd>
             </Button>
             <Button
               variant="outline"
@@ -200,7 +200,7 @@ export default function YamlConverter() {
             >
               <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Swap</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
           <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
@@ -242,12 +242,12 @@ export default function YamlConverter() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               <span>{copied ? "Copied!" : "Copy"}</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download output file">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Download</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

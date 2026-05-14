@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Copy, Check, ArrowLeftRight, Download } from "lucide-react"
@@ -158,7 +158,7 @@ export default function HtmlEntityEncoder() {
               aria-label="Encode mode, press Ctrl+Shift+E"
             >
               Encode
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
             </Button>
             <Button
               variant={mode === "decode" ? "default" : "outline"}
@@ -168,7 +168,7 @@ export default function HtmlEntityEncoder() {
               aria-label="Decode mode, press Ctrl+Shift+D"
             >
               Decode
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
             <Button
               variant="outline"
@@ -178,7 +178,7 @@ export default function HtmlEntityEncoder() {
               aria-label="Swap input and output, press Ctrl+Shift+S"
             >
               <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
           <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
@@ -208,7 +208,7 @@ export default function HtmlEntityEncoder() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download output">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download

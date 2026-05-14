@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
@@ -142,7 +142,7 @@ function AcReactance() {
             aria-checked={freq === hz}
             aria-label={`${hz} Hertz`}
           >
-            {hz} Hz<kbd className="ml-1.5 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
+            {hz} Hz<kbd className="ml-1.5 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
           </button>
         ))}
         <div className="relative">
@@ -234,7 +234,7 @@ function ThreePhase() {
             aria-checked={cfg === c}
             aria-label={c === "star" ? "Star configuration (Y)" : "Delta configuration (Δ)"}
           >
-            {c === "star" ? "⭐ Star (Y)" : "△ Delta (Δ)"}<kbd className="ml-2 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
+            {c === "star" ? "⭐ Star (Y)" : "△ Delta (Δ)"}<kbd className="ml-2 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
           </button>
         ))}
       </div>
@@ -338,7 +338,7 @@ function ResistorColorCode() {
             aria-checked={bands === b}
             aria-label={`${b} band resistor`}
           >
-            {b}-Band<kbd className="ml-2 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
+            {b}-Band<kbd className="ml-2 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
           </button>
         ))}
       </div>
@@ -403,7 +403,7 @@ function TimeConstant() {
             aria-checked={type === t}
             aria-label={t === "RC" ? "RC circuit (Resistor-Capacitor)" : "RL circuit (Resistor-Inductor)"}
           >
-            {t} Circuit<kbd className="ml-2 text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
+            {t} Circuit<kbd className="ml-2 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{idx + 1}</kbd>
           </button>
         ))}
       </div>
@@ -532,7 +532,7 @@ export default function ElectricalCalculator() {
                     aria-label={`${t.label} (press ${t.shortcut})`}
                     title={`Press ${t.shortcut} to switch`}
                   >
-                    {t.label}<kbd className="ml-auto float-right rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-foreground" aria-hidden="true">{t.shortcut}</kbd>
+                    {t.label}<kbd className="ml-auto hidden md:inline float-right rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-foreground" aria-hidden="true">{t.shortcut}</kbd>
                   </button>
                 ))}
               </div>

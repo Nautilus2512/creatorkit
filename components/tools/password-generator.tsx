@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, RefreshCw, Lock } from "lucide-react"
@@ -119,7 +119,7 @@ export function PasswordGenerator() {
           <Button size="sm" onClick={generate} disabled={!charset} aria-label={quantity > 1 ? `Generate ${quantity} passwords` : "Generate password"}>
             <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
             Generate{quantity > 1 ? ` ${quantity}` : ""}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
           </Button>
         </div>
       </div>

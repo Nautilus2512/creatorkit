@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
@@ -91,7 +91,7 @@ export default function PixelToRem() {
               >
                 {copied === "result" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                 {copied === "result" ? "Copied!" : "Copy Result"}
-                <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             )}
           </div>
@@ -190,7 +190,7 @@ export default function PixelToRem() {
                       >
                         {copied === "result" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
                         {copied === "result" ? "Copied!" : "Copy"}
-                        <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted font-mono text-[10px] font-medium opacity-100">
+                        <kbd className="ml-2 hidden md:inline pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted font-mono text-[10px] font-medium opacity-100">
                           <span className="text-xs">Ctrl</span>
                           <span>Shift</span>
                           <span>C</span>

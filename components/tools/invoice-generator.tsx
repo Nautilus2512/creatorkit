@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Plus, Trash2, Download, RotateCcw, FileCheck } from "lucide-react"
@@ -178,7 +178,7 @@ export default function InvoiceGenerator() {
           aria-label="Clear all invoice data"
         >
           <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Clear
-          <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
         </Button>
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal
@@ -197,7 +197,7 @@ export default function InvoiceGenerator() {
           >
             {downloaded ? <FileCheck className="h-3.5 w-3.5 mr-1.5" /> : <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />}
             {downloaded ? "Ready!" : "Download / Print"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+P</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+P</kbd>
           </Button>
         </div>
       </div>

@@ -148,12 +148,12 @@ export default function Notes() {
             {unsaved && (
               <Button variant="outline" size="sm" onClick={manualSave} aria-label="Save note">
                 <Save className="h-4 w-4 mr-1" aria-hidden="true" />Save
-                <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
               </Button>
             )}
             <Button size="sm" onClick={newNote} aria-label="Create new note">
               <Plus className="h-4 w-4 mr-1" aria-hidden="true" />New Note
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+A</kbd>
             </Button>
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function Notes() {
                     aria-label="Create your first note"
                   >
                     <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Create your first note
-                    <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+A</kbd>
+                    <kbd className="ml-2 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+A</kbd>
                   </Button>
                 </div>
               </div>

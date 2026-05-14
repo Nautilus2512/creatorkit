@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Download, Upload, Maximize2, Minimize2 } from "lucide-react"
@@ -187,7 +187,7 @@ export default function XmlFormatter() {
             >
               <Maximize2 className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Format</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
             </Button>
             <Button
               variant={mode === "minify" ? "default" : "outline"}
@@ -198,7 +198,7 @@ export default function XmlFormatter() {
             >
               <Minimize2 className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Minify</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+M</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+M</kbd>
             </Button>
           </div>
           {mode === "format" && (
@@ -246,12 +246,12 @@ export default function XmlFormatter() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               <span>{copied ? "Copied!" : "Copy"}</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download XML file">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Download</span>
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

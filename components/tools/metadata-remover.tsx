@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import exifr from "exifr"
@@ -366,7 +366,7 @@ export function MetadataRemover() {
                 ) : (
                   <>
                     Remove &amp; Download
-                    <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>
+                    <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>
                   </>
                 )}
               </Button>
@@ -579,7 +579,7 @@ export function MetadataRemover() {
                       </span>
                       <Button variant="outline" size="sm" onClick={downloadAllZip}>
                         <Download className="mr-2 h-3.5 w-3.5" /> Download ZIP
-                        <kbd className="ml-2 rounded border border-border px-1 text-[10px] opacity-50">Ctrl+D</kbd>
+                        <kbd className="ml-2 hidden md:inline rounded border border-border px-1 text-[10px] opacity-50">Ctrl+D</kbd>
                       </Button>
                     </div>
                   </div>

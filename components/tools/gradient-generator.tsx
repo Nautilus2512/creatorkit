@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Copy, Check, Plus, Trash2 } from "lucide-react"
@@ -120,7 +120,7 @@ export default function GradientGenerator() {
           <Button variant="outline" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy CSS"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function GradientGenerator() {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Type <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+T</kbd></Label>
+              <Label className="text-sm font-medium">Type <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+T</kbd></Label>
               <div className="flex gap-2" role="group" aria-label="Gradient type">
                 {(["linear", "radial", "conic"] as GradientType[]).map(t => (
                   <button
@@ -223,7 +223,7 @@ export default function GradientGenerator() {
                 <Label className="text-sm font-medium" id="color-stops-label">Color Stops</Label>
                 <Button variant="outline" size="sm" onClick={addStop} aria-label="Add color stop">
                   <Plus className="h-4 w-4 mr-1" aria-hidden="true" />Add Stop
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
+                  <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
                 </Button>
               </div>
               {sorted.map((stop) => (
@@ -286,7 +286,7 @@ export default function GradientGenerator() {
               <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
                 {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                 {copied ? "Copied!" : "Copy"}
-                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             </div>
             <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed" aria-live="polite">{css}</pre>

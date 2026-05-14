@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Copy, Check, Clock } from "lucide-react"
@@ -122,14 +122,14 @@ export default function TotpGenerator() {
           <span className="text-sm font-semibold shrink-0 mr-1">TOTP / 2FA Generator</span>
           <Button variant="ghost" size="sm" onClick={loadDemo} aria-label="Load demo secret">
             Load Demo
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
           </Button>
           <div className="ml-auto flex items-center gap-1.5">
             <ShortcutsModal pageName="TOTP Generator" shortcuts={shortcuts} />
             <Button size="sm" onClick={copy} disabled={!code} aria-label={copied ? "Code copied" : "Copy current TOTP code"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy Code"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function TotpGenerator() {
               </div>
               <Button variant="outline" className="w-full focus:outline-none focus:ring-2 focus:ring-primary/50" onClick={loadDemo} aria-label="Load demo secret for testing">
                 Load Demo Secret
-                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+                <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
               </Button>
               <div className="rounded-lg border border-border bg-muted/20 p-4">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Settings</p>

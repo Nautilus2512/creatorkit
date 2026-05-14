@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Upload, Copy, Check } from "lucide-react"
@@ -236,7 +236,7 @@ export default function ColorPaletteExtractor() {
               aria-label="Copy all colors"
             >
               {copied === 'all' ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-              Copy All<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              Copy All<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           )}
         </div>
@@ -306,7 +306,7 @@ export default function ColorPaletteExtractor() {
                     fileInput?.click()
                   }}
                 >
-                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Change Image<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd>
+                  <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Change Image<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+O</kbd>
                 </Button>
               </>
             </div>

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, ArrowLeftRight } from "lucide-react"
@@ -140,16 +140,16 @@ export default function UrlEncoder() {
         <div className="flex items-center gap-1" role="radiogroup" aria-label="Mode">
           <button onClick={() => switchMode("encode")} role="radio" aria-checked={mode === "encode"}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${mode === "encode" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-            Encode <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+            Encode <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
           </button>
           <button onClick={() => switchMode("decode")} role="radio" aria-checked={mode === "decode"}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${mode === "decode" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-            Decode <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+            Decode <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
           </button>
         </div>
         <button onClick={swap} disabled={!output} aria-label="Swap with output"
           className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 disabled:opacity-40 transition-colors flex items-center gap-1">
-          <ArrowLeftRight className="h-3 w-3" aria-hidden="true" />Swap <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+          <ArrowLeftRight className="h-3 w-3" aria-hidden="true" />Swap <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
         </button>
         {mode === "encode" && (
           <div className="flex items-center gap-1" role="radiogroup" aria-label="Encoding type">
@@ -170,7 +170,7 @@ export default function UrlEncoder() {
           <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
         </div>
       </div>

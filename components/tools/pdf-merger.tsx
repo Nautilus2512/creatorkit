@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { FileDown, Upload, X, Download, ArrowUp, ArrowDown, Scissors, Combine, AlertCircle, Trash2 } from "lucide-react"
@@ -334,13 +334,13 @@ export function PDFMerger() {
                 <>
                   <Combine className="mr-1 h-4 w-4" aria-hidden="true" />
                   Merge &amp; Download
-                  <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
                 </>
               ) : (
                 <>
                   <Scissors className="mr-1 h-4 w-4" aria-hidden="true" />
                   Split PDF
-                  <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
                 </>
               )}
             </Button>
@@ -353,7 +353,7 @@ export function PDFMerger() {
               >
                 <Download className="mr-1 h-4 w-4" aria-hidden="true" />
                 {mode === 'merge' ? 'Download Merged' : splitResults.length > 1 ? 'Download ZIP' : 'Download'}
-                <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
               </Button>
             )}
           </div>

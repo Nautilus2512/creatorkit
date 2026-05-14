@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Hash, Copy, Download, Check, RefreshCw } from "lucide-react"
@@ -142,7 +142,7 @@ export default function UuidGenerator() {
             >
               <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Generate Single</span>
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
             </Button>
             <Button
               size="sm"
@@ -153,7 +153,7 @@ export default function UuidGenerator() {
             >
               <Hash className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Generate {bulkCount}</span>
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+B</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+B</kbd>
             </Button>
             {uuids.length > 0 && (
               <>
@@ -176,7 +176,7 @@ export default function UuidGenerator() {
                 >
                   <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                   <span>Download</span>
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+                  <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
                 </Button>
               </>
             )}
@@ -231,7 +231,7 @@ export default function UuidGenerator() {
                   >
                     {copied === "single" ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                     <span>{copied === "single" ? "Copied!" : "Copy"}</span>
-                    <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                    <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
                   </Button>
                 </div>
               </div>
@@ -287,7 +287,7 @@ export default function UuidGenerator() {
                 >
                   <Hash className="h-4 w-4 mr-1" aria-hidden="true" />
                   <span>Generate {bulkCount} UUIDs</span>
-                  <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+B</kbd>
+                  <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+B</kbd>
                 </Button>
                 {uuids.length > 0 && (
                   <>
@@ -310,7 +310,7 @@ export default function UuidGenerator() {
                     >
                       <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                       <span>Download</span>
-                      <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+                      <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
                     </Button>
                   </>
                 )}

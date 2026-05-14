@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download, Grid, Clock } from "lucide-react"
@@ -179,7 +179,7 @@ export default function VideoThumbnailExtractor() {
               className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "grid" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
               <Grid className="h-3 w-3" aria-hidden="true" />
               <span>Grid</span>
-              <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+              <kbd className="ml-1 hidden md:inline pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
                 <span>G</span>
               </kbd>
             </button>
@@ -192,7 +192,7 @@ export default function VideoThumbnailExtractor() {
               className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${mode === "interval" ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
               <Clock className="h-3 w-3" aria-hidden="true" />
               <span>Interval</span>
-              <kbd className="ml-1 pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
+              <kbd className="ml-1 hidden md:inline pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border bg-background/60 px-1 font-mono text-[9px] font-medium text-foreground/70 shadow-sm">
                 <span>I</span>
               </kbd>
             </button>
@@ -244,7 +244,7 @@ export default function VideoThumbnailExtractor() {
           >
             {loading ? `Extracting… ${progress}%` : "Extract Frames"}
             {videoUrl && !loading && (
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd>
             )}
           </Button>
           {thumbs.length > 0 && (
@@ -255,7 +255,7 @@ export default function VideoThumbnailExtractor() {
             >
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               <span>Download ZIP</span>
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
             </Button>
           )}
         </div>

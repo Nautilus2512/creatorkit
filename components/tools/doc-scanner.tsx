@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Camera, Upload, RotateCcw, Download, RefreshCw } from "lucide-react"
@@ -307,10 +307,10 @@ export default function DocScanner() {
         {phase === "idle" && (
           <>
             <Button size="sm" onClick={startCamera} aria-label="Start camera (C)">
-              <Camera className="h-4 w-4 mr-1" aria-hidden="true" />Start Camera<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
+              <Camera className="h-4 w-4 mr-1" aria-hidden="true" />Start Camera<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
             </Button>
             <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} aria-label="Upload photo (U)">
-              <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload Photo<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
+              <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload Photo<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
             </Button>
             <input
               ref={fileRef}
@@ -368,7 +368,7 @@ export default function DocScanner() {
                 onClick={startCamera}
                 aria-label="Start camera (C)"
               >
-                <Camera className="h-4 w-4 mr-2" aria-hidden="true" />Start Camera<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
+                <Camera className="h-4 w-4 mr-2" aria-hidden="true" />Start Camera<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
               </Button>
               <Button
                 size="lg"
@@ -376,7 +376,7 @@ export default function DocScanner() {
                 onClick={() => fileRef.current?.click()}
                 aria-label="Upload photo (U)"
               >
-                <Upload className="h-4 w-4 mr-2" aria-hidden="true" />Upload Photo<kbd className="ml-2 rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
+                <Upload className="h-4 w-4 mr-2" aria-hidden="true" />Upload Photo<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
               </Button>
             </div>
             <input

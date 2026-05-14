@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download } from "lucide-react"
@@ -187,7 +187,7 @@ export default function VideoCompressor() {
               title={`${hint} (Ctrl+Shift+${index + 1})`}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary/50 ${preset === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
               <span className="font-medium">{label}</span>
-              <kbd className="ml-1.5 rounded border border-border bg-muted px-1 text-[9px]">Ctrl+Shift+{index + 1}</kbd>
+              <kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[9px]">Ctrl+Shift+{index + 1}</kbd>
             </button>
           ))}
         </div>
@@ -201,7 +201,7 @@ export default function VideoCompressor() {
           >
             {loading ? `${stage} ${progress > 0 ? progress + "%" : ""}` : "Compress Video"}
             {file && !loading && (
-              <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+C</kbd>
             )}
           </Button>
         </div>
@@ -285,7 +285,7 @@ export default function VideoCompressor() {
               <Button onClick={download} variant="outline" className="shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50" aria-label="Download compressed MP4">
                 <Download className="h-4 w-4 mr-1" aria-hidden="true" />
                 <span>Download Compressed MP4</span>
-                <kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
+                <kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+D</kbd>
               </Button>
             </div>
           ) : (

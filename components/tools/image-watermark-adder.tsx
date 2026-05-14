@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Layers, Upload, Download, X, ImageIcon, Type, FileCheck } from "lucide-react"
@@ -211,7 +211,7 @@ export function ImageWatermarkAdder() {
             {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
             {downloaded ? "Downloaded!" : "Download"}
             {!downloaded && imageEl && (
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+              <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
                 Ctrl+Shift+S
               </kbd>
             )}
@@ -543,7 +543,7 @@ export function ImageWatermarkAdder() {
                 {downloaded ? <FileCheck className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
                 {downloaded ? "Downloaded!" : "Download Full Resolution"}
                 {!downloaded && (
-                  <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+                  <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
                     Ctrl+Shift+S
                   </kbd>
                 )}

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { FileJson, Copy, Download, Check, AlertCircle, Minimize2, Maximize2, FileCheck } from "lucide-react"
@@ -167,7 +167,7 @@ export default function JsonFormatter() {
             aria-label="Upload JSON file"
           >
             <FileJson className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Upload
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
           </Button>
           <input
             ref={fileInputRef}
@@ -203,12 +203,12 @@ export default function JsonFormatter() {
             <Button variant="outline" size="sm" onClick={() => copy()} disabled={!isValid} aria-label={copied ? "Copied to clipboard" : "Copy formatted JSON"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={() => download()} disabled={!isValid} aria-label={downloaded ? "File downloaded" : "Download JSON file"}>
               {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
               {downloaded ? "Saved!" : "Download"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>

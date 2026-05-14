@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 
@@ -332,7 +332,7 @@ export function MarkdownEditor() {
           >
             {copied ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy"}
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
           </Button>
           <Button
             variant="outline"
@@ -342,7 +342,7 @@ export function MarkdownEditor() {
             aria-label="Download markdown file"
           >
             <Download className="h-3 w-3 mr-1" aria-hidden="true" />Download
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
           <div className="relative">
             <input
@@ -361,7 +361,7 @@ export function MarkdownEditor() {
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <label htmlFor="upload-md" className="cursor-pointer flex items-center gap-1" role="button" aria-label="Upload markdown file">
-                <Upload className="h-3 w-3" aria-hidden="true" />Upload<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+                <Upload className="h-3 w-3" aria-hidden="true" />Upload<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
               </label>
             </Button>
           </div>

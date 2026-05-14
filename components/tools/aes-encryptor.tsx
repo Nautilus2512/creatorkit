@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Copy, Check, Lock, Unlock, Eye, EyeOff, ArrowLeftRight } from "lucide-react"
@@ -190,7 +190,7 @@ export default function AesEncryptor() {
         </Button>
         <Button variant="outline" size="sm" onClick={swap} disabled={!output} aria-label="Swap input and output">
           <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
-          <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
         </Button>
         <div className="flex items-center gap-2 flex-1 min-w-[200px] max-w-sm">
           <Label htmlFor="passphrase-d" className="text-sm font-medium shrink-0">Passphrase</Label>
@@ -214,7 +214,7 @@ export default function AesEncryptor() {
           ]} />
           <Button size="sm" onClick={run} disabled={!input.trim() || !passphrase.trim() || loading} aria-label={mode === "encrypt" ? "Encrypt text" : "Decrypt text"}>
             {loading ? <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Working…</>
-              : <>{mode === "encrypt" ? "Encrypt" : "Decrypt"}<kbd className="ml-1 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
+              : <>{mode === "encrypt" ? "Encrypt" : "Decrypt"}<kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
           </Button>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function AesEncryptor() {
               aria-label="Copy output to clipboard"
             >
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-              {copied ? "Copied!" : "Copy"}<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              {copied ? "Copied!" : "Copy"}<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           </div>
           {error ? (

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download, FileDown } from "lucide-react"
@@ -172,7 +172,7 @@ export default function PdfToImage() {
                 aria-label="Open PDF file"
               >
                 <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Open PDF
-                <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
+                <kbd className="ml-2 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd>
               </span>
             </Button>
           </label>
@@ -186,7 +186,7 @@ export default function PdfToImage() {
             >
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />
               {loading ? `${progress}%` : "Download All (ZIP)"}
-              <kbd className="ml-2 rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-2 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           )}
         </div>

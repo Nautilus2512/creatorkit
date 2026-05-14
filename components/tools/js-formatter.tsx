@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Copy, Check, Download, Upload, Code2, Loader2, FileCheck } from "lucide-react"
@@ -307,7 +307,7 @@ export default function JsFormatter() {
           aria-label="Upload file to format"
         >
           <Upload className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Upload file
-          <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
         </Button>
         <input ref={fileRef} type="file" accept=".js,.jsx,.ts,.tsx,.css,.scss,.html,.json,.md" className="hidden" onChange={upload} aria-label="Select code file" />
       </div>
@@ -329,7 +329,7 @@ export default function JsFormatter() {
             aria-label={status !== "ready" ? "Format (Prettier not ready)" : "Format code with Prettier"}
           >
             <Code2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Format
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
           </Button>
           <Button
             variant="outline"
@@ -338,7 +338,7 @@ export default function JsFormatter() {
             aria-label="Upload file to format"
           >
             <Upload className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Upload
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
           </Button>
           {status === "loading" && <span className="text-xs text-muted-foreground flex items-center gap-1.5" aria-live="polite"><Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />Loading Prettier…</span>}
           {status === "ready" && <span className="text-xs text-green-600 dark:text-green-400" role="status" aria-live="polite">● Prettier ready</span>}
@@ -350,12 +350,12 @@ export default function JsFormatter() {
             <Button variant="outline" size="sm" onClick={() => copy()} disabled={!formatted} aria-label={copied ? "Copied to clipboard" : "Copy formatted code to clipboard"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={() => download()} disabled={!formatted} aria-label={downloaded ? "File downloaded" : "Download formatted file"}>
               {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
               {downloaded ? "Saved!" : "Download"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>

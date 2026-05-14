@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Upload, Download, ArrowLeftRight } from "lucide-react"
@@ -153,12 +153,12 @@ export default function Base64Encoder() {
           <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
           <Button variant="ghost" size="sm" onClick={swap} disabled={!output} aria-label="Swap input and output">
             <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
           </Button>
           {mode === "encode" && (
             <Button variant="ghost" size="sm" onClick={triggerUpload} aria-label="Upload file">
               <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
             </Button>
           )}
           {(input || output) && (
@@ -169,11 +169,11 @@ export default function Base64Encoder() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label="Copy output">
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download output">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
             </Button>
           </div>
         </div>

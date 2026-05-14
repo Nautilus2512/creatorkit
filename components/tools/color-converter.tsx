@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
@@ -282,7 +282,7 @@ export default function ColorConverter() {
                 className="text-xs h-7"
                 aria-label="Copy all formats"
               >
-                Copy All<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                Copy All<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
               </Button>
             )}
           </div>

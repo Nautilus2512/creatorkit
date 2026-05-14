@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { PDFDocument } from "pdf-lib"
@@ -182,7 +182,7 @@ export default function ImageToPdf() {
             {downloaded ? <FileDown className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
             {downloaded ? "Downloaded!" : loading ? "Converting..." : "Generate PDF"}
             {images.length > 0 && !loading && !downloaded && (
-              <kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
+              <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
                 Ctrl+Shift+P
               </kbd>
             )}

@@ -279,7 +279,7 @@ body, p { font-family: var(--font-body); }`
           <span className="text-sm font-semibold shrink-0 mr-1">Font Pairer</span>
           <Button variant="ghost" size="sm" onClick={randomPairing} aria-label="Apply random font pairing">
             <Shuffle className="h-4 w-4 mr-1" aria-hidden="true" />Random
-            <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
           </Button>
           <div className="ml-auto flex items-center gap-1.5">
             <ShortcutsModal pageName="Font Pairer" shortcuts={[
@@ -290,7 +290,7 @@ body, p { font-family: var(--font-body); }`
             <Button variant="outline" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy CSS"}
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
             </Button>
           </div>
         </div>
@@ -492,7 +492,7 @@ body, p { font-family: var(--font-body); }`
                   <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied to clipboard" : "Copy CSS to clipboard"} className="h-7">
                     {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                     {copied ? "Copied!" : "Copy CSS"}
-                    <kbd className="ml-1.5 rounded border border-border/30 bg-muted/30 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                    <kbd className="ml-1.5 hidden md:inline rounded border border-border/30 bg-muted/30 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
                   </Button>
                 </div>
                 <pre className="p-4 text-xs font-mono overflow-x-auto bg-muted/10 leading-relaxed whitespace-pre">{cssCode}</pre>

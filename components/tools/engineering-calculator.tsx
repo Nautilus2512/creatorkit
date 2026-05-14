@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Delete, RotateCcw } from "lucide-react"
@@ -471,7 +471,7 @@ export default function EngineeringCalculator() {
                 aria-label={isDeg ? "Degree mode" : "Radian mode"}
                 title={isDeg ? "Switch to RAD" : "Switch to DEG"}
               >
-                {isDeg ? "DEG" : "RAD"}<kbd className="ml-1.5 text-[9px] opacity-50" aria-hidden="true">D</kbd>
+                {isDeg ? "DEG" : "RAD"}<kbd className="ml-1.5 hidden md:inline text-[9px] opacity-50" aria-hidden="true">D</kbd>
               </button>
               <div className="flex gap-1" role="group" aria-label="Memory controls">
                 <button onClick={() => setMem(m => m + (parseFloat(display) || 0))}
@@ -537,7 +537,7 @@ export default function EngineeringCalculator() {
                 title={`Press ${t.shortcut} to switch`}
               >
                 {t.label}
-                <kbd className="ml-1 text-[9px] opacity-50" aria-hidden="true">{t.shortcut}</kbd>
+                <kbd className="ml-1 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{t.shortcut}</kbd>
               </button>
             ))}
           </div>

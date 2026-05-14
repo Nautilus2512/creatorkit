@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Clock } from "lucide-react"
@@ -121,7 +121,7 @@ export default function TimestampConverter() {
             <Button variant="outline" size="sm" onClick={useNow} aria-label="Use current timestamp">
               <Clock className="h-4 w-4 mr-1" aria-hidden="true" />
               Use Current Time
-              <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+N</kbd>
             </Button>
           </div>
         </div>
