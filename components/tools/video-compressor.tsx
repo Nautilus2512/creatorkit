@@ -167,7 +167,7 @@ export default function VideoCompressor() {
   const savings = file && outputSize ? Math.round((1 - outputSize / file.size) * 100) : 0
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>

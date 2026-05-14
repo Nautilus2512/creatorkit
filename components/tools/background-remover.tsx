@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Wand2, Upload, Download, X, ImageIcon, Pipette, AlertCircle } from "lucide-react"
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
-// ── Module-level model cache (persists across re-renders) ────────────────────
+// â”€â”€ Module-level model cache (persists across re-renders) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _processor: any = null
 let _model: any = null
 
@@ -54,7 +54,7 @@ async function removeBackgroundAI(imgEl: HTMLImageElement, objectUrl: string): P
   return canvas.toDataURL("image/png")
 }
 
-// ── Mobile: canvas color removal ─────────────────────────────────────────────
+// â”€â”€ Mobile: canvas color removal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function removeColorBg(imgEl: HTMLImageElement, rgb: [number, number, number], tolerance: number): string {
   const canvas = document.createElement("canvas")
   canvas.width = imgEl.naturalWidth
@@ -113,7 +113,7 @@ function announceToScreenReader(message: string) {
   setTimeout(() => document.body.removeChild(announcement), 1000)
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type Phase = "idle" | "loading-model" | "processing" | "done"
 
 export function BackgroundRemover() {
@@ -246,7 +246,7 @@ export function BackgroundRemover() {
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Background Remover application">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Background Remover application">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {imageEl ? `Image loaded: ${fileName}. ${resultUrl ? 'Result ready. Press Ctrl+Shift+S to download.' : 'Press Ctrl+Shift+Enter to remove background.'}` : 'No image loaded. Press Ctrl+Shift+O to upload.'}
       </div>
@@ -275,7 +275,7 @@ export function BackgroundRemover() {
             {isProcessing ? (
               <>
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-                {phase === "loading-model" ? `Loading model… ${progress}%` : "Removing…"}
+                {phase === "loading-model" ? `Loading modelâ€¦ ${progress}%` : "Removingâ€¦"}
               </>
             ) : (
               <>
@@ -330,12 +330,12 @@ export function BackgroundRemover() {
           >
             {isMobile ? (
               <>
-                <p className="font-medium text-amber-700 dark:text-amber-400">Lightweight Mode — mobile</p>
+                <p className="font-medium text-amber-700 dark:text-amber-400">Lightweight Mode â€” mobile</p>
                 <p className="text-muted-foreground">Removes solid or simple backgrounds by color. For complex backgrounds (hair, fur, transparent objects), try on a desktop browser.</p>
               </>
             ) : (
               <>
-                <p className="font-medium text-blue-700 dark:text-blue-400">AI Model Mode — desktop</p>
+                <p className="font-medium text-blue-700 dark:text-blue-400">AI Model Mode â€” desktop</p>
                 <p className="text-muted-foreground">Downloads a ~40 MB AI model on first use (cached after that). Removes any background automatically.</p>
               </>
             )}
@@ -378,7 +378,7 @@ export function BackgroundRemover() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium" title={fileName}>{fileName}</p>
                     <p className="text-xs text-muted-foreground" aria-label={`Image dimensions ${imageEl.naturalWidth} by ${imageEl.naturalHeight} pixels, file size ${formatBytes(fileSize)}`}>
-                      {imageEl.naturalWidth}×{imageEl.naturalHeight}px · {formatBytes(fileSize)}
+                      {imageEl.naturalWidth}Ã—{imageEl.naturalHeight}px Â· {formatBytes(fileSize)}
                     </p>
                   </div>
                   <button 
@@ -395,7 +395,7 @@ export function BackgroundRemover() {
                 <div className="flex flex-col items-center gap-2 text-center px-4">
                   <div className="rounded-full bg-muted p-3" aria-hidden="true"><Upload className="h-5 w-5 text-muted-foreground" /></div>
                   <p className="text-sm font-medium">Drop an image here</p>
-                  <p className="text-xs text-muted-foreground" id="upload-formats">JPG, PNG, WebP · <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></p>
+                  <p className="text-xs text-muted-foreground" id="upload-formats">JPG, PNG, WebP Â· <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd></p>
                   <span className="sr-only">Press Ctrl plus Shift plus O to browse for files</span>
                 </div>
               )}
@@ -426,7 +426,7 @@ export function BackgroundRemover() {
                     aria-label={pickingColor ? "Disable color picker mode" : "Enable color picker mode"}
                   >
                     <Pipette className="h-3.5 w-3.5" aria-hidden="true" />
-                    {pickingColor ? "Click image →" : "Pick from image"}
+                    {pickingColor ? "Click image â†’" : "Pick from image"}
                   </button>
                   <input
                     type="color"
@@ -469,7 +469,7 @@ export function BackgroundRemover() {
           {!isMobile && isProcessing && (
             <div className="space-y-2" role="region" aria-label="Processing status" aria-live="polite">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{phase === "loading-model" ? "Downloading AI model…" : "Removing background…"}</span>
+                <span>{phase === "loading-model" ? "Downloading AI modelâ€¦" : "Removing backgroundâ€¦"}</span>
                 {phase === "loading-model" && <span aria-label={`${progress} percent complete`}>{progress}%</span>}
               </div>
               <div 
@@ -489,7 +489,7 @@ export function BackgroundRemover() {
                 />
               </div>
               {phase === "loading-model" && progress < 5 && (
-                <p className="text-xs text-muted-foreground">First use — downloading ~40 MB AI model. Cached after this, never downloaded again.</p>
+                <p className="text-xs text-muted-foreground">First use â€” downloading ~40 MB AI model. Cached after this, never downloaded again.</p>
               )}
             </div>
           )}
@@ -528,7 +528,7 @@ export function BackgroundRemover() {
           ) : resultUrl ? (
             <div className="space-y-3" role="region" aria-label="Background removal result">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground" id="result-label">Result — transparent background</p>
+                <p className="text-xs font-medium text-muted-foreground" id="result-label">Result â€” transparent background</p>
                 <button 
                   onClick={() => { 
                     setResultUrl(null); 
@@ -589,7 +589,7 @@ export function BackgroundRemover() {
           {isProcessing ? (
             <>
               <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />
-              {phase === "loading-model" ? `Loading… ${progress}%` : "Removing…"}
+              {phase === "loading-model" ? `Loadingâ€¦ ${progress}%` : "Removingâ€¦"}
             </>
           ) : (
             <>

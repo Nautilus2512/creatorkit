@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Hash, Copy, Check, Upload, FileCheck, AlertCircle, X } from "lucide-react"
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
-// Pure-JS MD5 (RFC 1321) — runs entirely in browser, no server
+// Pure-JS MD5 (RFC 1321) â€” runs entirely in browser, no server
 function md5(buf: ArrayBuffer): string {
   const data = new Uint8Array(buf)
   const len = data.length
@@ -187,7 +187,7 @@ export function FileChecksumVerifier() {
 
   return (
     <>
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop: top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
@@ -199,7 +199,7 @@ export function FileChecksumVerifier() {
           ]} />
           <Button size="sm" onClick={compute} disabled={!file || computing}>
             {computing ? (
-              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Computing…</>
+              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Computingâ€¦</>
             ) : (
               <><Hash className="h-4 w-4 mr-1" aria-hidden="true" />Compute Hash</>
             )}
@@ -226,7 +226,7 @@ export function FileChecksumVerifier() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-      {/* Left panel — options */}
+      {/* Left panel â€” options */}
       <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
@@ -278,7 +278,7 @@ export function FileChecksumVerifier() {
                   </div>
                   <p className="text-sm font-medium">Drop any file here</p>
                   <p className="text-xs text-muted-foreground">
-                    or click to browse · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd>
+                    or click to browse Â· <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd>
                   </p>
                 </div>
               )}
@@ -314,7 +314,7 @@ export function FileChecksumVerifier() {
             </Label>
             <Input
               aria-describedby="expected-desc"
-              placeholder="Paste checksum from download page…"
+              placeholder="Paste checksum from download pageâ€¦"
               value={expectedHash}
               onChange={(e) => setExpectedHash(e.target.value)}
               className="font-mono text-xs"
@@ -332,7 +332,7 @@ export function FileChecksumVerifier() {
         )}
       </div>
 
-      {/* Right panel — results */}
+      {/* Right panel â€” results */}
       <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
         <div className="flex-1 overflow-y-auto p-4">
           {results.length === 0 ? (
@@ -364,7 +364,7 @@ export function FileChecksumVerifier() {
                   ) : (
                     <>
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span><span className="font-semibold">No match</span> — hash does not match any algorithm</span>
+                      <span><span className="font-semibold">No match</span> â€” hash does not match any algorithm</span>
                     </>
                   )}
                 </div>
@@ -423,7 +423,7 @@ export function FileChecksumVerifier() {
       >
         <div className="flex-1" />
         <Button size="sm" className="h-11 px-4" onClick={() => { compute(); setActiveTab("output") }} disabled={!file || computing}>
-          {computing ? "Computing…" : <><Hash className="h-4 w-4 mr-1.5" aria-hidden="true" />Compute Hash</>}
+          {computing ? "Computingâ€¦" : <><Hash className="h-4 w-4 mr-1.5" aria-hidden="true" />Compute Hash</>}
         </Button>
       </div>
 

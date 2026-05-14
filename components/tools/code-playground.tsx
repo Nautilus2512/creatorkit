@@ -205,7 +205,7 @@ ${html}
   }, [switchTab, downloadFiles, updatePreview, autoRun, activeTab])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       {/* Compact top toolbar */}
       <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Code Playground controls">
         <div className="flex items-center gap-1" role="tablist" aria-label="Editor tabs">

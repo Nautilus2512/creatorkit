@@ -335,7 +335,7 @@ export function ImageResizer() {
   }, [containerSize, firstFileSize, activePreviewPreset, cropOffsets])
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Image Resizer tool">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Image Resizer tool">
       {/* Desktop top bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Image Resizer</span>

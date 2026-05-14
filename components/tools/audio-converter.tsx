@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Download, Music, AlertCircle, X, FileAudio, Settings, Play, Loader2, FolderOpen, Save } from "lucide-react"
@@ -338,7 +338,7 @@ const convert = async () => {
   }, [file, isConverting, isLoadingFFmpeg, result, convert])
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Audio Converter application">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Audio Converter application">
       {/* Desktop top bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Audio Converter</span>
@@ -358,7 +358,7 @@ const convert = async () => {
               { keys: ["6"], description: "Select M4A format" },
               { keys: ["7"], description: "Select WMA format" },
               { keys: ["8"], description: "Select OPUS format" },
-              { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
+              { keys: ["Q"], description: "Cycle quality (Highâ†’Mediumâ†’Low)" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
@@ -411,7 +411,7 @@ const convert = async () => {
               { keys: ["6"], description: "Select M4A format" },
               { keys: ["7"], description: "Select WMA format" },
               { keys: ["8"], description: "Select OPUS format" },
-              { keys: ["Q"], description: "Cycle quality (High→Medium→Low)" },
+              { keys: ["Q"], description: "Cycle quality (Highâ†’Mediumâ†’Low)" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
@@ -452,7 +452,7 @@ const convert = async () => {
                 <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                    ⚠️ Under Development - ~25MB download required on first use
+                    âš ï¸ Under Development - ~25MB download required on first use
                   </p>
                   <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
                     <li>CDN loading issues may occur - use "Test mode" to simulate conversion</li>
@@ -491,7 +491,7 @@ const convert = async () => {
                       <p className="truncate text-sm font-medium" id="selected-file-name">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatBytes(file.size)}
-                        {audioInfo?.duration && ` · ${formatDuration(audioInfo.duration)}`}
+                        {audioInfo?.duration && ` Â· ${formatDuration(audioInfo.duration)}`}
                       </p>
                     </div>
                     <button
@@ -641,7 +641,7 @@ const convert = async () => {
               <div className="space-y-4">
                 <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-5 space-y-4">
                   <div className="text-center">
-                    <p className="text-4xl font-bold text-green-600 dark:text-green-400">✓</p>
+                    <p className="text-4xl font-bold text-green-600 dark:text-green-400">âœ“</p>
                     <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">Conversion Complete</p>
                   </div>
 

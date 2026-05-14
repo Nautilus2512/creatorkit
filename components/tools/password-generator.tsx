@@ -108,7 +108,7 @@ export function PasswordGenerator() {
   const quantities: (1 | 5 | 10 | 20)[] = [1, 5, 10, 20]
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
       {/* Desktop: top action bar */}

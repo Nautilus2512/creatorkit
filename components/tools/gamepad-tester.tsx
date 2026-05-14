@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Gamepad2, Wifi, WifiOff } from "lucide-react"
@@ -154,7 +154,7 @@ const stickBtns    = [10, 11]
 
   return (
     <>
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop: top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
@@ -227,7 +227,7 @@ const stickBtns    = [10, 11]
             {/* ID */}
             <div className="rounded-lg border border-border bg-muted/20 px-4 py-3" role="region" aria-labelledby="controller-id-label">
               <p id="controller-id-label" className="text-xs font-mono text-muted-foreground truncate">{gp.id}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Mapping: <span className="font-mono">{gp.mapping || "none"}</span> · {gp.buttons.length} buttons · {gp.axes.length} axes</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Mapping: <span className="font-mono">{gp.mapping || "none"}</span> Â· {gp.buttons.length} buttons Â· {gp.axes.length} axes</p>
             </div>
 
             {/* Visual layout */}

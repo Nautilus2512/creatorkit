@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Play, Pause, RotateCcw, SkipForward, Settings, X } from "lucide-react"
@@ -87,7 +87,7 @@ export default function PomodoroTimer() {
   useEffect(() => {
     const m = Math.floor(secondsLeft / 60).toString().padStart(2, "0")
     const s = (secondsLeft % 60).toString().padStart(2, "0")
-    document.title = running ? `${m}:${s} · ${MODE_LABEL[mode]} — CreatorKit` : "Pomodoro — CreatorKit"
+    document.title = running ? `${m}:${s} Â· ${MODE_LABEL[mode]} â€” CreatorKit` : "Pomodoro â€” CreatorKit"
     return () => { document.title = "CreatorKit" }
   }, [secondsLeft, running, mode])
 
@@ -114,14 +114,14 @@ export default function PomodoroTimer() {
       setTotalPomos(p => { const n = p + 1; localStorage.setItem("ck-pomodoro-pomos", String(n)); return n })
       if (newSess >= s.longsAfter) {
         setMode("long"); setSecondsLeft(s.long * 60); setSessionInCycle(0)
-        notify("Long Break 🎉", `${s.longsAfter} sessions complete! Take a ${s.long}-minute break.`)
+        notify("Long Break ðŸŽ‰", `${s.longsAfter} sessions complete! Take a ${s.long}-minute break.`)
       } else {
         setMode("short"); setSecondsLeft(s.short * 60); setSessionInCycle(newSess)
-        notify("Short Break ☕", `Good work! Take a ${s.short}-minute break.`)
+        notify("Short Break â˜•", `Good work! Take a ${s.short}-minute break.`)
       }
     } else {
       setMode("work"); setSecondsLeft(s.work * 60)
-      notify("Focus Time 🍅", `Break over — time to focus for ${s.work} minutes!`)
+      notify("Focus Time ðŸ…", `Break over â€” time to focus for ${s.work} minutes!`)
     }
     setRunning(false)
   }, [])
@@ -185,9 +185,9 @@ export default function PomodoroTimer() {
     <>
       <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
-      <div className="flex h-full flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
 
-        {/* ── Desktop: top action bar ── */}
+        {/* â”€â”€ Desktop: top action bar â”€â”€ */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
           <span className="text-sm font-semibold shrink-0 mr-1">Pomodoro Timer</span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -198,7 +198,7 @@ export default function PomodoroTimer() {
           </div>
         </div>
 
-        {/* ── Mobile: compact header ── */}
+        {/* â”€â”€ Mobile: compact header â”€â”€ */}
         <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
           <h2 className="text-base font-semibold">Pomodoro Timer</h2>
           <div className="flex items-center gap-1.5">
@@ -209,7 +209,7 @@ export default function PomodoroTimer() {
           </div>
         </div>
 
-        {/* ── Content ── */}
+        {/* â”€â”€ Content â”€â”€ */}
         <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden gap-0">
 
           {/* Timer */}
@@ -319,7 +319,7 @@ export default function PomodoroTimer() {
           )}
         </div>
 
-        {/* ── Mobile: bottom action bar ── */}
+        {/* â”€â”€ Mobile: bottom action bar â”€â”€ */}
         <div
           className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}

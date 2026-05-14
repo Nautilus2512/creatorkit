@@ -135,7 +135,7 @@ export default function LoremIpsum() {
 
   return (
     <>
-      <div className="flex h-full flex-col" role="main" aria-label="Lorem Ipsum Generator tool">
+      <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Lorem Ipsum Generator tool">
 
         {/* DESKTOP: top action bar */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">

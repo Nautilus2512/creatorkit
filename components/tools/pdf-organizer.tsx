@@ -124,7 +124,7 @@ export default function PdfOrganizer() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
-      <div className="flex h-full flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
         {/* Compact top toolbar */}
         <div className="shrink-0 flex items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="PDF Organizer controls">
           <label>

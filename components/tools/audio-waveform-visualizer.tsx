@@ -259,7 +259,7 @@ export default function AudioWaveformVisualizer() {
   }, [waveData])
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Audio Waveform Visualizer application">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Audio Waveform Visualizer application">
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {waveData ? `Waveform loaded for ${filename}. Duration: ${fmtTime(duration)}. Ready to export.` : 'No audio file loaded. Upload a file to visualize its waveform.'}
       </div>

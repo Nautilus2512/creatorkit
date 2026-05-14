@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import GamepadTester from "@/components/tools/gamepad-tester"
 import type { Metadata } from "next"
@@ -18,7 +18,7 @@ export default function GamepadTesterPage() {
           <kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px] opacity-50">Alt+Left Arrow</kbd>
         </Link>
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <GamepadTester />
       </div>
     </div>

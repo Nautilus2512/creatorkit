@@ -130,7 +130,7 @@ export default function ImageToPdf() {
   }, [images, loading, convert])
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Image to PDF tool">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Image to PDF tool">
       {/* Desktop top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Image to PDF</span>

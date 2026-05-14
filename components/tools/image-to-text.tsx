@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { Upload, Copy, Check, ImageIcon, Loader2 } from "lucide-react"
@@ -207,7 +207,7 @@ export default function ImageToText() {
   }, [result, copyText])
 
   return (
-    <div className="flex h-full flex-col" role="main" aria-label="Image to Text tool">
+    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Image to Text tool">
       {/* Desktop top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Image to Text</span>
@@ -263,7 +263,7 @@ export default function ImageToText() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left Panel — Upload */}
+        {/* Left Panel â€” Upload */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="image-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="image-panel-label">Image</span>
@@ -363,7 +363,7 @@ export default function ImageToText() {
                       className="text-xs text-muted-foreground mt-1"
                       id="upload-hint"
                     >
-                      or click to browse ·{" "}
+                      or click to browse Â·{" "}
                       <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">
                         Ctrl+Shift+O
                       </kbd>
@@ -410,7 +410,7 @@ export default function ImageToText() {
           </div>
         </div>
 
-        {/* Right Panel — Results */}
+        {/* Right Panel â€” Results */}
         <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="results-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
             <span className="text-sm font-medium" id="results-panel-label">Extracted Text</span>
@@ -484,7 +484,7 @@ export default function ImageToText() {
                   {result.text}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {result.text.split(/\s+/).filter(Boolean).length} words ·{" "}
+                  {result.text.split(/\s+/).filter(Boolean).length} words Â·{" "}
                   {result.text.length} characters
                 </p>
               </div>

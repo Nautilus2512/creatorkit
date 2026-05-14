@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Monitor, Square, Download, Trash2, Play, Pause } from "lucide-react"
@@ -150,7 +150,7 @@ export default function ScreenRecorder() {
   ]
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
@@ -212,7 +212,7 @@ export default function ScreenRecorder() {
 
       {/* Panels wrapper */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left — Recorder */}
+        {/* Left â€” Recorder */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Screen recorder">
           <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8">
             <div
@@ -231,11 +231,11 @@ export default function ScreenRecorder() {
           </div>
 
           <div className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground">
-            Recordings are in-memory only — download to save. Saved as WebM.
+            Recordings are in-memory only â€” download to save. Saved as WebM.
           </div>
         </div>
 
-        {/* Right — Recordings */}
+        {/* Right â€” Recordings */}
         <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Recordings library">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Recordings ({recordings.length})</span>
@@ -255,7 +255,7 @@ export default function ScreenRecorder() {
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">Recording {rec.id}</p>
-                        <p className="text-xs text-muted-foreground">{rec.timestamp.toLocaleTimeString()} · {fmtDur(rec.duration)}</p>
+                        <p className="text-xs text-muted-foreground">{rec.timestamp.toLocaleTimeString()} Â· {fmtDur(rec.duration)}</p>
                       </div>
                       <div className="flex gap-1 shrink-0" role="group" aria-label="Recording actions">
                         <Button

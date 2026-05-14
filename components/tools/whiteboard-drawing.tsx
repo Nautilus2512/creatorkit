@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -285,9 +285,9 @@ export function WhiteboardDrawing() {
     <>
       <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
-      <div className="flex h-full flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
 
-        {/* ── Compact top toolbar (all screen sizes, scrollable on mobile) ── */}
+        {/* â”€â”€ Compact top toolbar (all screen sizes, scrollable on mobile) â”€â”€ */}
         <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Drawing tools">
 
           {/* Tool buttons */}
@@ -347,7 +347,7 @@ export function WhiteboardDrawing() {
               onClick={() => setLineWidth(w => Math.max(1, w - 1))}
               className="h-6 w-6 rounded border border-border bg-muted/30 text-xs font-bold flex items-center justify-center hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Decrease line width"
-            >−</button>
+            >âˆ’</button>
             <span className="text-xs font-mono w-6 text-center tabular-nums" aria-live="polite" aria-label={`Line width: ${lineWidth}`}>{lineWidth}</span>
             <button
               onClick={() => setLineWidth(w => Math.min(20, w + 1))}
@@ -368,7 +368,7 @@ export function WhiteboardDrawing() {
           </div>
         </div>
 
-        {/* ── Canvas ── */}
+        {/* â”€â”€ Canvas â”€â”€ */}
         <div className="flex-1 min-h-0 relative bg-white overflow-hidden" role="region" aria-label="Drawing canvas">
           <canvas
             ref={canvasRef}
@@ -403,7 +403,7 @@ export function WhiteboardDrawing() {
                   if (e.key === "Enter") addText()
                   else if (e.key === "Escape") { setTextPosition(null); setTextInput("") }
                 }}
-                placeholder="Enter text…"
+                placeholder="Enter textâ€¦"
                 className="px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 autoFocus
                 aria-label="Text to add to canvas"
@@ -416,7 +416,7 @@ export function WhiteboardDrawing() {
           )}
         </div>
 
-        {/* ── Bottom action bar (always visible) ── */}
+        {/* â”€â”€ Bottom action bar (always visible) â”€â”€ */}
         <div
           className="shrink-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}

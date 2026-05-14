@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check, Shield, AlertCircle } from "lucide-react"
@@ -87,7 +87,7 @@ export default function JwtDecoder() {
 
   return (
     <>
-      <div className="flex h-full flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
 
         {/* DESKTOP: top action bar */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
@@ -126,7 +126,7 @@ export default function JwtDecoder() {
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden" role="main" aria-label="JWT Decoder tool">
-          {/* Left — Input */}
+          {/* Left â€” Input */}
           <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="input-panel-label">
               <div className="shrink-0 border-b border-border px-4 py-3">
                 <span className="text-sm font-medium" id="input-panel-label">JWT Token</span>
@@ -148,7 +148,7 @@ export default function JwtDecoder() {
                   </div>
                   {expiry && (
                     <p className={`text-xs ${expiry.expired ? "text-destructive" : "text-green-700"}`}>
-                      {expiry.expired ? "⚠ Expired" : "✓ Expires"}: {expiry.date.toLocaleString()}
+                      {expiry.expired ? "âš  Expired" : "âœ“ Expires"}: {expiry.date.toLocaleString()}
                     </p>
                   )}
                   {decoded.payload.iat && typeof decoded.payload.iat === "number" && (
@@ -163,7 +163,7 @@ export default function JwtDecoder() {
               )}
             </div>
 
-          {/* Right — Decoded */}
+          {/* Right â€” Decoded */}
           <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="decoded-panel-label">
               <div className="shrink-0 border-b border-border px-4 py-3">
                 <span className="text-sm font-medium" id="decoded-panel-label">Decoded</span>

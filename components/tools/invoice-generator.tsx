@@ -166,7 +166,7 @@ export default function InvoiceGenerator() {
   }, [printInvoice, reset])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       {/* Desktop: top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Invoice Generator</span>

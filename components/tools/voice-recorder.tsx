@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Mic, Square, Play, Pause, Download, Trash2 } from "lucide-react"
@@ -125,9 +125,9 @@ export default function VoiceRecorder() {
     <>
       <div aria-live="polite" aria-atomic="true" className="sr-only">{announcement}</div>
 
-      <div className="flex h-full flex-col">
+      <div className="flex flex-1 flex-col min-h-0">
 
-        {/* ── Desktop: top action bar ── */}
+        {/* â”€â”€ Desktop: top action bar â”€â”€ */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Voice recorder controls">
           <span className="text-sm font-semibold shrink-0 mr-1">Voice Recorder</span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -145,7 +145,7 @@ export default function VoiceRecorder() {
           </div>
         </div>
 
-        {/* ── Mobile: compact header + tab switcher ── */}
+        {/* â”€â”€ Mobile: compact header + tab switcher â”€â”€ */}
         <div className="flex md:hidden flex-col shrink-0 border-b border-border">
           <div className="flex items-center justify-between px-4 pt-3 pb-1">
             <h2 className="text-base font-semibold">Voice Recorder</h2>
@@ -163,7 +163,7 @@ export default function VoiceRecorder() {
           </div>
         </div>
 
-        {/* ── Panels ── */}
+        {/* â”€â”€ Panels â”€â”€ */}
         <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
 
           {/* Recorder panel */}
@@ -192,7 +192,7 @@ export default function VoiceRecorder() {
               </Button>
             </div>
             <div className="shrink-0 border-t border-border bg-card/95 px-4 py-2 text-xs text-muted-foreground" role="note">
-              Recordings are in-memory only — download to save before leaving this page.
+              Recordings are in-memory only â€” download to save before leaving this page.
             </div>
           </div>
 
@@ -211,7 +211,7 @@ export default function VoiceRecorder() {
                       </Button>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">Recording {rec.id}</p>
-                        <p className="text-xs text-muted-foreground">{rec.timestamp.toLocaleTimeString()} · {fmtDur(rec.duration)}</p>
+                        <p className="text-xs text-muted-foreground">{rec.timestamp.toLocaleTimeString()} Â· {fmtDur(rec.duration)}</p>
                       </div>
                       <div className="flex gap-1 shrink-0" role="group" aria-label="Recording actions">
                         <Button variant="ghost" size="sm" onClick={() => download(rec)} aria-label={`Download recording ${rec.id}`} className="focus:outline-none focus:ring-2 focus:ring-primary/50">
@@ -229,7 +229,7 @@ export default function VoiceRecorder() {
           </div>
         </div>
 
-        {/* ── Mobile: bottom action bar ── */}
+        {/* â”€â”€ Mobile: bottom action bar â”€â”€ */}
         <div
           className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
