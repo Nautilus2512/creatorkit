@@ -150,6 +150,17 @@ export function AnkiCard() {
     if (dueCards.length > 0 && view === "empty") setView("study")
   }, [activeDeckId])
 
+  const clearAllData = useCallback(() => {
+    const totalCards = decks.reduce((sum, d) => sum + d.cards.length, 0)
+    if (!confirm(`Delete all ${decks.length} deck${decks.length !== 1 ? "s" : ""} (${totalCards} card${totalCards !== 1 ? "s" : ""}) and study history? This cannot be undone.`)) return
+    setDecks([])
+    saveDecks([])
+    setStudyLog({})
+    saveLog({})
+    setActiveDeckId(null)
+    setView("empty")
+  }, [decks])
+
   const startStudy = useCallback(() => {
     if (!activeDeck) return
     const due = shuffle(activeDeck.cards.filter(isDue))
@@ -299,6 +310,11 @@ export function AnkiCard() {
             </div>
           )}
           <div className="ml-auto flex items-center gap-1.5">
+            {decks.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearAllData} aria-label="Clear all decks and study history" className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear data
+              </Button>
+            )}
             <ShortcutsModal pageName="Anki Flashcards" shortcuts={shortcuts} />
             <button
               onClick={() => setAddingDeck(v => !v)}
@@ -620,6 +636,11 @@ export function AnkiCard() {
         {/* MOBILE: bottom action bar */}
         <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+          {decks.length > 0 && view !== "study" && (
+            <Button variant="ghost" size="sm" className="h-11 px-3 text-muted-foreground hover:text-destructive" onClick={clearAllData} aria-label="Clear all decks and study history">
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          )}
           <div className="flex-1" />
           {view === "study" && currentCard ? (
             <>

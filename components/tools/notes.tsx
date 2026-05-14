@@ -107,6 +107,17 @@ export default function Notes() {
     announceToScreenReader("Note deleted")
   }, [activeId, notes, announceToScreenReader])
 
+  const clearAllNotes = useCallback(() => {
+    if (!confirm(`Delete all ${notes.length} note${notes.length !== 1 ? "s" : ""}? This cannot be undone.`)) return
+    setNotes([])
+    save([])
+    setActiveId(null)
+    setTitle("")
+    setContent("")
+    setUnsaved(false)
+    announceToScreenReader("All notes deleted")
+  }, [notes.length, announceToScreenReader])
+
   const active = notes.find(n => n.id === activeId) || null
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length
 
@@ -149,6 +160,11 @@ export default function Notes() {
               <Button variant="outline" size="sm" onClick={manualSave} aria-label="Save note">
                 <Save className="h-4 w-4 mr-1" aria-hidden="true" />Save
                 <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              </Button>
+            )}
+            {notes.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearAllNotes} aria-label="Clear all notes" className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear all
               </Button>
             )}
             <Button size="sm" onClick={newNote} aria-label="Create new note">

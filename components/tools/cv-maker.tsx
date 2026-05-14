@@ -467,6 +467,16 @@ export default function CvMaker() {
               { keys: ["Enter"], description: "Add skill when in skill input" },
             ]}
           />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClear}
+            aria-label={confirmingClear ? "Click again to confirm clearing all CV data" : "Clear all CV data"}
+            className={confirmingClear ? "text-destructive hover:text-destructive" : "text-muted-foreground"}
+          >
+            <Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />
+            {confirmingClear ? "Confirm?" : "Clear data"}
+          </Button>
           <Button size="sm" onClick={handlePrint} aria-label="Download PDF (Ctrl+Shift+D)">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download PDF
           </Button>
@@ -869,6 +879,15 @@ export default function CvMaker() {
       {/* Mobile bottom action bar */}
       <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-11 px-3 ${confirmingClear ? "text-destructive" : "text-muted-foreground"}`}
+          onClick={handleClear}
+          aria-label={confirmingClear ? "Tap again to confirm clearing all CV data" : "Clear all CV data"}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </Button>
         <div className="flex-1" />
         <Button size="sm" className="h-11 px-4" onClick={handlePrint} aria-label="Download PDF">
           <Download className="h-4 w-4 mr-2" aria-hidden="true" />Download PDF
