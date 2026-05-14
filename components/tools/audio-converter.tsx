@@ -389,7 +389,7 @@ export function AudioConverter() {
                         aria-label={`${fmt.label}: ${fmt.desc}. Press ${i + 1}.`}>
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-sm">{fmt.label}</span>
-                          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{i + 1}</kbd>
+                          <kbd className="hidden md:inline text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{i + 1}</kbd>
                         </div>
                         <div className="text-xs text-muted-foreground">{fmt.desc}</div>
                       </button>
@@ -408,7 +408,7 @@ export function AudioConverter() {
                         aria-label={`${fmt.label}: ${fmt.desc}. Press ${i + 3}.`}>
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-sm">{fmt.label}</span>
-                          <kbd className="text-[10px] px-1 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{i + 3}</kbd>
+                          <kbd className="hidden md:inline text-[10px] px-1 rounded bg-muted text-muted-foreground font-mono" aria-hidden="true">{i + 3}</kbd>
                         </div>
                         <div className="text-xs text-muted-foreground">{fmt.desc}</div>
                       </button>
