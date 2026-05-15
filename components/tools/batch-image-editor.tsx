@@ -256,7 +256,10 @@ export default function BatchImageEditor() {
               <div className="space-y-3" role="group" aria-label="Output format selection">
                 <Label className="text-sm font-medium" id="format-label">
                   Output Format
-                  <kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground" aria-hidden="true">← →</kbd>
+                  <span className="ml-1.5 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                    <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground">Tab</kbd>
+                    <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground">← →</kbd>
+                  </span>
                 </Label>
                 <div className="flex gap-2" role="radiogroup" aria-labelledby="format-label">
                   {(["jpeg", "png", "webp"] as OutputFormat[]).map(f => (
@@ -272,7 +275,11 @@ export default function BatchImageEditor() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between">
                       <Label className="text-xs text-muted-foreground" id="quality-label">
-                        Quality<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">← →</kbd>
+                        Quality
+                        <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                          <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                          <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+                        </span>
                       </Label>
                       <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{quality}%</span>
                     </div>
@@ -286,7 +293,11 @@ export default function BatchImageEditor() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium" id="resize-label">
-                    Resize<kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground" aria-hidden="true">Space</kbd>
+                    Resize
+                    <span className="ml-1.5 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground">Tab</kbd>
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground">Space</kbd>
+                    </span>
                   </Label>
                   <Switch checked={resize} onCheckedChange={v => { setResize(v); announceToScreenReader(v ? "Resize enabled" : "Resize disabled") }}
                     aria-labelledby="resize-label" />
@@ -314,7 +325,11 @@ export default function BatchImageEditor() {
                 <Label className="text-sm font-medium">Filters</Label>
                 <div className="flex items-center justify-between">
                   <Label className="text-xs text-muted-foreground" id="grayscale-label">
-                    Grayscale<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Space</kbd>
+                    Grayscale
+                    <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Space</kbd>
+                    </span>
                   </Label>
                   <Switch checked={grayscale} onCheckedChange={v => { setGrayscale(v); announceToScreenReader(v ? "Grayscale filter enabled" : "Grayscale filter disabled") }}
                     aria-labelledby="grayscale-label" />
@@ -326,7 +341,11 @@ export default function BatchImageEditor() {
                   <div key={label} className="space-y-1.5">
                     <div className="flex justify-between">
                       <Label className="text-xs text-muted-foreground" id={`${label.toLowerCase()}-label`}>
-                        {label}<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">← →</kbd>
+                        {label}
+                        <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                          <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                          <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+                        </span>
                       </Label>
                       <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{value}%</span>
                     </div>
