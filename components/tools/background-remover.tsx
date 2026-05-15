@@ -425,9 +425,9 @@ export function BackgroundRemover() {
           </Button>
         )}
         {imageEl && (
-          <Button size="sm" variant={downloading ? "default" : "outline"} onClick={download} aria-label="Download as PNG">
+          <Button size="sm" variant={downloading ? "outline" : "default"} onClick={download} aria-label="Download as PNG">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         )}
         <div className="ml-auto flex items-center gap-1.5">
@@ -837,7 +837,7 @@ export function BackgroundRemover() {
         ) : (
           <div className="flex-1" />
         )}
-        <Button size="sm" variant={downloading ? "default" : "outline"} className="h-11 px-5" onClick={download} disabled={!imageEl} aria-label="Download as PNG">
+        <Button size="sm" variant={downloading ? "outline" : "default"} className="h-11 px-5" onClick={download} disabled={!imageEl} aria-label="Download as PNG">
           <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download
         </Button>
       </div>
