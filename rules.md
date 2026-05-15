@@ -424,6 +424,24 @@ useEffect(() => {
 - Push to `main` branch deploys automatically to Vercel.
 - Do not force-push to `main`.
 
+### Tailwind CSS class availability (JIT bundle safety)
+
+Tailwind v4 uses a JIT scanner that only includes utility classes found in scanned source files. A class that appears in only one new file is included; a class that appears in **no** existing file is silently absent from the bundle. The element renders but the style has no effect.
+
+**Rule: when building a component that mirrors an existing one, use the exact same Tailwind utility values as the reference.**
+
+```tsx
+// ❌ Bug — h-44 was not used anywhere else in the codebase
+<div className="relative h-44 w-full rounded-lg ...">
+
+// ✅ Safe — h-36 is already in the bundle (used by design-token-generator.tsx)
+<div className="relative h-36 w-full rounded-lg ...">
+```
+
+This is especially relevant for height and size utilities on elements whose only child is `position: absolute` — if the height class is missing from the bundle the element collapses to `height: 0` and becomes invisible with no console error.
+
+**When in doubt:** grep the codebase for the class before using it. If zero results, use a confirmed equivalent instead (e.g. `h-36` instead of `h-44`).
+
 ### CSP requirements for media tools
 Any tool that creates a blob URL and plays it in an `<audio>` or `<video>` element requires `media-src 'self' blob:` in the CSP. Without this directive, browsers fall back to `default-src 'self'` which silently blocks blob URL playback — the player renders but shows `0:00 / 0:00` and refuses to load. This directive is already present in `next.config.mjs` and covers all media tools.
 

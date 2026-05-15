@@ -89,6 +89,24 @@
 
 ---
 
+## v1.76.1 — May 2026
+### Color Converter — SL Gradient Bugfix
+
+#### Bug
+The 2D saturation/lightness gradient area in `ColorPickerPanel` was invisible when the picker opened — only the hue slider and hex input appeared.
+
+#### Root cause
+`h-44` was used for the SL gradient div, but that class had never appeared anywhere else in the codebase. Tailwind v4's JIT scanner only includes classes it finds in scanned source files. Since no other file used `h-44`, it was absent from the CSS bundle entirely. The `div` rendered with `height: 0` because its only child (the thumb) is `position: absolute` and contributes nothing to intrinsic layout height.
+
+#### Fix
+- `h-44` → `h-36` (already confirmed present in the bundle via `design-token-generator.tsx`)
+- `bg-card shadow-lg` → `bg-popover shadow-xl` on the picker panel (exact match to the working DTG component)
+
+#### Files changed
+- `components/tools/color-converter.tsx`
+
+---
+
 ## v1.76.0 — May 2026
 ### Color Converter — Rules Compliance Pass + Custom Visual Color Picker
 

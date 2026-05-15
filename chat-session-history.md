@@ -635,6 +635,20 @@ Full rules.md compliance pass (14 issues) on `color-converter.tsx`, followed by 
 |---|---|
 | 657eae2 | fix: full compliance pass on color-converter |
 | b44e9cf | feat: replace native color input with custom visual picker in color-converter |
+| 195389e | docs: add v1.76.0 entries for color-converter compliance + custom picker |
+| c0c6c76 | fix: restore SL gradient in color-converter picker (h-36, bg-popover) |
+
+### Bugfix — SL Gradient Not Rendering (v1.76.1)
+After deploying the custom picker, the 2D saturation/lightness gradient area was invisible on localhost. Only the hue slider and hex input appeared.
+
+| Investigation | Finding |
+|---|---|
+| Code was structurally correct | `h-44` class present in JSX, gradient inline style present |
+| Compared with working DTG picker | DTG uses `h-36` — confirmed rendering correctly |
+| Hypothesis tested | `h-44` was not used anywhere else in the codebase |
+| Root cause confirmed | Tailwind v4 JIT scanner never included `h-44` in the CSS bundle; div collapsed to height 0 (absolutely-positioned thumb child contributes no intrinsic height) |
+
+**Fix:** `h-44` → `h-36` (already in bundle); `bg-card shadow-lg` → `bg-popover shadow-xl` (exact DTG match). New rule documented in rules.md Section 11: always use Tailwind utility values already confirmed present in the bundle when mirroring an existing component.
 
 ---
 
