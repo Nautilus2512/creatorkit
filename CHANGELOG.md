@@ -89,6 +89,45 @@
 
 ---
 
+## v1.77.0 — May 2026
+### Color Palette Extractor — Rules Compliance Pass + Format Shortcuts + Colorblind Simulation
+
+#### Rules compliance fixes (`color-palette-extractor.tsx`) — 16 issues
+- `Ctrl+Shift+O` (O hard-conflict) → `Ctrl+Shift+U`
+- `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V`
+- Keyboard handler: capture phase `true` removed; `stopPropagation()` ×2 removed; input guard added
+- ShortcutsModal: stale `Ctrl+O` / `Ctrl+C` → `Ctrl+Shift+U` / `Ctrl+Shift+V` in both desktop and mobile instances
+- Layout: old v1.64 edge-to-edge (`flex-1 min-h-0 overflow-hidden`) → `flex-1 overflow-y-auto p-4 space-y-4` wrapper + `rounded-xl border overflow-hidden` panels card with `min-h-[500px]`
+- Usage guide added (How to use, Keyboard shortcuts, Tips)
+- Footer spacer `md:hidden h-[60px]` added
+- Mobile bottom action bar added (`md:hidden fixed bottom-0 ... z-20`) with Copy All at `h-11` touch target
+- Mobile header: `py-2` → `pt-3 pb-2`; `<span>` → `<h2 className="text-base font-semibold">`
+- Mobile tablist: `role="tablist"` + `aria-label="Panel selection"` added; tabs use `border-b-2 border-primary` active pattern + `role="tab"` + `aria-selected` + focus-visible rings
+- `focus:` → `focus-visible:` on color count buttons, format buttons, drop zone
+- Drop zone kbd badge: `hidden md:inline` added
+- Change Image button kbd: updated to `Ctrl+Shift+U` + `hidden md:inline`
+- Auto-switch to Palette tab after upload
+- Unused `reExtract` function removed
+
+#### Format shortcuts + keyboard hints
+- `1` / `2` / `3` bare-key shortcuts switch HEX / RGB / HSL; wired in keyboard handler
+- Conditional kbd labels on Format buttons (white-on-dark when active, muted when inactive — same blackout-fix pattern as toggle buttons)
+- `Tab + ← →` two-badge hint added to the Colors radiogroup label (rules §3)
+- ShortcutsModal updated with `1`, `2`, `3` shortcut entries
+
+#### Colorblind simulation
+- `CBMode` type + `simulateColorBlindness()` matrix added (same algorithm as `design-token-generator.tsx`)
+- Normal / Deuter. / Protan. / Tritan. mode buttons placed in the Palette panel header — visible on both desktop and mobile without switching tabs
+- Both color swatches and percentage bars update live using the simulated color
+- Copied values always reflect the original color, not the simulated one
+- `announceToScreenReader` fires on every mode change
+- New "Color vision simulation" section added to the usage guide
+
+#### Files changed
+- `components/tools/color-palette-extractor.tsx`
+
+---
+
 ## v1.76.1 — May 2026
 ### Color Converter — SL Gradient Bugfix
 

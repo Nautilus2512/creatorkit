@@ -770,3 +770,94 @@ Canvas element:
 - `e.preventDefault()` in touch handlers blocks the page scroll during the gesture.
 - `select-none` prevents the browser text-selection highlight during a mouse drag.
 - Use a `ref` for `isDragging` (not state) to avoid triggering re-renders on every mouse move.
+
+---
+
+## 22. Color Blindness Simulation
+
+Any tool that displays colors as its primary output (palette extractor, design token generator, gradient generator, etc.) must offer a color blindness simulation mode so users can check whether their colors are distinguishable by people with different types of color vision.
+
+### When to add it
+Add this feature to tools where the **visual color swatch** is the output — not tools that merely have a color input. Required for: Color Palette Extractor, Design Token Generator. Optional but recommended for: Gradient Generator, Color Converter.
+
+### CBMode type
+
+```tsx
+type CBMode = "none" | "deuteranopia" | "protanopia" | "tritanopia"
+```
+
+### simulateColorBlindness helper
+
+```tsx
+function simulateColorBlindness(hex: string, mode: CBMode): string {
+  if (mode === "none" || !hex.startsWith("#") || hex.length !== 7) return hex
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  let sr: number, sg: number, sb: number
+  switch (mode) {
+    case "deuteranopia": sr = 0.625*r + 0.375*g; sg = 0.7*r + 0.3*g; sb = 0.3*g + 0.7*b; break
+    case "protanopia":   sr = 0.567*r + 0.433*g; sg = 0.558*r + 0.442*g; sb = 0.242*g + 0.758*b; break
+    case "tritanopia":   sr = 0.95*r + 0.05*g; sg = 0.433*g + 0.567*b; sb = 0.475*g + 0.525*b; break
+    default: return hex
+  }
+  const toH = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")
+  return `#${toH(sr)}${toH(sg)}${toH(sb)}`
+}
+```
+
+### Mode selector buttons
+
+Place the buttons **inside the output panel header** — not in the top action bar. This keeps them visible on both desktop and mobile without requiring the user to switch tabs.
+
+```tsx
+const CB_MODES: [CBMode, string][] = [
+  ["none", "Normal"],
+  ["deuteranopia", "Deuter."],
+  ["protanopia", "Protan."],
+  ["tritanopia", "Tritan."],
+]
+
+<div className="flex items-center gap-0.5" role="radiogroup" aria-label="Color vision simulation">
+  {CB_MODES.map(([mode, label]) => (
+    <button
+      key={mode}
+      onClick={() => changeCbMode(mode)}
+      className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        cbMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      }`}
+      role="radio"
+      aria-checked={cbMode === mode}
+      aria-label={`${label} color vision`}
+    >
+      {label}
+    </button>
+  ))}
+</div>
+```
+
+### Applying the simulation
+
+Apply `simulateColorBlindness()` to every visual element that shows color: swatches, progress bars, gradient previews. Never apply it to hex/rgb/hsl text values or to values that will be copied — simulation is for visual preview only.
+
+```tsx
+// Swatch
+<div
+  style={{ backgroundColor: simulateColorBlindness(sw.hex, cbMode) }}
+  role="img"
+  aria-label={`Color: ${label}${cbMode !== "none" ? ` (${cbMode} simulation)` : ""}`}
+/>
+
+// Progress bar — use actual color at reduced opacity instead of a static bg-primary
+<div
+  className="h-full rounded-full opacity-70"
+  style={{ width: `${pct}%`, backgroundColor: simulateColorBlindness(sw.hex, cbMode) }}
+/>
+```
+
+### Accessibility rules for CB simulation
+
+- Always announce mode changes: `announceToScreenReader(mode === "none" ? "Normal color vision" : `Color vision simulation: ${mode}`)`
+- Update `aria-label` on swatches to include the simulation mode name when active.
+- Copied/exported values must always be the **original** color. Never copy the simulated hex.
+- Include a guide section explaining what each mode represents and that copied values are original.

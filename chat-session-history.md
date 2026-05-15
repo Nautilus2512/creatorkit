@@ -597,6 +597,56 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.77.0 (May 2026) — Color Palette Extractor Compliance Pass + Colorblind Simulation
+
+### Overview
+Full rules.md compliance pass (16 issues) on `color-palette-extractor.tsx`, plus format keyboard shortcuts with kbd labels on header buttons, and a full colorblind simulation feature (Normal / Deuteranopia / Protanopia / Tritanopia).
+
+### Rules Compliance Fixes (16 issues)
+| Issue | Fix |
+|---|---|
+| `Ctrl+Shift+O` — O hard-conflict | → `Ctrl+Shift+U` |
+| `Ctrl+Shift+C` — C hard-conflict | → `Ctrl+Shift+V` |
+| Keyboard handler: capture phase `true` + `stopPropagation()` ×2 | Removed; input guard added |
+| ShortcutsModal shows stale `Ctrl+O` / `Ctrl+C` | → `Ctrl+Shift+U` / `Ctrl+Shift+V` (both instances) |
+| Old v1.64 edge-to-edge layout | → scrollable wrapper + `rounded-xl border` panels card with `min-h-[500px]` |
+| Missing usage guide | Added: How to use, Keyboard shortcuts, Tips |
+| Missing footer spacer | Added `md:hidden h-[60px]` |
+| Missing mobile bottom action bar | Added `md:hidden fixed bottom-0 z-20` with Copy All |
+| Mobile header `py-2` + `<span>` title | → `pt-3 pb-2` + `<h2>` |
+| Mobile tablist missing `role` + `aria-label` | Added; tabs use `border-b-2` active pattern + `role="tab"` + `aria-selected` + focus-visible rings |
+| `focus:` on count/format/dropzone | → `focus-visible:` throughout |
+| Drop zone kbd no `hidden md:inline` | Added |
+| Change Image kbd stale shortcut | Updated to `Ctrl+Shift+U` + `hidden md:inline` |
+| No auto-switch to palette after upload | Added `setActiveTab("output")` in handleFile |
+| Unused `reExtract` function | Removed |
+
+### Format Shortcuts + Keyboard Hints
+| Addition | Detail |
+|---|---|
+| `1` / `2` / `3` bare-key shortcuts | Switch HEX / RGB / HSL; wired in keyboard handler |
+| Conditional kbd labels on Format buttons | White-on-dark when active (`border-primary-foreground/30 bg-primary-foreground/20`), muted when inactive |
+| `Tab + ← →` hint on Colors label | Rules §3 radiogroup pattern; desktop only, `aria-hidden="true"` |
+| ShortcutsModal updated | `1`, `2`, `3` entries added |
+
+### Colorblind Simulation Feature
+| Decision | Rationale |
+|---|---|
+| Same `simulateColorBlindness()` matrix as DTG | Consistent algorithm; deuteranopia/protanopia/tritanopia coefficients already proven |
+| Buttons in Palette panel header (not top bar) | Visible on both desktop AND mobile without tab switching; placed where the colors are actually shown |
+| Swatches + bars both update | Full visual feedback — not just the swatch; the proportional bar also reflects the simulated view |
+| Copied values = original (not simulated) | Design principle: simulation is for preview only; the actual color value is always the real one |
+| `announceToScreenReader` on every mode change | Screen reader users know when simulation mode is active |
+| "Color vision simulation" guide section added | Explains what each mode does and clarifies that copied values are original |
+
+### Commits
+| Hash | Message |
+|---|---|
+| 7831505 | fix: full compliance pass on color-palette-extractor |
+| 9e0fcb2 | feat: add format shortcuts, keyboard hints, and colorblind simulation to color-palette-extractor |
+
+---
+
 ## Session v1.76.0 (May 2026) — Color Converter Compliance Pass + Custom Color Picker
 
 ### Overview
