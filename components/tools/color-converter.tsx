@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
-// Accessibility helper for screen reader announcements
 function announceToScreenReader(message: string) {
   const announcement = document.createElement('div')
   announcement.setAttribute('role', 'status')
@@ -141,9 +140,9 @@ export default function ColorConverter() {
   const oklch = color ? rgbToOklch(color.r, color.g, color.b) : null
 
   const formats = color ? [
-    { label: "HEX", key: "hex", value: hex, shortcut: "1" },
-    { label: "RGB", key: "rgb", value: `rgb(${color.r}, ${color.g}, ${color.b})`, shortcut: "2" },
-    { label: "HSL", key: "hsl", value: `hsl(${hsl!.h}, ${hsl!.s}%, ${hsl!.l}%)`, shortcut: "3" },
+    { label: "HEX",   key: "hex",   value: hex,                                       shortcut: "1" },
+    { label: "RGB",   key: "rgb",   value: `rgb(${color.r}, ${color.g}, ${color.b})`, shortcut: "2" },
+    { label: "HSL",   key: "hsl",   value: `hsl(${hsl!.h}, ${hsl!.s}%, ${hsl!.l}%)`, shortcut: "3" },
     { label: "OKLCH", key: "oklch", value: `oklch(${oklch!.l}% ${oklch!.c} ${oklch!.h})`, shortcut: "4" },
   ] : []
 
@@ -151,42 +150,41 @@ export default function ColorConverter() {
     if (!color || formats.length === 0) return
     const allFormats = formats.map(f => `${f.label}: ${f.value}`).join('\n')
     navigator.clipboard.writeText(allFormats)
+    setCopied("all")
     announceToScreenReader('All color formats copied to clipboard')
+    setTimeout(() => setCopied(null), 2000)
   }, [color, formats])
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
-      
-      // Number keys to copy formats
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
+
+      // Number keys 1–4 copy individual formats (no modifier needed)
       if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[1-4]$/.test(e.key) && color) {
         e.preventDefault()
         const format = formats.find(f => f.shortcut === e.key)
-        if (format) {
-          copy(format.value, format.key, format.label)
-        }
+        if (format) copy(format.value, format.key, format.label)
       }
-      
-      // Ctrl+Shift+C to copy all formats
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && color) {
+
+      // Ctrl+Shift+V — copy all formats
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && color) {
         e.preventDefault()
-        e.stopPropagation()
         copyAll()
       }
-      
-      // Escape to clear/focus input
+
+      // Escape — focus color input
       if (e.key === "Escape") {
         const inputEl = document.getElementById('color-input') as HTMLInputElement
         inputEl?.focus()
       }
     }
-    window.addEventListener("keydown", handleKeyDown, true)
-    return () => window.removeEventListener("keydown", handleKeyDown, true)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [color, formats, copy, copyAll])
 
   return (
-    <>
     <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop: top action bar */}
@@ -198,131 +196,196 @@ export default function ColorConverter() {
             { keys: ["2"], description: "Copy RGB" },
             { keys: ["3"], description: "Copy HSL" },
             { keys: ["4"], description: "Copy OKLCH" },
-            { keys: ["Ctrl", "Shift", "C"], description: "Copy all formats" },
+            { keys: ["Ctrl", "Shift", "V"], description: "Copy all formats" },
+            { keys: ["Escape"], description: "Focus color input" },
           ]} />
         </div>
       </div>
 
       {/* Mobile: compact header + tab switcher */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">Color Converter</h2>
           <ShortcutsModal pageName="Color Converter" shortcuts={[{ keys: ["1-4"], description: "Copy formats" }]} />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Color Input
           </button>
           <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             All Formats
           </button>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left Panel — Input */}
-        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Color input">
-          <div className="shrink-0 border-b border-border px-4 py-3">
-            <span className="text-sm font-medium">Color Input</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
-            <div className="flex items-start gap-4">
-              <input
-                type="color"
-                id="color-picker"
-                value={pickerValue}
-                onChange={(e) => handlePicker(e.target.value)}
-                className="w-16 h-16 rounded-lg border border-border cursor-pointer p-1 bg-background shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Color picker"
-              />
-              <div className="flex-1 space-y-1">
-                <Input
-                  id="color-input"
-                  value={input}
-                  onChange={(e) => handleTextInput(e.target.value)}
-                  placeholder="#3b82f6 or rgb(59,130,246) or hsl(217,91%,60%)"
-                  className="font-mono text-sm"
-                  aria-label="Color input (HEX, RGB, or HSL)"
-                  aria-describedby="color-formats-help"
-                />
-                <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        {/* Panels card */}
+        <div className="rounded-xl border border-border overflow-hidden">
+          <div className="flex flex-col md:flex-row min-h-[500px]">
+
+            {/* Left panel — Input */}
+            <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Color input">
+              <div className="shrink-0 border-b border-border px-4 py-3">
+                <span className="text-sm font-medium">Color Input</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                <div className="flex items-start gap-4">
+                  <input
+                    type="color"
+                    id="color-picker"
+                    value={pickerValue}
+                    onChange={(e) => handlePicker(e.target.value)}
+                    className="w-16 h-16 rounded-lg border border-border cursor-pointer p-1 bg-background shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label="Color picker"
+                  />
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      id="color-input"
+                      value={input}
+                      onChange={(e) => handleTextInput(e.target.value)}
+                      placeholder="#3b82f6 or rgb(59,130,246) or hsl(217,91%,60%)"
+                      className="font-mono text-sm"
+                      aria-label="Color input (HEX, RGB, or HSL)"
+                      aria-describedby="color-formats-help"
+                    />
+                    <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
+                  </div>
+                </div>
+
+                {color && (
+                  <div
+                    className="w-full h-36 rounded-xl border border-border shadow-inner transition-colors duration-200"
+                    style={{ backgroundColor: hex }}
+                    role="img"
+                    aria-label={`Color preview: ${hex}`}
+                  />
+                )}
+
+                {color && (
+                  <div className="rounded-lg border border-border p-4 space-y-1 text-sm" role="group" aria-label="RGB values">
+                    <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono" aria-live="polite">{color.r}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">G</span><span className="font-mono" aria-live="polite">{color.g}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">B</span><span className="font-mono" aria-live="polite">{color.b}</span></div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {color && (
-              <div
-                className="w-full h-36 rounded-xl border border-border shadow-inner transition-colors duration-200"
-                style={{ backgroundColor: hex }}
-                role="img"
-                aria-label={`Color preview: ${hex}`}
-              />
-            )}
-
-            {color && (
-              <div className="rounded-lg border border-border p-4 space-y-1 text-sm" role="group" aria-label="RGB values">
-                <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono" aria-live="polite">{color.r}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">G</span><span className="font-mono" aria-live="polite">{color.g}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">B</span><span className="font-mono" aria-live="polite">{color.b}</span></div>
+            {/* Right panel — Formats */}
+            <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 bg-card`} role="region" aria-label="Color formats">
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-medium">All Formats</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={copyAll}
+                  disabled={!color}
+                  className="text-xs h-7"
+                  aria-label="Copy all formats"
+                >
+                  {copied === "all" ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
+                  {copied === "all" ? "Copied!" : "Copy All"}
+                  <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
+                </Button>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Panel — Formats */}
-        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-label="Color formats">
-          <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-medium">All Formats</span>
-            {color && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={copyAll}
-                className="text-xs h-7"
-                aria-label="Copy all formats"
-              >
-                Copy All<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
-              </Button>
-            )}
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {formats.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="note">
-                Enter or pick a color to see all formats
-              </div>
-            ) : (
-              formats.map(({ label, key, value, shortcut }) => (
-                <div key={key} className="rounded-lg border border-border overflow-hidden">
-                  <div 
-                    className="h-8" 
-                    style={{ backgroundColor: value }}
-                    aria-hidden="true"
-                  />
-                  <div className="p-3 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-0.5">{label} <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd></p>
-                      <code className="text-sm font-mono" aria-live="polite">{value}</code>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => copy(value, key, label)} 
-                      className="shrink-0 h-7 text-xs"
-                      aria-label={`Copy ${label} value`}
-                    >
-                      {copied === key ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
-                      {copied === key ? "Copied!" : "Copy"}
-                    </Button>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {formats.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="note">
+                    Enter or pick a color to see all formats
                   </div>
-                </div>
-              ))
-            )}
+                ) : (
+                  formats.map(({ label, key, value, shortcut }) => (
+                    <div key={key} className="rounded-lg border border-border overflow-hidden">
+                      <div
+                        className="h-8"
+                        style={{ backgroundColor: value }}
+                        aria-hidden="true"
+                      />
+                      <div className="p-3 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-0.5">
+                            {label} <kbd className="rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>
+                          </p>
+                          <code className="text-sm font-mono" aria-live="polite">{value}</code>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copy(value, key, label)}
+                          className="shrink-0 h-7 text-xs"
+                          aria-label={`Copy ${label} value`}
+                        >
+                          {copied === key ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
+                          {copied === key ? "Copied!" : "Copy"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
-    </div>
-    </>
-  )
 
+        {/* Usage guide */}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Click the <span className="text-foreground font-medium">color swatch</span> to open a visual picker, or type a value directly into the input field.</li>
+              <li>All four formats update instantly in the right panel.</li>
+              <li>Click <span className="text-foreground font-medium">Copy</span> next to any format, or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">2</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">3</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">4</kbd> to copy HEX, RGB, HSL, or OKLCH.</li>
+              <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> or click <span className="text-foreground font-medium">Copy All</span> to copy every format at once.</li>
+            </ol>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">1 / 2 / 3 / 4</kbd> Copy HEX, RGB, HSL, or OKLCH</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> Copy all formats at once</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Focus the color input</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> Open shortcuts reference</li>
+            </ul>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+              <li>Shorthand HEX works too. <code className="rounded bg-muted px-1 text-[10px] font-mono">#abc</code> expands to <code className="rounded bg-muted px-1 text-[10px] font-mono">#aabbcc</code> automatically.</li>
+              <li>Paste any <code className="rounded bg-muted px-1 text-[10px] font-mono">rgb()</code> or <code className="rounded bg-muted px-1 text-[10px] font-mono">hsl()</code> value directly from CSS and it will be parsed.</li>
+              <li><span className="text-foreground font-medium">OKLCH</span> is the modern CSS color space with perceptually uniform lightness. It is supported in all major browsers.</li>
+              <li>Everything runs in your browser. Nothing is sent to a server.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="md:hidden h-[60px]" aria-hidden="true" />
+
+      </div>
+
+      {/* Mobile: bottom action bar */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-11 px-4"
+          onClick={copyAll}
+          disabled={!color}
+          aria-label="Copy all formats"
+        >
+          {copied === "all" ? <Check className="h-4 w-4 mr-1.5" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1.5" aria-hidden="true" />}
+          {copied === "all" ? "Copied!" : "Copy All"}
+        </Button>
+      </div>
+
+    </div>
+  )
 }
