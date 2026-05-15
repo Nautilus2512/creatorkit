@@ -115,7 +115,7 @@ Always **two rows**:
   </div>
 </div>
 ```
-- **Row 2** (conditional): Secondary info such as stats, shown only when data exists.
+- **Row 2** (conditional): Secondary info such as stats, OR action buttons for canvas/image tools, shown only when relevant data or an uploaded file exists.
 ```tsx
 {hasData && (
   <div className="flex items-center gap-3 px-4 pb-2 text-xs">
@@ -123,7 +123,20 @@ Always **two rows**:
   </div>
 )}
 ```
-Never put title + stats + icons all in one row — it becomes too crowded on narrow screens.
+For canvas tools (e.g. Background Remover), Row 2 holds labeled action buttons (icon + text) instead of stats:
+```tsx
+{imageEl && (
+  <div className="flex items-center gap-2 px-3 pb-2" role="group" aria-label="Editing tools">
+    <button aria-label="Repair" aria-pressed={restoreActive} ...>
+      <Icon className="h-4 w-4 mr-1" aria-hidden="true" />Repair
+    </button>
+    <button aria-label="Smooth Edge" ...>
+      <Icon className="h-4 w-4 mr-1" aria-hidden="true" />Smooth
+    </button>
+  </div>
+)}
+```
+Never put title + stats/actions + icons all in one row — it becomes too crowded on narrow screens.
 
 ### Tab switcher (mobile, for two-panel tools)
 ```tsx
@@ -465,6 +478,16 @@ Used by: Whiteboard, Code Playground, Markdown Editor, etc.
 [Full-width content area]
 ```
 
+### Unified canvas pattern (image editing tools)
+Used by: Background Remover.
+
+- A single `canvasRef` is the sole working surface; it activates immediately on image upload.
+- All editing modes (removal methods, repair brush, post-processing) operate directly on the canvas. There is no "input image / output image" distinction once the canvas is active.
+- Download always calls `canvas.toBlob()` on the current canvas state — no need to track which mode produced the last result.
+- Phase state machine: `"idle" | "loading-model" | "processing" | "canvas"`. The tool enters `"canvas"` on file upload, before any removal is applied.
+- An `originalDataRef` holds a baseline `ImageData` snapshot (updated after each removal step) so a repair brush can restore pixels to their post-removal state.
+- A global boolean flag (e.g. `restoreActive`) can override canvas pointer handlers for all modes. Canvas handlers should check `if (mode === "auto" && !restoreActive) return` rather than `if (mode === "auto") return`, so the repair brush works even when no destructive mode is active.
+
 ---
 
 ## 15. WASM / Heavy Library Loading
@@ -542,6 +565,37 @@ Button appearance:
 ```
 
 Use `Ctrl+Shift+V` as the standard copy shortcut across all tools (not `Ctrl+Shift+C` which conflicts with DevTools Inspector in Chrome, Firefox, and Edge).
+
+### Action button flash pattern (Download and other one-shot actions)
+
+The same transient state approach applies to Download and similar one-shot buttons. The button rests white (`variant="default"`) and flashes dark (`variant="outline"`) for 1500ms on trigger:
+
+```tsx
+const [downloading, setDownloading] = useState(false)
+
+const download = useCallback(() => {
+  setDownloading(true)
+  // ... trigger download
+  announceToScreenReader("Download started.")
+  setTimeout(() => setDownloading(false), 1500)
+}, [...])
+```
+
+Button with conditional kbd badge:
+```tsx
+<Button variant={downloading ? "outline" : "default"} onClick={download} aria-label="Download">
+  <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
+  <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${
+    downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"
+  }`} aria-hidden="true">Ctrl+Shift+S</kbd>
+</Button>
+```
+
+**Critical — variant semantics in this app's dark theme:**
+- `variant="default"` renders **white/bright** (primary colour is white in dark mode)
+- `variant="outline"` renders **dark** (transparent background with visible border)
+
+Always assign variants based on this. Swapping them produces the opposite of the intended effect: the button rests dark and flashes white on click.
 
 ---
 

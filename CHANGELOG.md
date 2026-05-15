@@ -89,6 +89,26 @@
 
 ---
 
+## v1.70.0 — May 2026
+### Background Remover — Download Button Visual Feedback + PRD
+
+#### Download button flash effect (`background-remover.tsx`)
+- Added `downloading` state: button flips from white (`variant="default"`) to dark (`variant="outline"`) for 1500ms on click, then resets automatically
+- Root cause of original bug documented: in this app's dark theme `variant="default"` = white/primary and `variant="outline"` = dark. Initial implementation had them swapped. Fixed by inverting the condition.
+- Conditional kbd badge class updated to match each state: `border-primary-foreground/30 bg-primary-foreground/20` when white, `border-border bg-muted` when dark
+- Applied to both desktop and mobile Download buttons
+- Removed pre-existing unused imports (`Minus`, `Plus`) and unused `handleImageClick` function
+
+#### PRD.md created
+- Product Requirements Document added to project root in Markdown format
+- Standard sections: Executive Summary, Problem Statement, Goals (with metrics), Target User personas (3), Scope (in/out), Feature Requirements, Non-Functional Requirements, User Stories, Technical Constraints, Success Metrics, Roadmap, Risks and Assumptions, Open Questions, Appendix with glossary
+
+#### Files changed
+- `components/tools/background-remover.tsx`
+- `PRD.md` (created)
+
+---
+
 ## v1.69.0 — May 2026
 ### Base64 Encoder / Decoder — Rules Compliance, Shortcuts, and Usage Guide
 

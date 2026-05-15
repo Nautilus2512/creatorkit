@@ -597,6 +597,28 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.70.0 (May 2026) — Background Remover Download Flash + PRD
+
+### Background Remover: Download Button Visual Feedback
+Added `downloading` boolean state. On click the Download button flips from `variant="default"` (white) to `variant="outline"` (dark) for 1500ms, then resets.
+
+**Root cause of initial bug:** the first implementation had the variants swapped — the button was dark at rest and flashed white on click. Root insight: in this app's dark theme `variant="default"` = white/primary and `variant="outline"` = dark with border. Inverting the condition fixed it. This is now documented in rules.md Section 17.
+
+Conditional kbd badge class also updated for each state to avoid the blackout bug.
+
+Also cleaned up three pre-existing unused hints: `Minus` and `Plus` imports, and the `handleImageClick` function.
+
+### PRD.md Created
+Product Requirements Document written in Markdown following international PM standard format. Sections: Executive Summary, Problem Statement, Goals with metrics, three Target User personas, Scope (in/out), per-tool feature requirements, Non-Functional Requirements (performance, security, compatibility, accessibility), User Stories, Technical Constraints, Success Metrics, Roadmap with status, Risks and Assumptions table, Open Questions, Appendix with glossary and external standards links.
+
+### Commits
+| Hash | Description |
+|---|---|
+| 9bd2c44 | feat: flash download button dark on trigger in background-remover |
+| c4a3db5 | fix: correct download button white/black states in background-remover |
+
+---
+
 ## Session v1.69.0 (May 2026) — Base64 Encoder Full Compliance Pass
 
 ### Overview
