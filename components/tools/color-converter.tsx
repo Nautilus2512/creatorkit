@@ -192,14 +192,14 @@ function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: 
       {/* Picker panel */}
       {open && (
         <div
-          className="rounded-xl border border-border bg-card shadow-lg p-3 space-y-3"
+          className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3"
           role="dialog"
           aria-label="Color picker"
         >
           {/* Saturation / Lightness 2D gradient */}
           <div
             ref={slRef}
-            className="relative h-44 w-full rounded-lg cursor-crosshair select-none"
+            className="relative h-36 w-full rounded-lg cursor-crosshair select-none"
             style={{
               background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
               touchAction: "none",
