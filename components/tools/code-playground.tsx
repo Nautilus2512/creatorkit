@@ -159,7 +159,6 @@ ${html}
         if (!(e.ctrlKey || e.metaKey)) return
       }
 
-      // Ctrl+1/2/3/4 — switch editor tabs
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
         if (e.key === "1") { e.preventDefault(); switchTab('html') }
         if (e.key === "2") { e.preventDefault(); switchTab('css') }
@@ -167,25 +166,21 @@ ${html}
         if (e.key === "4") { e.preventDefault(); switchTab('preview') }
       }
 
-      // Ctrl+Enter — run preview (manual trigger when auto-run is off)
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault()
         if (!autoRun) updatePreview()
       }
 
-      // Ctrl+Shift+S — download files as ZIP
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
         e.preventDefault()
         downloadFiles()
       }
 
-      // Ctrl+Shift+E — reset to defaults
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
         e.preventDefault()
         reset()
       }
 
-      // Escape — focus current editor (only when not already in an editor)
       if (e.key === "Escape" && activeTab !== 'preview') {
         const textarea = document.querySelector(`textarea[data-tab="${activeTab}"]`) as HTMLTextAreaElement
         textarea?.focus()
@@ -198,52 +193,60 @@ ${html}
   return (
     <div className="flex flex-1 flex-col min-h-0">
 
-      {/* Compact top toolbar */}
+      {/* Top toolbar */}
       <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Code Playground controls">
         <div className="flex items-center gap-1" role="tablist" aria-label="Editor tabs">
           <button
+            id="tab-html"
             onClick={() => switchTab('html')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'html' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
             aria-selected={activeTab === 'html'}
+            aria-controls="editor-panel"
             aria-label="HTML editor"
           >
             <FileCode className="h-4 w-4 text-orange-500" aria-hidden="true" />
             HTML<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+1</kbd>
           </button>
           <button
+            id="tab-css"
             onClick={() => switchTab('css')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'css' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
             aria-selected={activeTab === 'css'}
+            aria-controls="editor-panel"
             aria-label="CSS editor"
           >
             <FileType className="h-4 w-4 text-blue-500" aria-hidden="true" />
             CSS<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+2</kbd>
           </button>
           <button
+            id="tab-js"
             onClick={() => switchTab('js')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'js' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
             aria-selected={activeTab === 'js'}
+            aria-controls="editor-panel"
             aria-label="JavaScript editor"
           >
             <Code className="h-4 w-4 text-yellow-500" aria-hidden="true" />
             JS<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+3</kbd>
           </button>
           <button
+            id="tab-preview"
             onClick={() => switchTab('preview')}
             className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
             aria-selected={activeTab === 'preview'}
+            aria-controls="editor-panel"
             aria-label="Preview"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
@@ -294,12 +297,21 @@ ${html}
 
         {/* Left panel — Editors (+ mobile preview) */}
         <div className="flex flex-col overflow-hidden border-r border-border bg-card min-h-0 w-full md:w-1/2" role="region" aria-label="Code editors">
-          <div className="flex-1 overflow-hidden" role="tabpanel" aria-label={`${activeTab === 'html' ? 'HTML' : activeTab === 'css' ? 'CSS' : activeTab === 'js' ? 'JavaScript' : 'Preview'} editor`}>
+          {/*
+            flex flex-col so the spacer below the textarea can push content
+            up away from the fixed mobile bottom bar.
+          */}
+          <div
+            id="editor-panel"
+            className="flex-1 min-h-0 flex flex-col"
+            role="tabpanel"
+            aria-labelledby={`tab-${activeTab}`}
+          >
             {activeTab === 'html' && (
               <textarea
                 value={html}
                 onChange={(e) => setHtml(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
+                className="flex-1 min-h-0 w-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="<!-- Enter HTML here -->"
                 aria-label="HTML code editor"
@@ -310,7 +322,7 @@ ${html}
               <textarea
                 value={css}
                 onChange={(e) => setCss(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
+                className="flex-1 min-h-0 w-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="/* Enter CSS here */"
                 aria-label="CSS code editor"
@@ -321,25 +333,26 @@ ${html}
               <textarea
                 value={js}
                 onChange={(e) => setJs(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
+                className="flex-1 min-h-0 w-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="// Enter JavaScript here"
                 aria-label="JavaScript code editor"
                 data-tab="js"
               />
             )}
-            {/* Mobile preview — renders the live iframe when Preview tab is active */}
             {activeTab === 'preview' && (
-              <div className="w-full h-full bg-white md:hidden">
+              <div className="flex-1 min-h-0 flex flex-col bg-white md:hidden">
                 <iframe
                   srcDoc={srcDoc}
-                  className="w-full h-full border-0"
+                  className="flex-1 min-h-0 border-0"
                   sandbox="allow-scripts"
                   title="Mobile code preview"
                   aria-label="Preview of your HTML, CSS and JavaScript code"
                 />
               </div>
             )}
+            {/* Reserves height for the fixed mobile bottom bar so the last line of code is never hidden */}
+            <div className="md:hidden shrink-0 h-14" aria-hidden="true" />
           </div>
         </div>
 
@@ -372,32 +385,50 @@ ${html}
 
       </div>
 
-      {/* Bottom action bar */}
-      <div
-        className="shrink-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
-        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
-      >
+      {/* Desktop: bottom action bar (part of flex layout) */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <Button
           variant="ghost"
           size="sm"
-          className="h-11 md:h-9"
           onClick={reset}
           aria-label="Reset code to defaults"
           title="Reset to defaults (Ctrl+Shift+E)"
         >
           <RotateCcw className="h-4 w-4 mr-1" aria-hidden="true" />
-          Reset<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+          Reset<kbd className="ml-1 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
+        </Button>
+        <div className="flex-1" />
+        <Button size="sm" onClick={downloadFiles} aria-label="Download files as ZIP">
+          <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+          Download ZIP
+          <kbd className="ml-1 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+        </Button>
+      </div>
+
+      {/* Mobile: bottom action bar (fixed to viewport) */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-11"
+          onClick={reset}
+          aria-label="Reset code to defaults"
+        >
+          <RotateCcw className="h-4 w-4 mr-1" aria-hidden="true" />
+          Reset
         </Button>
         <div className="flex-1" />
         <Button
           size="sm"
-          className="h-11 md:h-9"
+          className="h-11 px-4"
           onClick={downloadFiles}
           aria-label="Download files as ZIP"
         >
-          <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+          <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />
           Download ZIP
-          <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
         </Button>
       </div>
 
