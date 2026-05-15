@@ -101,7 +101,34 @@ function toHex(r: number, g: number, b: number) {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
 }
 
-// ── Custom color picker (same visual design as Design Token Generator) ─────────
+// ── Color blindness simulation ────────────────────────────────────────────────
+
+type CBMode = "none" | "deuteranopia" | "protanopia" | "tritanopia"
+
+const CB_MODES: [CBMode, string][] = [
+  ["none", "Normal"],
+  ["deuteranopia", "Deuter."],
+  ["protanopia", "Protan."],
+  ["tritanopia", "Tritan."],
+]
+
+function simulateColorBlindness(hex: string, mode: CBMode): string {
+  if (mode === "none" || !hex.startsWith("#") || hex.length !== 7) return hex
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  let sr: number, sg: number, sb: number
+  switch (mode) {
+    case "deuteranopia": sr = 0.625*r + 0.375*g; sg = 0.7*r + 0.3*g; sb = 0.3*g + 0.7*b; break
+    case "protanopia":   sr = 0.567*r + 0.433*g; sg = 0.558*r + 0.442*g; sb = 0.242*g + 0.758*b; break
+    case "tritanopia":   sr = 0.95*r + 0.05*g; sg = 0.433*g + 0.567*b; sb = 0.475*g + 0.525*b; break
+    default: return hex
+  }
+  const toH = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")
+  return `#${toH(sr)}${toH(sg)}${toH(sb)}`
+}
+
+// ── Custom color picker ───────────────────────────────────────────────────────
 
 function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
   const hsl = useMemo(() => {
@@ -168,7 +195,6 @@ function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: 
 
   return (
     <div className="space-y-2">
-      {/* Swatch trigger */}
       <button
         type="button"
         onClick={() => {
@@ -180,50 +206,27 @@ function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: 
         aria-expanded={open}
         aria-label={`Color picker. Current color: ${value}. Press to ${open ? 'close' : 'open'}`}
       >
-        <span
-          className="h-7 w-7 rounded-md border border-border shrink-0 shadow-sm"
-          style={{ backgroundColor: value }}
-          aria-hidden="true"
-        />
+        <span className="h-7 w-7 rounded-md border border-border shrink-0 shadow-sm" style={{ backgroundColor: value }} aria-hidden="true" />
         <span className="font-mono text-sm flex-1 text-left">{hexInput}</span>
         <span className="text-xs text-muted-foreground">{open ? 'Close' : 'Edit'}</span>
       </button>
 
-      {/* Picker panel */}
       {open && (
-        <div
-          className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3"
-          role="dialog"
-          aria-label="Color picker"
-        >
-          {/* Saturation / Lightness 2D gradient */}
+        <div className="rounded-xl border border-border bg-popover shadow-xl p-3 space-y-3" role="dialog" aria-label="Color picker">
           <div
             ref={slRef}
             className="relative h-36 w-full rounded-lg cursor-crosshair select-none"
-            style={{
-              background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
-              touchAction: "none",
-            }}
+            style={{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`, touchAction: "none" }}
             onPointerDown={(e) => { draggingSL.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleSLPointer(e) }}
             onPointerMove={(e) => { if (draggingSL.current) handleSLPointer(e) }}
             onPointerUp={(e) => { draggingSL.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
             onPointerCancel={() => { draggingSL.current = false }}
-            role="slider"
-            aria-label="Saturation and lightness"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={s}
-            aria-valuetext={`Saturation ${s}%, Lightness ${l}%`}
-            tabIndex={0}
+            role="slider" aria-label="Saturation and lightness" aria-valuemin={0} aria-valuemax={100} aria-valuenow={s}
+            aria-valuetext={`Saturation ${s}%, Lightness ${l}%`} tabIndex={0}
           >
-            <div
-              className="absolute h-4 w-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ left: thumbX, top: thumbY, backgroundColor: value }}
-              aria-hidden="true"
-            />
+            <div className="absolute h-4 w-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: thumbX, top: thumbY, backgroundColor: value }} aria-hidden="true" />
           </div>
 
-          {/* Hue slider */}
           <div
             ref={hueRef}
             className="relative h-4 w-full rounded-full cursor-pointer select-none"
@@ -232,37 +235,16 @@ function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: 
             onPointerMove={(e) => { if (draggingH.current) handleHuePointer(e) }}
             onPointerUp={(e) => { draggingH.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
             onPointerCancel={() => { draggingH.current = false }}
-            role="slider"
-            aria-label="Hue"
-            aria-valuemin={0}
-            aria-valuemax={360}
-            aria-valuenow={h}
-            aria-valuetext={`Hue ${h} degrees`}
-            tabIndex={0}
+            role="slider" aria-label="Hue" aria-valuemin={0} aria-valuemax={360} aria-valuenow={h}
+            aria-valuetext={`Hue ${h} degrees`} tabIndex={0}
           >
-            <div
-              className="absolute h-5 w-5 rounded-full border-2 border-white shadow-md top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ left: hueX, backgroundColor: `hsl(${h}, 100%, 50%)` }}
-              aria-hidden="true"
-            />
+            <div className="absolute h-5 w-5 rounded-full border-2 border-white shadow-md top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ left: hueX, backgroundColor: `hsl(${h}, 100%, 50%)` }} aria-hidden="true" />
           </div>
 
-          {/* Hex input + RGB readout */}
           <div className="flex gap-2 items-center">
             <span className="h-8 w-8 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} aria-hidden="true" />
-            <Input
-              value={hexInput}
-              onChange={(e) => handleHexInput(e.target.value)}
-              className="flex-1 font-mono text-sm h-8"
-              placeholder="#000000"
-              aria-label="Hex color value"
-            />
-            <span
-              className="text-xs text-muted-foreground shrink-0 font-mono"
-              aria-label={`RGB values: ${rgb.r}, ${rgb.g}, ${rgb.b}`}
-            >
-              {rgb.r}, {rgb.g}, {rgb.b}
-            </span>
+            <Input value={hexInput} onChange={(e) => handleHexInput(e.target.value)} className="flex-1 font-mono text-sm h-8" placeholder="#000000" aria-label="Hex color value" />
+            <span className="text-xs text-muted-foreground shrink-0 font-mono" aria-label={`RGB values: ${rgb.r}, ${rgb.g}, ${rgb.b}`}>{rgb.r}, {rgb.g}, {rgb.b}</span>
           </div>
         </div>
       )}
@@ -278,6 +260,7 @@ export default function ColorConverter() {
   const [color, setColor] = useState<{ r: number; g: number; b: number } | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const [cbMode, setCbMode] = useState<CBMode>("none")
 
   const applyColor = useCallback((rgb: { r: number; g: number; b: number } | null, rawInput: string) => {
     setColor(rgb)
@@ -326,6 +309,13 @@ export default function ColorConverter() {
     announceToScreenReader('All color formats copied to clipboard')
     setTimeout(() => setCopied(null), 2000)
   }, [color, formats])
+
+  const changeCbMode = useCallback((mode: CBMode) => {
+    setCbMode(mode)
+    announceToScreenReader(mode === "none" ? "Normal color vision" : `Color vision simulation: ${mode}`)
+  }, [])
+
+  const displayHex = simulateColorBlindness(hex, cbMode)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -403,13 +393,11 @@ export default function ColorConverter() {
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
-                {/* Custom color picker */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium" id="picker-label">Pick a Color</Label>
                   <ColorPickerPanel value={pickerValue} onChange={handlePicker} />
                 </div>
 
-                {/* Text input for rgb / hsl */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium" htmlFor="color-input">Or Type a Value</Label>
                   <Input
@@ -424,17 +412,15 @@ export default function ColorConverter() {
                   <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
                 </div>
 
-                {/* Large color swatch preview */}
                 {color && (
                   <div
                     className="w-full h-28 rounded-xl border border-border shadow-inner transition-colors duration-200"
-                    style={{ backgroundColor: hex }}
+                    style={{ backgroundColor: displayHex }}
                     role="img"
-                    aria-label={`Color preview: ${hex}`}
+                    aria-label={`Color preview: ${hex}${cbMode !== "none" ? ` (${cbMode} simulation)` : ""}`}
                   />
                 )}
 
-                {/* RGB breakdown */}
                 {color && (
                   <div className="rounded-lg border border-border p-4 space-y-1 text-sm" role="group" aria-label="RGB values">
                     <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono" aria-live="polite">{color.r}</span></div>
@@ -447,14 +433,30 @@ export default function ColorConverter() {
 
             {/* Right panel — Formats */}
             <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 bg-card`} role="region" aria-label="Color formats">
-              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-                <span className="text-sm font-medium">All Formats</span>
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium shrink-0">All Formats</span>
+                {/* Color blindness simulation */}
+                <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Color vision simulation">
+                  {CB_MODES.map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      onClick={() => changeCbMode(mode)}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${cbMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                      role="radio"
+                      aria-checked={cbMode === mode}
+                      aria-label={`${label} color vision`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex-1" />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={copyAll}
                   disabled={!color}
-                  className="text-xs h-7"
+                  className="text-xs h-7 shrink-0"
                   aria-label="Copy all formats"
                 >
                   {copied === "all" ? <Check className="h-3 w-3 mr-1" aria-hidden="true" /> : <Copy className="h-3 w-3 mr-1" aria-hidden="true" />}
@@ -471,8 +473,8 @@ export default function ColorConverter() {
                   formats.map(({ label, key, value, shortcut }) => (
                     <div key={key} className="rounded-lg border border-border overflow-hidden">
                       <div
-                        className="h-8"
-                        style={{ backgroundColor: value }}
+                        className="h-8 transition-colors"
+                        style={{ backgroundColor: displayHex }}
                         aria-hidden="true"
                       />
                       <div className="p-3 flex items-center justify-between gap-2">
@@ -512,6 +514,15 @@ export default function ColorConverter() {
               <li>Click <span className="text-foreground font-medium">Copy</span> next to any format, or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">2</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">3</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">4</kbd> to copy HEX, RGB, HSL, or OKLCH.</li>
               <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> or click <span className="text-foreground font-medium">Copy All</span> to copy every format at once.</li>
             </ol>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Color vision simulation</p>
+            <p className="text-xs text-muted-foreground">Use the <span className="text-foreground font-medium">Normal / Deuter. / Protan. / Tritan.</span> buttons in the All Formats panel header to preview how your color appears to people with different types of color vision. The preview swatch and format card strips update live. Copied values are always the original color.</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside mt-1">
+              <li><span className="text-foreground font-medium">Deuteranopia</span> — reduced green sensitivity. The most common form, affecting about 6% of men. Red and green appear similar in hue.</li>
+              <li><span className="text-foreground font-medium">Protanopia</span> — reduced red sensitivity. Affects about 1% of men. Reds appear very dark and can be confused with black or dark brown.</li>
+              <li><span className="text-foreground font-medium">Tritanopia</span> — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue and green appear similar; yellow and violet may look alike.</li>
+            </ul>
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>

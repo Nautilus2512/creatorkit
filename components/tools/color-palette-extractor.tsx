@@ -487,7 +487,12 @@ export default function ColorPaletteExtractor() {
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Color vision simulation</p>
-            <p className="text-xs text-muted-foreground">Use the <span className="text-foreground font-medium">Normal / Deuter. / Protan. / Tritan.</span> buttons in the palette header to preview how your palette appears to people with different types of color vision. The swatch and bar colors update live. The copied value is always the original color.</p>
+            <p className="text-xs text-muted-foreground">Use the <span className="text-foreground font-medium">Normal / Deuter. / Protan. / Tritan.</span> buttons in the Palette panel header to preview how your extracted palette appears to people with different types of color vision. Both the swatch and the proportion bar update live. Copied values are always the original color.</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside mt-1">
+              <li><span className="text-foreground font-medium">Deuteranopia</span> — reduced green sensitivity. The most common form, affecting about 6% of men. Red and green appear similar in hue.</li>
+              <li><span className="text-foreground font-medium">Protanopia</span> — reduced red sensitivity. Affects about 1% of men. Reds appear very dark and can be confused with black or dark brown.</li>
+              <li><span className="text-foreground font-medium">Tritanopia</span> — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue and green appear similar; yellow and violet may look alike.</li>
+            </ul>
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
