@@ -207,6 +207,20 @@ export default function BatchImageEditor() {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
+              {/* Processing progress */}
+              {loading && (
+                <div className="space-y-1.5" aria-live="polite" aria-label="Processing status">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Processing images…</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
+                    role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Processing progress">
+                    <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
+
               {/* Upload */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Images</Label>
