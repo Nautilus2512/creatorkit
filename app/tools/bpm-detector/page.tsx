@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BPMDetector } from "@/components/tools/bpm-detector"
+import BPMDetector from "@/components/tools/bpm-detector"
 import { ArrowLeft } from "lucide-react"
 
 export default function BPMDetectorPage() {
