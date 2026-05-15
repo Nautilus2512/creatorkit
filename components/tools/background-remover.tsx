@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Wand2, Upload, Download, X, ImageIcon, Pipette, AlertCircle, ChevronDown, Eraser, Paintbrush, Minus, Plus, Sparkles, RotateCcw, Feather } from "lucide-react"
+import { Wand2, Upload, Download, X, ImageIcon, Pipette, AlertCircle, ChevronDown, Eraser, Paintbrush, Sparkles, RotateCcw, Feather } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -189,6 +189,7 @@ export function BackgroundRemover() {
   const [removalMethod, setRemovalMethod] = useState<RemovalMethod>("auto")
   const [smoothing, setSmoothing]         = useState(false)
   const [smoothApplied, setSmoothApplied] = useState(false)
+  const [downloading, setDownloading]     = useState(false)
 
   const inputRef           = useRef<HTMLInputElement>(null)
   const canvasRef          = useRef<HTMLCanvasElement | null>(null)
@@ -303,11 +304,13 @@ export function BackgroundRemover() {
   const download = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    setDownloading(true)
     const a = document.createElement("a")
     a.href = canvas.toDataURL("image/png")
     a.download = `nobg_${fileName.replace(/\.[^.]+$/, "")}.png`
     a.click()
     announceToScreenReader("Download started. Saving as PNG with transparent background.")
+    setTimeout(() => setDownloading(false), 1500)
   }, [fileName])
 
   // Repair brush, shared helper used by all methods when restoreActive is true
@@ -371,13 +374,6 @@ export function BackgroundRemover() {
   const handleCanvasTouchMove  = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => { e.preventDefault(); if (isDraggingOnCanvas.current) handleCanvasInteract(e.touches[0].clientX, e.touches[0].clientY) }, [handleCanvasInteract])
   const handleCanvasTouchEnd   = useCallback(() => { isDraggingOnCanvas.current = false }, [])
 
-  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!pickingColor || !imageEl) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const color = samplePixel(imageEl, (e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height)
-    setTargetColor(color); setPickingColor(false)
-  }
-
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLButtonElement) return
@@ -429,9 +425,9 @@ export function BackgroundRemover() {
           </Button>
         )}
         {imageEl && (
-          <Button size="sm" variant="outline" onClick={download} aria-label="Download as PNG">
+          <Button size="sm" variant={downloading ? "default" : "outline"} onClick={download} aria-label="Download as PNG">
             <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         )}
         <div className="ml-auto flex items-center gap-1.5">
@@ -841,7 +837,7 @@ export function BackgroundRemover() {
         ) : (
           <div className="flex-1" />
         )}
-        <Button size="sm" variant="outline" className="h-11 px-5" onClick={download} disabled={!imageEl} aria-label="Download as PNG">
+        <Button size="sm" variant={downloading ? "default" : "outline"} className="h-11 px-5" onClick={download} disabled={!imageEl} aria-label="Download as PNG">
           <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download
         </Button>
       </div>
