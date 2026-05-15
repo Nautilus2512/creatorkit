@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Music2, Upload, X, AlertCircle } from "lucide-react"
+import { Music2, Upload, X, AlertCircle, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -12,7 +12,6 @@ function detectBPM(buffer: AudioBuffer): { bpm: number; confidence: number } {
   const maxSamples = Math.min(buffer.length, sampleRate * 60)
   const rawData = buffer.getChannelData(0).slice(0, maxSamples)
 
-  // Low-pass filter to isolate bass (where beats live)
   const filtered = new Float32Array(rawData.length)
   const alpha = Math.exp(-2 * Math.PI * (200 / sampleRate))
   let prev = 0
@@ -20,7 +19,6 @@ function detectBPM(buffer: AudioBuffer): { bpm: number; confidence: number } {
     filtered[i] = prev = (1 - alpha) * rawData[i] + alpha * prev
   }
 
-  // Energy envelope in 512-sample hops
   const HOP = 512
   const numFrames = Math.floor(filtered.length / HOP)
   const energy = new Float32Array(numFrames)
@@ -30,12 +28,10 @@ function detectBPM(buffer: AudioBuffer): { bpm: number; confidence: number } {
     energy[i] = Math.sqrt(sum / HOP)
   }
 
-  // Normalize energy
   const maxE = energy.reduce((a, b) => Math.max(a, b), 0)
   if (maxE === 0) return { bpm: 120, confidence: 0 }
   const normE = Array.from(energy).map(e => e / maxE)
 
-  // Autocorrelation over BPM range 60–200
   const fps = sampleRate / HOP
   const minLag = Math.max(1, Math.round(fps * 60 / 200))
   const maxLag = Math.round(fps * 60 / 60)
@@ -94,23 +90,30 @@ function announceToScreenReader(message: string) {
 type Phase = "idle" | "decoding" | "analyzing" | "done"
 
 export default function BPMDetector() {
-  const [file, setFile]         = useState<File | null>(null)
-  const [phase, setPhase]       = useState<Phase>("idle")
-  const [result, setResult]     = useState<{ bpm: number; confidence: number } | null>(null)
-  const [duration, setDuration] = useState<number | null>(null)
+  const [file, setFile]             = useState<File | null>(null)
+  const [phase, setPhase]           = useState<Phase>("idle")
+  const [result, setResult]         = useState<{ bpm: number; confidence: number } | null>(null)
+  const [displayBpm, setDisplayBpm] = useState<number | null>(null)
+  const [duration, setDuration]     = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [error, setError]       = useState<string | null>(null)
-  const inputRef                = useRef<HTMLInputElement>(null)
-  const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const [error, setError]           = useState<string | null>(null)
+  const inputRef                    = useRef<HTMLInputElement>(null)
+  const [activeTab, setActiveTab]   = useState<"input" | "output">("input")
+  const [fileCopied, setFileCopied] = useState(false)
+  const [tapBpm, setTapBpm]         = useState<number | null>(null)
+  const [tapCount, setTapCount]     = useState(0)
+  const [tapCopied, setTapCopied]   = useState(false)
+  const tapTimestamps               = useRef<number[]>([])
+  const tapResetTimer               = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleFile = (f: File) => {
     if (!f.type.startsWith("audio/")) return
-    setFile(f); setResult(null); setError(null); setPhase("idle"); setDuration(null)
+    setFile(f); setResult(null); setDisplayBpm(null); setError(null); setPhase("idle"); setDuration(null)
   }
 
   const analyze = useCallback(async () => {
     if (!file) return
-    setPhase("decoding"); setError(null); setResult(null)
+    setPhase("decoding"); setError(null); setResult(null); setDisplayBpm(null)
     announceToScreenReader("Analyzing BPM, please wait.")
     try {
       const arrayBuffer = await file.arrayBuffer()
@@ -122,6 +125,7 @@ export default function BPMDetector() {
       await new Promise(r => setTimeout(r, 50))
       const bpmResult = detectBPM(audioBuffer)
       setResult(bpmResult)
+      setDisplayBpm(bpmResult.bpm)
       setPhase("done")
       announceToScreenReader(`BPM detected: ${bpmResult.bpm}`)
     } catch {
@@ -130,23 +134,91 @@ export default function BPMDetector() {
     }
   }, [file])
 
+  const handleHalf = useCallback(() => {
+    setDisplayBpm(prev => {
+      if (!prev) return prev
+      const n = Math.round(prev / 2)
+      announceToScreenReader(`BPM halved to ${n}`)
+      return n
+    })
+  }, [])
+
+  const handleDouble = useCallback(() => {
+    setDisplayBpm(prev => {
+      if (!prev) return prev
+      const n = prev * 2
+      announceToScreenReader(`BPM doubled to ${n}`)
+      return n
+    })
+  }, [])
+
+  const copyFileBpm = useCallback(() => {
+    if (!displayBpm) return
+    navigator.clipboard.writeText(String(displayBpm))
+    setFileCopied(true)
+    announceToScreenReader(`${displayBpm} BPM copied to clipboard`)
+    setTimeout(() => setFileCopied(false), 2000)
+  }, [displayBpm])
+
+  const handleTap = useCallback(() => {
+    const now = performance.now()
+    const prev = tapTimestamps.current
+
+    if (prev.length > 0 && now - prev[prev.length - 1] > 2000) {
+      tapTimestamps.current = [now]
+      setTapCount(1)
+      setTapBpm(null)
+    } else {
+      tapTimestamps.current = [...prev.slice(-7), now]
+      const ts = tapTimestamps.current
+      setTapCount(ts.length)
+      if (ts.length >= 2) {
+        const intervals = ts.slice(1).map((t, i) => t - ts[i])
+        const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length
+        const bpm = Math.round(60000 / avg)
+        setTapBpm(bpm)
+        announceToScreenReader(`Tap tempo: ${bpm} BPM`)
+      }
+    }
+
+    if (tapResetTimer.current) clearTimeout(tapResetTimer.current)
+    tapResetTimer.current = setTimeout(() => {
+      tapTimestamps.current = []
+      setTapBpm(null)
+      setTapCount(0)
+    }, 2500)
+  }, [])
+
+  const copyTapBpm = useCallback(() => {
+    if (!tapBpm) return
+    navigator.clipboard.writeText(String(tapBpm))
+    setTapCopied(true)
+    announceToScreenReader(`${tapBpm} BPM copied to clipboard`)
+    setTimeout(() => setTapCopied(false), 2000)
+  }, [tapBpm])
+
+  useEffect(() => {
+    return () => { if (tapResetTimer.current) clearTimeout(tapResetTimer.current) }
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         if (!(e.ctrlKey || e.metaKey)) return
       }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault()
-        analyze()
+        e.preventDefault(); analyze()
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") {
-        e.preventDefault()
-        inputRef.current?.click()
+        e.preventDefault(); inputRef.current?.click()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v") {
+        e.preventDefault(); copyFileBpm()
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [analyze])
+  }, [analyze, copyFileBpm])
 
   const isProcessing = phase === "decoding" || phase === "analyzing"
 
@@ -160,6 +232,7 @@ export default function BPMDetector() {
           <ShortcutsModal pageName="BPM Detector" shortcuts={[
             { keys: ["Ctrl", "Enter"], description: "Detect BPM" },
             { keys: ["Ctrl", "Shift", "U"], description: "Open audio file" },
+            { keys: ["Ctrl", "Shift", "V"], description: "Copy detected BPM" },
           ]} />
           <Button size="sm" onClick={analyze} disabled={!file || isProcessing} aria-label="Detect BPM">
             {isProcessing ? (
@@ -196,7 +269,7 @@ export default function BPMDetector() {
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="flex flex-col md:flex-row min-h-[500px]">
 
-            {/* Left panel — Upload */}
+            {/* Left panel — Upload + Tap Tempo */}
             <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-label="Upload audio file">
               <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
@@ -239,7 +312,7 @@ export default function BPMDetector() {
                           </p>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); setPhase("idle") }}
+                          onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); setDisplayBpm(null); setPhase("idle") }}
                           aria-label="Remove audio file"
                           className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
@@ -263,6 +336,42 @@ export default function BPMDetector() {
                   <p>Best on: electronic, dance, pop, hip-hop with steady beats.</p>
                   <p>Less accurate on: classical, jazz, live recordings with irregular tempo.</p>
                   <p>Only the first 60 seconds are analyzed.</p>
+                </div>
+
+                {/* Tap Tempo */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" aria-hidden="true" />
+                    <span className="text-xs text-muted-foreground shrink-0">or tap in the beat</span>
+                    <div className="flex-1 h-px bg-border" aria-hidden="true" />
+                  </div>
+                  <button
+                    onClick={handleTap}
+                    aria-label={tapBpm ? `Tap to continue. ${tapCount} taps, ${tapBpm} BPM` : "Tap to start measuring BPM manually"}
+                    className="w-full h-16 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 active:bg-primary/10 active:border-primary transition-all select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    {tapBpm ? (
+                      <span className="text-2xl font-bold tabular-nums">
+                        {tapBpm} <span className="text-sm font-normal text-muted-foreground">BPM</span>
+                      </span>
+                    ) : (
+                      <span className="text-sm font-medium text-muted-foreground">Tap here</span>
+                    )}
+                  </button>
+                  {tapCount > 0 && (
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{tapCount} tap{tapCount !== 1 ? "s" : ""} · resets after 2s pause</span>
+                      {tapBpm && (
+                        <button
+                          onClick={copyTapBpm}
+                          aria-label={`Copy tap tempo ${tapBpm} BPM to clipboard`}
+                          className="hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                        >
+                          {tapCopied ? "Copied!" : "Copy BPM"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {error && (
@@ -290,19 +399,56 @@ export default function BPMDetector() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[200px] gap-6 py-8">
+                  <div className="flex flex-col items-center justify-center h-full min-h-[200px] gap-5 py-8">
+
+                    {/* BPM number + copy button */}
                     <div className="text-center">
-                      <p className="text-[80px] font-bold leading-none tabular-nums" aria-label={`${result.bpm} BPM`}>{result.bpm}</p>
-                      <p className="text-lg text-muted-foreground mt-1" aria-hidden="true">BPM</p>
+                      <p className="text-[80px] font-bold leading-none tabular-nums" aria-label={`${displayBpm} BPM`}>{displayBpm}</p>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <p className="text-lg text-muted-foreground" aria-hidden="true">BPM</p>
+                        <button
+                          onClick={copyFileBpm}
+                          aria-label={`Copy ${displayBpm} BPM to clipboard`}
+                          className="rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+                        >
+                          {fileCopied
+                            ? <Check className="h-3.5 w-3.5 text-green-500" aria-hidden="true" />
+                            : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="text-center">
-                      <p className={`text-2xl font-semibold ${tempoLabel(result.bpm).color}`}>
-                        {tempoLabel(result.bpm).label}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">{tempoLabel(result.bpm).genre}</p>
+                    {/* ½× / 2× correction buttons */}
+                    <div className="flex gap-2 w-full max-w-xs" role="group" aria-label="BPM correction">
+                      <button
+                        onClick={handleHalf}
+                        disabled={!displayBpm || displayBpm / 2 < 30}
+                        aria-label={displayBpm ? `Halve BPM to ${Math.round(displayBpm / 2)}` : "Halve BPM"}
+                        className="flex-1 rounded-lg border border-border bg-muted/30 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        ½× {displayBpm ? Math.round(displayBpm / 2) : "—"}
+                      </button>
+                      <button
+                        onClick={handleDouble}
+                        disabled={!displayBpm || displayBpm * 2 > 300}
+                        aria-label={displayBpm ? `Double BPM to ${displayBpm * 2}` : "Double BPM"}
+                        className="flex-1 rounded-lg border border-border bg-muted/30 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        2× {displayBpm ? displayBpm * 2 : "—"}
+                      </button>
                     </div>
 
+                    {/* Tempo label — updates with displayBpm */}
+                    {displayBpm && (
+                      <div className="text-center">
+                        <p className={`text-2xl font-semibold ${tempoLabel(displayBpm).color}`}>
+                          {tempoLabel(displayBpm).label}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{tempoLabel(displayBpm).genre}</p>
+                      </div>
+                    )}
+
+                    {/* Confidence bar — always from the original detection */}
                     <div className="w-full max-w-xs space-y-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Detection confidence</span>
@@ -351,7 +497,8 @@ export default function BPMDetector() {
             <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
               <li>Drop an audio file onto the upload area, or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd> to browse.</li>
               <li>Click <span className="text-foreground font-medium">Detect BPM</span> or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> to analyze.</li>
-              <li>Read the detected BPM, tempo label, and confidence score in the Result panel.</li>
+              <li>If the result looks off, use <span className="text-foreground font-medium">½×</span> or <span className="text-foreground font-medium">2×</span> to correct by half or double.</li>
+              <li>For acoustic or live music, tap the <span className="text-foreground font-medium">Tap here</span> button in time with the beat to measure manually.</li>
             </ol>
           </div>
           <div className="space-y-1.5">
@@ -359,6 +506,7 @@ export default function BPMDetector() {
             <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> Detect BPM</li>
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd> Open file browser</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> Copy detected BPM</li>
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> Open shortcuts reference</li>
             </ul>
           </div>
@@ -366,8 +514,9 @@ export default function BPMDetector() {
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
             <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
               <li>Only the first 60 seconds of audio are analyzed for speed.</li>
-              <li>Low confidence usually means the beat is too soft or the rhythm is irregular. Try a louder or more rhythmic section.</li>
-              <li>If the result looks wrong, the true BPM may be half or double the shown value. This is common with electronic and drum-heavy tracks.</li>
+              <li>Low confidence usually means the beat is too soft or the rhythm is irregular.</li>
+              <li>The algorithm commonly reports half or double the true BPM for complex or layered tracks. Use <span className="text-foreground font-medium">½×</span> or <span className="text-foreground font-medium">2×</span> to fix this in one click.</li>
+              <li>Tap tempo works best with at least 4 taps. It averages the last 8 intervals for accuracy.</li>
               <li>Everything runs in your browser. Nothing is sent to a server.</li>
             </ul>
           </div>
