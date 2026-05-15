@@ -281,17 +281,15 @@ export default function CssMinifier() {
             role="region"
             aria-label="CSS Input"
           >
-            <div className="flex-1 overflow-y-auto">
-              <Textarea
-                id="css-input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={`.container {\n  display: flex;\n  /* my comment */\n  padding: 16px;\n}`}
-                className="h-full resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
-                aria-label="Original CSS input"
-                spellCheck={false}
-              />
-            </div>
+            <Textarea
+              id="css-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`.container {\n  display: flex;\n  /* my comment */\n  padding: 16px;\n}`}
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
+              aria-label="Original CSS input"
+              spellCheck={false}
+            />
           </div>
 
           {/* Output panel */}
@@ -300,29 +298,27 @@ export default function CssMinifier() {
             role="region"
             aria-label="Minified Output"
           >
-            <div className="flex-1 overflow-y-auto flex flex-col">
-              <Textarea
-                id="css-output"
-                value={output}
-                readOnly
-                placeholder="Minified CSS will appear here..."
-                className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
-                aria-label="Minified CSS output"
-                aria-live="polite"
-                aria-atomic="true"
-              />
-              {output && (
-                <div
-                  className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4"
-                  role="status"
-                  aria-label={`File size: original ${formatBytes(inputBytes)}, minified ${formatBytes(outputBytes)}, saved ${formatBytes(inputBytes - outputBytes)} (${savings}%)`}
-                >
-                  <span>Original: {formatBytes(inputBytes)}</span>
-                  <span>Minified: {formatBytes(outputBytes)}</span>
-                  {savings > 0 && <span className="text-green-700 dark:text-green-400">Saved {formatBytes(inputBytes - outputBytes)} ({savings}%)</span>}
-                </div>
-              )}
-            </div>
+            <Textarea
+              id="css-output"
+              value={output}
+              readOnly
+              placeholder="Minified CSS will appear here..."
+              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
+              aria-label="Minified CSS output"
+              aria-live="polite"
+              aria-atomic="true"
+            />
+            {output && (
+              <div
+                className="shrink-0 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2 text-xs text-muted-foreground flex gap-4"
+                role="status"
+                aria-label={`File size: original ${formatBytes(inputBytes)}, minified ${formatBytes(outputBytes)}, saved ${formatBytes(inputBytes - outputBytes)} (${savings}%)`}
+              >
+                <span>Original: {formatBytes(inputBytes)}</span>
+                <span>Minified: {formatBytes(outputBytes)}</span>
+                {savings > 0 && <span className="text-green-700 dark:text-green-400">Saved {formatBytes(inputBytes - outputBytes)} ({savings}%)</span>}
+              </div>
+            )}
           </div>
 
         </div>
