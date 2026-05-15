@@ -361,10 +361,10 @@ ${html}
                   Clear all
                 </button>
               </div>
-              <div className="flex-1 min-h-0 bg-white">
+              <div className="flex-1 min-h-0 bg-white flex flex-col">
                 <iframe
                   srcDoc={srcDoc}
-                  className="w-full h-full border-0"
+                  className="flex-1 w-full border-0"
                   sandbox="allow-scripts"
                   title="Code preview"
                   aria-label="Preview of your HTML, CSS and JavaScript code"
