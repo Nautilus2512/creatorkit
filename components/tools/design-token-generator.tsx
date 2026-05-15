@@ -519,9 +519,12 @@ export default function DesignTokenGenerator() {
                   aria-label="Switch to light preview"
                   role="radio"
                   aria-checked={previewMode === "light"}
-                  className={`rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`}
+                  className={`rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center gap-1 ${previewMode === "light" ? "bg-muted" : "hover:bg-muted/50"}`}
                 >
                   <Sun className="h-4 w-4" aria-hidden="true" />
+                  {previewMode === "dark" && (
+                    <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+L</kbd>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -529,9 +532,12 @@ export default function DesignTokenGenerator() {
                   aria-label="Switch to dark preview"
                   role="radio"
                   aria-checked={previewMode === "dark"}
-                  className={`rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${previewMode === "dark" ? "bg-muted" : "hover:bg-muted/50"}`}
+                  className={`rounded-md p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center gap-1 ${previewMode === "dark" ? "bg-muted" : "hover:bg-muted/50"}`}
                 >
                   <Moon className="h-4 w-4" aria-hidden="true" />
+                  {previewMode === "light" && (
+                    <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+L</kbd>
+                  )}
                 </button>
               </div>
             </div>
