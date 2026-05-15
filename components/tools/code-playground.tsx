@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { createPortal } from "react-dom"
-import { Play, RotateCcw, Download, Code, FileCode, FileType, Eye, Trash2, Info, X } from "lucide-react"
+import { Play, RotateCcw, Download, Code, FileCode, FileType, Eye, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import JSZip from "jszip"
@@ -64,6 +63,43 @@ console.log("Hello from JavaScript!");
 
 // Try the button click!`
 
+function GuideContent() {
+  return (
+    <div className="p-4 space-y-4">
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+        <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+          <li>Switch between <span className="text-foreground font-medium">HTML</span>, <span className="text-foreground font-medium">CSS</span>, and <span className="text-foreground font-medium">JS</span> tabs to edit each file. The preview updates automatically.</li>
+          <li>Turn off <span className="text-foreground font-medium">Auto-run</span> for large edits, then press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> to refresh manually.</li>
+          <li>On mobile, tap the <span className="text-foreground font-medium">Preview</span> tab to see live output.</li>
+          <li>Click <span className="text-foreground font-medium">Download ZIP</span> to save <code className="rounded bg-muted px-1 text-[10px] font-mono">index.html</code>, <code className="rounded bg-muted px-1 text-[10px] font-mono">style.css</code>, and <code className="rounded bg-muted px-1 text-[10px] font-mono">script.js</code> as a linked project.</li>
+          <li><span className="text-foreground font-medium">Reset</span> restores the starter code. <span className="text-foreground font-medium">Clear all</span> starts from blank.</li>
+        </ol>
+      </div>
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+        <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+1 / 2 / 3</kbd> Switch to HTML, CSS, or JS editor</li>
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> Run preview (when auto-run is off)</li>
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd> Download files as ZIP</li>
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd> Reset to defaults</li>
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Focus the current editor</li>
+          <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> Full shortcuts reference</li>
+        </ul>
+      </div>
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+        <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+          <li>The preview is sandboxed. External network requests and <code className="rounded bg-muted px-1 text-[10px] font-mono">localStorage</code> are not available inside it.</li>
+          <li>JavaScript errors in the preview do not affect the editor. Open browser DevTools to debug them.</li>
+          <li>The downloaded ZIP links all three files. Open <code className="rounded bg-muted px-1 text-[10px] font-mono">index.html</code> in a browser to run your project locally.</li>
+          <li>Everything runs in your browser. Nothing is sent to a server.</li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 export default function CodePlayground() {
   const [html, setHtml] = useState(DEFAULT_HTML)
   const [css, setCss]   = useState(DEFAULT_CSS)
@@ -71,10 +107,6 @@ export default function CodePlayground() {
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js' | 'preview'>('html')
   const [autoRun, setAutoRun] = useState(true)
   const [srcDoc, setSrcDoc]   = useState("")
-  const [showGuide, setShowGuide] = useState(false)
-  const [mounted, setMounted]     = useState(false)
-
-  useEffect(() => { setMounted(true) }, [])
 
   const updatePreview = useCallback(() => {
     const doc = `
@@ -198,8 +230,14 @@ ${html}
   return (
     <div className="flex flex-1 flex-col min-h-0">
 
-      {/* Top toolbar */}
+      {/* Mobile: compact header — title only */}
+      <div className="flex md:hidden shrink-0 items-center px-4 pt-3 pb-2 border-b border-border bg-card/95 backdrop-blur-sm">
+        <h2 className="text-base font-semibold">Code Playground</h2>
+      </div>
+
+      {/* Toolbar — tabs + controls */}
       <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Code Playground controls">
+        <span className="hidden md:inline text-sm font-semibold shrink-0 mr-2">Code Playground</span>
         <div className="flex items-center gap-1" role="tablist" aria-label="Editor tabs">
           <button
             id="tab-html"
@@ -279,14 +317,7 @@ ${html}
             Auto-run
           </label>
         </div>
-        <div className="ml-auto shrink-0 flex items-center gap-1">
-          <button
-            onClick={() => setShowGuide(true)}
-            aria-label="Show usage guide"
-            className="rounded p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
-          >
-            <Info className="h-4 w-4" aria-hidden="true" />
-          </button>
+        <div className="ml-auto shrink-0">
           <ShortcutsModal
             pageName="Code Playground"
             shortcuts={[
@@ -307,12 +338,8 @@ ${html}
       {/* Canvas/workspace */}
       <div className="flex-1 min-h-0 overflow-hidden flex">
 
-        {/* Left panel — Editors (+ mobile preview) */}
+        {/* Left panel — Editors (+ mobile preview + mobile guide) */}
         <div className="flex flex-col overflow-hidden border-r border-border bg-card min-h-0 w-full md:w-1/2" role="region" aria-label="Code editors">
-          {/*
-            flex flex-col so the spacer below the textarea can push content
-            up away from the fixed mobile bottom bar.
-          */}
           <div
             id="editor-panel"
             className="flex-1 min-h-0 flex flex-col"
@@ -352,24 +379,33 @@ ${html}
                 data-tab="js"
               />
             )}
+            {/* Mobile — preview iframe + guide below it */}
             {activeTab === 'preview' && (
-              <div className="flex-1 min-h-0 flex flex-col bg-white md:hidden">
-                <iframe
-                  srcDoc={srcDoc}
-                  className="flex-1 min-h-0 border-0"
-                  sandbox="allow-scripts"
-                  title="Mobile code preview"
-                  aria-label="Preview of your HTML, CSS and JavaScript code"
-                />
+              <div className="flex-1 min-h-0 flex flex-col md:hidden">
+                <div className="flex-1 min-h-0 bg-white">
+                  <iframe
+                    srcDoc={srcDoc}
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts"
+                    title="Mobile code preview"
+                    aria-label="Preview of your HTML, CSS and JavaScript code"
+                  />
+                </div>
+                {/* Guide always visible below preview on mobile */}
+                <div className="shrink-0 border-t border-border overflow-y-auto bg-card" style={{ maxHeight: '45%' }} role="region" aria-label="Usage guide">
+                  <GuideContent />
+                </div>
               </div>
             )}
-            {/* Reserves height for the fixed mobile bottom bar so the last line of code is never hidden */}
-            <div className="md:hidden shrink-0 h-14" aria-hidden="true" />
+            {/* Spacer reserves space for the fixed mobile bottom bar */}
+            {activeTab !== 'preview' && (
+              <div className="md:hidden shrink-0 h-14" aria-hidden="true" />
+            )}
           </div>
         </div>
 
-        {/* Right panel — Live preview (desktop only) */}
-        <div className="hidden md:flex flex-col overflow-hidden bg-card min-h-0 flex-1" role="region" aria-label="Live preview">
+        {/* Right panel — Live preview + guide (desktop only) */}
+        <div className="hidden md:flex flex-col overflow-hidden bg-card min-h-0 flex-1" role="region" aria-label="Live preview and usage guide">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
             <div className="flex items-center gap-2">
               <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -384,7 +420,8 @@ ${html}
               Clear all
             </button>
           </div>
-          <div className="flex-1 bg-white">
+          {/* Preview iframe fills available space */}
+          <div className="flex-1 min-h-0 bg-white">
             <iframe
               srcDoc={srcDoc}
               className="w-full h-full border-0"
@@ -393,11 +430,15 @@ ${html}
               aria-label="Preview of your HTML, CSS and JavaScript code"
             />
           </div>
+          {/* Guide always visible below preview — no button, no scroll needed to find */}
+          <div className="shrink-0 border-t border-border overflow-y-auto" style={{ maxHeight: '42%' }} role="region" aria-label="Usage guide">
+            <GuideContent />
+          </div>
         </div>
 
       </div>
 
-      {/* Desktop: bottom action bar (part of flex layout) */}
+      {/* Desktop: bottom action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <Button
           variant="ghost"
@@ -443,64 +484,6 @@ ${html}
           Download ZIP
         </Button>
       </div>
-
-      {/* Usage guide modal */}
-      {mounted && showGuide && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="guide-title"
-        >
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowGuide(false)} aria-hidden="true" />
-          <div className="relative bg-card rounded-xl border border-border shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 id="guide-title" className="text-sm font-semibold">How to use Code Playground</h2>
-              <button
-                onClick={() => setShowGuide(false)}
-                aria-label="Close guide"
-                className="rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
-              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
-                <li>Switch between the <span className="text-foreground font-medium">HTML</span>, <span className="text-foreground font-medium">CSS</span>, and <span className="text-foreground font-medium">JS</span> tabs to edit each file.</li>
-                <li>With <span className="text-foreground font-medium">Auto-run</span> on, the preview updates automatically as you type. Turn it off for large edits, then press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> to refresh manually.</li>
-                <li>On mobile, tap the <span className="text-foreground font-medium">Preview</span> tab to see the live output.</li>
-                <li>Click <span className="text-foreground font-medium">Download ZIP</span> to save <code className="rounded bg-muted px-1 text-[10px] font-mono">index.html</code>, <code className="rounded bg-muted px-1 text-[10px] font-mono">style.css</code>, and <code className="rounded bg-muted px-1 text-[10px] font-mono">script.js</code> as separate linked files.</li>
-                <li>Use <span className="text-foreground font-medium">Reset</span> to restore the default starter code, or <span className="text-foreground font-medium">Clear all</span> to start from a blank slate.</li>
-              </ol>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
-              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+1 / 2 / 3</kbd> Switch to HTML, CSS, or JS editor</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> Run preview (when auto-run is off)</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd> Download files as ZIP</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd> Reset to defaults</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Focus the current editor</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> Open the shortcuts reference</li>
-              </ul>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
-              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                <li>The preview runs inside a sandboxed iframe. External network requests and browser APIs like <code className="rounded bg-muted px-1 text-[10px] font-mono">localStorage</code> are not available inside it.</li>
-                <li>JavaScript errors in the preview do not affect the editor. Open browser DevTools to debug them.</li>
-                <li>The downloaded ZIP links the three files together. Open <code className="rounded bg-muted px-1 text-[10px] font-mono">index.html</code> directly in a browser to run your project locally.</li>
-                <li>Everything runs in your browser. Nothing is sent to a server.</li>
-              </ul>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
 
     </div>
   )
