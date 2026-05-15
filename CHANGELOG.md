@@ -89,6 +89,111 @@
 
 ---
 
+## v1.75.0 — May 2026
+### Code Playground — Rules Compliance, Tool Title, Guide, and Layout Refactor
+
+#### Rules compliance fixes (`code-playground.tsx`) — 12 issues
+- Named export `export function` → `export default function`; `page.tsx` import updated
+- `Ctrl+S` → `Ctrl+Shift+S` (bare `Ctrl+` conflicts with browser Save Page)
+- `Ctrl+R` → `Ctrl+Enter` (bare `Ctrl+` conflicts with browser Reload)
+- `Ctrl+Shift+R` in ShortcutsModal was never implemented AND `R` is a hard-conflict letter → replaced with `Ctrl+Shift+E` for Reset, now wired in keyboard handler
+- Keyboard handler: capture phase and `stopPropagation()` removed; input guard added (all `Ctrl+` shortcuts still fire inside textareas)
+- Mobile Preview tab now renders the live iframe instead of a placeholder text string
+- All 4 tab buttons: `focus:` → `focus-visible:`
+- Clear All button: `focus:` → `focus-visible:`
+- All 3 textarea editors: `focus:` → `focus-visible:`
+- Checkbox: `focus:` → `focus-visible:`
+- Download ZIP kbd badge: `border-border bg-muted` → `border-primary-foreground/30 bg-primary-foreground/20`
+- Unused `iframeRef` removed
+
+#### Mobile bottom bar fix
+- Split into desktop (`hidden md:flex shrink-0`) and mobile (`md:hidden fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`)
+- Textareas changed from `h-full` to `flex-1 min-h-0`; tabpanel is `flex flex-col` so the `h-14` footer spacer prevents content hiding behind the fixed bar
+
+#### Accessibility additions
+- Tab buttons gain `id` (`tab-html/css/js/preview`) and `aria-controls="editor-panel"`
+- Tabpanel gains `id="editor-panel"` and `aria-labelledby` pointing to the active tab (proper ARIA tab/panel relationship)
+
+#### Tool title added
+- Desktop: "Code Playground" inline in toolbar left of tabs
+- Mobile: dedicated compact header row above the toolbar
+
+#### Usage guide
+- Added as a card below the panels card (same pattern as `aes-encryptor` and `base64-encoder`)
+- Three sections: How to use (5 ordered steps), Keyboard shortcuts, Tips (sandbox limits, DevTools, ZIP structure, privacy note)
+- Discarded two earlier approaches (embedded in right panel — shrank the preview; modal behind an Info button — required hunting for it) in favour of the standard scrollable layout
+
+#### Layout refactor to standard panels-card pattern
+- Replaced the viewport-filling `flex-1 min-h-0 overflow-hidden flex` workspace with the standard `flex-1 overflow-y-auto p-4 space-y-4` scrollable wrapper + `rounded-xl border border-border overflow-hidden` panels card with `min-h-[500px]`
+- Preview gets full panel height with nothing competing for space
+- Guide card below the panels card, accessible by scrolling — consistent with all other split-panel tools
+
+#### Files changed
+- `components/tools/code-playground.tsx`
+- `app/tools/code-playground/page.tsx`
+
+---
+
+## v1.74.0 — May 2026
+### BPM Detector — Rules Compliance Pass + Tap Tempo + BPM Correction + Copy BPM
+
+#### Rules compliance fixes (`bpm-detector.tsx`) — 20 issues
+- `Ctrl+O` violated two rules: bare `Ctrl+` shortcut AND `O` is a hard-conflict letter → `Ctrl+Shift+U`
+- Named export `export function` → `export default`; `page.tsx` import updated
+- Keyboard handler: input guard added
+- `announceToScreenReader` added — fires on analyze start and on BPM result
+- "Analyze again" button hidden on mobile (`hidden md:inline`) — bottom bar already covers the action
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Panels wrapped in `rounded-xl border` card inside `flex-1 overflow-y-auto` scrollable area
+- Usage guide added
+- Footer spacer added
+- Redundant `<>` wrapper removed
+- Mobile header `pb-1` → `pb-2`; mobile tablist `aria-label` added; mobile tab buttons focus-visible rings added
+- Error display: `<p className="text-xs text-red-500">` → `role="alert"` + `aria-live="assertive"` pattern
+- Drop zone: `role="button"` + `tabIndex={0}` + `onKeyDown` + `aria-label` + focus-visible ring
+- "Analyze again" button: `aria-label` + `focus-visible` ring
+- Confidence bar: `role="progressbar"` with `aria-valuenow/min/max`
+- Detect BPM kbd badge: `border-border bg-muted` → `border-primary-foreground/30 bg-primary-foreground/20`
+- Drop zone hint updated from `Ctrl+O` to `Ctrl+Shift+U`
+
+#### New features (all fully client-side)
+- **½× / 2× BPM correction buttons** — appear below the BPM number after detection; each previews the target value (e.g. "½× 70", "2× 280"); disabled when result would fall below 30 or above 300; tempo label and genre update live as value is corrected
+- **Tap Tempo** — dashed tap button in left panel; averages last 8 tap intervals; live BPM shown during tapping; resets 2.5 s after last tap; Copy BPM button appears with independent feedback state
+- **Copy BPM** — copy icon inline with "BPM" label; copies `displayBpm` (reflects any ½× / 2× correction); `Ctrl+Shift+V` shortcut wired in keyboard handler and ShortcutsModal
+
+#### Files changed
+- `components/tools/bpm-detector.tsx`
+- `app/tools/bpm-detector/page.tsx`
+
+---
+
+## v1.73.0 — May 2026
+### Box Shadow Generator — Rules Compliance Pass
+
+#### Rules compliance fixes (`shadow-generator.tsx`) — 18 issues
+- `Ctrl+Shift+C` → `Ctrl+Shift+V` (copy CSS — hard conflict)
+- `Ctrl+Shift+N` → `Ctrl+Shift+X` (add layer — `N` is hard conflict)
+- ShortcutsModal corrected: `["Ctrl", "N"]` → `["Ctrl", "Shift", "X"]`; `["Ctrl", "Shift", "C"]` → `["Ctrl", "Shift", "V"]`
+- Keyboard handler: capture phase removed; input guard added; `e.stopPropagation()` removed
+- Arrow key layer switching: now skips when a slider is focused (prevented slider arrow keys from also switching layers)
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Panels wrapped in `rounded-xl border border-border overflow-hidden` card inside `flex-1 overflow-y-auto p-4 space-y-4` scrollable area
+- Usage guide added (How to use, Keyboard shortcuts, Tips)
+- Footer spacer added
+- Redundant `<>` wrapper removed
+- Mobile header `pb-1` → `pb-2`; mobile tablist `aria-label="Panel selection"` added
+- Mobile tab buttons: `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` added
+- Layer tab buttons: `focus:` → `focus-visible:`
+- Remove layer button: `focus:` → `focus-visible:`
+- All three color inputs: `focus:` → `focus-visible:`
+- Inset switch label: `Tab + Space` two-badge hint added
+- All 5 slider labels: `Tab + ← →` two-badge hints added
+
+#### Files changed
+- `components/tools/shadow-generator.tsx`
+
+---
+
 ## v1.72.0 — May 2026
 ### Border Radius Visualizer — Rules Compliance Pass
 

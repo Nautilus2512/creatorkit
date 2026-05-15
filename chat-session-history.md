@@ -597,6 +597,131 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.75.0 (May 2026) — Code Playground Overhaul
+
+### Overview
+Full rules.md compliance pass (12 issues), mobile bottom bar fix, tool title, usage guide, and layout refactor for `code-playground.tsx`. Multiple design iterations refined the guide placement before landing on the standard scrollable layout.
+
+### Rules Compliance Fixes (12 issues)
+| Issue | Fix |
+|---|---|
+| Named export | → `export default`; `page.tsx` updated |
+| `Ctrl+S` bare shortcut | → `Ctrl+Shift+S` |
+| `Ctrl+R` bare shortcut | → `Ctrl+Enter` |
+| `Ctrl+Shift+R` unimplemented + R hard-conflict | → `Ctrl+Shift+E` for Reset, wired in handler |
+| Keyboard handler: capture phase + stopPropagation | Removed; input guard added |
+| Mobile Preview tab showed placeholder text | Now renders live iframe |
+| Tab buttons `focus:` | → `focus-visible:` |
+| Clear All button `focus:` | → `focus-visible:` |
+| Textarea editors `focus:` | → `focus-visible:` |
+| Checkbox `focus:` | → `focus-visible:` |
+| Download ZIP kbd badge wrong class | → `border-primary-foreground/30 bg-primary-foreground/20` |
+| Unused `iframeRef` | Removed |
+
+### Mobile Bottom Bar Fix
+Split into `hidden md:flex shrink-0` (desktop) and `md:hidden fixed bottom-0 left-0 right-0 z-20` (mobile). Textareas use `flex-1 min-h-0`; tabpanel is `flex flex-col`; `h-14` spacer prevents content hiding behind fixed bar.
+
+### Accessibility Additions
+Tab buttons have `id` + `aria-controls="editor-panel"`. Tabpanel has `id="editor-panel"` + `aria-labelledby` for proper ARIA tab/panel relationship.
+
+### Tool Title
+Desktop: inline in toolbar. Mobile: dedicated compact header row above the toolbar.
+
+### Guide Placement — Design Iteration
+Three approaches explored before landing on the correct one:
+1. **Modal (Info button)** — discarded: required user to find and click an icon
+2. **Embedded in right panel below preview** — discarded: shrank the live preview at 100% zoom, felt distracting
+3. **Standard scrollable layout with guide below panels card** — adopted: matches `aes-encryptor` and `base64-encoder` exactly; preview gets full `min-h-[500px]` height; guide accessible by scrolling
+
+### Key lesson documented
+For full-screen editor tools, the standard scrollable layout with `min-h-[500px]` panels card is still the right approach. The card grows to fill the viewport; the guide sits below it; users scroll to access it without disrupting the editor.
+
+### Commits
+| Hash | Message |
+|---|---|
+| 1da608f | fix: full compliance pass on code-playground |
+| 8311a6e | fix: mobile bottom bar + accessibility |
+| c586bbd | feat: add usage guide modal (later replaced) |
+| a8975bb | feat: inline guide + tool title |
+| f2049ca | refactor: move guide below panels card (final) |
+
+---
+
+## Session v1.74.0 (May 2026) — BPM Detector Compliance Pass + Three New Features
+
+### Overview
+Full rules.md compliance pass (20 issues) on `bpm-detector.tsx` plus three fully client-side feature additions: tap tempo, ½×/2× BPM correction, and copy BPM.
+
+### Rules Compliance Fixes (20 issues)
+| Issue | Fix |
+|---|---|
+| `Ctrl+O` bare shortcut + `O` hard-conflict | → `Ctrl+Shift+U` |
+| Named export | → `export default`; `page.tsx` updated |
+| No keyboard input guard | Added |
+| No `announceToScreenReader` | Added (analyze start + BPM result) |
+| "Analyze again" visible on mobile | Hidden with `hidden md:inline` |
+| Mobile bottom bar `shrink-0` | → fixed viewport bottom |
+| Missing scrollable wrapper + panels card | Added |
+| Missing usage guide | Added |
+| Missing footer spacer | Added |
+| Redundant `<>` wrapper | Removed |
+| Mobile header `pb-1` | → `pb-2` |
+| Mobile tablist missing `aria-label` | Added |
+| Mobile tab buttons no focus ring | Added |
+| Error display plain `<p>` | → `role="alert"` pattern |
+| Drop zone not keyboard accessible | Added `role="button"` + `tabIndex` + `onKeyDown` + `aria-label` |
+| "Analyze again" no `aria-label` or focus ring | Added |
+| Confidence bar no progressbar ARIA | Added `role="progressbar"` with full aria values |
+| Detect BPM kbd badge wrong class | → `border-primary-foreground/30 bg-primary-foreground/20` |
+| Drop zone hint showed `Ctrl+O` | Updated to `Ctrl+Shift+U` |
+
+### New Features
+- **Tap Tempo** — large dashed tap button in left panel; averages last 8 intervals; resets after 2.5 s; live BPM shown; Copy BPM button appears after 2+ taps
+- **½× / 2× BPM correction** — two buttons below the result; each previews target value; tempo label and genre update live; disabled at extremes (< 30 or > 300)
+- **Copy BPM** — copy icon next to "BPM" label; copies `displayBpm` (reflects corrections); `Ctrl+Shift+V` shortcut; separate `fileCopied` and `tapCopied` states
+
+### Commits
+| Hash | Message |
+|---|---|
+| f1f2ac2 | fix: full compliance pass on bpm-detector |
+| 9184eec | feat: add tap tempo, BPM correction, and copy BPM |
+
+---
+
+## Session v1.73.0 (May 2026) — Box Shadow Generator Full Compliance Pass
+
+### Overview
+Full rules.md compliance audit and rewrite of `shadow-generator.tsx`. 18 issues identified and fixed.
+
+### Rules Compliance Fixes (18 issues)
+| Issue | Fix |
+|---|---|
+| `Ctrl+Shift+C` hard conflict (copy CSS) | → `Ctrl+Shift+V` |
+| `Ctrl+Shift+N` hard conflict (add layer) | → `Ctrl+Shift+X` |
+| ShortcutsModal showed `["Ctrl", "N"]` | → `["Ctrl", "Shift", "X"]` and `["Ctrl", "Shift", "V"]` |
+| Keyboard handler: capture phase + stopPropagation | Removed; input guard added |
+| Arrow keys switched layers even when slider focused | Added `role === "slider"` guard to skip |
+| Mobile bottom bar `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| Missing scrollable wrapper + panels card | Added `flex-1 overflow-y-auto p-4` + `rounded-xl border` |
+| Missing usage guide | Added (How to use, Keyboard shortcuts, Tips) |
+| Missing footer spacer | Added |
+| Redundant `<>` wrapper | Removed |
+| Mobile header `pb-1` | → `pb-2` |
+| Mobile tablist missing `aria-label` | Added `aria-label="Panel selection"` |
+| Mobile tab buttons no focus ring | Added `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` |
+| Layer tab buttons `focus:` | → `focus-visible:` |
+| Remove layer button `focus:` | → `focus-visible:` |
+| All three color inputs `focus:` | → `focus-visible:` |
+| Inset switch label missing hint | Added `Tab + Space` two-badge hint |
+| All 5 slider labels missing hints | Added `Tab + ← →` two-badge hints |
+
+### Commits
+| Hash | Message |
+|---|---|
+| 0960839 | fix: full compliance pass on shadow-generator |
+
+---
+
 ## Session v1.72.0 (May 2026) — Border Radius Visualizer Full Compliance Pass
 
 ### Overview
