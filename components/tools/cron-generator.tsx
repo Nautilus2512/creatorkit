@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useCallback, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
-// Accessibility helper for screen reader announcements
 function announceToScreenReader(message: string) {
   const announcement = document.createElement('div')
   announcement.setAttribute('role', 'status')
@@ -139,7 +138,7 @@ const shortcuts = [
   { keys: ["8"], description: "Every Monday preset" },
   { keys: ["9"], description: "Weekdays only preset" },
   { keys: ["0"], description: "Weekends only preset" },
-  { keys: ["Ctrl", "Shift", "C"], description: "Copy expression" },
+  { keys: ["Ctrl", "Shift", "V"], description: "Copy expression" },
   { keys: ["Escape"], description: "Focus expression input" },
   { keys: ["?"], description: "Toggle this shortcuts panel" },
   { keys: ["Tab"], description: "Navigate between controls" },
@@ -155,36 +154,28 @@ export default function CronGenerator() {
   const description = isValid ? describeCron(expr) : "Enter a valid 5-field cron expression"
   const nextRuns = isValid ? getNextRuns(expr) : []
 
-  const setExpression = useCallback((newExpr: string, label?: string) => {
+  const setExpression = useCallback((newExpr: string, label: string) => {
     setExpr(newExpr)
-    if (label) {
-      announceToScreenReader(`Applied preset: ${label}`)
-    } else {
-      announceToScreenReader(`Cron expression: ${newExpr}`)
-    }
+    announceToScreenReader(`Applied preset: ${label}`)
   }, [])
 
   const copy = useCallback(() => {
     navigator.clipboard.writeText(expr)
     setCopied(true)
-    announceToScreenReader('Cron expression copied')
+    announceToScreenReader("Cron expression copied")
     setTimeout(() => setCopied(false), 2000)
   }, [expr])
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        // Ctrl+Shift+C to copy when in input
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && expr) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && expr) {
           e.preventDefault()
-          e.stopPropagation()
           copy()
         }
         return
       }
 
-      // Number keys 0-9 for presets
       if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[0-9]$/.test(e.key)) {
         const preset = PRESETS.find(p => p.shortcut === e.key)
         if (preset) {
@@ -193,91 +184,124 @@ export default function CronGenerator() {
         }
       }
 
-      // Ctrl+Shift+C to copy
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && expr) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && expr) {
         e.preventDefault()
-        e.stopPropagation()
         copy()
       }
 
-      // Escape to focus expression input
       if (e.key === "Escape") {
-        const inputEl = document.getElementById('cron-expression') as HTMLInputElement
+        const inputEl = document.getElementById("cron-expression") as HTMLInputElement
         inputEl?.focus()
         inputEl?.select()
       }
     }
-    window.addEventListener("keydown", handleKeyDown, true)
-    return () => window.removeEventListener("keydown", handleKeyDown, true)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [expr, copy, setExpression])
 
   return (
-    <>
-      <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex flex-1 flex-col min-h-0">
 
-        {/* DESKTOP: top action bar */}
-        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Cron Generator controls">
-          <span className="text-sm font-semibold shrink-0 mr-1">Cron Generator</span>
-          <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-          {/* Presets */}
-          <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Cron presets">
-            {PRESETS.map(({ label, expr: e, shortcut }) => (
-              <button
-                key={e}
-                onClick={() => setExpression(e, label)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${expr === e ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
-                role="radio"
-                aria-checked={expr === e}
-                aria-label={shortcut ? `${label} (press ${shortcut})` : label}
-              >
-                {label}{shortcut && <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{shortcut}</kbd>}
-              </button>
-            ))}
-          </div>
-
-          {/* RIGHT: primary output actions + ShortcutsModal */}
-          <div className="ml-auto flex items-center gap-1.5">
-            <ShortcutsModal pageName="Cron Generator" shortcuts={shortcuts} />
-            <Button variant="outline" size="sm" onClick={copy} aria-label="Copy cron expression">
-              {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-              {copied ? "Copied!" : "Copy Expression"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
-            </Button>
-          </div>
+      {/* DESKTOP: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Cron Generator controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Cron Generator</span>
+        <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Cron presets">
+          {PRESETS.map(({ label, expr: e, shortcut }) => (
+            <button
+              key={e}
+              onClick={() => setExpression(e, label)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                expr === e
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+              }`}
+              role="radio"
+              aria-checked={expr === e}
+              aria-label={shortcut ? `${label} (press ${shortcut})` : label}
+            >
+              {label}
+              {shortcut && (
+                <kbd
+                  className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${
+                    expr === e
+                      ? "border-primary-foreground/30 bg-primary-foreground/20"
+                      : "border-border bg-muted"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {shortcut}
+                </kbd>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* MOBILE: compact header + tab switcher */}
-        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <h2 className="text-base font-semibold">Cron Generator</h2>
-            <ShortcutsModal pageName="Cron Generator" shortcuts={shortcuts} />
-          </div>
-          <div className="flex" role="tablist" aria-label="Panel selection">
-            <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
-              Builder
-            </button>
-            <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
-              Schedule
-            </button>
-          </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Cron Generator" shortcuts={shortcuts} />
+          <Button variant="outline" size="sm" onClick={copy} aria-label="Copy cron expression">
+            {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {copied ? "Copied!" : "Copy Expression"}
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
+          </Button>
         </div>
+      </div>
 
-        {/* PANELS */}
-        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+      {/* MOBILE: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold">Cron Generator</h2>
+          <ShortcutsModal pageName="Cron Generator" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel selection">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+              activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
+            }`}
+          >
+            Builder
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
+              activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"
+            }`}
+          >
+            Schedule
+          </button>
+        </div>
+      </div>
+
+      {/* SCROLLABLE CONTENT AREA */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        {/* PANELS CARD */}
+        <div className="flex flex-col md:flex-row min-h-[500px] rounded-xl border border-border overflow-hidden">
 
           {/* Input panel — Expression builder */}
-          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
-            role="region" aria-label="Cron expression builder">
+          <div
+            className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden md:border-r border-border`}
+            role="region"
+            aria-label="Cron expression builder"
+          >
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
+
               {/* Mobile presets */}
               <div className="md:hidden flex flex-wrap gap-2" role="radiogroup" aria-label="Cron presets">
                 {PRESETS.map(({ label, expr: e, shortcut }) => (
                   <button
                     key={e}
                     onClick={() => setExpression(e, label)}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${expr === e ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                    className={`text-xs px-3 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      expr === e
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                    }`}
                     role="radio"
                     aria-checked={expr === e}
                     aria-label={shortcut ? `${label} (press ${shortcut})` : label}
@@ -291,11 +315,11 @@ export default function CronGenerator() {
                 <Input
                   id="cron-expression"
                   value={expr}
-                  onChange={(e) => setExpression(e.target.value)}
+                  onChange={(e) => setExpr(e.target.value)}
                   className="font-mono text-2xl tracking-[0.3em] text-center h-12"
                   placeholder="* * * * *"
                   aria-label="Cron expression"
-                  aria-describedby="cron-field-labels cron-help"
+                  aria-describedby="cron-field-labels"
                 />
                 <div id="cron-field-labels" className="grid grid-cols-5 gap-1 text-center text-xs text-muted-foreground">
                   {["Minute", "Hour", "Day", "Month", "Weekday"].map(l => <div key={l}>{l}</div>)}
@@ -314,7 +338,7 @@ export default function CronGenerator() {
                     <div key={label} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
                       <div>
                         <span className="text-sm">{label}</span>
-                        <span className="text-xs text-muted-foreground ml-2" id={`${label.toLowerCase().replace(/\s+/g, '-')}-hint`}>{hint}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{hint}</span>
                       </div>
                       <code className="font-mono text-sm bg-muted px-2 py-0.5 rounded" aria-label={`${label} value`}>{value}</code>
                     </div>
@@ -330,8 +354,14 @@ export default function CronGenerator() {
           </div>
 
           {/* Output panel — Next runs */}
-          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
-            role="region" aria-label="Next scheduled runs">
+          <div
+            className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
+            role="region"
+            aria-label="Next scheduled runs"
+          >
+            <div className="shrink-0 border-b border-border px-4 py-3">
+              <span className="text-sm font-medium">Schedule</span>
+            </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2" role="list" aria-label="Upcoming runs list">
               {nextRuns.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground" role="note">No upcoming runs found</div>
@@ -362,17 +392,56 @@ export default function CronGenerator() {
 
         </div>
 
-        {/* MOBILE: bottom action bar */}
-        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
-          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-          <div className="flex-1" />
-          <Button size="sm" className="h-11 px-3" onClick={copy} aria-label="Copy cron expression">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span className="ml-1 text-xs">{copied ? "Copied!" : "Copy Expression"}</span>
-          </Button>
+        {/* USAGE GUIDE */}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Click a <span className="text-foreground font-medium">preset</span> or type a custom expression in the input field. The 5 fields are: <span className="text-foreground font-medium">minute, hour, day, month, weekday</span>.</li>
+              <li>The <span className="text-foreground font-medium">Meaning</span> box instantly translates the expression into plain English so you can verify it is correct.</li>
+              <li>Switch to the <span className="text-foreground font-medium">Schedule</span> panel to see the next 5 upcoming run times based on your local clock.</li>
+              <li>Click <span className="text-foreground font-medium">Copy Expression</span> to copy the cron string to your clipboard, then paste it into your scheduler.</li>
+            </ol>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+              <li>Keys <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> through <kbd className="rounded border border-border bg-muted px-1 text-[10px]">9</kbd> and <kbd className="rounded border border-border bg-muted px-1 text-[10px]">0</kbd> apply the matching preset (numbered left to right in the top bar).</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> copies the current expression to your clipboard.</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> focuses and selects the expression input so you can start typing immediately.</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> opens and closes the shortcuts reference panel.</li>
+            </ul>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Field reference</p>
+            <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+              <li>A cron expression has 5 space-separated fields: <span className="text-foreground font-medium">minute (0-59), hour (0-23), day-of-month (1-31), month (1-12), day-of-week (0-6, Sun=0)</span>.</li>
+              <li><span className="text-foreground font-medium">*</span> matches every value. <span className="text-foreground font-medium">*/5</span> matches every 5th value. <span className="text-foreground font-medium">1-5</span> matches a range. <span className="text-foreground font-medium">1,3,5</span> matches exact values.</li>
+              <li>Both <span className="text-foreground font-medium">0</span> and <span className="text-foreground font-medium">7</span> represent Sunday in the day-of-week field.</li>
+            </ul>
+          </div>
+
+          <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
         </div>
 
+        {/* Spacer so fixed mobile bar does not cover last content */}
+        <div className="md:hidden h-[60px]" aria-hidden="true" />
       </div>
-    </>
+
+      {/* MOBILE: bottom action bar */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button size="sm" className="h-11 px-3" onClick={copy} aria-label="Copy cron expression">
+          {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+          <span className="ml-1 text-xs">{copied ? "Copied!" : "Copy Expression"}</span>
+        </Button>
+      </div>
+
+    </div>
   )
 }
