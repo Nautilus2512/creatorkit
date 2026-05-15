@@ -89,6 +89,39 @@
 
 ---
 
+## v1.76.0 — May 2026
+### Color Converter — Rules Compliance Pass + Custom Visual Color Picker
+
+#### Rules compliance fixes (`color-converter.tsx`) — 14 issues
+- Named export `export function` → `export default function`
+- `Ctrl+Shift+C` (Copy All) → `Ctrl+Shift+V` (`C` is a hard-conflict letter)
+- Keyboard handler: capture phase removed; input guard added
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Panels wrapped in `rounded-xl border` card inside `flex-1 overflow-y-auto` scrollable area
+- All interactive elements: `focus:` → `focus-visible:`
+- Color swatch preview: `role="img"` + `aria-label` added
+- RGB breakdown table: `role="group"` + `aria-label` + `aria-live="polite"` on values
+- Format cards: `aria-live="polite"` on code blocks
+- `announceToScreenReader` added for copy and invalid-color feedback
+- Usage guide added with How to use, Keyboard shortcuts, and Tips sections
+- Footer spacer (`md:hidden h-[60px]`) added
+- Mobile tab switcher gains proper `role="tablist"` + `aria-label`
+- All kbd badges in action bar: `border-primary-foreground/30 bg-primary-foreground/20`
+
+#### Custom visual color picker
+- Replaced browser-native `<input type="color">` with a custom `ColorPickerPanel` component matching the design from `design-token-generator.tsx`
+- Swatch trigger button shows current color + "Edit / Close" text; `aria-haspopup="dialog"`, `aria-expanded`
+- When open: 2D SL gradient area (h-44) for saturation/lightness → hue slider → hex input + RGB readout
+- Pointer Events API with `setPointerCapture` for smooth drag on both mouse and touch (no `mousemove`/`touchmove` workarounds needed)
+- `useMemo` derives initial HSL from the hex value; separate `h`, `s`, `l` state vars prevent stale closure issues
+- Separate text input preserved below the picker for pasting `rgb()` / `hsl()` values directly
+- Large color swatch preview (`h-28`) and RGB breakdown remain in the left panel
+
+#### Files changed
+- `components/tools/color-converter.tsx`
+
+---
+
 ## v1.75.0 — May 2026
 ### Code Playground — Rules Compliance, Tool Title, Guide, and Layout Refactor
 

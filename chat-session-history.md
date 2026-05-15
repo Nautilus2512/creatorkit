@@ -597,6 +597,47 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.76.0 (May 2026) — Color Converter Compliance Pass + Custom Color Picker
+
+### Overview
+Full rules.md compliance pass (14 issues) on `color-converter.tsx`, followed by replacing the browser-native `<input type="color">` with a custom visual color picker matching the design from `design-token-generator.tsx`.
+
+### Rules Compliance Fixes (14 issues)
+| Issue | Fix |
+|---|---|
+| Named export | → `export default` |
+| `Ctrl+Shift+C` Copy All — `C` hard-conflict | → `Ctrl+Shift+V` |
+| Keyboard handler: capture phase | Removed; input guard added |
+| Mobile bottom bar: `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| No scrollable layout | Panels wrapped in `rounded-xl border` card in `flex-1 overflow-y-auto` |
+| `focus:` on all interactive elements | → `focus-visible:` |
+| Color swatch missing accessible label | `role="img"` + `aria-label` added |
+| RGB breakdown no group label | `role="group"` + `aria-label` + `aria-live="polite"` |
+| Format code blocks no live region | `aria-live="polite"` added |
+| No screen reader announcements | `announceToScreenReader` added for copy + invalid color |
+| No usage guide | Added: How to use, Keyboard shortcuts, Tips |
+| No footer spacer | `md:hidden h-[60px]` spacer added |
+| Mobile tablist no `aria-label` | Added `aria-label="Panel selection"` |
+| Action bar kbd badge color | → `border-primary-foreground/30 bg-primary-foreground/20` |
+
+### Custom Color Picker Feature
+| Decision | Rationale |
+|---|---|
+| Replaced native `<input type="color">` | Native browser picker is visually inconsistent across platforms and lacks the split SL + hue UX |
+| Matches design-token-generator pattern exactly | Design consistency; reuses proven drag logic |
+| Pointer Events API with `setPointerCapture` | Single unified handler for mouse and touch; no separate touch event listeners needed |
+| `useMemo` for initial HSL + separate h/s/l state | Prevents stale closure; allows picker to re-initialise when `value` prop changes externally |
+| Swatch trigger button with `aria-haspopup="dialog"` | Screen readers announce expandable picker correctly |
+| Separate text input preserved below picker | Allows pasting `rgb()` / `hsl()` values which the picker alone cannot accept |
+
+### Commits
+| Hash | Message |
+|---|---|
+| 657eae2 | fix: full compliance pass on color-converter |
+| b44e9cf | feat: replace native color input with custom visual picker in color-converter |
+
+---
+
 ## Session v1.75.0 (May 2026) — Code Playground Overhaul
 
 ### Overview
