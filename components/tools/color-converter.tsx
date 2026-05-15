@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 function announceToScreenReader(message: string) {
@@ -100,6 +101,177 @@ function toHex(r: number, g: number, b: number) {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
 }
 
+// ── Custom color picker (same visual design as Design Token Generator) ─────────
+
+function ColorPickerPanel({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
+  const hsl = useMemo(() => {
+    const rgb = hexToRgb(value) ?? { r: 59, g: 130, b: 246 }
+    return rgbToHsl(rgb.r, rgb.g, rgb.b)
+  }, [value])
+
+  const [h, setH] = useState(hsl.h)
+  const [s, setS] = useState(hsl.s)
+  const [l, setL] = useState(hsl.l)
+  const [hexInput, setHexInput] = useState(value)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    setH(hsl.h); setS(hsl.s); setL(hsl.l)
+    setHexInput(value)
+  }, [value, hsl.h, hsl.s, hsl.l])
+
+  const commit = useCallback((nh: number, ns: number, nl: number) => {
+    const rgb = hslToRgb(nh, ns, nl)
+    const hex = toHex(rgb.r, rgb.g, rgb.b)
+    setHexInput(hex)
+    onChange(hex)
+  }, [onChange])
+
+  const slRef = useRef<HTMLDivElement>(null)
+  const draggingSL = useRef(false)
+
+  const handleSLPointer = useCallback((e: React.PointerEvent) => {
+    if (!slRef.current) return
+    e.preventDefault()
+    const rect = slRef.current.getBoundingClientRect()
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+    const ns = Math.round(nx * 100)
+    const nl = Math.round((1 - ny) * 100)
+    setS(ns); setL(nl)
+    commit(h, ns, nl)
+  }, [h, commit])
+
+  const hueRef = useRef<HTMLDivElement>(null)
+  const draggingH = useRef(false)
+
+  const handleHuePointer = useCallback((e: React.PointerEvent) => {
+    if (!hueRef.current) return
+    e.preventDefault()
+    const rect = hueRef.current.getBoundingClientRect()
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const nh = Math.round(nx * 360)
+    setH(nh)
+    commit(nh, s, l)
+  }, [s, l, commit])
+
+  const handleHexInput = (raw: string) => {
+    setHexInput(raw)
+    const clean = raw.startsWith("#") ? raw : `#${raw}`
+    if (/^#[0-9a-fA-F]{6}$/.test(clean)) onChange(clean)
+  }
+
+  const rgb = hslToRgb(h, s, l)
+  const thumbX = `${s}%`
+  const thumbY = `${100 - l}%`
+  const hueX = `${(h / 360) * 100}%`
+
+  return (
+    <div className="space-y-2">
+      {/* Swatch trigger */}
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(v => !v)
+          announceToScreenReader(open ? 'Color picker closed' : 'Color picker opened')
+        }}
+        className="flex items-center gap-2.5 w-full rounded-lg border border-border bg-muted/30 px-3 py-2.5 hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Color picker. Current color: ${value}. Press to ${open ? 'close' : 'open'}`}
+      >
+        <span
+          className="h-7 w-7 rounded-md border border-border shrink-0 shadow-sm"
+          style={{ backgroundColor: value }}
+          aria-hidden="true"
+        />
+        <span className="font-mono text-sm flex-1 text-left">{hexInput}</span>
+        <span className="text-xs text-muted-foreground">{open ? 'Close' : 'Edit'}</span>
+      </button>
+
+      {/* Picker panel */}
+      {open && (
+        <div
+          className="rounded-xl border border-border bg-card shadow-lg p-3 space-y-3"
+          role="dialog"
+          aria-label="Color picker"
+        >
+          {/* Saturation / Lightness 2D gradient */}
+          <div
+            ref={slRef}
+            className="relative h-44 w-full rounded-lg cursor-crosshair select-none"
+            style={{
+              background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${h}, 100%, 50%))`,
+              touchAction: "none",
+            }}
+            onPointerDown={(e) => { draggingSL.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleSLPointer(e) }}
+            onPointerMove={(e) => { if (draggingSL.current) handleSLPointer(e) }}
+            onPointerUp={(e) => { draggingSL.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
+            onPointerCancel={() => { draggingSL.current = false }}
+            role="slider"
+            aria-label="Saturation and lightness"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={s}
+            aria-valuetext={`Saturation ${s}%, Lightness ${l}%`}
+            tabIndex={0}
+          >
+            <div
+              className="absolute h-4 w-4 rounded-full border-2 border-white shadow-md -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: thumbX, top: thumbY, backgroundColor: value }}
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Hue slider */}
+          <div
+            ref={hueRef}
+            className="relative h-4 w-full rounded-full cursor-pointer select-none"
+            style={{ background: "linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)", touchAction: "none" }}
+            onPointerDown={(e) => { draggingH.current = true; e.currentTarget.setPointerCapture(e.pointerId); handleHuePointer(e) }}
+            onPointerMove={(e) => { if (draggingH.current) handleHuePointer(e) }}
+            onPointerUp={(e) => { draggingH.current = false; e.currentTarget.releasePointerCapture(e.pointerId) }}
+            onPointerCancel={() => { draggingH.current = false }}
+            role="slider"
+            aria-label="Hue"
+            aria-valuemin={0}
+            aria-valuemax={360}
+            aria-valuenow={h}
+            aria-valuetext={`Hue ${h} degrees`}
+            tabIndex={0}
+          >
+            <div
+              className="absolute h-5 w-5 rounded-full border-2 border-white shadow-md top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ left: hueX, backgroundColor: `hsl(${h}, 100%, 50%)` }}
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Hex input + RGB readout */}
+          <div className="flex gap-2 items-center">
+            <span className="h-8 w-8 rounded-md border border-border shrink-0" style={{ backgroundColor: value }} aria-hidden="true" />
+            <Input
+              value={hexInput}
+              onChange={(e) => handleHexInput(e.target.value)}
+              className="flex-1 font-mono text-sm h-8"
+              placeholder="#000000"
+              aria-label="Hex color value"
+            />
+            <span
+              className="text-xs text-muted-foreground shrink-0 font-mono"
+              aria-label={`RGB values: ${rgb.r}, ${rgb.g}, ${rgb.b}`}
+            >
+              {rgb.r}, {rgb.g}, {rgb.b}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 export default function ColorConverter() {
   const [input, setInput] = useState("")
   const [pickerValue, setPickerValue] = useState("#3b82f6")
@@ -121,11 +293,11 @@ export default function ColorConverter() {
   const handleTextInput = useCallback((value: string) => applyColor(parseColor(value), value), [applyColor])
 
   const handlePicker = useCallback((hex: string) => {
-    setPickerValue(hex)
     const rgb = hexToRgb(hex)
+    setPickerValue(hex)
     setColor(rgb)
     setInput(hex)
-    if (rgb) announceToScreenReader(`Color picker set to ${hex}`)
+    if (rgb) announceToScreenReader(`Color set to ${hex}`)
   }, [])
 
   const copy = useCallback((value: string, key: string, label: string) => {
@@ -161,20 +333,17 @@ export default function ColorConverter() {
         if (!(e.ctrlKey || e.metaKey)) return
       }
 
-      // Number keys 1–4 copy individual formats (no modifier needed)
       if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[1-4]$/.test(e.key) && color) {
         e.preventDefault()
         const format = formats.find(f => f.shortcut === e.key)
         if (format) copy(format.value, format.key, format.label)
       }
 
-      // Ctrl+Shift+V — copy all formats
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && color) {
         e.preventDefault()
         copyAll()
       }
 
-      // Escape — focus color input
       if (e.key === "Escape") {
         const inputEl = document.getElementById('color-input') as HTMLInputElement
         inputEl?.focus()
@@ -233,38 +402,39 @@ export default function ColorConverter() {
                 <span className="text-sm font-medium">Color Input</span>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                <div className="flex items-start gap-4">
-                  <input
-                    type="color"
-                    id="color-picker"
-                    value={pickerValue}
-                    onChange={(e) => handlePicker(e.target.value)}
-                    className="w-16 h-16 rounded-lg border border-border cursor-pointer p-1 bg-background shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    aria-label="Color picker"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <Input
-                      id="color-input"
-                      value={input}
-                      onChange={(e) => handleTextInput(e.target.value)}
-                      placeholder="#3b82f6 or rgb(59,130,246) or hsl(217,91%,60%)"
-                      className="font-mono text-sm"
-                      aria-label="Color input (HEX, RGB, or HSL)"
-                      aria-describedby="color-formats-help"
-                    />
-                    <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
-                  </div>
+
+                {/* Custom color picker */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" id="picker-label">Pick a Color</Label>
+                  <ColorPickerPanel value={pickerValue} onChange={handlePicker} />
                 </div>
 
+                {/* Text input for rgb / hsl */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium" htmlFor="color-input">Or Type a Value</Label>
+                  <Input
+                    id="color-input"
+                    value={input}
+                    onChange={(e) => handleTextInput(e.target.value)}
+                    placeholder="rgb(59, 130, 246) or hsl(217, 91%, 60%)"
+                    className="font-mono text-sm"
+                    aria-label="Color input — RGB or HSL format"
+                    aria-describedby="color-formats-help"
+                  />
+                  <p className="text-xs text-muted-foreground" id="color-formats-help">Accepts HEX, RGB, HSL</p>
+                </div>
+
+                {/* Large color swatch preview */}
                 {color && (
                   <div
-                    className="w-full h-36 rounded-xl border border-border shadow-inner transition-colors duration-200"
+                    className="w-full h-28 rounded-xl border border-border shadow-inner transition-colors duration-200"
                     style={{ backgroundColor: hex }}
                     role="img"
                     aria-label={`Color preview: ${hex}`}
                   />
                 )}
 
+                {/* RGB breakdown */}
                 {color && (
                   <div className="rounded-lg border border-border p-4 space-y-1 text-sm" role="group" aria-label="RGB values">
                     <div className="flex justify-between"><span className="text-muted-foreground">R</span><span className="font-mono" aria-live="polite">{color.r}</span></div>
@@ -337,7 +507,7 @@ export default function ColorConverter() {
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
             <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
-              <li>Click the <span className="text-foreground font-medium">color swatch</span> to open a visual picker, or type a value directly into the input field.</li>
+              <li>Click <span className="text-foreground font-medium">Edit</span> on the color swatch to open the visual picker. Drag the gradient area to set saturation and lightness, and drag the hue bar to change the color.</li>
               <li>All four formats update instantly in the right panel.</li>
               <li>Click <span className="text-foreground font-medium">Copy</span> next to any format, or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">2</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">3</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">4</kbd> to copy HEX, RGB, HSL, or OKLCH.</li>
               <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> or click <span className="text-foreground font-medium">Copy All</span> to copy every format at once.</li>
@@ -356,7 +526,7 @@ export default function ColorConverter() {
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
             <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
               <li>Shorthand HEX works too. <code className="rounded bg-muted px-1 text-[10px] font-mono">#abc</code> expands to <code className="rounded bg-muted px-1 text-[10px] font-mono">#aabbcc</code> automatically.</li>
-              <li>Paste any <code className="rounded bg-muted px-1 text-[10px] font-mono">rgb()</code> or <code className="rounded bg-muted px-1 text-[10px] font-mono">hsl()</code> value directly from CSS and it will be parsed.</li>
+              <li>Paste any <code className="rounded bg-muted px-1 text-[10px] font-mono">rgb()</code> or <code className="rounded bg-muted px-1 text-[10px] font-mono">hsl()</code> value from CSS into the text field and it will be parsed.</li>
               <li><span className="text-foreground font-medium">OKLCH</span> is the modern CSS color space with perceptually uniform lightness. It is supported in all major browsers.</li>
               <li>Everything runs in your browser. Nothing is sent to a server.</li>
             </ul>
