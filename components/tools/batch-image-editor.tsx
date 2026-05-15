@@ -254,7 +254,10 @@ export default function BatchImageEditor() {
 
               {/* Format & Quality */}
               <div className="space-y-3" role="group" aria-label="Output format selection">
-                <Label className="text-sm font-medium" id="format-label">Output Format</Label>
+                <Label className="text-sm font-medium" id="format-label">
+                  Output Format
+                  <kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground" aria-hidden="true">← →</kbd>
+                </Label>
                 <div className="flex gap-2" role="radiogroup" aria-labelledby="format-label">
                   {(["jpeg", "png", "webp"] as OutputFormat[]).map(f => (
                     <button key={f}
@@ -268,7 +271,9 @@ export default function BatchImageEditor() {
                 {format !== "png" && (
                   <div className="space-y-1.5">
                     <div className="flex justify-between">
-                      <Label className="text-xs text-muted-foreground" id="quality-label">Quality</Label>
+                      <Label className="text-xs text-muted-foreground" id="quality-label">
+                        Quality<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">← →</kbd>
+                      </Label>
                       <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{quality}%</span>
                     </div>
                     <Slider value={[quality]} onValueChange={([v]) => { setQuality(v); if (v % 20 === 0) announceToScreenReader(`Quality set to ${v} percent`) }}
@@ -280,7 +285,9 @@ export default function BatchImageEditor() {
               {/* Resize */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium" id="resize-label">Resize</Label>
+                  <Label className="text-sm font-medium" id="resize-label">
+                    Resize<kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[10px] font-normal text-muted-foreground" aria-hidden="true">Space</kbd>
+                  </Label>
                   <Switch checked={resize} onCheckedChange={v => { setResize(v); announceToScreenReader(v ? "Resize enabled" : "Resize disabled") }}
                     aria-labelledby="resize-label" />
                 </div>
@@ -306,7 +313,9 @@ export default function BatchImageEditor() {
               <div className="space-y-3" role="group" aria-label="Image filters">
                 <Label className="text-sm font-medium">Filters</Label>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground" id="grayscale-label">Grayscale</Label>
+                  <Label className="text-xs text-muted-foreground" id="grayscale-label">
+                    Grayscale<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Space</kbd>
+                  </Label>
                   <Switch checked={grayscale} onCheckedChange={v => { setGrayscale(v); announceToScreenReader(v ? "Grayscale filter enabled" : "Grayscale filter disabled") }}
                     aria-labelledby="grayscale-label" />
                 </div>
@@ -316,7 +325,9 @@ export default function BatchImageEditor() {
                 ].map(({ label, value, set, min, max }) => (
                   <div key={label} className="space-y-1.5">
                     <div className="flex justify-between">
-                      <Label className="text-xs text-muted-foreground" id={`${label.toLowerCase()}-label`}>{label}</Label>
+                      <Label className="text-xs text-muted-foreground" id={`${label.toLowerCase()}-label`}>
+                        {label}<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">← →</kbd>
+                      </Label>
                       <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{value}%</span>
                     </div>
                     <Slider value={[value]} onValueChange={([v]) => { set(v); if (v === 100 || v % 50 === 0) announceToScreenReader(`${label} set to ${v} percent`) }}
