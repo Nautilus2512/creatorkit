@@ -89,6 +89,36 @@
 
 ---
 
+## v1.72.0 — May 2026
+### Border Radius Visualizer — Rules Compliance Pass
+
+#### Rules compliance fixes (`border-radius-visualizer.tsx`) — 16 issues
+- Hard-conflict shortcut: `Ctrl+Shift+C` → `Ctrl+Shift+V` (Copy CSS)
+- Keyboard handler: capture phase (`true`) removed; `Ctrl+Shift` shortcuts now fire inside inputs
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Footer spacer `h-[60px]` added inside scrollable area
+- Panels wrapped in `flex-1 overflow-y-auto p-4` wrapper + `rounded-xl border border-border overflow-hidden` card
+- Mobile header `pb-1` → `pb-2`
+- Mobile tablist: `aria-label="Panel selection"` added
+- Mobile tab buttons: `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` added
+- Preset buttons: `focus:` → `focus-visible:`
+- Box color input: `focus:` → `focus-visible:`
+- Mobile unit radio buttons: `role="radio"` and `aria-checked` added
+- Redundant `<>` fragment wrapper removed
+- ShortcutsModal updated to show `Ctrl+Shift+V` instead of `Ctrl+Shift+C`
+
+#### Accessibility additions
+- Two-badge `Tab` + `← →` hints on all 4 corner sliders (TL, TR, BR, BL) — desktop only, `aria-hidden="true"`
+- Linked button: conditional kbd badge (`border-primary-foreground/30 bg-primary-foreground/20` when active, `border-border bg-muted` when inactive)
+
+#### Usage guide added
+- Three sections: How to use (adjust corners, link/unlink, copy CSS), Keyboard shortcuts, Tips (presets, units, individual corners)
+
+#### Files changed
+- `components/tools/border-radius-visualizer.tsx`
+
+---
+
 ## v1.71.0 — May 2026
 ### Batch Image Editor — Rules Compliance, UX Restructure, and Accessibility
 

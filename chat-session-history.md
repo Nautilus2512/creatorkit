@@ -597,6 +597,38 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.72.0 (May 2026) — Border Radius Visualizer Full Compliance Pass
+
+### Overview
+Full rules.md compliance audit and rewrite of `border-radius-visualizer.tsx`. 16 issues identified and fixed across layout, accessibility, keyboard shortcuts, and mobile UX.
+
+### Rules Compliance Fixes (16 issues)
+| Issue | Fix |
+|---|---|
+| `Ctrl+Shift+C` hard conflict | → `Ctrl+Shift+V` (Copy CSS) |
+| Keyboard handler capture phase `true` | Removed; Ctrl+Shift shortcuts now fire inside inputs |
+| Mobile bottom bar `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| Missing footer spacer | Added `h-[60px]` inside scrollable area |
+| Panels not in scrollable wrapper | Wrapped in `flex-1 overflow-y-auto p-4` + `rounded-xl border` card |
+| Mobile header `pb-1` | → `pb-2` |
+| Mobile tablist missing `aria-label` | Added `aria-label="Panel selection"` |
+| Mobile tab buttons missing focus ring | Added `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` |
+| Preset buttons `focus:` | → `focus-visible:` |
+| Box color input `focus:` | → `focus-visible:` |
+| Mobile unit radios missing ARIA | Added `role="radio"` and `aria-checked` |
+| Corner sliders missing nav hints | Added two-badge `Tab` + `← →` hints (desktop only) |
+| Linked button kbd badge not conditional | Added conditional class for active/inactive states |
+| Redundant `<>` wrapper | Removed |
+| ShortcutsModal stale shortcut | Updated to show `Ctrl+Shift+V` |
+| Missing usage guide | Added 3-section guide (How to use, Keyboard shortcuts, Tips) |
+
+### Commits
+| Hash | Message |
+|---|---|
+| 5ebb9f2 | fix: full compliance pass on border-radius-visualizer |
+
+---
+
 ## Session v1.71.0 (May 2026) — Batch Image Editor Full Compliance Pass
 
 ### Overview
