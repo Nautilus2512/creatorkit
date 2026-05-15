@@ -219,56 +219,101 @@ export default function Base64Encoder() {
           </div>
         </div>
 
-        {/* ── Panels ── */}
-        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+        {/* ── Scrollable content ── */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
-          {/* Input panel */}
-          <div
-            className={`relative ${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
-            role="region"
-            aria-label={mode === "encode" ? "Plain text input" : "Base64 input"}
-          >
-            <Textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => handleInputChange(e.target.value)}
-              placeholder={mode === "encode" ? "Enter text to encode…" : "Enter Base64 to decode…"}
-              className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
-              aria-label={mode === "encode" ? "Plain text to encode" : "Base64 string to decode"}
-            />
-            {!input && (
-              <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1.5 pointer-events-none select-none" aria-hidden="true">
-                <span className="text-[10px] text-muted-foreground/40">focus input</span>
-                <kbd className="rounded border border-border/50 bg-muted/50 px-1 text-[10px] text-muted-foreground/40">Ctrl+Shift+F</kbd>
-              </div>
-            )}
-          </div>
+          {/* Panels card */}
+          <div className="flex flex-col md:flex-row min-h-[500px] rounded-xl border border-border overflow-hidden">
 
-          {/* Output panel */}
-          <div
-            className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
-            role="region"
-            aria-label={mode === "encode" ? "Base64 output" : "Decoded text"}
-          >
-            {error ? (
-              <div className="flex-1 p-4" role="alert" aria-live="assertive">
-                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
-                  {error}
-                </div>
-              </div>
-            ) : (
+            {/* Input panel */}
+            <div
+              className={`relative ${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
+              role="region"
+              aria-label={mode === "encode" ? "Plain text input" : "Base64 input"}
+            >
               <Textarea
-                value={output}
-                readOnly
-                placeholder="Output will appear here…"
-                className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
-                aria-live="polite"
+                ref={inputRef}
+                value={input}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder={mode === "encode" ? "Enter text to encode…" : "Enter Base64 to decode…"}
+                className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
+                aria-label={mode === "encode" ? "Plain text to encode" : "Base64 string to decode"}
               />
-            )}
-          </div>
-        </div>
+              {!input && (
+                <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1.5 pointer-events-none select-none" aria-hidden="true">
+                  <span className="text-[10px] text-muted-foreground/40">focus input</span>
+                  <kbd className="rounded border border-border/50 bg-muted/50 px-1 text-[10px] text-muted-foreground/40">Ctrl+Shift+F</kbd>
+                </div>
+              )}
+            </div>
 
-        <div className="md:hidden h-[60px] shrink-0" aria-hidden="true" />
+            {/* Output panel */}
+            <div
+              className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}
+              role="region"
+              aria-label={mode === "encode" ? "Base64 output" : "Decoded text"}
+            >
+              {error ? (
+                <div className="flex-1 p-4" role="alert" aria-live="assertive">
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+                    {error}
+                  </div>
+                </div>
+              ) : (
+                <Textarea
+                  value={output}
+                  readOnly
+                  placeholder="Output will appear here…"
+                  className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 bg-muted/10 p-4"
+                  aria-live="polite"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Usage guide */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">What it does</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="text-foreground font-medium">Base64</span> encodes any text or file into a string of printable ASCII characters, and decodes it back to the original. It is used in emails, data URLs, and web APIs to safely pass binary data through text-only systems.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Select <span className="text-foreground font-medium">Encode</span> to convert text to Base64, or <span className="text-foreground font-medium">Decode</span> to reverse it.</li>
+                <li>Type or paste your content into the left panel. The result appears instantly on the right.</li>
+                <li>Click <span className="text-foreground font-medium">Copy</span> to copy the output to your clipboard, or <span className="text-foreground font-medium">Download</span> to save it as a file.</li>
+                <li>In Encode mode, click <span className="text-foreground font-medium">Upload</span> to encode any file directly to Base64.</li>
+                <li>Click <span className="text-foreground font-medium">Swap</span> to send the current output back to the input and reverse the operation.</li>
+              </ol>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd> to switch to Encode mode, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+Z</kbd> to switch to Decode.</li>
+                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+F</kbd> to focus the input panel from anywhere on the page.</li>
+                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+X</kbd> to swap, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> to copy, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd> to download.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li>Base64 increases data size by roughly 33 percent. This is expected and normal.</li>
+                <li>If Decode shows an error, check that the input has no extra spaces, line breaks, or missing padding characters.</li>
+                <li>Everything runs in your browser. Nothing is sent to a server.</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
+        </div>
 
         {/* ── Mobile: bottom action bar ── */}
         <div
