@@ -359,7 +359,12 @@ export default function DesignTokenGenerator() {
               title={`${name}-${shade}: ${color}`}
               aria-label={`Copy ${name} ${shade}: ${color}`}
             >
-              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">
+              <span
+                className={`absolute inset-0 flex items-center justify-center bg-black/50 text-[9px] text-white transition-opacity group-hover:opacity-100 ${
+                  copiedKey === `${name}-${shade}` ? "opacity-100" : "opacity-0"
+                }`}
+                aria-hidden="true"
+              >
                 {copiedKey === `${name}-${shade}` ? <Check className="h-2.5 w-2.5" aria-hidden="true" /> : shade}
               </span>
             </button>
