@@ -597,6 +597,64 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.79.0 (May 2026) — Six-Tool Compliance Pass + Three Bug Fixes
+
+### Overview
+Full rules.md compliance pass across six tools: Cron Generator (11 issues), CSS Minifier (17), CSV-JSON Converter (18), CV Maker (20), Design Token Generator (19), plus a 1-issue fix on Code Playground. Three recurring bugs diagnosed and fixed across multiple tools. Two UX additions to Design Token Generator.
+
+### Recurring Bug #1 — `h-full` inside flex parents (CSS Minifier, Code Playground)
+`h-full` (100% of parent height) only works when the parent has an explicitly-set CSS `height`. When height comes from flex distribution (e.g. `flex-1`), `h-full` collapses to content height and leaves a large empty gap on mobile.
+
+**Fix pattern:** Remove the intermediate wrapper div; apply `flex-1` directly to the textarea or iframe so it participates in the flex layout as a flex item.
+
+| Tool | Element | Fix |
+|---|---|---|
+| CSS Minifier | `<Textarea>` panels | `h-full` inside `overflow-y-auto` div → `flex-1` directly on `<Textarea>` |
+| Code Playground | `<iframe>` | `h-full` inside wrapper → `flex-1` on `<iframe>`; wrapper adds `flex flex-col` |
+
+### Recurring Bug #2 — Tab key stolen as shortcut (CSV-JSON Converter)
+The keyboard handler intercepted `Tab` with `e.preventDefault()`, silently breaking all keyboard navigation on the page for every user. No one could Tab through the interface.
+
+**Fix:** Remove the `Tab` shortcut entirely. The 1/2 bare keys already handle mode switching; Tab is native browser navigation and must never be intercepted.
+
+### Recurring Bug #3 — setActiveTab on every keystroke (CSV-JSON Converter)
+A `useEffect` depending on `[csvInput, jsonInput, mode]` called `setActiveTab("output")` on every character typed, forcing mobile users off the Input tab on every keystroke.
+
+**Fix:** Remove `setActiveTab("output")` from the effect entirely. Auto-switch preserved only in `handleFileUpload` (the one intentional full-content action that warrants it).
+
+### Compliance Summary
+| Tool | Issues | Shortcut changes | Key additions |
+|---|---|---|---|
+| Cron Generator | 11 | `Ctrl+Shift+C` → `Ctrl+Shift+V` | Scrollable wrapper, panels card, usage guide; conditional preset kbd |
+| CSS Minifier | 17 | O/E label mismatches fixed; C→V; D→S | Textarea `flex-1` fix; download flash state; Clear destructive style |
+| CSV-JSON Converter | 18 | O→U; C→V; Tab shortcut removed | Tab bug fix; keystroke tab-switch fix; mode buttons full ARIA |
+| Code Playground | 1 | — | iframe `flex-1` height fix |
+| CV Maker | 20 | D→L (edu); K→Y (skills); Ctrl+Alt+D→Ctrl+Shift+S | Section `aria-expanded`; all label mismatches fixed |
+| Design Token Generator | 19 | Ctrl+C→V; Ctrl+L/D→Ctrl+Shift+L toggle; Ctrl+1/2/3→bare 1/2/3 | Named→default export; palette copy indicator for touch |
+
+### Design Token Generator — UX Additions
+| Addition | Detail |
+|---|---|
+| `Ctrl+Shift+L` kbd label on toggle buttons | Shows on the inactive button only — the one the shortcut would activate next. Both buttons stay the same width at any time. |
+| Palette copy indicator for touchscreen | Overlay was `opacity-0 group-hover:opacity-100` — touch users never saw feedback. Now forces `opacity-100` when `copiedKey` matches, so checkmark always appears after a tap. |
+
+### Commits
+| Hash | Message |
+|---|---|
+| 278929a | docs: update CHANGELOG, session history, and rules for v1.78.0 |
+| cd198f2 | fix: full compliance pass on cron-generator (11 issues) |
+| 847424f | fix: full compliance pass on css-minifier (17 issues) |
+| ca7d129 | fix: textarea panels now fill full card height on mobile |
+| db468eb | fix: full compliance pass on csv-json-converter (18 issues) |
+| 53a1112 | fix: stop auto-switching to output tab on every keystroke |
+| 84cfd75 | fix: iframe now fills full preview panel height on mobile |
+| e44ff58 | fix: full compliance pass on cv-maker (20 issues) |
+| 7f82633 | fix: full compliance pass on design-token-generator (19 issues) |
+| 5241e71 | feat: add Ctrl+Shift+L kbd label to preview mode toggle buttons |
+| 6559788 | fix: show copy checkmark on palette swatches for touchscreen |
+
+---
+
 ## Session v1.78.0 (May 2026) — Color Converter Colorblind Simulation + Extractor Guide Expansion
 
 ### Overview

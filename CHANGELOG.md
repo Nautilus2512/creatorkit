@@ -89,6 +89,85 @@
 
 ---
 
+## v1.79.0 — May 2026
+### Rules Compliance Pass — Cron Generator, CSS Minifier, CSV-JSON Converter, Code Playground, CV Maker, Design Token Generator
+
+#### Cron Generator (`cron-generator.tsx`) — 11 issues
+- `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V`; label in ShortcutsModal updated
+- Keyboard handler: capture phase removed; `stopPropagation()` removed; input guard added
+- `focus:` → `focus-visible:` on all preset buttons (desktop + mobile)
+- Mobile tab buttons: `focus-visible:` ring added
+- Mobile header `pb-1` → `pb-2`; tablist `aria-label` added
+- Mobile bottom bar: `shrink-0` static → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Added `flex-1 overflow-y-auto p-4 space-y-4` scrollable wrapper
+- Added `rounded-xl border border-border min-h-[500px]` panels card
+- Added usage guide (How to use, Keyboard shortcuts, Field reference, privacy note)
+- Added `md:hidden h-[60px]` footer spacer
+- Preset button kbd: conditional class (`border-primary-foreground/30 bg-primary-foreground/20` when active) — blackout bug fix
+
+#### CSS Minifier (`css-minifier.tsx`) — 17 issues + 1 bug fix
+- `Ctrl+O` label mismatch + O hard-conflict → `Ctrl+Shift+U`; `Ctrl+E` label mismatch fixed to `Ctrl+Shift+E`
+- `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V`; `Ctrl+Shift+D` (D hard-conflict) → `Ctrl+Shift+S`
+- Keyboard handler: capture phase removed; `stopPropagation()` removed; input guard added
+- Mobile header `pb-1` → `pb-2`; tab buttons get `focus-visible:` ring
+- Mobile bottom bar: static → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Added scrollable wrapper, `rounded-xl border min-h-[500px]` panels card, usage guide (How to use, Keyboard shortcuts, What gets minified, privacy note), footer spacer
+- Download button: `downloading` flash state + conditional kbd class (§17); Clear button: `text-muted-foreground hover:text-destructive`
+- **Bug fix**: textarea panels changed from `h-full` inside wrapper div to `flex-1` directly on `<Textarea>` — fixes large empty gap below content on mobile (`h-full` does not reliably fill a flex parent)
+
+#### CSV-JSON Converter (`csv-json-converter.tsx`) — 18 issues + 1 bug fix
+- `Ctrl+Shift+O` (O hard-conflict) → `Ctrl+Shift+U`; `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V`
+- `Tab` key stolen as shortcut — broke all keyboard navigation for all users → removed entirely
+- Keyboard handler: capture phase removed; `stopPropagation()` removed; input guard fixed to check both `HTMLInputElement` and `HTMLTextAreaElement`
+- Desktop mode buttons: `focus-visible:` ring + conditional kbd class (blackout fix)
+- Mobile mode buttons: added `role="radio"`, `aria-checked`, `aria-label`, `focus-visible:` ring
+- Mobile header `pb-1` → `pb-2`; tablist `aria-label` added; tab buttons get `focus-visible:` ring
+- Mobile bottom bar: static → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`; Save button added to mobile bar
+- Added scrollable wrapper, panels card, usage guide (How to use, Keyboard shortcuts, Format notes, privacy note), footer spacer
+- Download button: `downloading` flash state + `variant="default"` resting; Upload replaced `<label asChild>` with standard button+click pattern; removed unused imports (`ArrowRightLeft`, `ArrowBigRight`, `Badge`)
+- **Bug fix**: `setActiveTab("output")` removed from the `useEffect` that fired on every keystroke — was forcing mobile users off the Input tab on every character typed; auto-switch preserved only in `handleFileUpload`
+
+#### Code Playground (`code-playground.tsx`) — 1 bug fix
+- **Bug fix**: iframe changed from `h-full` to `flex-1`; parent wrapper gets `flex flex-col` — fixes iframe not filling the full preview panel height on mobile (same `h-full`-in-flex-context issue)
+
+#### CV Maker (`cv-maker.tsx`) — 20 issues
+- `Ctrl+Shift+D` (D hard-conflict) for education → `Ctrl+Shift+L`; `Ctrl+Shift+K` (K hard-conflict) for skills → `Ctrl+Shift+Y`; `Ctrl+Alt+D` (non-standard) for download → `Ctrl+Shift+S`
+- ShortcutsModal: all labels were showing `Ctrl+X` when handlers used `Ctrl+Shift+X` → fixed; two identical inline arrays replaced with single module-level `shortcuts` constant
+- Button `aria-label` texts, kbd badges, and inline skill hint text all updated to match actual handlers
+- Keyboard handler: capture phase removed; `stopPropagation()` removed; input guard corrected (Escape blurs field and returns; non-Ctrl returns; Ctrl/Meta falls through so shortcuts work inside inputs)
+- Template buttons: `focus:` → `focus-visible:`; kbd class conditional (blackout fix when active)
+- `Section` toggle button: added `focus-visible:` ring + `aria-expanded`
+- Trash buttons inside form items: `focus:` → `focus-visible:`
+- Mobile header `pb-1` → `pb-2`; tablist `aria-label` added; tab buttons get `focus-visible:` ring
+- Mobile bottom bar: static → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Added scrollable wrapper, `rounded-xl border min-h-[500px]` panels card, usage guide (How to use, Keyboard shortcuts, Tips, privacy note), footer spacer
+- Removed `<>` Fragment wrapper; `activeTab` state moved to top of declarations; `shortcuts` extracted as module-level constant
+
+#### Design Token Generator (`design-token-generator.tsx`) — 19 issues + 2 UX additions
+- Named export `export function` → `export default`; `app/tools/design-tokens/page.tsx` import updated
+- `Ctrl+C` (intercepts OS clipboard copy) → `Ctrl+Shift+V`; `Ctrl+L`/`Ctrl+D` (plain Ctrl+ forbidden; D hard-conflict) → `Ctrl+Shift+L` toggles light/dark; `Ctrl+1/2/3` (browser tab switching) → bare `1`/`2`/`3` keys outside inputs
+- CSS copy `<kbd>` badge said `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V`
+- ShortcutsModal: two identical inline arrays → single module-level constant with corrected labels; keyboard handler: input guard added
+- Color picker trigger, CB mode buttons, preview mode buttons, ColorPalette shade buttons: `focus:` → `focus-visible:` throughout
+- Preview mode buttons: wrong kbd badges (`L`/`D`) removed; changed to `role="radio"` + `aria-checked`
+- ColorPicker label kbd: `bg-background` → `bg-muted`; redundant `role`/`aria-selected` removed from `TabsTrigger`
+- Mobile header `pb-1` → `pb-2`; tablist `aria-label` added; tab buttons get `focus-visible:` ring
+- Mobile bottom bar: static → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Added scrollable wrapper, panels card, usage guide (How to use, Color vision simulation §22 with per-mode bullets, Keyboard shortcuts, privacy note), footer spacer; removed Fragment wrapper
+- **Addition**: `Ctrl+Shift+L` kbd label added to light/dark toggle buttons — shown only on the inactive button (the one the shortcut would activate next) so both buttons stay the same width at all times
+- **Bug fix**: palette swatch copy indicator: overlay was `opacity-0 group-hover:opacity-100` — touch users never saw any feedback; now forces `opacity-100` when `copiedKey` matches the shade so the checkmark always appears after a tap
+
+#### Files changed
+- `components/tools/cron-generator.tsx`
+- `components/tools/css-minifier.tsx`
+- `components/tools/csv-json-converter.tsx`
+- `components/tools/code-playground.tsx`
+- `components/tools/cv-maker.tsx`
+- `components/tools/design-token-generator.tsx`
+- `app/tools/design-tokens/page.tsx`
+
+---
+
 ## v1.78.0 — May 2026
 ### Color Converter — Colorblind Simulation + Color Palette Extractor — Expanded CB Guide
 
