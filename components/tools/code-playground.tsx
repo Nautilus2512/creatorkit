@@ -1,12 +1,11 @@
-﻿"use client"
+"use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Play, RotateCcw, Download, Code, FileCode, FileType, Eye, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 import JSZip from "jszip"
 
-// Accessibility helper for screen reader announcements
 function announceToScreenReader(message: string) {
   const announcement = document.createElement('div')
   announcement.setAttribute('role', 'status')
@@ -64,14 +63,13 @@ console.log("Hello from JavaScript!");
 
 // Try the button click!`
 
-export function CodePlayground() {
+export default function CodePlayground() {
   const [html, setHtml] = useState(DEFAULT_HTML)
-  const [css, setCss] = useState(DEFAULT_CSS)
-  const [js, setJs] = useState(DEFAULT_JS)
+  const [css, setCss]   = useState(DEFAULT_CSS)
+  const [js, setJs]     = useState(DEFAULT_JS)
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js' | 'preview'>('html')
   const [autoRun, setAutoRun] = useState(true)
-  const [srcDoc, setSrcDoc] = useState("")
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [srcDoc, setSrcDoc]   = useState("")
 
   const updatePreview = useCallback(() => {
     const doc = `
@@ -155,63 +153,57 @@ ${html}
     announceToScreenReader(`Switched to ${tabNames[tab]} editor`)
   }, [])
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Tab switching with Ctrl+1/2/3/4
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        if (e.key === "1") {
-          e.preventDefault()
-          e.stopPropagation()
-          switchTab('html')
-        }
-        if (e.key === "2") {
-          e.preventDefault()
-          e.stopPropagation()
-          switchTab('css')
-        }
-        if (e.key === "3") {
-          e.preventDefault()
-          e.stopPropagation()
-          switchTab('js')
-        }
-        if (e.key === "4") {
-          e.preventDefault()
-          e.stopPropagation()
-          switchTab('preview')
-        }
-        if (e.key.toLowerCase() === "s") {
-          e.preventDefault()
-          e.stopPropagation()
-          downloadFiles()
-        }
-        if (e.key.toLowerCase() === "r") {
-          e.preventDefault()
-          e.stopPropagation()
-          if (!autoRun) {
-            updatePreview()
-          }
-        }
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
       }
 
-      // Escape to focus editor
+      // Ctrl+1/2/3/4 — switch editor tabs
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        if (e.key === "1") { e.preventDefault(); switchTab('html') }
+        if (e.key === "2") { e.preventDefault(); switchTab('css') }
+        if (e.key === "3") { e.preventDefault(); switchTab('js') }
+        if (e.key === "4") { e.preventDefault(); switchTab('preview') }
+      }
+
+      // Ctrl+Enter — run preview (manual trigger when auto-run is off)
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault()
+        if (!autoRun) updatePreview()
+      }
+
+      // Ctrl+Shift+S — download files as ZIP
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
+        e.preventDefault()
+        downloadFiles()
+      }
+
+      // Ctrl+Shift+E — reset to defaults
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
+        e.preventDefault()
+        reset()
+      }
+
+      // Escape — focus current editor (only when not already in an editor)
       if (e.key === "Escape" && activeTab !== 'preview') {
         const textarea = document.querySelector(`textarea[data-tab="${activeTab}"]`) as HTMLTextAreaElement
         textarea?.focus()
       }
     }
-    window.addEventListener("keydown", handleKeyDown, true)
-    return () => window.removeEventListener("keydown", handleKeyDown, true)
-  }, [switchTab, downloadFiles, updatePreview, autoRun, activeTab])
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [switchTab, downloadFiles, updatePreview, reset, autoRun, activeTab])
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
+
       {/* Compact top toolbar */}
       <div className="shrink-0 flex items-center gap-1 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Code Playground controls">
         <div className="flex items-center gap-1" role="tablist" aria-label="Editor tabs">
           <button
             onClick={() => switchTab('html')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'html' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
@@ -223,7 +215,7 @@ ${html}
           </button>
           <button
             onClick={() => switchTab('css')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'css' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
@@ -235,7 +227,7 @@ ${html}
           </button>
           <button
             onClick={() => switchTab('js')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'js' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
@@ -247,7 +239,7 @@ ${html}
           </button>
           <button
             onClick={() => switchTab('preview')}
-            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
               activeTab === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
             role="tab"
@@ -255,7 +247,7 @@ ${html}
             aria-label="Preview"
           >
             <Eye className="h-4 w-4" aria-hidden="true" />
-            Preview<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+4</kbd>
+            Preview
           </button>
         </div>
         <div className="shrink-0 flex items-center gap-2 ml-2">
@@ -266,14 +258,14 @@ ${html}
             aria-label={autoRun ? "Auto-run is enabled" : "Run code preview"}
           >
             <Play className="h-4 w-4 mr-1" aria-hidden="true" />
-            Run{!autoRun && <kbd className="ml-1.5 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+R</kbd>}
+            Run{!autoRun && <kbd className="ml-1.5 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd>}
           </Button>
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
             <input
               type="checkbox"
               checked={autoRun}
               onChange={toggleAutoRun}
-              className="rounded border-border focus:ring-2 focus:ring-primary"
+              className="rounded border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Toggle auto-run"
             />
             Auto-run
@@ -286,13 +278,12 @@ ${html}
               { keys: ["Ctrl", "1"], description: "Switch to HTML editor" },
               { keys: ["Ctrl", "2"], description: "Switch to CSS editor" },
               { keys: ["Ctrl", "3"], description: "Switch to JS editor" },
-              { keys: ["Ctrl", "4"], description: "Switch to Preview" },
-              { keys: ["Ctrl", "R"], description: "Run code (when auto-run is off)" },
-              { keys: ["Ctrl", "S"], description: "Download files as ZIP" },
-              { keys: ["Ctrl", "Shift", "R"], description: "Reset to defaults" },
+              { keys: ["Ctrl", "4"], description: "Switch to Preview (mobile)" },
+              { keys: ["Ctrl", "Enter"], description: "Run code (when auto-run is off)" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download files as ZIP" },
+              { keys: ["Ctrl", "Shift", "E"], description: "Reset to defaults" },
               { keys: ["Escape"], description: "Focus current editor" },
               { keys: ["?"], description: "Toggle this shortcuts panel" },
-              { keys: ["Tab"], description: "Navigate between controls" },
             ]}
           />
         </div>
@@ -300,15 +291,15 @@ ${html}
 
       {/* Canvas/workspace */}
       <div className="flex-1 min-h-0 overflow-hidden flex">
-        {/* Left panel - Editors */}
+
+        {/* Left panel — Editors (+ mobile preview) */}
         <div className="flex flex-col overflow-hidden border-r border-border bg-card min-h-0 w-full md:w-1/2" role="region" aria-label="Code editors">
-          {/* Editor area */}
           <div className="flex-1 overflow-hidden" role="tabpanel" aria-label={`${activeTab === 'html' ? 'HTML' : activeTab === 'css' ? 'CSS' : activeTab === 'js' ? 'JavaScript' : 'Preview'} editor`}>
             {activeTab === 'html' && (
               <textarea
                 value={html}
                 onChange={(e) => setHtml(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary/20"
+                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="<!-- Enter HTML here -->"
                 aria-label="HTML code editor"
@@ -319,7 +310,7 @@ ${html}
               <textarea
                 value={css}
                 onChange={(e) => setCss(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary/20"
+                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="/* Enter CSS here */"
                 aria-label="CSS code editor"
@@ -330,22 +321,29 @@ ${html}
               <textarea
                 value={js}
                 onChange={(e) => setJs(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary/20"
+                className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/20"
                 spellCheck={false}
                 placeholder="// Enter JavaScript here"
                 aria-label="JavaScript code editor"
                 data-tab="js"
               />
             )}
+            {/* Mobile preview — renders the live iframe when Preview tab is active */}
             {activeTab === 'preview' && (
-              <div className="w-full h-full bg-muted flex items-center justify-center md:hidden" role="note" aria-label="Mobile preview placeholder">
-                <p className="text-muted-foreground">Preview on the right panel</p>
+              <div className="w-full h-full bg-white md:hidden">
+                <iframe
+                  srcDoc={srcDoc}
+                  className="w-full h-full border-0"
+                  sandbox="allow-scripts"
+                  title="Mobile code preview"
+                  aria-label="Preview of your HTML, CSS and JavaScript code"
+                />
               </div>
             )}
           </div>
         </div>
 
-        {/* Right panel - Preview */}
+        {/* Right panel — Live preview (desktop only) */}
         <div className="hidden md:flex flex-col overflow-hidden bg-card min-h-0 flex-1" role="region" aria-label="Live preview">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
             <div className="flex items-center gap-2">
@@ -354,7 +352,7 @@ ${html}
             </div>
             <button
               onClick={clearAll}
-              className="text-xs text-muted-foreground hover:text-red-500 flex items-center gap-1 transition-colors focus:outline-none focus:ring-2 focus:ring-destructive rounded px-2 py-1"
+              className="text-xs text-muted-foreground hover:text-red-500 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded px-2 py-1"
               aria-label="Clear all code"
             >
               <Trash2 className="h-3 w-3" aria-hidden="true" />
@@ -363,7 +361,6 @@ ${html}
           </div>
           <div className="flex-1 bg-white">
             <iframe
-              ref={iframeRef}
               srcDoc={srcDoc}
               className="w-full h-full border-0"
               sandbox="allow-scripts"
@@ -372,6 +369,7 @@ ${html}
             />
           </div>
         </div>
+
       </div>
 
       {/* Bottom action bar */}
@@ -385,10 +383,10 @@ ${html}
           className="h-11 md:h-9"
           onClick={reset}
           aria-label="Reset code to defaults"
-          title="Reset to defaults (Ctrl+Shift+R)"
+          title="Reset to defaults (Ctrl+Shift+E)"
         >
           <RotateCcw className="h-4 w-4 mr-1" aria-hidden="true" />
-          Reset
+          Reset<kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
         </Button>
         <div className="flex-1" />
         <Button
@@ -399,9 +397,10 @@ ${html}
         >
           <Download className="h-4 w-4 mr-1" aria-hidden="true" />
           Download ZIP
-          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+S</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
         </Button>
       </div>
+
     </div>
   )
 }

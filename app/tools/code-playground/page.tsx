@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CodePlayground } from "@/components/tools/code-playground"
+import CodePlayground from "@/components/tools/code-playground"
 import { ArrowLeft } from "lucide-react"
 
 export default function CodePlaygroundPage() {
