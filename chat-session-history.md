@@ -597,6 +597,43 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.78.0 (May 2026) — Color Converter Colorblind Simulation + Extractor Guide Expansion
+
+### Overview
+Added full colorblind simulation to `color-converter.tsx` (Normal / Deuteranopia / Protanopia / Tritanopia) and expanded the colorblind simulation guide descriptions in `color-palette-extractor.tsx` to include per-mode bullet explanations. Both tools now have identical, detailed guide text for all four color vision modes.
+
+### Color Converter — Colorblind Simulation
+| Decision | Detail |
+|---|---|
+| `CBMode` type + `CB_MODES` constant | Matches the same pattern used in DTG and color-palette-extractor |
+| `simulateColorBlindness()` added | Placed after `toHex()` helper; same matrix coefficients used across all tools |
+| `cbMode` state + `changeCbMode` callback | `changeCbMode` includes `announceToScreenReader` on every mode change |
+| CB buttons in "All Formats" panel header | `flex items-center gap-2 flex-wrap` row: title `\|` CB radiogroup `\|` `flex-1` spacer `\|` Copy All button |
+| `displayHex` constant | `const displayHex = simulateColorBlindness(hex, cbMode)` — computed once, shared by large swatch + all 4 format card strips |
+| Large swatch `aria-label` | Includes ` (${cbMode} simulation)` suffix when simulation is active |
+| Format card strips | Changed from `backgroundColor: value` (could be rgb/hsl string) to `backgroundColor: displayHex` (always valid hex) |
+| "Color vision simulation" guide section added | Paragraph + 3 per-mode bullet descriptions (deuteranopia / protanopia / tritanopia) |
+
+### Color Palette Extractor — Guide Expansion
+| Change | Detail |
+|---|---|
+| "Color vision simulation" section expanded | From single-line description to paragraph + `<ul>` with 3 mode bullets |
+| Wording identical to color-converter | Consistent across both tools: same deuteranopia / protanopia / tritanopia descriptions |
+
+### Standard CB guide text (used in both tools)
+```
+Deuteranopia — reduced green sensitivity. The most common form, affecting about 6% of men. Red and green appear similar in hue.
+Protanopia — reduced red sensitivity. Affects about 1% of men. Reds appear very dark and can be confused with black or dark brown.
+Tritanopia — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue and green appear similar; yellow and violet may look alike.
+```
+
+### Commits
+| Hash | Message |
+|---|---|
+| c0b0f3a | feat: add colorblind simulation to color-converter + expand CB guide in color-palette-extractor |
+
+---
+
 ## Session v1.77.0 (May 2026) — Color Palette Extractor Compliance Pass + Colorblind Simulation
 
 ### Overview

@@ -89,6 +89,29 @@
 
 ---
 
+## v1.78.0 — May 2026
+### Color Converter — Colorblind Simulation + Color Palette Extractor — Expanded CB Guide
+
+#### Color Converter (`color-converter.tsx`)
+- Added `CBMode` type, `CB_MODES` constant, and `simulateColorBlindness()` matrix (same algorithm as `design-token-generator.tsx` and `color-palette-extractor.tsx`)
+- Added `cbMode` state + `changeCbMode` callback with `announceToScreenReader` on every mode change
+- Normal / Deuter. / Protan. / Tritan. buttons added to the "All Formats" panel header — visible on both desktop and mobile without tab switching
+- `displayHex = simulateColorBlindness(hex, cbMode)` drives both the large preview swatch (left panel) and all four format card strips (right panel) simultaneously
+- Format card strips changed from `backgroundColor: value` (CSS format string) to `backgroundColor: displayHex` (hex) — more reliable and simulation-aware; visually identical when `cbMode === "none"`
+- `aria-label` on the large swatch updated to append `(${cbMode} simulation)` when a simulation mode is active
+- Copied values always use the original format `value` strings — simulation is display-only
+- "Color vision simulation" section added to usage guide with per-mode descriptions (deuteranopia, protanopia, tritanopia) including prevalence and distinguishability notes
+
+#### Color Palette Extractor (`color-palette-extractor.tsx`)
+- Expanded the existing one-liner CB guide entry into a paragraph + three bullet points: deuteranopia (6% of men, red/green confusion), protanopia (1% of men, reds appear dark), tritanopia (<0.01%, blue/green confusion)
+- Wording is now identical to color-converter for consistency across all tools
+
+#### Files changed
+- `components/tools/color-converter.tsx`
+- `components/tools/color-palette-extractor.tsx`
+
+---
+
 ## v1.77.0 — May 2026
 ### Color Palette Extractor — Rules Compliance Pass + Format Shortcuts + Colorblind Simulation
 

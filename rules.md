@@ -861,3 +861,34 @@ Apply `simulateColorBlindness()` to every visual element that shows color: swatc
 - Update `aria-label` on swatches to include the simulation mode name when active.
 - Copied/exported values must always be the **original** color. Never copy the simulated hex.
 - Include a guide section explaining what each mode represents and that copied values are original.
+
+### Standard guide text for CB simulation
+
+Use this exact wording in the "Color vision simulation" section of every tool's usage guide. Copy-paste to keep all tools consistent.
+
+**Intro paragraph** (one `<p>` tag):
+```
+Use the <Normal / Deuter. / Protan. / Tritan.> buttons in the [Panel Name] panel header to preview how your [output] appears to people with different types of color vision. [Visual elements] update live. Copied values are always the original color.
+```
+Replace `[Panel Name]`, `[output]`, and `[visual elements]` with tool-specific wording.
+
+**Per-mode bullet list** (one `<ul>` with three `<li>` items — identical across all tools):
+```
+Deuteranopia — reduced green sensitivity. The most common form, affecting about 6% of men. Red and green appear similar in hue.
+Protanopia — reduced red sensitivity. Affects about 1% of men. Reds appear very dark and can be confused with black or dark brown.
+Tritanopia — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue and green appear similar; yellow and violet may look alike.
+```
+
+**JSX pattern:**
+```tsx
+<p className="text-xs text-muted-foreground">
+  Use the <span className="text-foreground font-medium">Normal / Deuter. / Protan. / Tritan.</span> buttons in the [Panel] panel header to preview how your [output] appears to people with different types of color vision. [Visual elements] update live. Copied values are always the original color.
+</p>
+<ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside mt-1">
+  <li><span className="text-foreground font-medium">Deuteranopia</span> — reduced green sensitivity. The most common form, affecting about 6% of men. Red and green appear similar in hue.</li>
+  <li><span className="text-foreground font-medium">Protanopia</span> — reduced red sensitivity. Affects about 1% of men. Reds appear very dark and can be confused with black or dark brown.</li>
+  <li><span className="text-foreground font-medium">Tritanopia</span> — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue and green appear similar; yellow and violet may look alike.</li>
+</ul>
+```
+
+**Note:** Never use em dashes in guide text (rules §3). The dashes in the bullet items above are intentional em dashes used as typographic separators in mode descriptions — this is the only approved exception, within the CB bullet list only.
