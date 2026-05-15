@@ -89,6 +89,40 @@
 
 ---
 
+## v1.71.0 — May 2026
+### Batch Image Editor — Rules Compliance, UX Restructure, and Accessibility
+
+#### Rules compliance fixes (`batch-image-editor.tsx`) — 12 issues
+- Hard-conflict shortcuts replaced: `Ctrl+Shift+O/C` → `Ctrl+Shift+U/X`
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Footer spacer `h-[60px]` added inside scrollable area
+- Panels wrapped in `flex-1 overflow-y-auto p-4` scrollable wrapper + `rounded-xl border` card
+- Keyboard handler: capture phase (`true`) removed; `Ctrl+Shift` shortcuts now fire inside inputs
+- `focus:` → `focus-visible:` on format radio buttons and number inputs
+- `aria-label="Panel selection"` added to mobile tablist
+- Focus-visible rings added to mobile tab buttons
+- Mobile header `pb-1` → `pb-2`
+- Removed redundant `<>` fragment wrapper
+
+#### UX restructure
+- Upload area and Clear All moved into the Settings (left) panel — visible as the first tab on mobile
+- Preview panel shows a placeholder hint ("Add images from the Settings panel") when empty
+- Auto-switches to Preview tab after processing completes
+
+#### Accessibility additions
+- `role="progressbar"` with `aria-valuenow / aria-valuemin / aria-valuemax` during processing
+- Two-badge `Tab` + `← →` hints on Quality, Brightness, Contrast sliders and Output Format radiogroup (desktop only)
+- Two-badge `Tab` + `Space` hints on Resize and Grayscale switch labels (desktop only)
+- All hints are `hidden md:inline-flex` and `aria-hidden="true"`
+
+#### Usage guide added
+- Ordered steps (upload, format, resize/filter, download) and tips (PNG quality note, resize behaviour, privacy)
+
+#### Files changed
+- `components/tools/batch-image-editor.tsx`
+
+---
+
 ## v1.70.0 — May 2026
 ### Background Remover — Download Button Visual Feedback + PRD
 

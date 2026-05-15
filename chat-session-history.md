@@ -597,6 +597,49 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.71.0 (May 2026) — Batch Image Editor Full Compliance Pass
+
+### Overview
+Full rules.md compliance audit, UX restructure, and accessibility additions for `batch-image-editor.tsx` across four commits.
+
+### Rules Compliance Fixes (12 issues)
+| Issue | Fix |
+|---|---|
+| `Ctrl+Shift+O` / `Ctrl+Shift+C` hard conflicts | → `Ctrl+Shift+U` / `Ctrl+Shift+X` |
+| Mobile bottom bar `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| Missing footer spacer | Added `h-[60px]` inside scrollable area |
+| Edge-to-edge layout | → scrollable `p-4` wrapper + `rounded-xl border` panels card |
+| Keyboard handler capture phase | Removed `true`; `Ctrl+Shift` shortcuts work inside inputs |
+| `focus:` on format buttons + number inputs | → `focus-visible:` throughout |
+| `tablist` missing `aria-label` | Added `aria-label="Panel selection"` |
+| Tab buttons missing focus rings | Added `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` |
+| Mobile header `pb-1` | → `pb-2` |
+| Redundant `<>` fragment | Removed |
+
+### UX Restructure
+- Upload area and Clear All moved into the Settings (left) panel — first tab on mobile
+- Preview empty state shows hint pointing to Settings
+- Auto-switches to Preview tab after processing completes
+
+### Accessibility Additions
+- `role="progressbar"` with `aria-valuenow/min/max` shown in Settings panel during processing
+- Two-badge `Tab + ← →` hints on Quality, Brightness, Contrast, Output Format labels (desktop only)
+- Two-badge `Tab + Space` hints on Resize and Grayscale switch labels (desktop only)
+- Lesson learned: a single `← →` badge looks like a clickable arrow button. Two-badge format (`Tab` then `← →`) makes the Tab-first sequence unambiguous. Documented in rules.md Section 3.
+
+### Usage Guide Added
+- Steps and tips card below panels
+
+### Commits
+| Hash | Description |
+|---|---|
+| 08d1ca2 | fix: rules compliance + UX pass for batch-image-editor |
+| 938cfc7 | fix: add role=progressbar to batch-image-editor during processing |
+| 6d95559 | feat: add keyboard nav hint labels to settings controls (desktop only) |
+| 67e41bf | fix: show Tab+key hint on settings controls, not key alone |
+
+---
+
 ## Session v1.70.0 (May 2026) — Background Remover Download Flash + PRD
 
 ### Background Remover: Download Button Visual Feedback

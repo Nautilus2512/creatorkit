@@ -97,6 +97,35 @@ All panels and the usage guide live inside this scrollable wrapper.
 }`}>Ctrl+Shift+X</kbd>
 ```
 
+### Keyboard navigation hints on settings controls (desktop only)
+
+For settings controls that are keyboard-navigable but have no dedicated shortcut (sliders, switches, radio groups), add a two-badge `Tab → key` hint next to the label on desktop. This communicates the two-step sequence: Tab to focus, then the key to act.
+
+```tsx
+{/* Slider — arrow keys adjust value */}
+<Label id="quality-label">
+  Quality
+  <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+    <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+    <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+  </span>
+</Label>
+
+{/* Switch — Space bar toggles */}
+<Label id="resize-label">
+  Resize
+  <span className="ml-1.5 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+    <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+    <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Space</kbd>
+  </span>
+</Label>
+```
+
+- Always `hidden md:inline-flex` — never shown on mobile.
+- Always `aria-hidden="true"` on the wrapping `<span>` — screen readers already know keyboard behaviour from `role="slider"`, `role="switch"`, `role="radio"`, etc.
+- Use `← →` for sliders and radio groups. Use `Space` for switches.
+- **Never use a single `← →` badge alone** — it looks like a clickable arrow button and confuses users. The `Tab` badge before it makes the sequence explicit.
+
 ---
 
 ## 4. Mobile Layout (Vertical Screen)
