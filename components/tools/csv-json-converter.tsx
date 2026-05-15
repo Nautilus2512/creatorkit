@@ -49,10 +49,8 @@ export default function CsvJsonConverter() {
   useEffect(() => {
     if (mode === 'csv-to-json' && csvInput) {
       convertCsvToJson()
-      setActiveTab("output")
     } else if (mode === 'json-to-csv' && jsonInput) {
       convertJsonToCsv()
-      setActiveTab("output")
     }
   }, [csvInput, jsonInput, mode])
 
