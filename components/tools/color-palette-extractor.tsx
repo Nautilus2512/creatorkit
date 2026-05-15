@@ -19,6 +19,24 @@ function announceToScreenReader(message: string) {
 
 interface ColorSwatch { hex: string; rgb: [number, number, number]; count: number; pct: number }
 
+type CBMode = "none" | "deuteranopia" | "protanopia" | "tritanopia"
+
+function simulateColorBlindness(hex: string, mode: CBMode): string {
+  if (mode === "none" || !hex.startsWith("#") || hex.length !== 7) return hex
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  let sr: number, sg: number, sb: number
+  switch (mode) {
+    case "deuteranopia": sr = 0.625*r + 0.375*g; sg = 0.7*r + 0.3*g; sb = 0.3*g + 0.7*b; break
+    case "protanopia":   sr = 0.567*r + 0.433*g; sg = 0.558*r + 0.442*g; sb = 0.242*g + 0.758*b; break
+    case "tritanopia":   sr = 0.95*r + 0.05*g; sg = 0.433*g + 0.567*b; sb = 0.475*g + 0.525*b; break
+    default: return hex
+  }
+  const toH = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")
+  return `#${toH(sr)}${toH(sg)}${toH(sb)}`
+}
+
 function toHex(r: number, g: number, b: number) {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
 }
@@ -76,6 +94,15 @@ function extractPalette(img: HTMLImageElement, numColors = 10): ColorSwatch[] {
     }))
 }
 
+const CB_MODES: [CBMode, string][] = [
+  ["none", "Normal"],
+  ["deuteranopia", "Deuter."],
+  ["protanopia", "Protan."],
+  ["tritanopia", "Tritan."],
+]
+
+const FORMAT_SHORTCUTS: Record<"hex" | "rgb" | "hsl", string> = { hex: "1", rgb: "2", hsl: "3" }
+
 export default function ColorPaletteExtractor() {
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [imageUrl, setImageUrl] = useState("")
@@ -83,6 +110,7 @@ export default function ColorPaletteExtractor() {
   const [numColors, setNumColors] = useState(8)
   const [copied, setCopied] = useState<string | null>(null)
   const [colorFormat, setColorFormat] = useState<"hex" | "rgb" | "hsl">("hex")
+  const [cbMode, setCbMode] = useState<CBMode>("none")
 
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -118,7 +146,12 @@ export default function ColorPaletteExtractor() {
 
   const changeFormat = useCallback((f: "hex" | "rgb" | "hsl") => {
     setColorFormat(f)
-    announceToScreenReader(`Color format changed to ${f.toUpperCase()}`)
+    announceToScreenReader(`Color format: ${f.toUpperCase()}`)
+  }, [])
+
+  const changeCbMode = useCallback((mode: CBMode) => {
+    setCbMode(mode)
+    announceToScreenReader(mode === "none" ? "Normal color vision" : `Color vision simulation: ${mode}`)
   }, [])
 
   const getLabel = useCallback((sw: ColorSwatch) => {
@@ -160,10 +193,17 @@ export default function ColorPaletteExtractor() {
         e.preventDefault()
         copyAll()
       }
+
+      // 1/2/3 — switch color format (bare keys, no modifier)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        if (e.key === "1") { e.preventDefault(); changeFormat("hex") }
+        if (e.key === "2") { e.preventDefault(); changeFormat("rgb") }
+        if (e.key === "3") { e.preventDefault(); changeFormat("hsl") }
+      }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [palette.length, copyAll])
+  }, [palette.length, copyAll, changeFormat])
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
@@ -171,13 +211,21 @@ export default function ColorPaletteExtractor() {
       {/* Desktop top bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Color Palette Extractor</span>
+
+        {/* Colors count radiogroup */}
         <div className="flex items-center gap-2" role="radiogroup" aria-label="Number of colors to extract">
-          <Label className="text-xs text-muted-foreground shrink-0">Colors:</Label>
+          <Label className="text-xs text-muted-foreground shrink-0">
+            Colors
+            <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+              <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+              <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+            </span>
+          </Label>
           {[5, 8, 10, 12].map(n => (
             <button
               key={n}
               onClick={() => changeNumColors(n)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${numColors === n ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${numColors === n ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
               role="radio"
               aria-checked={numColors === n}
               aria-label={`Extract ${n} colors`}
@@ -186,29 +234,39 @@ export default function ColorPaletteExtractor() {
             </button>
           ))}
         </div>
+
+        {/* Format radiogroup */}
         <div className="flex items-center gap-2 ml-2" role="radiogroup" aria-label="Color format">
           <Label className="text-xs text-muted-foreground shrink-0">Format:</Label>
           {(["hex", "rgb", "hsl"] as const).map(f => (
             <button
               key={f}
               onClick={() => changeFormat(f)}
-              className={`text-xs px-3 py-1 rounded-full border uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${colorFormat === f ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+              className={`text-xs px-2.5 py-1 rounded-full border uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${colorFormat === f ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
               role="radio"
               aria-checked={colorFormat === f}
-              aria-label={f.toUpperCase()}
+              aria-label={`${f.toUpperCase()} format (press ${FORMAT_SHORTCUTS[f]})`}
             >
               {f}
+              <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${colorFormat === f ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">
+                {FORMAT_SHORTCUTS[f]}
+              </kbd>
             </button>
           ))}
         </div>
+
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal
             pageName="Color Palette Extractor"
             shortcuts={[
               { keys: ["Ctrl", "Shift", "U"], description: "Upload or change image" },
               { keys: ["Ctrl", "Shift", "V"], description: "Copy all colors" },
+              { keys: ["1"], description: "Switch to HEX format" },
+              { keys: ["2"], description: "Switch to RGB format" },
+              { keys: ["3"], description: "Switch to HSL format" },
               { keys: ["?"], description: "Toggle this shortcuts panel" },
               { keys: ["Tab"], description: "Navigate between controls" },
+              { keys: ["Tab", "← →"], description: "Change color count" },
             ]}
           />
           {palette.length > 0 && (
@@ -235,6 +293,7 @@ export default function ColorPaletteExtractor() {
             shortcuts={[
               { keys: ["Ctrl", "Shift", "U"], description: "Upload or change image" },
               { keys: ["Ctrl", "Shift", "V"], description: "Copy all colors" },
+              { keys: ["1 / 2 / 3"], description: "Switch HEX / RGB / HSL" },
             ]}
           />
         </div>
@@ -340,11 +399,26 @@ export default function ColorPaletteExtractor() {
 
             {/* Right panel — Palette */}
             <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 bg-card`} role="region" aria-label="Extracted color palette">
-              <div className="shrink-0 border-b border-border px-4 py-3">
-                <span className="text-sm font-medium">
+              <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-sm font-medium shrink-0">
                   Extracted Palette
                   {palette.length > 0 && <span className="text-muted-foreground font-normal ml-1">({palette.length} colors)</span>}
                 </span>
+                {/* Color blindness simulation */}
+                <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Color vision simulation">
+                  {CB_MODES.map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      onClick={() => changeCbMode(mode)}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${cbMode === mode ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                      role="radio"
+                      aria-checked={cbMode === mode}
+                      aria-label={`${label} color vision`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2" role="list" aria-label="Color palette list">
                 {palette.length === 0 ? (
@@ -354,6 +428,7 @@ export default function ColorPaletteExtractor() {
                 ) : (
                   palette.map((sw, index) => {
                     const label = getLabel(sw)
+                    const displayColor = simulateColorBlindness(sw.hex, cbMode)
                     return (
                       <div
                         key={sw.hex}
@@ -361,18 +436,21 @@ export default function ColorPaletteExtractor() {
                         role="listitem"
                       >
                         <div
-                          className="w-12 h-12 rounded-md border border-border/50 shrink-0"
-                          style={{ backgroundColor: sw.hex }}
+                          className="w-12 h-12 rounded-md border border-border/50 shrink-0 transition-colors"
+                          style={{ backgroundColor: displayColor }}
                           role="img"
-                          aria-label={`Color ${index + 1}: ${label}`}
+                          aria-label={`Color ${index + 1}: ${label}${cbMode !== "none" ? ` (${cbMode} simulation)` : ""}`}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-mono" aria-live="polite">{label}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                              <div className="h-full rounded-full bg-primary/40" style={{ width: `${Math.max(sw.pct, 2)}%` }} />
+                              <div
+                                className="h-full rounded-full opacity-70 transition-colors"
+                                style={{ width: `${Math.max(sw.pct, 2)}%`, backgroundColor: displayColor }}
+                              />
                             </div>
-                            <span className="text-xs text-muted-foreground shrink-0">{sw.pct}% of image</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{sw.pct}%</span>
                           </div>
                         </div>
                         <Button
@@ -403,15 +481,20 @@ export default function ColorPaletteExtractor() {
               <li>Click the upload area or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd> to select an image.</li>
               <li>The tool extracts the most dominant colors automatically and shows them in the right panel.</li>
               <li>Use the <span className="text-foreground font-medium">Colors</span> buttons in the toolbar to choose how many colors to extract (5, 8, 10, or 12).</li>
-              <li>Switch between <span className="text-foreground font-medium">HEX</span>, <span className="text-foreground font-medium">RGB</span>, and <span className="text-foreground font-medium">HSL</span> using the Format buttons in the toolbar.</li>
+              <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">2</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">3</kbd> or use the Format buttons to switch between HEX, RGB, and HSL.</li>
               <li>Click <span className="text-foreground font-medium">Copy</span> next to any color, or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> to copy all colors at once.</li>
             </ol>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Color vision simulation</p>
+            <p className="text-xs text-muted-foreground">Use the <span className="text-foreground font-medium">Normal / Deuter. / Protan. / Tritan.</span> buttons in the palette header to preview how your palette appears to people with different types of color vision. The swatch and bar colors update live. The copied value is always the original color.</p>
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
             <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd> Upload or change image</li>
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> Copy all colors</li>
+              <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">2</kbd> <kbd className="rounded border border-border bg-muted px-1 text-[10px]">3</kbd> Switch HEX / RGB / HSL format</li>
               <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">?</kbd> Open shortcuts reference</li>
             </ul>
           </div>
@@ -420,7 +503,7 @@ export default function ColorPaletteExtractor() {
             <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
               <li>Images are downsampled to 200px before analysis for fast, in-browser processing.</li>
               <li>Transparent pixels (alpha below 50%) are ignored, so PNG images with transparency extract only visible colors.</li>
-              <li>The percentage bar next to each color shows how much of the image area that color covers.</li>
+              <li>The bar next to each color shows how much of the image area that color covers.</li>
               <li>Everything runs in your browser. Nothing is sent to a server.</li>
             </ul>
           </div>
