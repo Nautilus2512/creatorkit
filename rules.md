@@ -71,6 +71,30 @@ All panels and the usage guide live inside this scrollable wrapper.
 - Panels fill the card; no extra outer borders needed.
 - Panel header label: `<div className="shrink-0 border-b border-border px-4 py-3">`
 
+### Filling panel content height — `flex-1` not `h-full`
+
+Inside a panel that is itself `flex-1`, child elements must use `flex-1` to fill available height. **Never use `h-full`** on textareas, iframes, or divs whose parent gets its height from flex distribution — `h-full` only works when the parent has an *explicit* CSS `height` property, not a flex-derived one. With flex, the element collapses to content height and leaves a large empty gap on mobile.
+
+```tsx
+// ❌ Bug — h-full collapses inside a flex-1 parent
+<div className="flex-1 overflow-y-auto">
+  <Textarea className="h-full ..." />
+</div>
+
+// ✅ Correct — textarea is a flex item and fills the column
+<Textarea className="flex-1 ..." />
+
+// ❌ Bug — same issue with iframes
+<div className="flex-1 min-h-0 bg-white">
+  <iframe className="w-full h-full ..." />
+</div>
+
+// ✅ Correct — parent is flex col, iframe uses flex-1
+<div className="flex-1 min-h-0 bg-white flex flex-col">
+  <iframe className="flex-1 w-full ..." />
+</div>
+```
+
 ### Usage guide card (always at the bottom)
 ```tsx
 <div className="rounded-xl border border-border bg-card p-4 space-y-4">
@@ -181,7 +205,9 @@ Never put title + stats/actions + icons all in one row — it becomes too crowde
 </div>
 ```
 - Active tab uses `border-b-2 border-primary`.
-- Automatically switch to output tab after a primary action completes.
+- Automatically switch to output tab after a primary action completes (file upload, form submit, process button) — **not** on every keystroke.
+
+**Never call `setActiveTab("output")` inside a `useEffect` whose dependencies include user-typed state** (e.g. `[inputValue]`). This fires on every character typed and kicks the user off the input panel mid-sentence. The auto-switch belongs only in the handler for the deliberate action that produces output (upload callback, button click, etc.).
 
 ### Panel visibility (mobile tab switching)
 ```tsx
@@ -252,6 +278,9 @@ Plain `Ctrl+` shortcuts conflict with browser defaults. All tool shortcuts must 
 - `Ctrl+Shift+Enter` — secondary submit (add card in form)
 - `Space` / `1` `2` `3` `4` / `Enter` — scoped to a focused tool panel (e.g. study mode), never global
 
+### Never intercept Tab
+**Never use `Tab` as a keyboard shortcut.** It is the browser's fundamental focus-navigation key. Intercepting it with `e.preventDefault()` breaks keyboard navigation for every user on the page — they can no longer Tab through inputs, buttons, or any interactive element. If you need a mode-toggle shortcut, use a number key (`1` / `2`) or a `Ctrl+Shift+` combination instead.
+
 ### ShortcutsModal
 Every tool must include a `ShortcutsModal`. It lives in:
 - The desktop top action bar inside `ml-auto`
@@ -318,6 +347,21 @@ For inset rings (inside panels): `focus-visible:ring-inset`
 - Arrow keys for navigating within a group (deck list, radio group).
 - Enter or Space to activate a focused button.
 - Escape to cancel, close, or return to a previous state.
+
+### Touch users and hover-only feedback
+Any visual feedback that relies solely on `hover:` is invisible to touch users (phones, tablets). If a UI element has a state that should be communicated after a tap — copied indicator, active selection, confirmation — ensure that state produces visible output **independent of hover**.
+
+```tsx
+// ❌ Bug — hover-only overlay; touch users see nothing after tap
+<span className="opacity-0 group-hover:opacity-100">✓</span>
+
+// ✅ Correct — copied state forces opacity regardless of hover
+<span className={`transition-opacity group-hover:opacity-100 ${
+  isCopied ? "opacity-100" : "opacity-0"
+}`}>✓</span>
+```
+
+This applies to: copy confirmation overlays on swatches, active-state highlights on mode buttons, any `group-hover:` reveal that communicates a result.
 
 ---
 
