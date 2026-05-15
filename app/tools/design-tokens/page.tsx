@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { DesignTokenGenerator } from "@/components/tools/design-token-generator"
+import DesignTokenGenerator from "@/components/tools/design-token-generator"
 import { ArrowLeft } from "lucide-react"
 
 export default function DesignTokensPage() {
