@@ -530,6 +530,112 @@ When implementing keyboard shortcuts in CreatorKit tools, avoid these browser de
 
 ---
 
+### Session v1.68.0 (May 2026) - Background Remover Full Rebuild
+
+#### Overview
+Comprehensive rebuild of `background-remover.tsx` across 10 commits: three removal methods, unified canvas architecture, global Repair mode, Smooth Edge post-processing, mobile layout simplification, and full accessibility compliance.
+
+#### Rules Compliance Fixes (Standalone Commit)
+- Layout aligned to rules.md: `flex flex-1 flex-col min-h-0` root, scrollable `p-4` wrapper, `rounded-xl border` panels card
+- Mobile footer changed to `fixed bottom-0 z-20` with `env(safe-area-inset-bottom)` inset
+- Conditional kbd class pattern applied (blackout fix on toggle buttons)
+- Focus rings corrected from `focus:` to `focus-visible:` throughout
+
+#### Three Removal Methods
+- **Auto** — HuggingFace RMBG-1.4 AI on desktop; color-threshold on mobile (existing feature, now one of three)
+- **Magic Eraser** — Photoshop Background Eraser behavior: samples color at brush tip center; erases only pixels within radius matching sampled color within tolerance; safe near foreground objects because the tip reads a different color
+- **Brush Eraser** — Freehand manual eraser with adjustable brush size
+
+#### Unified Canvas Architecture
+- `canvasRef` activates immediately on image upload; no separate input/output state
+- All methods and Repair operate on the same canvas; Download captures current canvas state
+- Phase state machine: `"idle" | "loading-model" | "processing" | "canvas"`
+- `originalDataRef` stores post-removal image data so Repair brush references the correct baseline
+
+#### Repair Mode (Global)
+- Repair button always visible in header once an image is loaded; works on top of all three methods
+- `restoreActive` flag overrides canvas interactions regardless of active method
+- Canvas handlers: `if (removalMethod === "auto" && !restoreActive) return` (was blocking Auto mode repair)
+- Renamed "Restore" to "Repair" in all UI strings; internal names kept as `restoreActive` / `runRestoreBrush` to avoid rename collisions
+- `Ctrl+Shift+Z` shortcut
+
+#### Smooth Edge
+- Box blur on alpha channel only (radius 2); feathers transparent cut edges without touching RGB values
+- Always available when `imageEl` is set; `Ctrl+Shift+F` shortcut
+
+#### UX Simplification
+- Removed Upload button from header and footer
+- Removed Apply button (direct-to-canvas model: methods apply immediately, Download captures state)
+- No em dashes anywhere in the file
+
+#### Mobile Layout (3-Row Header)
+- Row 1: title + ShortcutsModal
+- Row 2 (conditional on `imageEl`): `role="group"` wrapper with labeled Repair + Smooth Edge buttons (icon + text label)
+- Row 3: Upload / Canvas tab switcher
+- Footer: Remove Background + Download (Auto); Download only (Magic / Brush)
+
+#### Accessibility
+- Method selector: `role="radiogroup"` + `role="radio"` + `aria-checked` (not `aria-pressed`, which is for toggles)
+- All focus rings use `focus-visible:` variant
+- `aria-live="polite"` region for all phase transition announcements
+- `role="img"` + descriptive `aria-label` on canvas
+- `role="progressbar"` with `aria-valuenow / aria-valuemin / aria-valuemax`
+
+#### Commits
+| Hash | Description |
+|------|-------------|
+| e349ad9 | rules.md compliance fixes |
+| 7d3f3d1 | manual brush eraser edit mode |
+| 19dee48 | magic eraser + method selector (initial flood fill) |
+| 34b1087 | corrected magic eraser to hotspot-sampling behavior |
+| 2b80f4e | unified canvas + instant erase/repair + smooth edge |
+| e4f1409 | global Repair button for all methods |
+| ac6f8d2 | rename Restore to Repair + Ctrl+Shift+Z + header tidy |
+| c3246c2 | remove Upload+Apply from header, strip em dashes |
+| 2975899 | mobile layout: Repair+Smooth in header, simple footer |
+| dd34f8f | accessibility compliance pass |
+
+---
+
+## Session v1.69.0 (May 2026) — Base64 Encoder Full Compliance Pass
+
+### Overview
+Full rules.md compliance audit and feature pass on `base64-encoder.tsx` across two commits: rules compliance and accessibility fixes, then usage guide and layout restructure.
+
+### Rules Compliance Fixes
+| Issue | Fix |
+|---|---|
+| Hard-conflict shortcuts C/D/O | Replaced with V/S/U per Section 5 |
+| Mobile bottom bar `shrink-0` | Changed to `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| Footer spacer outside scrollable area | Moved inside `overflow-y-auto` wrapper |
+| Keyboard handler blocked all shortcuts in textarea | Now only blocks non-Ctrl shortcuts; capture phase removed |
+| Error display plain text | Rebuilt to Section 18 styled card (`rounded-lg border border-destructive/50 bg-destructive/5`) |
+| Download btn kbd blackout | Changed to `border-primary-foreground/30 bg-primary-foreground/20` |
+| Encode/Decode kbd blackout on active state | Conditional kbd class applied |
+| Mobile header `pb-1` | Corrected to `pb-2` |
+| Mobile Enc/Dec no `aria-label` | Added "Switch to Encode/Decode mode" |
+| Mobile tab buttons no focus ring | Added `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` |
+| Deprecated `unescape`/`escape` | Replaced with `TextEncoder`/`TextDecoder` |
+
+### New Shortcuts
+- `Ctrl+Shift+E` — encode mode (conditional kbd on button)
+- `Ctrl+Shift+Z` — decode mode (conditional kbd on button)
+- `Ctrl+Shift+F` — focus input textarea; switches to input tab on mobile
+- Focus hint label: subtle `Ctrl+Shift+F` overlay at bottom-right of empty input panel, desktop only, disappears on typing
+
+### Usage Guide and Layout Restructure
+- Panels wrapped in `rounded-xl border min-h-[500px]` card per Type A layout (Section 3)
+- Scrollable content area: `flex-1 overflow-y-auto p-4 space-y-4`
+- Usage guide card: four sections — What it does, How to use (5 ordered steps), Keyboard shortcuts (inline kbd), Tips with privacy note last
+
+### Commits
+| Hash | Description |
+|---|---|
+| d0fbdc7 | fix: rules compliance and accessibility audit for base64-encoder |
+| 3422787 | feat: add usage guide and scrollable layout to base64-encoder |
+
+---
+
 ## All Tools List (71 Total)
 
 ### Security (7 tools)

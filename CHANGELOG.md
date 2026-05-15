@@ -89,6 +89,99 @@
 
 ---
 
+## v1.69.0 — May 2026
+### Base64 Encoder / Decoder — Rules Compliance, Shortcuts, and Usage Guide
+
+#### Rules compliance fixes (`base64-encoder.tsx`)
+- Hard-conflict shortcuts replaced per Section 5: `Ctrl+Shift+C` → `Ctrl+Shift+V` (copy), `Ctrl+Shift+D` → `Ctrl+Shift+S` (download), `Ctrl+Shift+O` → `Ctrl+Shift+U` (upload)
+- Mobile bottom bar changed from `shrink-0` flow to `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Footer spacer `h-[60px]` moved inside scrollable area
+- Keyboard handler: `Ctrl+Shift` shortcuts now fire from inside textarea; capture phase (`true`) removed
+- Error display rebuilt to Section 18 styled card: `rounded-lg border border-destructive/50 bg-destructive/5`
+- Download button kbd blackout fixed: `border-border bg-muted` → `border-primary-foreground/30 bg-primary-foreground/20`
+- Encode/Decode toggle buttons: conditional kbd class applied to match active/inactive state
+- Mobile header row 1 padding: `pb-1` → `pb-2`
+- Mobile Enc/Dec buttons: `aria-label` added ("Switch to Encode mode" / "Switch to Decode mode")
+- Mobile tab buttons: `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset` added
+- Deprecated `unescape`/`escape` replaced with `TextEncoder`/`TextDecoder`
+
+#### New shortcuts
+- `Ctrl+Shift+E` — Switch to Encode mode (with conditional kbd label on button)
+- `Ctrl+Shift+Z` — Switch to Decode mode (with conditional kbd label on button)
+- `Ctrl+Shift+F` — Focus the input textarea; also switches to input tab on mobile
+- Subtle focus-input hint label at bottom-right of empty input panel (desktop only, disappears on typing)
+
+#### Usage guide and layout restructure
+- Panels wrapped in `rounded-xl border min-h-[500px]` card per Type A layout rules (Section 3)
+- Scrollable content area: `flex-1 overflow-y-auto p-4 space-y-4`
+- Usage guide card with four sections: What it does, How to use (5 ordered steps), Keyboard shortcuts (inline kbd), Tips (privacy note last)
+
+#### Files changed
+- `components/tools/base64-encoder.tsx`
+
+---
+
+## v1.68.0 — May 2026
+### Background Remover — Full Rebuild: Three Methods, Unified Canvas, Repair Mode
+
+#### Full rebuild (`background-remover.tsx`)
+
+**Rules compliance fixes (standalone commit):**
+- Layout aligned to rules.md standard: `flex flex-1 flex-col min-h-0` root, scrollable `p-4` wrapper, panels in `rounded-xl border` card
+- Mobile bottom bar changed to `fixed bottom-0 z-20` with `env(safe-area-inset-bottom)` padding
+- All `bg-white/20` kbd badges replaced with conditional class pattern (blackout fix on toggle buttons)
+- Focus rings corrected from `focus:` to `focus-visible:` throughout
+
+**Three removal methods:**
+- **Auto** — AI removal via HuggingFace RMBG-1.4 on desktop; color-threshold removal on mobile (existing feature, now one of three methods)
+- **Magic Eraser** — Background Eraser Tool behavior: samples the color at the brush tip center; erases only pixels within radius that match the sampled color within tolerance; dragging near a foreground object of a different color is safe because the tip reads a different color and stops erasing
+- **Brush Eraser** — freehand manual eraser with adjustable brush size
+
+**Unified canvas architecture:**
+- `canvasRef` activates immediately on image upload; no separate input/output state
+- All three methods (Auto / Magic / Brush) and Repair all operate on the same canvas
+- Phase state machine: `"idle" | "loading-model" | "processing" | "canvas"` — enters `"canvas"` on upload, not only after removal
+- Download always captures current canvas state
+- `originalDataRef` stores post-removal image data so Repair brush references the correct baseline
+
+**Repair mode (global, all methods):**
+- Repair button always visible in header once an image is loaded; works on top of Auto, Magic, and Brush methods
+- `restoreActive` flag overrides canvas interactions to `runRestoreBrush()` regardless of active method
+- Canvas handlers changed from `if (removalMethod === "auto") return` to `if (removalMethod === "auto" && !restoreActive) return` so Repair works in Auto mode
+- Renamed from "Restore" to "Repair" in all UI strings; internal variable names (`restoreActive`, `runRestoreBrush`) kept unchanged to avoid rename collisions
+- `Ctrl+Shift+Z` shortcut added
+
+**Smooth Edge:**
+- Available once an image is loaded (no `hasApplied` gate needed)
+- Box blur (radius 2) applied to alpha channel only; feathers cut edges without touching RGB values
+- `Ctrl+Shift+F` shortcut
+
+**Header and flow simplification:**
+- Upload button removed from header (upload card is sufficient)
+- Apply button removed (methods apply directly to canvas; Download captures current state)
+- Desktop action bar order: tool name | Repair (Ctrl+Shift+Z) | Smooth Edge (Ctrl+Shift+F) | Download (Ctrl+Shift+S) | `ml-auto`: ShortcutsModal + Remove Background (Auto only)
+- All em dashes removed from the entire file
+
+**Mobile layout (3-row header):**
+- Row 1: title | ShortcutsModal
+- Row 2 (conditional on `imageEl`): `role="group"` wrapper with labeled Repair + Smooth Edge buttons (icon + text label)
+- Row 3: Upload / Canvas tab switcher
+- Fixed footer: Remove Background + Download (Auto); Download only (Magic / Brush)
+- Upload button removed from footer
+
+**Accessibility compliance:**
+- Method selector uses `role="radiogroup"` on wrapper and `role="radio"` + `aria-checked` on each button; `aria-pressed` is reserved for toggle buttons, not exclusive-choice selectors
+- All focus rings use `focus-visible:` variant (not `focus:`)
+- `aria-live="polite"` region for all phase transition announcements
+- Canvas labeled with `role="img"` and descriptive `aria-label`
+- `role="progressbar"` with `aria-valuenow / aria-valuemin / aria-valuemax` on progress indicator
+- All icon buttons have `aria-label`; all icons are `aria-hidden="true"`
+
+#### Files changed
+- `components/tools/background-remover.tsx`
+
+---
+
 ## v1.67.0 — May 2026
 ### Audio Waveform Visualizer — Full Rebuild + Touch Scrubbing
 
