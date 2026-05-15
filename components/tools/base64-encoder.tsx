@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Copy, Check, Upload, Download, ArrowLeftRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,17 +26,18 @@ export default function Base64Encoder() {
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const process = useCallback((text: string, currentMode: Mode) => {
     setError("")
     if (!text) { setOutput(""); return }
     try {
       if (currentMode === "encode") {
-        const encoded = btoa(unescape(encodeURIComponent(text)))
+        const encoded = btoa(Array.from(new TextEncoder().encode(text), b => String.fromCharCode(b)).join(""))
         setOutput(encoded)
         announceToScreenReader(`Text encoded to Base64. Output is ${encoded.length} characters.`)
       } else {
-        const decoded = decodeURIComponent(escape(atob(text.trim())))
+        const decoded = new TextDecoder().decode(Uint8Array.from(atob(text.trim()), c => c.charCodeAt(0)))
         setOutput(decoded)
         announceToScreenReader(`Base64 decoded to text. Output is ${decoded.length} characters.`)
       }
@@ -112,28 +113,36 @@ export default function Base64Encoder() {
   }, [output, mode])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      if (!(e.ctrlKey || e.metaKey)) return
+    }
     if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
       switch (e.key.toLowerCase()) {
-        case "o": e.preventDefault(); if (mode === "encode") triggerUpload(); return
+        case "e": e.preventDefault(); switchMode("encode"); return
+        case "z": e.preventDefault(); switchMode("decode"); return
+        case "f": e.preventDefault(); setActiveTab("input"); inputRef.current?.focus(); return
+        case "u": e.preventDefault(); if (mode === "encode") triggerUpload(); return
         case "x": e.preventDefault(); swap(); return
-        case "c": e.preventDefault(); if (output) copy(); return
-        case "d": e.preventDefault(); if (output) download(); return
+        case "v": e.preventDefault(); if (output) copy(); return
+        case "s": e.preventDefault(); if (output) download(); return
       }
     }
     if (e.key === "Escape" && error) { e.preventDefault(); setError("") }
-  }, [swap, copy, download, output, error, mode])
+  }, [swap, copy, download, switchMode, output, error, mode])
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown, true)
-    return () => window.removeEventListener("keydown", handleKeyDown, true)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [handleKeyDown])
 
   const shortcuts = [
-    { keys: ["Ctrl", "Shift", "O"], description: "Upload file (encode mode)" },
+    { keys: ["Ctrl", "Shift", "E"], description: "Switch to Encode mode" },
+    { keys: ["Ctrl", "Shift", "Z"], description: "Switch to Decode mode" },
+    { keys: ["Ctrl", "Shift", "F"], description: "Focus input" },
+    { keys: ["Ctrl", "Shift", "U"], description: "Upload file (encode mode)" },
     { keys: ["Ctrl", "Shift", "X"], description: "Swap input/output" },
-    { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
-    { keys: ["Ctrl", "Shift", "D"], description: "Download output" },
+    { keys: ["Ctrl", "Shift", "V"], description: "Copy output" },
+    { keys: ["Ctrl", "Shift", "S"], description: "Download output" },
     { keys: ["?"], description: "Toggle shortcuts panel" },
   ]
 
@@ -148,8 +157,14 @@ export default function Base64Encoder() {
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Base64 controls">
           <span className="text-sm font-semibold shrink-0 mr-1">Base64</span>
           <div className="h-4 w-px bg-border" aria-hidden="true" />
-          <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")} aria-pressed={mode === "encode"}>Encode</Button>
-          <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")} aria-pressed={mode === "decode"}>Decode</Button>
+          <Button variant={mode === "encode" ? "default" : "outline"} size="sm" onClick={() => switchMode("encode")} aria-pressed={mode === "encode"}>
+            Encode
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "encode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+E</kbd>
+          </Button>
+          <Button variant={mode === "decode" ? "default" : "outline"} size="sm" onClick={() => switchMode("decode")} aria-pressed={mode === "decode"}>
+            Decode
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "decode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+Z</kbd>
+          </Button>
           <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
           <Button variant="ghost" size="sm" onClick={swap} disabled={!output} aria-label="Swap input and output">
             <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
@@ -158,7 +173,7 @@ export default function Base64Encoder() {
           {mode === "encode" && (
             <Button variant="ghost" size="sm" onClick={triggerUpload} aria-label="Upload file">
               <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
             </Button>
           )}
           {(input || output) && (
@@ -169,18 +184,18 @@ export default function Base64Encoder() {
             <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label="Copy output">
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
             </Button>
             <Button size="sm" onClick={download} disabled={!output} aria-label="Download output">
               <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>
 
         {/* ── Mobile: compact header + tab switcher ── */}
         <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <h2 className="text-base font-semibold">Base64 Encoder / Decoder</h2>
             <ShortcutsModal pageName="Base64 Encoder / Decoder" shortcuts={shortcuts} />
           </div>
@@ -189,7 +204,7 @@ export default function Base64Encoder() {
               role="tab"
               aria-selected={activeTab === "input"}
               onClick={() => setActiveTab("input")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
             >
               {mode === "encode" ? "Plain Text" : "Base64 Input"}
             </button>
@@ -197,7 +212,7 @@ export default function Base64Encoder() {
               role="tab"
               aria-selected={activeTab === "output"}
               onClick={() => setActiveTab("output")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
             >
               {mode === "encode" ? "Base64 Output" : "Decoded Text"}
             </button>
@@ -209,17 +224,24 @@ export default function Base64Encoder() {
 
           {/* Input panel */}
           <div
-            className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
+            className={`relative ${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}
             role="region"
             aria-label={mode === "encode" ? "Plain text input" : "Base64 input"}
           >
             <Textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder={mode === "encode" ? "Enter text to encode…" : "Enter Base64 to decode…"}
               className="flex-1 resize-none border-0 rounded-none font-mono text-sm focus-visible:ring-0 p-4"
               aria-label={mode === "encode" ? "Plain text to encode" : "Base64 string to decode"}
             />
+            {!input && (
+              <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1.5 pointer-events-none select-none" aria-hidden="true">
+                <span className="text-[10px] text-muted-foreground/40">focus input</span>
+                <kbd className="rounded border border-border/50 bg-muted/50 px-1 text-[10px] text-muted-foreground/40">Ctrl+Shift+F</kbd>
+              </div>
+            )}
           </div>
 
           {/* Output panel */}
@@ -229,7 +251,11 @@ export default function Base64Encoder() {
             aria-label={mode === "encode" ? "Base64 output" : "Decoded text"}
           >
             {error ? (
-              <div className="flex-1 flex items-center justify-center text-destructive text-sm p-6" role="alert" aria-live="assertive">{error}</div>
+              <div className="flex-1 p-4" role="alert" aria-live="assertive">
+                <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+                  {error}
+                </div>
+              </div>
             ) : (
               <Textarea
                 value={output}
@@ -242,13 +268,15 @@ export default function Base64Encoder() {
           </div>
         </div>
 
+        <div className="md:hidden h-[60px] shrink-0" aria-hidden="true" />
+
         {/* ── Mobile: bottom action bar ── */}
         <div
-          className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
-          <Button variant={mode === "encode" ? "default" : "outline"} size="sm" className="h-11 px-3 text-xs" onClick={() => switchMode("encode")} aria-pressed={mode === "encode"}>Enc</Button>
-          <Button variant={mode === "decode" ? "default" : "outline"} size="sm" className="h-11 px-3 text-xs" onClick={() => switchMode("decode")} aria-pressed={mode === "decode"}>Dec</Button>
+          <Button variant={mode === "encode" ? "default" : "outline"} size="sm" className="h-11 px-3 text-xs" onClick={() => switchMode("encode")} aria-pressed={mode === "encode"} aria-label="Switch to Encode mode">Enc</Button>
+          <Button variant={mode === "decode" ? "default" : "outline"} size="sm" className="h-11 px-3 text-xs" onClick={() => switchMode("decode")} aria-pressed={mode === "decode"} aria-label="Switch to Decode mode">Dec</Button>
           <Button variant="ghost" size="sm" className="h-11 px-2" onClick={swap} disabled={!output} aria-label="Swap">
             <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
           </Button>
