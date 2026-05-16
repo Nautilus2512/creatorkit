@@ -541,6 +541,7 @@ export default function DocScanner() {
         {/* ── Done ── */}
         {phase === "done" && resultUrl && (
           <div className="flex flex-col md:flex-row h-full overflow-y-auto md:overflow-hidden" role="region" aria-label="Scanned document result">
+
             {/* Result */}
             <div className="flex-1 overflow-auto bg-muted/20 p-6 flex items-center justify-center">
               <img
@@ -647,56 +648,77 @@ export default function DocScanner() {
                 </p>
               </div>
             </div>
+            {/* Spacer so fixed mobile bar doesn't cover last control */}
+            <div className="md:hidden h-[60px] shrink-0" aria-hidden="true" />
           </div>
         )}
       </div>
 
-      {/* Bottom action bar */}
+      {/* Mobile bottom bar — fixed */}
+      {phase === "select" && (
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <Button variant="outline" className="h-11 w-11 p-0 shrink-0" onClick={reset} aria-label="Start over">
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button className="h-11 flex-1" onClick={scan} disabled={processing} aria-label="Scan document">
+            {processing ? "Processing…" : "Scan Document"}
+          </Button>
+        </div>
+      )}
+      {phase === "done" && (
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
+          <Button variant="outline" className="h-11 w-11 p-0 shrink-0" onClick={reset} aria-label="Start over">
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            variant={downloading ? "outline" : "default"}
+            className="h-11 flex-1"
+            onClick={downloadResult}
+            aria-label={`Download ${outputFormat.toUpperCase()}`}
+          >
+            <Download className="h-4 w-4 mr-1.5 shrink-0" aria-hidden="true" />Download {outputFormat.toUpperCase()}
+          </Button>
+          <Button variant="outline" className="h-11 w-11 p-0 shrink-0" onClick={reset} aria-label="Scan another">
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
+      )}
+
+      {/* Desktop bottom bar — in-flow */}
       <div
-        className="shrink-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
+        className="hidden md:flex shrink-0 items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-2"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         {phase !== "idle" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-11 md:h-9"
-            onClick={reset}
-            aria-label="Start over (Ctrl+Shift+Z)"
-          >
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Start over<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
+          <Button variant="outline" size="sm" className="h-9" onClick={reset} aria-label="Start over (Ctrl+Shift+Z)">
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Start over<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
           </Button>
         )}
         <div className="flex-1" />
         {phase === "select" && (
-          <Button
-            className="h-11 md:h-9"
-            onClick={scan}
-            disabled={processing}
-            aria-label="Scan document (Ctrl+Enter)"
-          >
-            {processing ? "Processing…" : <><span>Scan Document</span><kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
+          <Button className="h-9" onClick={scan} disabled={processing} aria-label="Scan document (Ctrl+Enter)">
+            {processing ? "Processing…" : <><span>Scan Document</span><kbd className="ml-2 rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
           </Button>
         )}
         {phase === "done" && (
           <Button
             variant={downloading ? "outline" : "default"}
-            className="h-11 md:h-9"
+            className="h-9"
             onClick={downloadResult}
             aria-label={`Download ${outputFormat.toUpperCase()} (Ctrl+Shift+S)`}
           >
-            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download {outputFormat.toUpperCase()}<kbd className={`ml-2 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
+            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download {outputFormat.toUpperCase()}<kbd className={`ml-2 rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         )}
         {phase === "done" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-11 md:h-9"
-            onClick={reset}
-            aria-label="Scan another (Ctrl+Shift+Z)"
-          >
-            <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />Scan Another<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
+          <Button variant="outline" size="sm" className="h-9" onClick={reset} aria-label="Scan another (Ctrl+Shift+Z)">
+            <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />Scan Another<kbd className="ml-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
           </Button>
         )}
       </div>
