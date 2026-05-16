@@ -179,7 +179,7 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
   })
 }
 
-function drawGrid(canvas: HTMLCanvasElement, images: GridImage[], cols: number, rows: number, gap: number, bg: string) {
+function drawGrid(canvas: HTMLCanvasElement, images: GridImage[], cols: number, rows: number, gap: number, bg: string, draggingCell?: number | null, hoverCell?: number | null) {
   const ctx = canvas.getContext("2d")!
   const cellW = (canvas.width - gap * (cols + 1)) / cols
   const cellH = (canvas.height - gap * (rows + 1)) / rows
@@ -194,7 +194,15 @@ function drawGrid(canvas: HTMLCanvasElement, images: GridImage[], cols: number, 
       const scale = Math.max(cellW / img.width, cellH / img.height)
       const sw = cellW / scale, sh = cellH / scale
       const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2
+      if (i === draggingCell) ctx.globalAlpha = 0.4
       ctx.drawImage(img, sx, sy, sw, sh, x, y, cellW, cellH)
+      ctx.globalAlpha = 1
+      if (i === hoverCell && draggingCell != null && i !== draggingCell) {
+        const lw = Math.max(4, gap > 0 ? gap * 0.6 : 4)
+        ctx.strokeStyle = "#3b82f6"
+        ctx.lineWidth = lw
+        ctx.strokeRect(x + lw / 2, y + lw / 2, cellW - lw, cellH - lw)
+      }
       i++
     }
   }
@@ -217,6 +225,8 @@ export default function ImageGrid() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const [canvasDragging, setCanvasDragging] = useState<number | null>(null)
+  const [canvasHover, setCanvasHover] = useState<number | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const downloadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -281,8 +291,8 @@ export default function ImageGrid() {
     if (!canvas || currentImages.length === 0) return
     canvas.width = canvasSize
     canvas.height = canvasSize
-    drawGrid(canvas, currentImages, layoutDef.cols, layoutDef.rows, gap, bgColor)
-  }, [currentImages, layout, gap, bgColor, canvasSize, currentPage])
+    drawGrid(canvas, currentImages, layoutDef.cols, layoutDef.rows, gap, bgColor, canvasDragging, canvasHover)
+  }, [currentImages, layout, gap, bgColor, canvasSize, currentPage, canvasDragging, canvasHover])
 
   const download = useCallback(() => {
     const canvas = canvasRef.current
@@ -329,6 +339,62 @@ export default function ImageGrid() {
   useEffect(() => {
     return () => { if (downloadingTimerRef.current) clearTimeout(downloadingTimerRef.current) }
   }, [])
+
+  function getCanvasCellIndex(clientX: number, clientY: number): number | null {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvasSize / rect.width
+    const scaleY = canvasSize / rect.height
+    const x = (clientX - rect.left) * scaleX
+    const y = (clientY - rect.top) * scaleY
+    const cellW = (canvasSize - gap * (layoutDef.cols + 1)) / layoutDef.cols
+    const cellH = (canvasSize - gap * (layoutDef.rows + 1)) / layoutDef.rows
+    for (let r = 0; r < layoutDef.rows; r++) {
+      for (let c = 0; c < layoutDef.cols; c++) {
+        const cx = gap + c * (cellW + gap)
+        const cy = gap + r * (cellH + gap)
+        if (x >= cx && x <= cx + cellW && y >= cy && y <= cy + cellH) return r * layoutDef.cols + c
+      }
+    }
+    return null
+  }
+
+  function handleCanvasPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (currentImages.length === 0) return
+    const idx = getCanvasCellIndex(e.clientX, e.clientY)
+    if (idx === null || idx >= currentImages.length) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setCanvasDragging(idx)
+  }
+
+  function handleCanvasPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (canvasDragging === null) return
+    const idx = getCanvasCellIndex(e.clientX, e.clientY)
+    setCanvasHover(idx !== null && idx < currentImages.length && idx !== canvasDragging ? idx : null)
+  }
+
+  function handleCanvasPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (canvasDragging === null) return
+    const idx = getCanvasCellIndex(e.clientX, e.clientY)
+    if (idx !== null && idx !== canvasDragging && idx < currentImages.length) {
+      setImages(prev => {
+        const next = [...prev]
+        const a = startIndex + canvasDragging
+        const b = startIndex + idx
+        ;[next[a], next[b]] = [next[b], next[a]]
+        return next
+      })
+      announceToScreenReader(`Image ${canvasDragging + 1} swapped with image ${idx + 1}`)
+    }
+    setCanvasDragging(null)
+    setCanvasHover(null)
+  }
+
+  function handleCanvasPointerCancel() {
+    setCanvasDragging(null)
+    setCanvasHover(null)
+  }
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
@@ -576,7 +642,7 @@ export default function ImageGrid() {
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Add images to fill your chosen grid layout. The tool arranges them in order and renders them on a canvas.
-                  <span className="text-foreground font-medium"> Drag</span> any image row to reorder it.
+                  You can reorder images two ways: <span className="text-foreground font-medium">drag a row</span> in the Images list, or <span className="text-foreground font-medium">drag directly on the preview grid</span> — both work on touchscreen too.
                   Click <span className="text-foreground font-medium">Download PNG</span> to export the current grid.
                 </p>
               </div>
@@ -636,10 +702,19 @@ export default function ImageGrid() {
         <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`} role="region" aria-labelledby="preview-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-2 flex items-center justify-between">
             <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
-            {totalPages > 1 && (
-              <span className="text-xs text-muted-foreground" aria-live="polite">
-                Page {currentPage + 1} · {currentImages.length} images
-              </span>
+            {currentImages.length > 0 && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {totalPages > 1 && (
+                  <>
+                    <span aria-live="polite">Page {currentPage + 1} · {currentImages.length} images</span>
+                    <span className="w-px h-3 bg-border" aria-hidden="true" />
+                  </>
+                )}
+                <span className="flex items-center gap-1">
+                  <Grip className="h-3 w-3" aria-hidden="true" />
+                  Drag to reorder
+                </span>
+              </div>
             )}
           </div>
           <div className="flex-1 flex items-center justify-center p-4 bg-muted/10 overflow-hidden" role="img" aria-label={images.length > 0 ? "Image grid preview" : "Empty preview"}>
@@ -651,8 +726,12 @@ export default function ImageGrid() {
               <canvas
                 ref={canvasRef}
                 className="max-w-full max-h-full object-contain rounded-lg border border-border shadow-lg"
-                style={{ maxWidth: "100%" }}
-                aria-label={`${layoutDef.cols} by ${layoutDef.rows} image grid preview with ${currentImages.length} images`}
+                style={{ maxWidth: "100%", touchAction: "none", cursor: canvasDragging !== null ? "grabbing" : "grab" }}
+                onPointerDown={handleCanvasPointerDown}
+                onPointerMove={handleCanvasPointerMove}
+                onPointerUp={handleCanvasPointerUp}
+                onPointerCancel={handleCanvasPointerCancel}
+                aria-label={`${layoutDef.cols} by ${layoutDef.rows} image grid preview with ${currentImages.length} images. Drag to reorder.`}
               />
             )}
           </div>
