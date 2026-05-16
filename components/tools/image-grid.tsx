@@ -558,19 +558,21 @@ export default function ImageGrid() {
 
           <div className="flex-1 overflow-y-auto min-h-0">
             {images.length === 0 ? (
-              <button
-                className="flex-1 flex w-full flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border m-4 rounded-xl hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                style={{ minHeight: "200px" }}
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Click to add images"
-              >
-                <Upload className="h-10 w-10 text-muted-foreground/40 mb-3" aria-hidden="true" />
-                <p className="text-sm font-medium">Click to add images</p>
-                <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd>
-                </p>
-              </button>
+              <div className="p-4">
+                <button
+                  className="flex w-full flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  style={{ minHeight: "200px" }}
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Click to add images"
+                >
+                  <Upload className="h-10 w-10 text-muted-foreground/40 mb-3" aria-hidden="true" />
+                  <p className="text-sm font-medium">Click to add images</p>
+                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    or press <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd>
+                  </p>
+                </button>
+              </div>
             ) : (
               <>
                 <button
