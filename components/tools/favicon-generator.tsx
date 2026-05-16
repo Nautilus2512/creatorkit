@@ -299,7 +299,7 @@ export default function FaviconGenerator() {
                 <Upload className="h-5 w-5" />
                 <span>Click to upload</span>
                 <span className="text-xs opacity-60">PNG, JPG, WebP, SVG</span>
-                <kbd className="mt-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
+                <kbd className="mt-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
               </div>
               <input
                 ref={uploadRef}
