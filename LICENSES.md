@@ -18,6 +18,8 @@ CreatorKit uses the following open-source libraries. All are used under their pe
 | @radix-ui/* | MIT | Accessible UI primitives |
 | lamejs | LGPL-3.0 | MP3 encoding in audio-converter (used as unmodified library) |
 | @img/sharp-win32-x64 | Apache-2.0 AND LGPL-3.0-or-later | Image processing binary (used as unmodified library) |
+| imagequant | GPL-3.0 | PNG color quantization (transitive dependency of sharp; runs server-side only, not distributed to users) |
 
 > jszip is dual-licensed (MIT OR GPL-3.0-or-later). CreatorKit uses it under the MIT license.
 > lamejs and @img/sharp-win32-x64 are LGPL-licensed. CreatorKit uses them as unmodified libraries, which is permitted under LGPL without requiring source disclosure.
+> imagequant is GPL-3.0 but is a transitive server-side dependency only. CreatorKit is a web service (SaaS); the GPL distribution clause does not apply as no binary is distributed to users.
