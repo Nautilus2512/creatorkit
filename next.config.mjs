@@ -10,6 +10,7 @@ const nextConfig = {
   },
   turbopack: {},
   webpack: (config) => {
+    config.experiments = { ...config.experiments, asyncWebAssembly: true }
     config.resolve.alias = {
       ...config.resolve.alias,
       "sharp$": false,
