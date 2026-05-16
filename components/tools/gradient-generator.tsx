@@ -293,13 +293,13 @@ export default function GradientGenerator() {
         </div>
 
         {/* Right — Preview + Code */}
-        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-y-auto md:overflow-hidden bg-card`}>
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium">Preview</span>
           </div>
-          <div className="flex-1 p-4 flex flex-col gap-4 min-h-0">
+          <div className="p-4 md:flex-1 md:flex md:flex-col md:gap-4 md:min-h-0">
             <div
-              className="flex-1 rounded-xl border border-border shadow-inner min-h-0"
+              className="h-[280px] md:h-auto md:flex-1 md:min-h-0 rounded-xl border border-border shadow-inner"
               style={{ background: cssValue }}
               role="img"
               aria-label={`Gradient preview showing ${type} gradient with ${stops.length} color stops`}
@@ -316,6 +316,7 @@ export default function GradientGenerator() {
             </div>
             <pre className="rounded-lg border border-border bg-muted/20 p-3 text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed" aria-live="polite">{css}</pre>
           </div>
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
       </div>
 
