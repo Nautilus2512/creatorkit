@@ -133,10 +133,10 @@ export default function GamepadTester() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "?" || (e.shiftKey && e.key === "/")) {
-        return
-      }
-      if (e.key === "c" || e.key === "C") {
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "X" || e.key === "x")) {
+        e.preventDefault()
         cycleController()
       }
     }
@@ -153,7 +153,6 @@ export default function GamepadTester() {
 const stickBtns    = [10, 11]
 
   return (
-    <>
     <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop: top action bar */}
@@ -165,18 +164,24 @@ const stickBtns    = [10, 11]
             : <Badge variant="secondary"><WifiOff className="h-3 w-3 mr-1" aria-hidden="true" />No controllers</Badge>}
         </div>
         <div className="ml-auto">
-          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[{ keys: ["C"], description: "Cycle controller" }, { keys: ["?"], description: "Toggle shortcuts panel" }]} />
+          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[
+            { keys: ["Ctrl", "Shift", "X"], description: "Cycle controller" },
+            { keys: ["?"], description: "Toggle this panel" },
+          ]} />
         </div>
       </div>
 
       {/* Mobile: compact header */}
-      <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
+      <div className="flex md:hidden shrink-0 items-center justify-between px-4 pt-3 pb-2 border-b border-border">
         <h2 className="text-base font-semibold">Game Controller Tester</h2>
         <div className="flex items-center gap-2">
           <div role="status" aria-live="polite">
             {gamepads.length > 0 && <Badge className="bg-green-500 text-white text-xs"><Wifi className="h-3 w-3 mr-1" aria-hidden="true" />{gamepads.length}</Badge>}
           </div>
-          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[{ keys: ["C"], description: "Cycle controller" }]} />
+          <ShortcutsModal pageName="Game Controller Tester" shortcuts={[
+            { keys: ["Ctrl", "Shift", "X"], description: "Cycle controller" },
+            { keys: ["?"], description: "Toggle this panel" },
+          ]} />
         </div>
       </div>
 
@@ -191,15 +196,37 @@ const stickBtns    = [10, 11]
 
         {/* No controller connected */}
         {!isSafari && gamepads.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4 p-8 text-center" role="region" aria-labelledby="no-controller-heading">
-            <div className="rounded-full bg-muted/50 border border-border p-8">
-              <Gamepad2 className="h-14 w-14 text-muted-foreground" aria-hidden="true" />
+          <div className="p-4 space-y-4">
+            <div className="flex flex-col items-center justify-center gap-4 py-8 text-center" role="region" aria-labelledby="no-controller-heading">
+              <div className="rounded-full bg-muted/50 border border-border p-8">
+                <Gamepad2 className="h-14 w-14 text-muted-foreground" aria-hidden="true" />
+              </div>
+              <div className="space-y-2">
+                <h2 id="no-controller-heading" className="text-lg font-semibold">Connect a controller</h2>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Plug in a USB gamepad or connect via Bluetooth, then press any button to activate it. Works with Xbox, PlayStation, and generic controllers.
+                </p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <h2 id="no-controller-heading" className="text-lg font-semibold">Connect a controller</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Plug in a USB gamepad or connect via Bluetooth, then press any button to activate it. Works with Xbox, PlayStation, and generic controllers.
-              </p>
+            {/* Usage guide */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Plug in a USB controller or pair one via Bluetooth. Press any button on the controller to register it with the browser.</li>
+                <li>The <span className="text-foreground font-medium">Controller Layout</span> shows a visual map of all buttons. Dots highlight when pressed.</li>
+                <li>The <span className="text-foreground font-medium">All Buttons</span> list shows every button by name with its analog value where applicable.</li>
+                <li>The <span className="text-foreground font-medium">Axes</span> section shows analog stick positions in real time.</li>
+                <li>If multiple controllers are connected, use the tabs or <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+X</kbd> to switch between them.</li>
+              </ol>
+              <div className="border-t border-border pt-3 space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Compatibility</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>Works in Chrome, Firefox, and Edge. Safari does not support the Gamepad API.</li>
+                  <li>Most Xbox, PlayStation, and generic USB/Bluetooth controllers are supported.</li>
+                  <li>Button numbering follows the standard Gamepad API mapping.</li>
+                </ul>
+              </div>
+              <p className="text-xs text-muted-foreground">Everything runs in your browser. No controller input is sent to a server.</p>
             </div>
           </div>
         )}
@@ -227,7 +254,7 @@ const stickBtns    = [10, 11]
             {/* ID */}
             <div className="rounded-lg border border-border bg-muted/20 px-4 py-3" role="region" aria-labelledby="controller-id-label">
               <p id="controller-id-label" className="text-xs font-mono text-muted-foreground truncate">{gp.id}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Mapping: <span className="font-mono">{gp.mapping || "none"}</span> Â· {gp.buttons.length} buttons Â· {gp.axes.length} axes</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Mapping: <span className="font-mono">{gp.mapping || "none"}</span> · {gp.buttons.length} buttons · {gp.axes.length} axes</p>
             </div>
 
             {/* Visual layout */}
@@ -308,6 +335,5 @@ const stickBtns    = [10, 11]
       </div>
       </div>
     </div>
-    </>
   )
 }
