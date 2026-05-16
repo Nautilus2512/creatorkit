@@ -244,6 +244,7 @@ export default function ImageCompressor() {
               onFilesSelected={handleFilesSelected}
               maxFiles={20}
               multiple
+              shortcut="Ctrl+Shift+U"
             />
 
             {files.length > 0 && (

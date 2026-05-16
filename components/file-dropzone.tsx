@@ -10,6 +10,7 @@ interface FileDropzoneProps {
   onFilesSelected: (files: File[]) => void
   maxFiles?: number
   existingFiles?: File[]
+  shortcut?: string
 }
 
 export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(function FileDropzone({
@@ -18,6 +19,7 @@ export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(func
   onFilesSelected,
   maxFiles = 10,
   existingFiles,
+  shortcut,
 }, ref) {
   const [isDragging, setIsDragging] = useState(false)
   const [internalFiles, setInternalFiles] = useState<File[]>([])
@@ -103,7 +105,7 @@ export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(func
               Drag and drop your files here
             </p>
             <p className="text-xs text-muted-foreground">
-              or click to browse • Max {maxFiles} files • <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd>
+              or click to browse • Max {maxFiles} files{shortcut && <> • <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">{shortcut}</kbd></>}
             </p>
           </div>
         </div>
