@@ -451,6 +451,63 @@ const shortcuts = [
   { keys: ["Tab"], description: "Navigate between controls" },
 ]
 
+const TAB_GUIDES: Record<string, { about: string; formulas: string[]; tips: string[] }> = {
+  ohm: {
+    about: "Enter any 2 of the 4 values (V, I, R, P) — the other two are solved automatically using Ohm's Law and power formulas.",
+    formulas: ["V = IR", "P = VI = I²R = V²/R"],
+    tips: [
+      "V in Volts, I in Amperes, R in Ohms (Ω), P in Watts.",
+      "Example: a 12 V source with a 100 Ω load draws 120 mA and dissipates 1.44 W.",
+      "Any 2 values uniquely determine the other 2 for a purely resistive DC circuit.",
+    ],
+  },
+  ac: {
+    about: "Calculate inductive and capacitive reactance, combined impedance, phase angle, and power factor for an AC circuit.",
+    formulas: ["XL = 2πfL", "XC = 1 / (2πfC)", "Z = √(R² + X²)", "PF = cos(θ)"],
+    tips: [
+      "50 Hz is standard in Europe, Asia, Africa, and Australia. 60 Hz is standard in the Americas.",
+      "XL rises with frequency. XC falls with frequency — they cancel at resonance.",
+      "At resonance (XL = XC), impedance Z equals R and power factor reaches 1.",
+    ],
+  },
+  power: {
+    about: "Calculate apparent, active, and reactive power for a single-phase AC circuit from voltage, current, and power factor.",
+    formulas: ["S = V × I (apparent power, VA)", "P = S × PF (active power, W)", "Q = S × sin(θ) (reactive power, VAr)"],
+    tips: [
+      "Power factor 1.0 means a purely resistive load such as a heater or incandescent bulb.",
+      "Typical motors and transformers have a power factor of 0.7 to 0.9.",
+      "Reactive power Q does not do useful work but must still be supplied by the source.",
+    ],
+  },
+  "3phase": {
+    about: "Calculate phase and line values for a balanced three-phase Star (Y) or Delta (Δ) system from line voltage, line current, and power factor.",
+    formulas: ["Star: VP = VL / √3, IP = IL", "Delta: VP = VL, IP = IL / √3", "P₃φ = √3 × VL × IL × PF"],
+    tips: [
+      "Star (Y) provides a neutral wire. In a 400 V IEC grid the phase voltage is 230 V (400 / √3).",
+      "Delta (Δ) has no neutral and higher line currents. Common for industrial motor loads.",
+      "Standard voltages: 230/400 V (IEC 60038), 120/208 V (IEEE/ANSI).",
+    ],
+  },
+  colors: {
+    about: "Decode the resistance value and tolerance of a resistor from its color band markings. Supports 4-band and 5-band resistors.",
+    formulas: ["4-band: digit 1, digit 2, multiplier, tolerance", "5-band: digit 1, digit 2, digit 3, multiplier, tolerance"],
+    tips: [
+      "Color order (0–9): Black, Brown, Red, Orange, Yellow, Green, Blue, Violet, Grey, White.",
+      "Tolerance bands: Gold = ±5%, Silver = ±10%, Brown = ±1%, Red = ±2%.",
+      "5-band resistors carry a third significant digit for higher precision (1% and 0.1% components).",
+    ],
+  },
+  timeconst: {
+    about: "Calculate the time constant τ for RC and RL circuits. τ governs how quickly the circuit charges or energises, and determines the filter cutoff frequency.",
+    formulas: ["RC circuit: τ = R × C (seconds)", "RL circuit: τ = L / R (seconds)", "Cutoff frequency: fc = 1 / (2πτ) Hz"],
+    tips: [
+      "At t = τ, the capacitor or inductor reaches 63.2% of its final value.",
+      "At t = 5τ the circuit is considered fully charged or energised (99.3%).",
+      "Enter values in base SI units: Farads (F), Henries (H), Ohms (Ω). Use 1e-6 for µ and 1e-3 for m.",
+    ],
+  },
+}
+
 export default function ElectricalCalculator() {
   const [tab, setTab] = useState("ohm")
   const TabComponent = TABS.find(t => t.id === tab)?.component ?? OhmsLaw
@@ -513,9 +570,30 @@ export default function ElectricalCalculator() {
 
         {/* Content (scrollable) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+          {/* Mobile: horizontal calculator selector */}
+          <div className="md:hidden overflow-x-auto -mx-1 px-1 pb-1">
+            <div className="flex gap-1.5 min-w-max" role="tablist" aria-label="Calculator selection">
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTabWithAnnounce(t.id)}
+                  className={`shrink-0 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    tab === t.id ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:bg-muted/50"
+                  }`}
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  aria-label={t.label}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-4 min-h-[500px]">
-            {/* Tab sidebar */}
-            <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-48" role="region" aria-label="Calculator selection">
+            {/* Tab sidebar — desktop only */}
+            <div className="hidden md:flex md:shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card w-48" role="region" aria-label="Calculator selection">
               <div className="shrink-0 border-b border-border px-4 py-3">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Calculators</span>
                 <span className="ml-2 text-[10px] text-muted-foreground/60">(1-6)</span>
@@ -554,35 +632,49 @@ export default function ElectricalCalculator() {
             </div>
           </div>
 
-          {/* Usage guide */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
-              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
-                <li>Select a calculator from the sidebar or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd>.</li>
-                <li>Enter any known values. Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd> to move between fields.</li>
-                <li>Results calculate instantly. <span className="text-foreground font-medium">Highlighted rows</span> show the computed output.</li>
-                <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> to blur a focused input and return keyboard focus to the page.</li>
-              </ol>
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
-              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd> Switch between calculators</li>
-                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Blur the focused input</li>
-              </ul>
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
-              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                <li><span className="text-foreground font-medium">Ohm's Law</span> auto-solves for any unknown when 2 of V, I, R, or P are entered.</li>
-                <li>Use scientific notation for small values. For example, 1 µF = 0.000001 F, or enter 1e-6.</li>
-                <li>The <span className="text-foreground font-medium">Resistor Colors</span> tab shows a live resistor diagram that updates with each band selection.</li>
-                <li>All calculations follow IEC and IEEE standards with SI units.</li>
-              </ul>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">Everything runs in your browser. Nothing is sent to a server.</p>
-          </div>
+          {/* Usage guide — tab-specific content + general info */}
+          {(() => {
+            const guide = TAB_GUIDES[tab]
+            const tabLabel = TABS.find(t => t.id === tab)?.label ?? ""
+            return (
+              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                {guide && (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{tabLabel}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{guide.about}</p>
+                      <div className="space-y-1">
+                        {guide.formulas.map((f, i) => (
+                          <div key={i} className="rounded bg-muted/40 border border-border px-2.5 py-1.5 text-xs font-mono text-muted-foreground">{f}</div>
+                        ))}
+                      </div>
+                      <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                        {guide.tips.map((tip, i) => <li key={i}>{tip}</li>)}
+                      </ul>
+                    </div>
+                    <div className="border-t border-border" />
+                  </>
+                )}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                  <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                    <li>Select a calculator from the sidebar or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd>.</li>
+                    <li>Enter any known values. Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd> to move between fields.</li>
+                    <li>Results calculate instantly. <span className="text-foreground font-medium">Highlighted rows</span> show the computed output.</li>
+                    <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> to blur a focused input and return keyboard focus to the page.</li>
+                  </ol>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd> Switch between calculators</li>
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Blur the focused input</li>
+                  </ul>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">Everything runs in your browser. Nothing is sent to a server.</p>
+              </div>
+            )
+          })()}
           <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
 
