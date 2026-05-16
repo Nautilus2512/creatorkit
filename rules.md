@@ -446,6 +446,20 @@ useEffect(() => {
 | Info / neutral | `text-blue-600`, `border-blue-500/30`, `bg-blue-500/10` |
 | Destructive | `text-destructive`, `hover:text-destructive` |
 
+### Calculator / button grid styling
+
+Never use hardcoded neon or themed color classes (blue, amber, red, green) for calculator button variants. Use neutral `bg-muted` shades that adapt to both light and dark themes without overrides.
+
+| Variant | Correct style |
+|---------|--------------|
+| Primary action (= / Enter) | `bg-primary text-primary-foreground border-primary hover:opacity-90` |
+| Destructive (Clear, Delete) | `bg-muted/40 text-destructive border-border hover:bg-destructive/10 hover:border-destructive/40` |
+| Function (sin, cos, ln, √…) | `bg-muted/60 text-foreground border-border hover:bg-muted` |
+| Operator (÷, ×, +, −, ^) | `bg-muted/30 text-foreground border-border hover:bg-muted/60` |
+| Number (0–9, .) | `bg-card text-foreground border-border hover:bg-muted/40` |
+
+Only the primary action button (`=`) uses `bg-primary`. All other button distinctions are achieved with muted opacity levels, never with fixed hue classes like `bg-blue-500`, `bg-amber-400`, or `bg-red-600`.
+
 ---
 
 ## 10. File & Folder Conventions

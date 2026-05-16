@@ -47,7 +47,7 @@
 - Game Controller Tester — Gamepad API, real-time states
 - Document Scanner — Perspective warp, brightness/contrast
 - Electrical Calculator — Ohm's Law, AC reactance, three-phase
-- Scientific Calculator — DEG/RAD trig, graphing, calculus, constants, memory
+- Scientific Calculator — DEG/RAD trig, graphing, calculus, constants, memory, usage guides
 - Math Calculator — REPL-style, variables, matrices
 
 ### Media (7 tools)
@@ -86,6 +86,47 @@
 - YAML ↔ JSON Converter — js-yaml powered
 - JS Formatter — Prettier 2.8.8, 8 languages
 - Markdown → HTML — marked powered
+
+---
+
+## v1.81.0 — May 2026
+### Scientific Calculator — Compliance Pass, Rename, Button Style, Guides, Mobile Polish
+
+#### Rename: Engineering Calculator → Scientific Calculator
+- Tool renamed throughout: component header, `ShortcutsModal pageName`, page metadata title/description, tools listing title/description, CHANGELOG tools list
+
+#### Rules compliance pass (`engineering-calculator.tsx`) — 7 issues
+- `ShortcutsModal` was missing from both desktop action bar and mobile header row 1 — added to both with `CALC_SHORTCUTS` constant (19 entries)
+- `focus:` → `focus-visible:` on DEG/RAD toggle button and all three memory buttons (M+, MR, MC)
+- `btnClass` focus ring was using `focus:ring-2` — corrected to `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1`
+- Right-panel tab buttons (Graph / Calculus / Constants / History) were missing `focus-visible:` ring — added `focus-visible:ring-inset` variant
+- DEG/RAD `kbd` badge was always using `border-border bg-muted` — made conditional: `border-primary-foreground/30 bg-primary-foreground/20` when active, `border-border bg-muted` when inactive
+- Mobile header `pb-1` → `pb-2`
+- `D` key shortcut was shown on the DEG/RAD badge but not wired in the keyboard handler — added handler: `if (key === "D") { setIsDeg(d => !d); return }`
+
+#### Button style refactor (neon → neutral)
+- Replaced all hardcoded color classes (blue, amber, red) with neutral `bg-muted` shades
+- `eq` (equals): `bg-primary text-primary-foreground` — only button that uses primary color
+- `primary` (C, ⌫): `bg-muted/40 text-destructive` with `hover:bg-destructive/10 hover:border-destructive/40`
+- `fn` (sin, cos, ln, etc.): `bg-muted/60 text-foreground`
+- `op` (÷, ×, +, −): `bg-muted/30 text-foreground`
+- `num` (0–9, .): `bg-card text-foreground`
+
+#### Usage guides added (all 4 panels)
+- **Calculator keypad** — "How to use" card covering type & evaluate, ANS, memory (M+/MR/MC), DEG/RAD toggle, and keyboard shortcut reference table
+- **Graph tab** — compact card explaining f(x) syntax, x min/max range, Plot button/Enter key, and example expressions
+- **Calculus tab** — card covering definite integral (Simpson's rule, 1000 steps), derivative at point (central diff), bounds expression syntax, and supported functions
+- **Constants tab** — card explaining click-to-insert, typing symbols directly in expressions, and use in Graph/Calculus panels
+
+#### Mobile polish
+- Button shortcut `kbd` labels: `hidden md:inline` added so they never appear on mobile (saves space on narrow screens)
+- Constants buttons: tap flash feedback — `flashedKey` state highlights the tapped card with primary border + `bg-primary/15` + shadow for 500ms; `active:scale-95` provides instant physical press feel
+- Unused `idx` variable removed from `TABS.map`
+
+#### Files changed
+- `components/tools/engineering-calculator.tsx`
+- `app/tools/engineering-calculator/page.tsx`
+- `app/tools/page.tsx`
 
 ---
 

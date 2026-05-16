@@ -597,24 +597,60 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
-## Session v1.80.0 (May 2026) — Doc Scanner Compliance Pass
+## Session v1.80.0 (May 2026) — Document Scanner: Compliance Pass, Rename, Redesign, Multi-Format
 
 ### Overview
-Full rules.md compliance pass on `doc-scanner.tsx`: 10 issues fixed. Phase-scoped bare-key shortcuts replaced with Ctrl+Shift modifiers, download flash state added, usage guide added in idle phase, corner handles made fully keyboard-accessible with arrow key movement, and Tab→key navigation hints added to all settings controls in the done phase.
+Full rules.md compliance pass on `doc-scanner.tsx` (10 issues), followed by a rename to "Document Scanner", a redesigned idle screen that promotes photo upload as the primary entry point, a JPEG/PNG/WebP output format selector, and a mobile bottom bar fix that was blocking the scan and download buttons behind a scroll.
 
-### Compliance Summary
+### Compliance Pass — 10 Issues
 | # | Issue | Fix |
 |---|-------|-----|
-| 1 | Bare keys C, U, S, R violate "all shortcuts must use Ctrl+Shift+" | `Ctrl+Shift+E` (camera), `Ctrl+Shift+U` (upload), `Ctrl+Enter` (scan), `Ctrl+Shift+Z` (reset) |
+| 1 | Bare keys C, U, S, R — all shortcuts must use Ctrl+Shift+ | `Ctrl+Shift+E` (camera), `Ctrl+Shift+U` (upload), `Ctrl+Enter` (scan), `Ctrl+Shift+Z` (reset) |
 | 2 | `Ctrl+Shift+D` — D is a hard-conflict letter | `Ctrl+Shift+S` (download) |
 | 3 | ShortcutsModal showed `["Ctrl", "D"]`; handler fired on `Ctrl+Shift+D` | All labels corrected to match new shortcuts |
-| 4 | No input guard in keyboard handler | `HTMLInputElement` / `HTMLTextAreaElement` guard added; bare keys were also at risk when sliders focused |
+| 4 | No input guard in keyboard handler | `HTMLInputElement` / `HTMLTextAreaElement` guard added |
 | 5 | `kbd` on outline buttons used `bg-background` | `bg-muted` on Upload Photo, Start over, Scan Another |
 | 6 | `kbd` on default buttons used wrong classes | `border-primary-foreground/30 bg-primary-foreground/20` on Start Camera, Scan Document, Download JPEG |
 | 7 | Corner handles: `tabIndex={0}` + `role="button"` but no focus ring, no keyboard activation | `focus-visible:ring-2 focus-visible:ring-primary` added; `onKeyDown`: Enter/Space toggles drag, arrow keys move handle 1% per press, Escape releases |
 | 8 | Missing usage guide card | Added in idle phase: 5-step How to use, shortcuts list, tips, privacy note |
 | 9 | Missing download flash state | `downloading` boolean + 1500ms timeout; button flashes `outline`, kbd badge is conditional |
 | 10 | Sliders and switch missing Tab→key hints | `Tab → ← →` on Brightness/Contrast labels; `Tab → Space` on Grayscale label (desktop only) |
+
+### Rename + Idle Screen Redesign
+Renamed from "Doc Scanner" → "Document Scanner" throughout: toolbar header, `ShortcutsModal pageName`, page metadata, tools listing title/description/stat, tools page shortcut label.
+
+Idle screen motivation: camera access on a website raises privacy concerns even for a privacy-first product. Redesigned to make photo upload the clear primary action and camera a clearly secondary option.
+
+| Change | Detail |
+|---|---|
+| Three workflow icons | Upload → ScanLine → Download replaces the single camera icon; communicates the full flow at a glance |
+| Two-card action area | Upload Photo: 2/3 width, dashed primary border, `bg-primary/5`. Live Camera: 1/3 width, muted border, muted text. |
+| Toolbar simplified | "Document Scanner" title always visible; idle-phase action buttons removed from toolbar (they're in the workspace) |
+
+### Multi-Format Download
+| Decision | Detail |
+|---|---|
+| Formats: JPEG, PNG, WebP | PNG is lossless — the best choice for documents with text; WebP is smallest but needs a modern browser |
+| Format selector in "done" adjustments panel | `role="radiogroup"` + `role="radio"` + `aria-checked` per standard pattern |
+| PNG skips the quality argument | `canvas.toDataURL("image/png")` — lossless, no quality compression |
+| Download button label updates live | "Download JPEG" / "Download PNG" / "Download WEBP"; filename extension matches |
+| Format persists across scans | `outputFormat` state is not reset in `reset()` — deliberate; user likely wants the same format for multiple consecutive scans |
+
+### Mobile Bottom Bar Fix
+The bottom bar was `shrink-0` in a flex column. On mobile, if the flex layout was not perfectly constrained (e.g. due to `h-screen` browser chrome issues), the bar scrolled off screen. Solution: split into two separate elements.
+
+| Element | Classes | Content |
+|---|---|---|
+| Mobile | `md:hidden fixed bottom-0 left-0 right-0 z-20` | Icon-only buttons to fit narrow screens |
+| Desktop | `hidden md:flex shrink-0` | Full labels + kbd badges (unchanged) |
+
+Mobile done phase: `[RotateCcw icon]` · `[flex-1 Download JPEG/PNG/WEBP]` · `[RefreshCw icon]` — all three fit without overflow on the narrowest Android screens.
+
+### Commits
+| Hash | Message |
+|---|---|
+| c2189fc | feat: Document Scanner — full compliance pass, rename, redesigned idle screen, multi-format download |
+| dc94cc5 | fix: split doc-scanner bottom bar into fixed mobile + in-flow desktop |
 
 ---
 
@@ -1122,9 +1158,9 @@ Full rules.md compliance audit and feature pass on `base64-encoder.tsx` across t
 - **Invoice Generator** — Multi-currency, line items, PDF export
 - **Pomodoro Timer** — 25/5/15 cycles, Web Audio bell
 - **Game Controller Tester** — Gamepad API, real-time states
-- **Doc Scanner** — Perspective warp, brightness/contrast
+- **Document Scanner** — Perspective warp, JPEG/PNG/WebP, brightness/contrast
 - **Electrical Calculator** — Ohm's Law, AC reactance, three-phase
-- **Engineering Calculator** — DEG/RAD trig, constants, memory
+- **Scientific Calculator** — DEG/RAD trig, graphing, calculus, constants, memory, usage guides
 - **Math Calculator** — REPL-style, variables, matrices
 
 ### Media (7 tools)
@@ -1511,5 +1547,58 @@ const H = canvas.clientHeight || 200
 
 ---
 
-*Last updated: 2026-05-14*
+---
+
+## Session v1.81.0 (May 2026) — Scientific Calculator: Compliance Pass, Rename, Guides, Mobile Polish
+
+### Overview
+Full rules.md compliance pass (7 issues) on `engineering-calculator.tsx`, rename to "Scientific Calculator", button style refactor from neon to neutral, usage guides added to all 4 panels, and two mobile UX improvements (hidden shortcut labels, constants tap flash).
+
+### Rules Compliance Fixes (7 issues)
+| Issue | Fix |
+|---|---|
+| `ShortcutsModal` missing from desktop bar and mobile header | Added to both; `CALC_SHORTCUTS` constant defined (19 entries) |
+| `focus:` on DEG/RAD button and memory buttons (M+, MR, MC) | → `focus-visible:` |
+| `btnClass` using `focus:ring-2` | → `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1` |
+| Tab buttons (Graph/Calculus/Constants/History) no focus ring | Added `focus-visible:ring-inset` variant |
+| DEG/RAD `kbd` badge not conditional | Active: `border-primary-foreground/30 bg-primary-foreground/20`; inactive: `border-border bg-muted` |
+| Mobile header `pb-1` | → `pb-2` |
+| `D` key shown as badge but not wired in keyboard handler | Added `if (key === "D") { setIsDeg(d => !d); return }` |
+
+### Button Style Refactor — Neon to Neutral
+The original calculator had hardcoded blue/amber/red neon button colors. These were replaced with neutral `bg-muted` shades that work in both light and dark themes without color-specific overrides.
+
+| Variant | Old style | New style |
+|---|---|---|
+| `eq` (=) | Blue neon | `bg-primary` (only primary-colored button) |
+| `primary` (C, ⌫) | Red solid | `bg-muted/40 text-destructive` + destructive hover |
+| `fn` (sin, cos, etc.) | Amber/yellow | `bg-muted/60 text-foreground` |
+| `op` (÷, ×, +, −) | Colored | `bg-muted/30 text-foreground` |
+| `num` (0–9) | White/light | `bg-card text-foreground` |
+
+Rule documented in rules.md §9: button grids use neutral muted shades; only `eq`/primary-action button uses `bg-primary`.
+
+### Usage Guides (4 panels)
+| Panel | Content |
+|---|---|
+| Calculator keypad | How to use, ANS, memory (M+/MR/MC), DEG/RAD, keyboard shortcut table |
+| Graph tab | f(x) syntax, x min/max, Plot/Enter, example expressions |
+| Calculus tab | Definite integral (Simpson's rule), derivative (central diff), bounds syntax, function support |
+| Constants tab | Click-to-insert, typing symbols directly, use in Graph/Calculus panels |
+
+### Mobile Polish
+- **Shortcut labels hidden on mobile**: `hidden md:inline` added to button `kbd` badges — saves space on narrow screens
+- **Constants tap flash**: `flashedKey` state tracks the last-pressed constant; button shows `bg-primary/15 border-primary shadow-sm shadow-primary/20` for 500ms; `active:scale-95` gives instant press feel — solves the "is my tap registering?" problem on touchscreen
+
+### Commits
+| Hash | Message |
+|---|---|
+| a0f3e2f | fix: scientific-calculator compliance pass + rename from engineering |
+| 650b03c | feat: clean button styles + usage guides for scientific-calculator |
+| d0bf3ce | fix: hide button shortcut labels on mobile + remove unused idx variable |
+| d22e9f6 | feat: add tap flash feedback to constants buttons |
+
+---
+
+*Last updated: 2026-05-16*
 *This file should be updated after each development session for future reference.*
