@@ -950,3 +950,117 @@ Tritanopia — reduced blue sensitivity. Much rarer, under 0.01% of people. Blue
 ```
 
 **Note:** Never use em dashes in guide text (rules §3). The dashes in the bullet items above are intentional em dashes used as typographic separators in mode descriptions — this is the only approved exception, within the CB bullet list only.
+
+---
+
+## 23. Custom Visual Color Picker
+
+Any tool that requires the user to select or edit a color must use the custom `ColorPicker` component instead of a native `<input type="color">`. The native color input has poor accessibility (no keyboard control over saturation/lightness), inconsistent cross-browser UI, and cannot be styled to match the design system.
+
+### When to use it
+
+Use the custom `ColorPicker` any time a tool needs a color input — stop colors, palette swatches, design tokens, theme colors, etc. Do not use `<input type="color">` anywhere in the codebase.
+
+### Component structure
+
+The picker consists of three parts rendered in a popover:
+1. **2D SL area** — a `canvas`-like `div` with a stacked gradient (white-to-hue horizontal, transparent-to-black vertical). Clicking or dragging sets saturation (X) and lightness-from-black (Y).
+2. **Hue slider** — a full-spectrum `<input type="range">` (0–360) with a rainbow `background` gradient. Sets the hue independently.
+3. **Hex input** — a plain text `<input>` accepting 6-digit hex values. Updates the picker state when valid.
+
+### Props
+
+```tsx
+interface ColorPickerProps {
+  value: string           // current hex color, e.g. "#3b82f6"
+  onChange: (hex: string) => void
+  label?: string          // optional — shown as trigger button label
+  shortcut?: string       // optional — keyboard shortcut badge on trigger
+  id?: string             // optional — used for aria-labelledby on the popover
+}
+```
+
+### Pointer Events pattern
+
+Use the Pointer Events API (`onPointerDown`, `onPointerMove`, `onPointerUp`) with `e.currentTarget.setPointerCapture(e.pointerId)` for the SL area. This handles both mouse and touch without separate event listeners and avoids `mousedown`/`touchstart` duplication.
+
+```tsx
+const handleSLPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+  if (e.type === "pointerdown") e.currentTarget.setPointerCapture(e.pointerId)
+  if (e.type === "pointerup" || (e.buttons === 0 && e.type === "pointermove")) return
+  const rect = e.currentTarget.getBoundingClientRect()
+  const s = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+  const l = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+  onChange(hslToHex(hue, s, 1 - l))
+}
+```
+
+### Required utility functions
+
+These three functions must be present in any file that uses `ColorPicker`:
+
+```tsx
+function hexToHSL(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+  let h = 0
+  if (d) {
+    if (max === r) h = ((g - b) / d + 6) % 6
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+    h = h / 6
+  }
+  const l = (max + min) / 2
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0
+  return [Math.round(h * 360), s, l]
+}
+
+function hslToHex(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+    return Math.round(Math.max(0, Math.min(1, c)) * 255).toString(16).padStart(2, "0")
+  }
+  return `#${f(0)}${f(8)}${f(4)}`
+}
+
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12
+    return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+  }
+  return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)]
+}
+```
+
+### Trigger button
+
+The trigger opens/closes the popover. When `label` is provided, display it as text; otherwise show only a color swatch. The swatch is a small rounded square using the current hex as `backgroundColor`.
+
+```tsx
+<button
+  aria-label={label ? undefined : "Pick color"}
+  className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-sm hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+  onClick={() => setOpen(o => !o)}
+>
+  <span className="h-5 w-5 rounded border border-border/50 shrink-0" style={{ backgroundColor: value }} />
+  {label && <span>{label}</span>}
+  {shortcut && <kbd className="hidden md:inline ml-1 rounded border border-border bg-muted px-1 text-[10px] opacity-50">{shortcut}</kbd>}
+</button>
+```
+
+### Accessibility rules
+
+- The hue `<input type="range">` must have `aria-label="Hue"`.
+- The hex `<input>` must have `aria-label="Hex color"`.
+- The SL area `<div>` must have `role="presentation"` (it is not keyboard-navigable; the hex input is the keyboard path).
+- The popover container must have `role="dialog"` and `aria-label="Color picker"`.
+- Do not trap focus inside the popover — allow Tab to naturally exit it.
+
+### Reference implementation
+
+The canonical implementation lives in `components/tools/design-token-generator.tsx`. Copy it verbatim when adding to a new tool; adapt only the `label`/`shortcut`/`id` props to be optional if the use case does not require them (e.g. gradient stop rows where no label is shown).
