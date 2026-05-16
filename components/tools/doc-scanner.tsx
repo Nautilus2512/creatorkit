@@ -1,7 +1,7 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Camera, Upload, RotateCcw, Download, RefreshCw } from "lucide-react"
+import { Camera, Upload, RotateCcw, Download, RefreshCw, ScanLine } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -84,6 +84,7 @@ function warpPerspective(
 
 type Pt = [number, number]     // percentage coords [0..1, 0..1]
 type Phase = "idle" | "select" | "done"
+type OutputFormat = "jpeg" | "png" | "webp"
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -98,6 +99,8 @@ export default function DocScanner() {
   const [brightness, setBrightness] = useState(100)
   const [contrast, setContrast]     = useState(100)
   const [grayscale, setGrayscale]   = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("jpeg")
 
   const videoRef     = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -120,7 +123,7 @@ export default function DocScanner() {
       await vid.play()
       setAspect(vid.videoWidth / vid.videoHeight || 4/3)
       setMode("camera"); setPhase("select")
-      announceToScreenReader('Camera started. Drag the 4 corner handles to align with document edges, then press S to scan.')
+      announceToScreenReader('Camera started. Drag the 4 corner handles to align with document edges, then press Ctrl+Enter to scan.')
     } catch {
       announceToScreenReader('Camera access denied or unavailable. Try uploading a photo instead.')
       alert("Camera access denied or unavailable. Try uploading a photo instead.")
@@ -147,7 +150,7 @@ export default function DocScanner() {
       imgRef.current = img
       setAspect(img.naturalWidth / img.naturalHeight || 4/3)
       setMode("upload"); setPhase("select")
-      announceToScreenReader('Photo uploaded. Drag the 4 corner handles to align with document edges, then press S to scan.')
+      announceToScreenReader('Photo uploaded. Drag the 4 corner handles to align with document edges, then press Ctrl+Enter to scan.')
     }
     img.src = url
     e.target.value = ""
@@ -215,7 +218,7 @@ export default function DocScanner() {
         out.width = outW; out.height = outH
         out.getContext("2d")!.putImageData(warped, 0, 0)
         setResultUrl(out.toDataURL("image/jpeg", 0.94))
-        announceToScreenReader('Document scanned successfully. Adjust brightness and contrast if needed, then press Ctrl+D to download.')
+        announceToScreenReader('Document scanned successfully. Adjust brightness and contrast if needed, then press Ctrl+Shift+S to download.')
       } catch (err) {
         announceToScreenReader('Scanning failed: ' + String(err))
         alert("Processing failed: " + String(err))
@@ -234,11 +237,12 @@ export default function DocScanner() {
     setCorners([[.12,.1],[.88,.1],[.88,.9],[.12,.9]])
     setBrightness(100); setContrast(100); setGrayscale(false)
     setProcessing(false)
-    announceToScreenReader('Reset complete. Press C to start camera or U to upload a photo.')
+    announceToScreenReader('Reset complete. Press Ctrl+Shift+E to start camera or Ctrl+Shift+U to upload a photo.')
   }, [stopCamera])
 
   const downloadResult = useCallback(() => {
     if (!resultUrl) return
+    setDownloading(true)
     announceToScreenReader('Downloading scanned document...')
     const img = new Image()
     img.onload = () => {
@@ -247,24 +251,32 @@ export default function DocScanner() {
       const ctx = c.getContext("2d")!
       ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) ${grayscale?"grayscale(1)":""}`
       ctx.drawImage(img, 0, 0)
+      const mimeType = outputFormat === "jpeg" ? "image/jpeg" : outputFormat === "webp" ? "image/webp" : "image/png"
+      const ext = outputFormat === "jpeg" ? "jpg" : outputFormat
+      const dataUrl = outputFormat === "png" ? c.toDataURL("image/png") : c.toDataURL(mimeType, 0.92)
       const a = document.createElement("a")
-      a.href = c.toDataURL("image/jpeg", 0.92)
-      a.download = "scanned-doc.jpg"; a.click()
-      announceToScreenReader('Document downloaded as scanned-doc.jpg')
+      a.href = dataUrl
+      a.download = `scanned-doc.${ext}`; a.click()
+      announceToScreenReader(`Document downloaded as scanned-doc.${ext}`)
     }
     img.src = resultUrl
-  }, [resultUrl, brightness, contrast, grayscale])
+    setTimeout(() => setDownloading(false), 1500)
+  }, [resultUrl, brightness, contrast, grayscale, outputFormat])
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
+
       // Idle phase shortcuts
       if (phase === "idle") {
-        if (e.key === "c" || e.key === "C") {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "E" || e.key === "e")) {
           e.preventDefault()
           startCamera()
         }
-        if (e.key === "u" || e.key === "U") {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "U" || e.key === "u")) {
           e.preventDefault()
           fileRef.current?.click()
         }
@@ -272,11 +284,11 @@ export default function DocScanner() {
 
       // Select phase shortcuts
       if (phase === "select") {
-        if (e.key === "s" || e.key === "S") {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
           e.preventDefault()
           if (!processing) scan()
         }
-        if (e.key === "r" || e.key === "R") {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "Z" || e.key === "z")) {
           e.preventDefault()
           reset()
         }
@@ -284,11 +296,11 @@ export default function DocScanner() {
 
       // Done phase shortcuts
       if (phase === "done") {
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "D" || e.key === "d")) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "S" || e.key === "s")) {
           e.preventDefault()
           downloadResult()
         }
-        if (e.key === "r" || e.key === "R") {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "Z" || e.key === "z")) {
           e.preventDefault()
           reset()
         }
@@ -303,25 +315,8 @@ export default function DocScanner() {
   return (
     <div className="flex flex-1 flex-col min-h-0">
       {/* Compact top toolbar */}
-      <div className="shrink-0 flex items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Doc Scanner controls">
-        {phase === "idle" && (
-          <>
-            <Button size="sm" onClick={startCamera} aria-label="Start camera (C)">
-              <Camera className="h-4 w-4 mr-1" aria-hidden="true" />Start Camera<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} aria-label="Upload photo (U)">
-              <Upload className="h-4 w-4 mr-1" aria-hidden="true" />Upload Photo<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUpload}
-              aria-label="Upload image file"
-            />
-          </>
-        )}
+      <div className="shrink-0 flex items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-3 py-2 overflow-x-auto" role="toolbar" aria-label="Document Scanner controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Document Scanner</span>
         {phase === "select" && (
           <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
             Drag corner handles 1–4 to align with the document edges
@@ -334,13 +329,13 @@ export default function DocScanner() {
         )}
         <div className="ml-auto shrink-0">
           <ShortcutsModal
-            pageName="Doc Scanner"
+            pageName="Document Scanner"
             shortcuts={[
-              { keys: ["C"], description: "Start camera" },
-              { keys: ["U"], description: "Upload photo" },
-              { keys: ["S"], description: "Scan document" },
-              { keys: ["R"], description: "Reset / Cancel / Scan another" },
-              { keys: ["Ctrl", "D"], description: "Download scanned document" },
+              { keys: ["Ctrl", "Shift", "E"], description: "Start camera" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload photo" },
+              { keys: ["Ctrl", "Enter"], description: "Scan document" },
+              { keys: ["Ctrl", "Shift", "Z"], description: "Reset / Cancel / Scan another" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download scanned document" },
               { keys: ["?"], description: "Toggle this shortcuts panel" },
               { keys: ["Tab"], description: "Navigate between controls" },
             ]}
@@ -352,41 +347,111 @@ export default function DocScanner() {
       <div className="flex-1 min-h-0 overflow-hidden">
         {/* ── Idle ── */}
         {phase === "idle" && (
-          <div className="flex flex-col items-center justify-center h-full gap-6 p-8" role="region" aria-label="Start scanning">
-            <div className="rounded-full bg-muted/50 border border-border p-8" aria-hidden="true">
-              <Camera className="h-14 w-14 text-muted-foreground" aria-hidden="true" />
+          <div className="flex flex-col h-full overflow-y-auto">
+            <div className="flex flex-col items-center justify-center flex-1 gap-6 px-4 py-8" role="region" aria-label="Start scanning">
+
+              {/* Workflow icons */}
+              <div className="flex items-center gap-2" aria-hidden="true">
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3">
+                  <Upload className="h-7 w-7 text-primary" />
+                </div>
+                <span className="text-muted-foreground/40 text-xl font-light">›</span>
+                <div className="rounded-xl bg-muted/50 border border-border p-3">
+                  <ScanLine className="h-7 w-7 text-muted-foreground" />
+                </div>
+                <span className="text-muted-foreground/40 text-xl font-light">›</span>
+                <div className="rounded-xl bg-muted/50 border border-border p-3">
+                  <Download className="h-7 w-7 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="text-center space-y-2 max-w-sm">
+                <h2 className="text-lg font-semibold">Flatten document photos</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload any photo of a document. Drag the 4 corner handles to match its edges, then scan for a clean, perspective-corrected image.
+                </p>
+              </div>
+
+              {/* Two-card action area */}
+              <div className="flex gap-3 w-full max-w-sm">
+                {/* Primary: Upload */}
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="flex-[2] rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all p-5 flex flex-col items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                  aria-label="Upload a document photo (Ctrl+Shift+U)"
+                >
+                  <div className="rounded-full bg-primary/15 p-2.5">
+                    <Upload className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Upload Photo</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">JPEG, PNG, WebP</p>
+                  </div>
+                  <kbd className="hidden md:block rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground" aria-hidden="true">Ctrl+Shift+U</kbd>
+                </button>
+
+                {/* Secondary: Camera */}
+                <button
+                  onClick={startCamera}
+                  className="flex-1 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-all p-5 flex flex-col items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                  aria-label="Start camera (Ctrl+Shift+E)"
+                >
+                  <div className="rounded-full bg-muted p-2.5">
+                    <Camera className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground">Live Camera</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Scan directly</p>
+                  </div>
+                  <kbd className="hidden md:block rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground" aria-hidden="true">Ctrl+Shift+E</kbd>
+                </button>
+              </div>
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUpload}
+                aria-label="Upload image file"
+              />
             </div>
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold">Scan a document</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Point your camera at a document, drag the 4 corner handles to align with its edges, then hit Scan. Works with uploaded photos too.
-              </p>
+
+            {/* Usage guide */}
+            <div className="shrink-0 px-4 pb-4 max-w-2xl mx-auto w-full space-y-4">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                  <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                    <li>Click <span className="text-foreground font-medium">Upload Photo</span> to load any photo of a document from your device.</li>
+                    <li>Drag the 4 numbered <span className="text-foreground font-medium">corner handles</span> to align with the document edges. Use arrow keys when a handle is focused.</li>
+                    <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> or click <span className="text-foreground font-medium">Scan Document</span> to flatten the perspective.</li>
+                    <li>Adjust <span className="text-foreground font-medium">Brightness</span>, <span className="text-foreground font-medium">Contrast</span>, and <span className="text-foreground font-medium">Grayscale</span> in the settings panel.</li>
+                    <li>Click <span className="text-foreground font-medium">Download JPEG</span> to save the scanned document.</li>
+                  </ol>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd> Upload photo</li>
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd> Scan document</li>
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+Z</kbd> Reset or cancel</li>
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+S</kbd> Download scanned document</li>
+                    <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+E</kbd> Start live camera</li>
+                  </ul>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                    <li>Enable <span className="text-foreground font-medium">Grayscale</span> and increase <span className="text-foreground font-medium">Contrast</span> for a clean black-and-white document scan.</li>
+                    <li>Photos work best when the document fills most of the frame and is well lit.</li>
+                    <li>Live camera captures a still frame without saving anything to your device.</li>
+                  </ul>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">Everything runs in your browser. Nothing is sent to a server.</p>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                size="lg"
-                onClick={startCamera}
-                aria-label="Start camera (C)"
-              >
-                <Camera className="h-4 w-4 mr-2" aria-hidden="true" />Start Camera<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">C</kbd>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-                aria-label="Upload photo (U)"
-              >
-                <Upload className="h-4 w-4 mr-2" aria-hidden="true" />Upload Photo<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">U</kbd>
-              </Button>
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleUpload}
-              aria-label="Upload image file"
-            />
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
         )}
 
@@ -444,10 +509,19 @@ export default function DocScanner() {
                   {corners.map(([x,y], i) => (
                     <g key={i}
                       style={{ cursor: dragging===i ? "grabbing" : "grab" }}
+                      className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
                       onPointerDown={e => { e.stopPropagation(); (e.target as Element).setPointerCapture(e.pointerId); setDragging(i) }}
                       onPointerUp={() => setDragging(null)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDragging(dragging === i ? null : i) }
+                        else if (e.key === "ArrowLeft")  { e.preventDefault(); setCorners(cs => cs.map((c, j) => j === i ? [Math.max(0.02, c[0] - 0.01), c[1]] : c) as Pt[]) }
+                        else if (e.key === "ArrowRight") { e.preventDefault(); setCorners(cs => cs.map((c, j) => j === i ? [Math.min(0.98, c[0] + 0.01), c[1]] : c) as Pt[]) }
+                        else if (e.key === "ArrowUp")    { e.preventDefault(); setCorners(cs => cs.map((c, j) => j === i ? [c[0], Math.max(0.02, c[1] - 0.01)] : c) as Pt[]) }
+                        else if (e.key === "ArrowDown")  { e.preventDefault(); setCorners(cs => cs.map((c, j) => j === i ? [c[0], Math.min(0.98, c[1] + 0.01)] : c) as Pt[]) }
+                        else if (e.key === "Escape") setDragging(null)
+                      }}
                       role="button"
-                      aria-label={`Corner handle ${i + 1} of 4. Drag to align with document edge.`}
+                      aria-label={`Corner handle ${i + 1} of 4. Drag or use arrow keys to align with document edge.`}
                       aria-pressed={dragging === i}
                       tabIndex={0}
                     >
@@ -478,11 +552,45 @@ export default function DocScanner() {
             </div>
             {/* Controls */}
             <div className="border-t md:border-t-0 md:border-l border-border p-4 space-y-5 overflow-y-auto md:w-60 md:shrink-0" role="region" aria-label="Image adjustments">
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Output Format</Label>
+                <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Output format">
+                  {(["jpeg", "png", "webp"] as OutputFormat[]).map(fmt => (
+                    <button
+                      key={fmt}
+                      onClick={() => setOutputFormat(fmt)}
+                      role="radio"
+                      aria-checked={outputFormat === fmt}
+                      aria-label={fmt.toUpperCase()}
+                      className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                        outputFormat === fmt
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                      }`}
+                    >
+                      {fmt.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+                {outputFormat === "png" && (
+                  <p className="text-[10px] text-muted-foreground">Lossless. Best for text documents.</p>
+                )}
+                {outputFormat === "webp" && (
+                  <p className="text-[10px] text-muted-foreground">Smallest file size. Requires a modern browser.</p>
+                )}
+              </div>
+
               <div className="space-y-4">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Adjustments</Label>
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <Label className="text-xs text-muted-foreground" htmlFor="brightness-slider">Brightness</Label>
+                    <Label className="text-xs text-muted-foreground" htmlFor="brightness-slider">
+                      Brightness
+                      <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+                      </span>
+                    </Label>
                     <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{brightness}%</span>
                   </div>
                   <Slider
@@ -497,7 +605,13 @@ export default function DocScanner() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex justify-between">
-                    <Label className="text-xs text-muted-foreground" htmlFor="contrast-slider">Contrast</Label>
+                    <Label className="text-xs text-muted-foreground" htmlFor="contrast-slider">
+                      Contrast
+                      <span className="ml-1 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+                      </span>
+                    </Label>
                     <span className="text-xs font-mono text-muted-foreground" aria-live="polite">{contrast}%</span>
                   </div>
                   <Slider
@@ -511,7 +625,13 @@ export default function DocScanner() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground" htmlFor="grayscale-switch">Grayscale</Label>
+                  <Label className="text-xs text-muted-foreground" htmlFor="grayscale-switch">
+                    Grayscale
+                    <span className="ml-1.5 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                      <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Space</kbd>
+                    </span>
+                  </Label>
                   <Switch
                     id="grayscale-switch"
                     checked={grayscale}
@@ -542,9 +662,9 @@ export default function DocScanner() {
             size="sm"
             className="h-11 md:h-9"
             onClick={reset}
-            aria-label="Start over (R)"
+            aria-label="Start over (Ctrl+Shift+Z)"
           >
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Start over<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">R</kbd>
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Start over<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
           </Button>
         )}
         <div className="flex-1" />
@@ -553,18 +673,19 @@ export default function DocScanner() {
             className="h-11 md:h-9"
             onClick={scan}
             disabled={processing}
-            aria-label="Scan document (S)"
+            aria-label="Scan document (Ctrl+Enter)"
           >
-            {processing ? "Processing…" : <><span>Scan Document</span><kbd className="ml-2 hidden md:inline rounded border border-border bg-primary-foreground text-primary px-1 text-[10px]" aria-hidden="true">S</kbd></>}
+            {processing ? "Processing…" : <><span>Scan Document</span><kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>}
           </Button>
         )}
         {phase === "done" && (
           <Button
+            variant={downloading ? "outline" : "default"}
             className="h-11 md:h-9"
             onClick={downloadResult}
-            aria-label="Download JPEG (Ctrl+D)"
+            aria-label={`Download ${outputFormat.toUpperCase()} (Ctrl+Shift+S)`}
           >
-            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download JPEG<kbd className="ml-2 hidden md:inline rounded border border-border bg-primary-foreground text-primary px-1 text-[10px]" aria-hidden="true">Ctrl+D</kbd>
+            <Download className="h-4 w-4 mr-1.5" aria-hidden="true" />Download {outputFormat.toUpperCase()}<kbd className={`ml-2 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         )}
         {phase === "done" && (
@@ -573,9 +694,9 @@ export default function DocScanner() {
             size="sm"
             className="h-11 md:h-9"
             onClick={reset}
-            aria-label="Scan another (R)"
+            aria-label="Scan another (Ctrl+Shift+Z)"
           >
-            <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />Scan Another<kbd className="ml-2 hidden md:inline rounded border border-border bg-background px-1 text-[10px] text-foreground" aria-hidden="true">R</kbd>
+            <RefreshCw className="h-4 w-4 mr-1.5" aria-hidden="true" />Scan Another<kbd className="ml-2 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+Z</kbd>
           </Button>
         )}
       </div>

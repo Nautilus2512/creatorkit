@@ -597,6 +597,27 @@ Comprehensive rebuild of `background-remover.tsx` across 10 commits: three remov
 
 ---
 
+## Session v1.80.0 (May 2026) — Doc Scanner Compliance Pass
+
+### Overview
+Full rules.md compliance pass on `doc-scanner.tsx`: 10 issues fixed. Phase-scoped bare-key shortcuts replaced with Ctrl+Shift modifiers, download flash state added, usage guide added in idle phase, corner handles made fully keyboard-accessible with arrow key movement, and Tab→key navigation hints added to all settings controls in the done phase.
+
+### Compliance Summary
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | Bare keys C, U, S, R violate "all shortcuts must use Ctrl+Shift+" | `Ctrl+Shift+E` (camera), `Ctrl+Shift+U` (upload), `Ctrl+Enter` (scan), `Ctrl+Shift+Z` (reset) |
+| 2 | `Ctrl+Shift+D` — D is a hard-conflict letter | `Ctrl+Shift+S` (download) |
+| 3 | ShortcutsModal showed `["Ctrl", "D"]`; handler fired on `Ctrl+Shift+D` | All labels corrected to match new shortcuts |
+| 4 | No input guard in keyboard handler | `HTMLInputElement` / `HTMLTextAreaElement` guard added; bare keys were also at risk when sliders focused |
+| 5 | `kbd` on outline buttons used `bg-background` | `bg-muted` on Upload Photo, Start over, Scan Another |
+| 6 | `kbd` on default buttons used wrong classes | `border-primary-foreground/30 bg-primary-foreground/20` on Start Camera, Scan Document, Download JPEG |
+| 7 | Corner handles: `tabIndex={0}` + `role="button"` but no focus ring, no keyboard activation | `focus-visible:ring-2 focus-visible:ring-primary` added; `onKeyDown`: Enter/Space toggles drag, arrow keys move handle 1% per press, Escape releases |
+| 8 | Missing usage guide card | Added in idle phase: 5-step How to use, shortcuts list, tips, privacy note |
+| 9 | Missing download flash state | `downloading` boolean + 1500ms timeout; button flashes `outline`, kbd badge is conditional |
+| 10 | Sliders and switch missing Tab→key hints | `Tab → ← →` on Brightness/Contrast labels; `Tab → Space` on Grayscale label (desktop only) |
+
+---
+
 ## Session v1.79.0 (May 2026) — Six-Tool Compliance Pass + Three Bug Fixes
 
 ### Overview

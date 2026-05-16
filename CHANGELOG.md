@@ -45,7 +45,7 @@
 - Invoice Generator — Multi-currency, line items, PDF export
 - Pomodoro Timer — 25/5/15 cycles, Web Audio bell
 - Game Controller Tester — Gamepad API, real-time states
-- Doc Scanner — Perspective warp, brightness/contrast
+- Document Scanner — Perspective warp, brightness/contrast
 - Electrical Calculator — Ohm's Law, AC reactance, three-phase
 - Engineering Calculator — DEG/RAD trig, constants, memory
 - Math Calculator — REPL-style, variables, matrices
@@ -86,6 +86,29 @@
 - YAML ↔ JSON Converter — js-yaml powered
 - JS Formatter — Prettier 2.8.8, 8 languages
 - Markdown → HTML — marked powered
+
+---
+
+## v1.80.0 — May 2026
+### Rules Compliance Pass — Doc Scanner
+
+#### Doc Scanner (`doc-scanner.tsx`) — 10 issues
+- Bare-key shortcuts C, U, S, R replaced with Ctrl+Shift modifiers: `Ctrl+Shift+E` (start camera), `Ctrl+Shift+U` (upload photo), `Ctrl+Enter` (scan document), `Ctrl+Shift+Z` (reset / cancel / scan another)
+- `Ctrl+Shift+D` (D hard-conflict) → `Ctrl+Shift+S` (download)
+- ShortcutsModal labels corrected: was showing `["Ctrl", "D"]` for a handler that fired on `Ctrl+Shift+D`; all entries updated to match new shortcuts
+- Input guard added to keyboard handler: skips shortcuts when focus is on an input/textarea unless Ctrl/Meta is held
+- `kbd` badges on outline buttons: `bg-background text-foreground` → `bg-muted` (Upload Photo, Start over, Scan Another)
+- `kbd` badges on default buttons: wrong `bg-primary-foreground text-primary border-border` → correct `border-primary-foreground/30 bg-primary-foreground/20` (Start Camera, Scan Document, Download JPEG)
+- Corner handle `<g>` elements: `focus-visible:ring-2 focus-visible:ring-primary` classes added; `onKeyDown` handler added — Enter/Space toggles drag state, arrow keys move handle by 1% per press, Escape releases drag
+- Corner handle `aria-label` updated to include "use arrow keys" instruction
+- Usage guide card added in idle phase (How to use 5 steps, Keyboard shortcuts, Tips, privacy note); idle container restructured to `flex flex-col h-full overflow-y-auto` with `flex-1` centered section and `shrink-0` guide below
+- Download flash state added: `downloading` boolean + `setTimeout(1500ms)`; Download JPEG button rests `variant="default"`, flashes `variant="outline"`; kbd badge conditional between states
+- Brightness, Contrast sliders: `Tab → ← →` hint badges added to labels (desktop only, `hidden md:inline-flex`)
+- Grayscale switch: `Tab → Space` hint badges added to label (desktop only)
+- `announceToScreenReader` messages updated throughout to reference new shortcuts
+
+#### Files changed
+- `components/tools/doc-scanner.tsx`
 
 ---
 

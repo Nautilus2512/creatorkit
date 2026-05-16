@@ -539,10 +539,10 @@ const toolCards = [
   },
   {
     icon: ScanLine,
-    title: "Doc Scanner",
-    description: "Scan documents with your camera. Drag 4 corner handles to align, then hit Scan for perspective-corrected output in seconds.",
+    title: "Document Scanner",
+    description: "Upload any document photo and drag 4 corner handles to align with the edges. Scan for a clean, perspective-corrected image in seconds.",
     href: "/tools/doc-scanner",
-    stat: "Camera + upload · Perspective warp · B&W mode",
+    stat: "Upload + camera · Perspective warp · B&W mode",
     category: "Productivity",
   },
   {
@@ -908,7 +908,7 @@ export default function ToolsPage() {
           { keys: ["\\"], description: "Open Math Calculator" },
           { keys: ["`"], description: "Open Engineering Calculator" },
           { keys: ["/"], description: "Open OG Image Generator" },
-          { keys: ["~"], description: "Open Doc Scanner" },
+          { keys: ["~"], description: "Open Document Scanner" },
           { keys: ["!"], description: "Open Invoice Generator" },
           { keys: ["@"], description: "Open Pomodoro Timer" },
           { keys: ["#"], description: "Open Game Controller Tester" },
