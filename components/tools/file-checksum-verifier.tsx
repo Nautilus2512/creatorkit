@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
 
-// Pure-JS MD5 (RFC 1321) â€” runs entirely in browser, no server
+// Pure-JS MD5 (RFC 1321) — runs entirely in browser, no server
 function md5(buf: ArrayBuffer): string {
   const data = new Uint8Array(buf)
   const len = data.length
@@ -107,7 +107,18 @@ function formatBytes(n: number) {
   return `${(n / 1073741824).toFixed(2)} GB`
 }
 
-export function FileChecksumVerifier() {
+function announceToScreenReader(message: string) {
+  const el = document.createElement("div")
+  el.setAttribute("role", "status")
+  el.setAttribute("aria-live", "polite")
+  el.setAttribute("aria-atomic", "true")
+  el.className = "sr-only"
+  el.textContent = message
+  document.body.appendChild(el)
+  setTimeout(() => document.body.removeChild(el), 1000)
+}
+
+export default function FileChecksumVerifier() {
   const [file, setFile] = useState<File | null>(null)
   const [selectedAlgos, setSelectedAlgos] = useState<Set<Algo>>(new Set<Algo>(["SHA-256"]))
   const [expectedHash, setExpectedHash] = useState("")
@@ -142,6 +153,7 @@ export function FileChecksumVerifier() {
     if (!file) return
     setComputing(true)
     setError(null)
+    announceToScreenReader("Computing checksums…")
     try {
       const buffer = await file.arrayBuffer()
       const hashes: { algo: Algo; hash: string }[] = []
@@ -153,6 +165,7 @@ export function FileChecksumVerifier() {
         })
       }
       setResults(hashes)
+      announceToScreenReader(`Done. ${hashes.length} hash${hashes.length !== 1 ? "es" : ""} computed.`)
     } catch {
       setError("Failed to read file. Try a smaller file or refresh the page.")
     } finally {
@@ -162,11 +175,14 @@ export function FileChecksumVerifier() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault()
         compute()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "O") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "U" || e.key === "u")) {
         e.preventDefault()
         inputRef.current?.click()
       }
@@ -178,6 +194,7 @@ export function FileChecksumVerifier() {
   const copy = (algo: string, hash: string) => {
     navigator.clipboard.writeText(hash)
     setCopiedAlgo(algo)
+    announceToScreenReader(`${algo} hash copied to clipboard.`)
     setTimeout(() => setCopiedAlgo(null), 2000)
   }
 
@@ -186,7 +203,6 @@ export function FileChecksumVerifier() {
   const matchAlgo = results.find(r => r.hash === normalized)?.algo ?? null
 
   return (
-    <>
     <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop: top action bar */}
@@ -195,13 +211,14 @@ export function FileChecksumVerifier() {
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal pageName="File Checksum Verifier" shortcuts={[
             { keys: ["Ctrl", "Enter"], description: "Compute hash" },
-            { keys: ["Ctrl", "O"], description: "Open file picker" },
+            { keys: ["Ctrl", "Shift", "U"], description: "Open file picker" },
+            { keys: ["?"], description: "Toggle this panel" },
           ]} />
-          <Button size="sm" onClick={compute} disabled={!file || computing}>
+          <Button size="sm" onClick={compute} disabled={!file || computing} aria-label="Compute hash">
             {computing ? (
-              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Computingâ€¦</>
+              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Computing…</>
             ) : (
-              <><Hash className="h-4 w-4 mr-1" aria-hidden="true" />Compute Hash</>
+              <><Hash className="h-4 w-4 mr-1" aria-hidden="true" />Compute Hash<kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Enter</kbd></>
             )}
           </Button>
         </div>
@@ -209,24 +226,28 @@ export function FileChecksumVerifier() {
 
       {/* Mobile: compact header + tab switcher */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">File Checksum Verifier</h2>
-          <ShortcutsModal pageName="File Checksum Verifier" shortcuts={[{ keys: ["Ctrl", "Enter"], description: "Compute hash" }]} />
+          <ShortcutsModal pageName="File Checksum Verifier" shortcuts={[
+            { keys: ["Ctrl", "Enter"], description: "Compute hash" },
+            { keys: ["Ctrl", "Shift", "U"], description: "Open file picker" },
+            { keys: ["?"], description: "Toggle this panel" },
+          ]} />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Upload
           </button>
           <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Results
           </button>
         </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-      {/* Left panel â€” options */}
+      {/* Left panel: options */}
       <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`}>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
@@ -278,7 +299,7 @@ export function FileChecksumVerifier() {
                   </div>
                   <p className="text-sm font-medium">Drop any file here</p>
                   <p className="text-xs text-muted-foreground">
-                    or click to browse Â· <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+O</kbd>
+                    or click to browse <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
                   </p>
                 </div>
               )}
@@ -314,7 +335,7 @@ export function FileChecksumVerifier() {
             </Label>
             <Input
               aria-describedby="expected-desc"
-              placeholder="Paste checksum from download pageâ€¦"
+              placeholder="Paste checksum from download page…"
               value={expectedHash}
               onChange={(e) => setExpectedHash(e.target.value)}
               className="font-mono text-xs"
@@ -323,16 +344,41 @@ export function FileChecksumVerifier() {
               Paste the hash from the software publisher to verify the file has not been tampered with
             </p>
           </div>
+
+          {/* Usage guide */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Drop any file onto the upload area, or click it to browse. Works with files of any size.</li>
+              <li>Select the hash algorithms you want to compute. <span className="text-foreground font-medium">SHA-256</span> is the modern standard for file verification.</li>
+              <li>Optionally paste the expected checksum from the software publisher into the <span className="text-foreground font-medium">Expected Hash</span> field.</li>
+              <li>Click <span className="text-foreground font-medium">Compute Hash</span> or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Enter</kbd>. Results appear on the right.</li>
+            </ol>
+            <div className="border-t border-border pt-3 space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Algorithm reference</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li><span className="text-foreground font-medium">MD5</span> — fast, widely used, but cryptographically broken. Only use for basic integrity checks.</li>
+                <li><span className="text-foreground font-medium">SHA-1</span> — stronger than MD5, but also deprecated for security use. Still common in older software.</li>
+                <li><span className="text-foreground font-medium">SHA-256</span> — current standard. Use this when the publisher provides a SHA-256 checksum.</li>
+                <li><span className="text-foreground font-medium">SHA-512</span> — stronger variant of SHA-256. Preferred for high-security verification.</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground">Everything runs in your browser. Your file is never uploaded to a server.</p>
+          </div>
+
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
 
         {error && (
-          <div className="shrink-0 px-4 pb-3 flex items-center gap-1.5 text-xs text-red-500">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{error}
+          <div className="shrink-0 px-4 pb-3" role="alert" aria-live="assertive">
+            <div className="flex items-center gap-1.5 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{error}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Right panel â€” results */}
+      {/* Right panel: results */}
       <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`}>
         <div className="flex-1 overflow-y-auto p-4">
           {results.length === 0 ? (
@@ -364,7 +410,7 @@ export function FileChecksumVerifier() {
                   ) : (
                     <>
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span><span className="font-semibold">No match</span> â€” hash does not match any algorithm</span>
+                      <span><span className=”font-semibold”>No match.</span> Hash does not match any algorithm.</span>
                     </>
                   )}
                 </div>
@@ -418,16 +464,15 @@ export function FileChecksumVerifier() {
 
       {/* Mobile: bottom action bar */}
       <div
-        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex-1" />
         <Button size="sm" className="h-11 px-4" onClick={() => { compute(); setActiveTab("output") }} disabled={!file || computing}>
-          {computing ? "Computingâ€¦" : <><Hash className="h-4 w-4 mr-1.5" aria-hidden="true" />Compute Hash</>}
+          {computing ? "Computing…" : <><Hash className="h-4 w-4 mr-1.5" aria-hidden="true" />Compute Hash</>}
         </Button>
       </div>
 
     </div>
-    </>
   )
 }

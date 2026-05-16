@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { FileChecksumVerifier } from "@/components/tools/file-checksum-verifier"
+import FileChecksumVerifier from "@/components/tools/file-checksum-verifier"
 import { ArrowLeft } from "lucide-react"
 
 export default function FileChecksumVerifierPage() {
