@@ -1,7 +1,7 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Download, Check, RefreshCw, ArrowRight } from "lucide-react"
+import { Download, Check, RefreshCw, ArrowRight, Info } from "lucide-react"
 import JSZip from "jszip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -15,7 +15,7 @@ function announceToScreenReader(message: string) {
   announcement.setAttribute("role", "status")
   announcement.setAttribute("aria-live", "polite")
   announcement.setAttribute("aria-atomic", "true")
-  announcement.className = 'sr-only'
+  announcement.className = "sr-only"
   announcement.textContent = message
   document.body.appendChild(announcement)
   setTimeout(() => document.body.removeChild(announcement), 1000)
@@ -91,23 +91,24 @@ async function convertImage(file: File, format: Format, quality: number): Promis
 }
 
 const shortcuts = [
-  { keys: ["Ctrl", "Shift", "O"], description: "Upload images" },
-  { keys: ["Ctrl", "Shift", "D"], description: "Download all" },
+  { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
+  { keys: ["Ctrl", "Shift", "S"], description: "Download all" },
   { keys: ["?"], description: "Toggle this panel" },
 ]
 
-export function ImageFormatConverter() {
+export default function ImageFormatConverter() {
   const [files, setFiles] = useState<File[]>([])
   const [format, setFormat] = useState<Format>("webp")
   const [quality, setQuality] = useState(85)
   const [results, setResults] = useState<ConvertResult[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [downloadedIndex, setDownloadedIndex] = useState<number | null>(null)
-  const [downloadedAll, setDownloadedAll] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const uploadRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const downloadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const resultsRef = useRef<ConvertResult[]>([])
 
   const convert = useCallback(async (filesToConvert: File[], fmt: Format, q: number) => {
@@ -130,7 +131,6 @@ export function ImageFormatConverter() {
     setResults(converted)
     setErrors(errs)
     setIsProcessing(false)
-    if (converted.length > 0) setActiveTab("output")
   }, [])
 
   const handleFilesSelected = useCallback((selected: File[]) => {
@@ -138,6 +138,7 @@ export function ImageFormatConverter() {
     resultsRef.current.forEach(r => URL.revokeObjectURL(r.url))
     resultsRef.current = []
     setResults([])
+    setActiveTab("output")
     convert(selected, format, quality)
     announceToScreenReader(`${selected.length} file${selected.length > 1 ? "s" : ""} added for conversion`)
   }, [format, quality, convert])
@@ -160,7 +161,14 @@ export function ImageFormatConverter() {
 
   const downloadAll = useCallback(async () => {
     if (!results.length) return
-    if (results.length === 1) { downloadOne(results[0], 0); return }
+    setDownloading(true)
+    if (downloadingTimerRef.current) clearTimeout(downloadingTimerRef.current)
+    downloadingTimerRef.current = setTimeout(() => setDownloading(false), 1500)
+    if (results.length === 1) {
+      downloadOne(results[0], 0)
+      announceToScreenReader(`Downloaded ${results[0].name}`)
+      return
+    }
     const zip = new JSZip()
     for (const r of results) zip.file(r.name, r.blob)
     const blob = await zip.generateAsync({ type: "blob" })
@@ -168,206 +176,269 @@ export function ImageFormatConverter() {
     a.href = URL.createObjectURL(blob)
     a.download = "converted-images.zip"
     a.click()
-    setDownloadedAll(true)
     announceToScreenReader("Downloaded all images as ZIP")
-    setTimeout(() => setDownloadedAll(false), 2000)
   }, [results, downloadOne])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
       if (e.key === "?" || (e.shiftKey && e.key === "/")) return
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); uploadRef.current?.click(); announceToScreenReader("Upload dialog opened") }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "d") { e.preventDefault(); downloadAll() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") { e.preventDefault(); uploadRef.current?.click(); announceToScreenReader("Upload dialog opened") }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); downloadAll() }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [downloadAll])
 
+  useEffect(() => {
+    return () => {
+      if (downloadingTimerRef.current) clearTimeout(downloadingTimerRef.current)
+    }
+  }, [])
+
   const isLossy = OUTPUT_FORMATS.find(f => f.id === format)?.lossy ?? true
 
   return (
-    <>
-      <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex flex-1 flex-col min-h-0">
 
-        {/* DESKTOP: top action bar */}
-        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Image Format Converter controls">
-          <span className="text-sm font-semibold shrink-0 mr-1">Image Format Converter</span>
-          <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-          <div className="ml-auto flex items-center gap-1.5">
-            <ShortcutsModal pageName="Image Format Converter" shortcuts={shortcuts} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadAll}
-              disabled={!results.length || isProcessing}
-              aria-label={downloadedAll ? "All images downloaded" : results.length > 1 ? "Download all as ZIP" : "Download converted image"}
-            >
-              {downloadedAll ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
-              {downloadedAll ? "Downloaded!" : results.length > 1 ? "Download All as ZIP" : "Download"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+D</kbd>
-            </Button>
-          </div>
-        </div>
-
-        {/* MOBILE: compact header + tab switcher */}
-        <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <h2 className="text-base font-semibold">Image Format Converter</h2>
-            <ShortcutsModal pageName="Image Format Converter" shortcuts={shortcuts} />
-          </div>
-          <div className="flex" role="tablist" aria-label="Panel selection">
-            <button
-              role="tab"
-              aria-selected={activeTab === "input"}
-              onClick={() => setActiveTab("input")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
-            >
-              Upload &amp; Format
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === "output"}
-              onClick={() => setActiveTab("output")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
-            >
-              Preview
-            </button>
-          </div>
-        </div>
-
-        {/* PANELS */}
-        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-
-          {/* Input/Settings panel */}
-          <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}>
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              <FileDropzone
-                ref={uploadRef}
-                accept={ACCEPT}
-                onFilesSelected={handleFilesSelected}
-                maxFiles={20}
-                multiple
-              />
-
-              {files.length > 0 && (
-                <>
-                  <div className="space-y-2" role="group" aria-labelledby="format-label">
-                    <Label className="text-sm font-medium" id="format-label">Convert to</Label>
-                    <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-labelledby="format-label">
-                      {OUTPUT_FORMATS.map(f => (
-                        <button
-                          key={f.id}
-                          onClick={() => { setFormat(f.id); announceToScreenReader(`${f.label} format selected`) }}
-                          aria-pressed={format === f.id}
-                          aria-label={`${f.label} format`}
-                          className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                            format === f.id
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                          }`}
-                        >
-                          {f.label}
-                        </button>
-                      ))}
-                    </div>
-                    {format === "avif" && (
-                      <p className="text-xs text-muted-foreground" role="note">AVIF requires a modern browser (Chrome 85+, Safari 16.4+)</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-3" role="group" aria-labelledby="quality-label">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium" id="quality-label">Quality</Label>
-                      <span className="text-sm font-mono font-medium tabular-nums" aria-live="polite">{isLossy ? `${quality}%` : "Lossless"}</span>
-                    </div>
-                    <Slider
-                      min={1}
-                      max={100}
-                      step={1}
-                      value={[quality]}
-                      onValueChange={([v]) => { setQuality(v); if (v % 20 === 0) announceToScreenReader(`Quality ${v} percent`) }}
-                      disabled={!isLossy}
-                      aria-label={`Quality ${isLossy ? quality : "lossless"}`}
-                      aria-valuetext={isLossy ? `${quality} percent` : "Lossless"}
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Smaller file</span>
-                      <span>Better quality</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Output/Preview panel */}
-          <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}>
-            <div className="flex-1 overflow-y-auto p-4">
-              {isProcessing ? (
-                <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3" role="status" aria-live="polite">
-                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-                  <p className="text-sm text-muted-foreground">Converting...</p>
-                </div>
-              ) : results.length === 0 ? (
-                <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
-                  <div className="rounded-full border border-border bg-muted/50 p-4">
-                    <RefreshCw className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">No images yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Upload images on the left to convert them</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3" role="list" aria-label="Converted images">
-                  {errors.map((err, i) => (
-                    <p key={i} className="text-xs text-red-500" role="alert">{err}</p>
-                  ))}
-                  {results.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5" role="listitem">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{r.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                          <span aria-hidden="true">{r.originalFormat}</span>
-                          <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                          <span className="uppercase">{format === "jpeg" ? "JPG" : format.toUpperCase()}</span>
-                          <span className="text-muted-foreground/60" aria-hidden="true">·</span>
-                          <span>{formatBytes(r.originalSize)} → {formatBytes(r.convertedSize)}</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => downloadOne(r, i)}
-                        aria-label={`Download ${r.name}, ${formatBytes(r.convertedSize)}`}
-                        className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      >
-                        {downloadedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" aria-hidden="true" /> : <Download className="h-3.5 w-3.5" aria-hidden="true" />}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-        </div>
-
-        {/* MOBILE: bottom action bar */}
-        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
-          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-          <div className="flex-1" />
+      {/* DESKTOP: top action bar */}
+      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="Image Format Converter controls">
+        <span className="text-sm font-semibold shrink-0 mr-1">Image Format Converter</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Image Format Converter" shortcuts={shortcuts} />
           <Button
+            variant={downloading ? "outline" : "default"}
             size="sm"
-            className="h-11 px-4"
             onClick={downloadAll}
             disabled={!results.length || isProcessing}
-            aria-label={downloadedAll ? "All images downloaded" : results.length > 1 ? "Download all as ZIP" : "Download converted image"}
+            aria-label={downloading ? "Downloaded" : results.length > 1 ? "Download all as ZIP" : "Download converted image"}
           >
-            {downloadedAll ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
-            {downloadedAll ? "Downloaded!" : results.length > 1 ? "Download ZIP" : "Download"}
+            {downloading ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {downloading ? "Downloaded!" : results.length > 1 ? "Download All as ZIP" : "Download"}
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
+        </div>
+      </div>
+
+      {/* MOBILE: compact header + tab switcher */}
+      <div className="flex md:hidden flex-col shrink-0 border-b border-border">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold">Image Format Converter</h2>
+          <ShortcutsModal pageName="Image Format Converter" shortcuts={shortcuts} />
+        </div>
+        <div className="flex" role="tablist" aria-label="Panel selection">
+          <button
+            role="tab"
+            aria-selected={activeTab === "input"}
+            onClick={() => setActiveTab("input")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Upload &amp; Format
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "output"}
+            onClick={() => setActiveTab("output")}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            Preview
+          </button>
+        </div>
+      </div>
+
+      {/* PANELS */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
+        {/* Input/Settings panel */}
+        <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border`}>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <FileDropzone
+              ref={uploadRef}
+              accept={ACCEPT}
+              onFilesSelected={handleFilesSelected}
+              maxFiles={20}
+              multiple
+              shortcut="Ctrl+Shift+U"
+            />
+
+            {files.length > 0 && (
+              <>
+                <div className="space-y-2" role="group" aria-labelledby="format-label">
+                  <Label className="text-sm font-medium" id="format-label">Convert to</Label>
+                  <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-labelledby="format-label">
+                    {OUTPUT_FORMATS.map(f => (
+                      <button
+                        key={f.id}
+                        onClick={() => { setFormat(f.id); announceToScreenReader(`${f.label} format selected`) }}
+                        aria-pressed={format === f.id}
+                        aria-label={`${f.label} format`}
+                        className={`rounded-md border px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                          format === f.id
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  {format === "avif" && (
+                    <p className="text-xs text-muted-foreground" role="note">AVIF requires a modern browser (Chrome 85+, Safari 16.4+)</p>
+                  )}
+                </div>
+
+                <div className="space-y-3" role="group" aria-labelledby="quality-label">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium" id="quality-label">
+                      Quality
+                      <span className="ml-1.5 hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd>
+                        <kbd className="rounded border border-border bg-muted px-1 text-[10px]">← →</kbd>
+                      </span>
+                    </Label>
+                    <span className="text-sm font-mono font-medium tabular-nums" aria-live="polite">{isLossy ? `${quality}%` : "Lossless"}</span>
+                  </div>
+                  <Slider
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[quality]}
+                    onValueChange={([v]) => { setQuality(v); if (v % 20 === 0) announceToScreenReader(`Quality ${v} percent`) }}
+                    disabled={!isLossy}
+                    aria-label={`Quality ${isLossy ? quality : "lossless"}`}
+                    aria-valuetext={isLossy ? `${quality} percent` : "Lossless"}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Smaller file</span>
+                    <span>Better quality</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* USAGE GUIDE */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Drop or select up to <span className="text-foreground font-medium">20 images</span> to convert them all at once.
+                  Choose an output format, adjust quality if needed, and the tool converts in the background.
+                  Results appear on the <span className="text-foreground font-medium">Preview</span> tab automatically on upload.
+                  Changing format or quality reprocesses without switching you away from settings.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Output formats</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li><span className="text-foreground font-medium">JPEG</span> is lossy and best for photos. Smallest file sizes at high quality settings. Transparent areas become white.</li>
+                  <li><span className="text-foreground font-medium">PNG</span> is lossless. Preserves transparency. Larger files than JPEG for photos.</li>
+                  <li><span className="text-foreground font-medium">WebP</span> supports both lossy and lossless. Better compression than JPEG and supports transparency. Supported in all current browsers.</li>
+                  <li><span className="text-foreground font-medium">AVIF</span> is the newest format with the best compression. Requires Chrome 85+, Safari 16.4+, or Firefox 113+.</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Quality slider</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Drag left for a smaller file, right for better visual quality. Only applies to lossy formats (JPEG, WebP, AVIF).
+                  <span className="text-foreground font-medium"> 80-90%</span> is a good starting point for most images.
+                  PNG ignores the slider as it is always lossless.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Downloading</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Use the per-file download button in the Preview tab for individual images.
+                  <span className="text-foreground font-medium"> Download All as ZIP</span> bundles everything into one file when you have multiple images.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
+            </div>
+
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Output/Preview panel */}
+        <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-1 flex-col min-h-0 overflow-hidden`}>
+          <div className="flex-1 overflow-y-auto p-4">
+            {isProcessing ? (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3" role="status" aria-live="polite">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+                <p className="text-sm text-muted-foreground">Converting...</p>
+              </div>
+            ) : results.length === 0 ? (
+              <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
+                <div className="rounded-full border border-border bg-muted/50 p-4">
+                  <RefreshCw className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">No images yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Upload images on the left to convert them</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3" role="list" aria-label="Converted images">
+                {errors.map((err, i) => (
+                  <div key={i} className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2" role="alert">
+                    <p className="text-xs text-destructive">{err}</p>
+                  </div>
+                ))}
+                {format === "avif" && results.length > 0 && (
+                  <div className="flex items-start gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2" role="note">
+                    <Info className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
+                    <p className="text-xs text-blue-600">AVIF output requires a modern browser to display. Chrome 85+, Safari 16.4+, Firefox 113+.</p>
+                  </div>
+                )}
+                {results.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5" role="listitem">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{r.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                        <span aria-hidden="true">{r.originalFormat}</span>
+                        <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                        <span className="uppercase">{format === "jpeg" ? "JPG" : format.toUpperCase()}</span>
+                        <span className="text-muted-foreground/60" aria-hidden="true">·</span>
+                        <span>{formatBytes(r.originalSize)} → {formatBytes(r.convertedSize)}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => downloadOne(r, i)}
+                      aria-label={`Download ${r.name}, ${formatBytes(r.convertedSize)}`}
+                      className="shrink-0 rounded-md border border-border bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      {downloadedIndex === i ? <Check className="h-3.5 w-3.5 text-green-500" aria-hidden="true" /> : <Download className="h-3.5 w-3.5" aria-hidden="true" />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
+          </div>
         </div>
 
       </div>
-    </>
+
+      {/* MOBILE: bottom action bar */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex-1" />
+        <Button
+          variant={downloading ? "outline" : "default"}
+          size="sm"
+          className="h-11 px-4"
+          onClick={downloadAll}
+          disabled={!results.length || isProcessing}
+          aria-label={downloading ? "Downloaded" : results.length > 1 ? "Download all as ZIP" : "Download converted image"}
+        >
+          {downloading ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+          {downloading ? "Downloaded!" : results.length > 1 ? "Download ZIP" : "Download"}
+        </Button>
+      </div>
+
+    </div>
   )
 }

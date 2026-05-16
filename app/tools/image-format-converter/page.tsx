@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ImageFormatConverter } from "@/components/tools/image-format-converter"
+import ImageFormatConverter from "@/components/tools/image-format-converter"
 import { ArrowLeft } from "lucide-react"
 
 export default function ImageFormatConverterPage() {
