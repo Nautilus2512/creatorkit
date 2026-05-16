@@ -410,7 +410,7 @@ export default function FileChecksumVerifier() {
                   ) : (
                     <>
                       <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span><span className=”font-semibold”>No match.</span> Hash does not match any algorithm.</span>
+                      <span><span className="font-semibold">No match.</span> Hash does not match any algorithm.</span>
                     </>
                   )}
                 </div>
