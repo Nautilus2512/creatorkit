@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ImageResizer } from "@/components/tools/image-resizer"
+import ImageResizer from "@/components/tools/image-resizer"
 import { ArrowLeft } from "lucide-react"
 
 export default function ImageResizerPage() {

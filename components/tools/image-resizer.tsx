@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { Download, CheckCircle2, ChevronDown, Plus, X, Crop } from "lucide-react"
+import { Download, Check, CheckCircle2, ChevronDown, Plus, X, Crop } from "lucide-react"
 import JSZip from "jszip"
 import { FileDropzone } from "@/components/file-dropzone"
 import { Button } from "@/components/ui/button"
@@ -149,7 +149,7 @@ function computeOverlay(containerW: number, containerH: number, imgW: number, im
   return { cropX: rendX + extraX / 2 + (extraX / 2) * offsetX, cropY: rendY + extraY / 2 + (extraY / 2) * offsetY, cropW, cropH }
 }
 
-export function ImageResizer() {
+export default function ImageResizer() {
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("jpeg")
   const [quality, setQuality] = useState(92)
@@ -166,7 +166,7 @@ export function ImageResizer() {
   const [firstFileSize, setFirstFileSize] = useState<{ width: number; height: number } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null)
-  const [downloaded, setDownloaded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const dragRef = useRef<{ presetId: string; startX: number; startY: number; startOffsetX: number; startOffsetY: number } | null>(null)
   const cropContainerRef = useRef<HTMLDivElement>(null)
@@ -210,11 +210,14 @@ export function ImageResizer() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
       if (e.key === "?" || (e.shiftKey && e.key === "/")) return
       const ctrl = e.ctrlKey || e.metaKey
-      if (ctrl && e.shiftKey && e.key.toLowerCase() === "o") { e.preventDefault(); uploadRef.current?.click(); announceToScreenReader("Upload dialog opened") }
+      if (ctrl && e.shiftKey && e.key.toLowerCase() === "u") { e.preventDefault(); uploadRef.current?.click(); announceToScreenReader("Upload dialog opened") }
       if (ctrl && e.key === "Enter") { e.preventDefault(); if (!isProcessing && files.length > 0) { generateSelected(); announceToScreenReader("Generating images") } }
-      if (ctrl && e.shiftKey && e.key.toLowerCase() === "d") { e.preventDefault(); if (generatedImages.length > 0) downloadAll() }
+      if (ctrl && e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); if (generatedImages.length > 0) downloadAll() }
       if (ctrl && e.key === "Backspace") { e.preventDefault(); if (files.length > 0) { setFiles([]); setGeneratedImages([]); announceToScreenReader("Files cleared") } }
     }
     window.addEventListener("keydown", handler)
@@ -320,9 +323,9 @@ export function ImageResizer() {
     const url = URL.createObjectURL(blob)
     downloadFile(url, "resized-social-images.zip")
     URL.revokeObjectURL(url)
-    setDownloaded(true)
+    setDownloading(true)
     announceToScreenReader("Downloaded all images as ZIP")
-    setTimeout(() => setDownloaded(false), 2000)
+    setTimeout(() => setDownloading(false), 1500)
   }, [generatedImages])
 
   const overlayRect = useMemo(() => {
@@ -343,28 +346,24 @@ export function ImageResizer() {
           <ShortcutsModal
             pageName="Image Resizer"
             shortcuts={[
-              { keys: ["Ctrl", "Shift", "O"], description: "Open file upload" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
               { keys: ["Ctrl", "Enter"], description: "Generate selected sizes" },
-              { keys: ["Ctrl", "Shift", "D"], description: "Download all as ZIP" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download all as ZIP" },
               { keys: ["Ctrl", "Backspace"], description: "Clear all files" },
               { keys: ["?"], description: "Toggle this shortcuts panel" },
             ]}
           />
           {generatedImages.length > 0 && (
             <Button
-              variant="outline"
+              variant={downloading ? "outline" : "default"}
               size="sm"
               onClick={() => downloadAll()}
-              aria-label={downloaded ? "All images downloaded as ZIP" : `Download all ${generatedImages.length} images as ZIP`}
+              aria-label={downloading ? "All images downloaded as ZIP" : `Download all ${generatedImages.length} images as ZIP`}
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              {downloaded ? <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
-              {downloaded ? "Downloaded!" : "Download All as ZIP"}
-              {!downloaded && (
-                <kbd className="ml-2 hidden md:inline rounded border border-border/30 bg-muted/30 px-1.5 text-[10px] opacity-60" aria-hidden="true">
-                  Ctrl+Shift+D
-                </kbd>
-              )}
+              {downloading ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+              {downloading ? "Downloaded!" : "Download All as ZIP"}
+              <kbd className={`ml-2 hidden md:inline rounded border px-1.5 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           )}
         </div>
@@ -372,31 +371,35 @@ export function ImageResizer() {
 
       {/* Mobile header */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 py-2">
-          <span className="text-sm font-semibold">Image Resizer</span>
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold">Image Resizer</h2>
           <ShortcutsModal
             pageName="Image Resizer"
             shortcuts={[
-              { keys: ["Ctrl", "Shift", "O"], description: "Open file upload" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
               { keys: ["Ctrl", "Enter"], description: "Generate selected sizes" },
-              { keys: ["Ctrl", "Shift", "D"], description: "Download all as ZIP" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download all as ZIP" },
               { keys: ["Ctrl", "Backspace"], description: "Clear all files" },
               { keys: ["?"], description: "Toggle this shortcuts panel" },
             ]}
           />
         </div>
-        <div className="flex border-t border-border">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button
+            role="tab"
+            aria-selected={activeTab === "input"}
             onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${activeTab === "input" ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
           >
-            Upload &amp; Settings
+            Settings
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "output"}
             onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2 text-sm font-medium transition-colors ${activeTab === "output" ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
           >
-            Preview &amp; Download
+            Preview
           </button>
         </div>
       </div>
@@ -410,11 +413,11 @@ export function ImageResizer() {
               <Crop className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="text-sm font-medium" id="left-panel-label">Upload &amp; Size Selection</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">40+ sizes across 12 platforms · Custom size support · Press Ctrl+Shift+O to upload</p>
+            <p className="text-xs text-muted-foreground mt-0.5">40+ sizes across 12 platforms · Custom size support · Press Ctrl+Shift+U to upload</p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <FileDropzone ref={uploadRef} accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple />
+            <FileDropzone ref={uploadRef} accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple shortcut="Ctrl+Shift+U" />
 
             {selectedChips.length > 0 && (
               <div className="space-y-1" role="group" aria-labelledby="selected-sizes-label">
@@ -540,6 +543,49 @@ export function ImageResizer() {
                 </div>
               )}
             </div>
+
+            {/* USAGE GUIDE */}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Upload one or more images, select the sizes you want, then click <span className="text-foreground font-medium">Generate</span>.
+                  Each image is resized to every selected size and shown in the Preview panel ready to download.
+                  Use <span className="text-foreground font-medium">Ctrl+Enter</span> to generate without leaving the keyboard.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Platforms and sizes</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  40+ preset sizes across 12 platforms including Instagram, YouTube, LinkedIn, and TikTok.
+                  Use <span className="text-foreground font-medium">Select All</span> or <span className="text-foreground font-medium">Deselect All</span> inside each accordion to pick sizes in bulk.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Custom sizes</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Enter a width, height, and optional label in the <span className="text-foreground font-medium">Add Custom Size</span> form. Custom sizes appear as checkboxes alongside the platform presets and can be removed at any time.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Crop position</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  The Preview panel shows a crop overlay for the selected size. <span className="text-foreground font-medium">Drag</span> the overlay to shift the crop focus before generating.
+                  Use the dropdown to switch between sizes and adjust each independently.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Output format</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-medium">JPG</span> and <span className="text-foreground font-medium">WebP</span> support a quality slider (50 to 100).
+                  <span className="text-foreground font-medium"> PNG</span> is always lossless.
+                  All resized images download together as a single ZIP file.
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
+            </div>
+
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
 
           {/* Sticky Action Bar — left panel (desktop only) */}
@@ -630,12 +676,16 @@ export function ImageResizer() {
                 </div>
               )
             )}
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
         </div>
       </div>
 
       {/* Mobile bottom bar */}
-      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
         {activeTab === "input" ? (
           files.length > 0 && selectedPresetList.length > 0 ? (
             <Button
@@ -654,13 +704,13 @@ export function ImageResizer() {
         ) : (
           generatedImages.length > 0 && (
             <Button
-              variant="outline"
+              variant={downloading ? "outline" : "default"}
               className="w-full h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               onClick={() => downloadAll()}
-              aria-label={downloaded ? "All images downloaded as ZIP" : `Download all ${generatedImages.length} images as ZIP`}
+              aria-label={downloading ? "All images downloaded as ZIP" : `Download all ${generatedImages.length} images as ZIP`}
             >
-              {downloaded ? <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
-              {downloaded ? "Downloaded!" : "Download All as ZIP"}
+              {downloading ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+              {downloading ? "Downloaded!" : "Download All as ZIP"}
             </Button>
           )
         )}
