@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { FaviconGenerator } from "@/components/tools/favicon-generator"
+import FaviconGenerator from "@/components/tools/favicon-generator"
 import { ArrowLeft } from "lucide-react"
 
 export default function FaviconGeneratorPage() {

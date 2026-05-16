@@ -60,7 +60,18 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   })
 }
 
-export function FaviconGenerator() {
+function announceToScreenReader(message: string) {
+  const el = document.createElement("div")
+  el.setAttribute("role", "status")
+  el.setAttribute("aria-live", "polite")
+  el.setAttribute("aria-atomic", "true")
+  el.className = "sr-only"
+  el.textContent = message
+  document.body.appendChild(el)
+  setTimeout(() => document.body.removeChild(el), 1000)
+}
+
+export default function FaviconGenerator() {
   const [mode, setMode] = useState<Mode>("image")
   const [sourceCanvas, setSourceCanvas] = useState<HTMLCanvasElement | null>(null)
   const [previews, setPreviews] = useState<Record<number, string>>({})
@@ -69,7 +80,7 @@ export function FaviconGenerator() {
   const [textColor, setTextColor] = useState("#ffffff")
   const [fontSize, setFontSize] = useState(52)
   const [siteName, setSiteName] = useState("My App")
-  const [downloaded, setDownloaded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedSizes, setSelectedSizes] = useState<Set<number>>(new Set(SIZES))
   const [includeManifest, setIncludeManifest] = useState(true)
@@ -154,18 +165,26 @@ export function FaviconGenerator() {
     a.download = "favicons.zip"
     a.click()
     setIsProcessing(false)
-    setDownloaded(true)
-    setTimeout(() => setDownloaded(false), 2000)
+    setDownloading(true)
+    announceToScreenReader("Download started.")
+    setTimeout(() => setDownloading(false), 1500)
   }, [sourceCanvas, siteName, selectedSizes, includeManifest])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
       const ctrl = e.ctrlKey || e.metaKey
-      if (ctrl && e.shiftKey && (e.key === "D" || e.key === "d")) {
+      if (ctrl && e.shiftKey && (e.key === "S" || e.key === "s")) {
         e.preventDefault(); downloadAll()
       }
-      if (ctrl && e.shiftKey && (e.key === "O" || e.key === "o")) {
+      if (ctrl && e.shiftKey && (e.key === "U" || e.key === "u")) {
         e.preventDefault(); uploadRef.current?.click()
+      }
+      if (!ctrl && !e.shiftKey && !e.altKey) {
+        if (e.key === "1") { e.preventDefault(); setMode("image"); setPreviews({}); setSourceCanvas(null) }
+        if (e.key === "2") { e.preventDefault(); setMode("text"); setPreviews({}); setSourceCanvas(null) }
       }
     }
     window.addEventListener("keydown", handler)
@@ -177,7 +196,6 @@ export function FaviconGenerator() {
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
 
   return (
-    <>
     <div className="flex flex-1 flex-col min-h-0">
 
       {/* Desktop top action bar */}
@@ -187,8 +205,8 @@ export function FaviconGenerator() {
           <ShortcutsModal
             pageName="Favicon Generator"
             shortcuts={[
-              { keys: ["Ctrl", "O"], description: "Upload image" },
-              { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download favicons.zip" },
               { keys: ["1"], description: "Switch to image mode" },
               { keys: ["2"], description: "Switch to text mode" },
               { keys: ["?"], description: "Toggle this panel" },
@@ -196,38 +214,40 @@ export function FaviconGenerator() {
           />
           <Button
             size="sm"
+            variant={downloading ? "outline" : "default"}
             onClick={downloadAll}
             disabled={!hasPreviews || isProcessing}
             aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
           >
-            {downloaded ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
-            {downloaded ? "Downloaded!" : "Download"}
+            {downloading ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+            {downloading ? "Downloaded!" : "Download"}
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloading ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>
 
       {/* Mobile: compact header + tab switcher */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">Favicon Generator</h2>
           <ShortcutsModal
             pageName="Favicon Generator"
             shortcuts={[
-              { keys: ["Ctrl", "O"], description: "Upload image" },
-              { keys: ["Ctrl", "D"], description: "Download favicons.zip" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload image" },
+              { keys: ["Ctrl", "Shift", "S"], description: "Download favicons.zip" },
               { keys: ["1"], description: "Switch to image mode" },
               { keys: ["2"], description: "Switch to text mode" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Upload
           </button>
           <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Preview
           </button>
         </div>
@@ -249,7 +269,7 @@ export function FaviconGenerator() {
                 <button
                   key={m}
                   onClick={() => { setMode(m); setPreviews({}); setSourceCanvas(null) }}
-                  className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     mode === m
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -271,7 +291,7 @@ export function FaviconGenerator() {
               <Label htmlFor="favicon-upload" className="text-sm font-medium">Image</Label>
               <div
                 onClick={() => uploadRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-8 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-8 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 role="button"
                 aria-label="Upload image for favicon"
                 tabIndex={0}
@@ -279,7 +299,7 @@ export function FaviconGenerator() {
                 <Upload className="h-5 w-5" />
                 <span>Click to upload</span>
                 <span className="text-xs opacity-60">PNG, JPG, WebP, SVG</span>
-                <kbd className="mt-2 rounded border border-border bg-background px-2 py-1 text-[10px]" aria-label="Shortcut">Ctrl+O</kbd>
+                <kbd className="mt-2 rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
               </div>
               <input
                 ref={uploadRef}
@@ -365,7 +385,7 @@ export function FaviconGenerator() {
               <Label className="text-sm font-medium">Sizes to export</Label>
               <button
                 onClick={() => setSelectedSizes(selectedSizes.size === SIZES.length ? new Set([16]) : new Set(SIZES))}
-                className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                className="text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                 aria-label={selectedSizes.size === SIZES.length ? "Deselect all sizes" : "Select all sizes"}
               >
                 {selectedSizes.size === SIZES.length ? "Deselect all" : "Select all"}
@@ -378,7 +398,7 @@ export function FaviconGenerator() {
                   onClick={() => toggleSize(size)}
                   aria-label={`${selectedSizes.has(size) ? "Deselect" : "Select"} ${SIZE_LABELS[size]}`}
                   aria-pressed={selectedSizes.has(size)}
-                  className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     selectedSizes.has(size)
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-muted/20 text-muted-foreground hover:border-primary/30"
@@ -400,7 +420,7 @@ export function FaviconGenerator() {
               onClick={() => setIncludeManifest(v => !v)}
               aria-label={`${includeManifest ? "Exclude" : "Include"} site.webmanifest`}
               aria-pressed={includeManifest}
-              className="flex items-center gap-2 pt-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+              className="flex items-center gap-2 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             >
               <div 
                 className={`h-3.5 w-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
@@ -415,6 +435,29 @@ export function FaviconGenerator() {
               </span>
             </button>
           </div>
+
+          {/* Usage guide */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Choose <span className="text-foreground font-medium">Upload Image</span> to use your own logo, or <span className="text-foreground font-medium">Text / Emoji</span> to generate one from initials or an emoji.</li>
+              <li>Select the sizes you need and enter your site name for the web manifest.</li>
+              <li>Click <span className="text-foreground font-medium">Download</span> to get a ZIP with all files ready to drop into your project root.</li>
+            </ol>
+            <div className="border-t border-border pt-3 space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Size reference</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li><span className="text-foreground font-medium">16×16 / 32×32</span> — browser tab favicon</li>
+                <li><span className="text-foreground font-medium">48×48</span> — favicon.ico (Windows / legacy)</li>
+                <li><span className="text-foreground font-medium">180×180</span> — Apple touch icon (iOS home screen)</li>
+                <li><span className="text-foreground font-medium">192×192 / 512×512</span> — Android / PWA splash screen</li>
+                <li><span className="text-foreground font-medium">site.webmanifest</span> — links the two Android sizes; required for "Add to Home Screen" prompts</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
+          </div>
+
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
       </div>
 
@@ -468,21 +511,23 @@ export function FaviconGenerator() {
       </div>
 
       {/* Mobile bottom action bar */}
-      <div className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
-        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="flex-1" />
         <Button
           size="sm"
+          variant={downloading ? "outline" : "default"}
           className="h-11 px-4"
           onClick={downloadAll}
           disabled={!hasPreviews || isProcessing}
           aria-label={hasPreviews ? "Download favicons as ZIP" : "No favicons to download"}
         >
-          {downloaded ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
-          {downloaded ? "Downloaded!" : "Download"}
+          {downloading ? <Check className="mr-2 h-4 w-4" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
+          {downloading ? "Downloaded!" : "Download"}
         </Button>
       </div>
     </div>
-    </>
   )
 }
