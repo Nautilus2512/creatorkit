@@ -16,5 +16,8 @@ CreatorKit uses the following open-source libraries. All are used under their pe
 | next-themes | MIT | Dark/light theme |
 | lucide-react | ISC | Icon library |
 | @radix-ui/* | MIT | Accessible UI primitives |
+| lamejs | LGPL-3.0 | MP3 encoding in audio-converter (used as unmodified library) |
+| @img/sharp-win32-x64 | Apache-2.0 AND LGPL-3.0-or-later | Image processing binary (used as unmodified library) |
 
 > jszip is dual-licensed (MIT OR GPL-3.0-or-later). CreatorKit uses it under the MIT license.
+> lamejs and @img/sharp-win32-x64 are LGPL-licensed. CreatorKit uses them as unmodified libraries, which is permitted under LGPL without requiring source disclosure.

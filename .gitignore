@@ -18,3 +18,5 @@ node_modules
 # Private development docs
 _dev-docs/
 .history/
+plan.md
+history progress/
