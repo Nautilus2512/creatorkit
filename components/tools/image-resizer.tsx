@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { Download, Check, CheckCircle2, ChevronDown, Plus, X, Crop } from "lucide-react"
@@ -422,194 +422,200 @@ export default function ImageResizer() {
 
       {/* Panels */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
         {/* LEFT PANEL */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="left-panel-label">
 
-          {/* Images section — capped height, own scroll */}
-          <div className="flex flex-col overflow-hidden shrink-0 border-b border-border" style={{ maxHeight: "45%" }}>
-            <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-muted/20">
-              <Crop className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm font-medium" id="left-panel-label">Images</span>
-              {files.length > 0 && <span className="ml-auto text-xs text-muted-foreground">{files.length} file{files.length !== 1 ? "s" : ""}</span>}
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
-              <FileDropzone ref={uploadRef} accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple shortcut="Ctrl+Shift+U" />
-              {selectedChips.length > 0 && (
-                <div className="space-y-1" role="group" aria-labelledby="selected-sizes-label">
-                  <p className="text-xs font-medium text-muted-foreground" id="selected-sizes-label">{selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected</p>
-                  <div className="flex flex-wrap gap-1.5" role="list" aria-label="Selected sizes">
-                    {selectedChips.map((chip) => (
-                      <span key={chip.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs" role="listitem">
-                        {chip.label}
-                        <button type="button" onClick={() => { removeChip(chip.id); announceToScreenReader(`${chip.label} removed`) }} aria-label={`Remove ${chip.label}`} className="ml-0.5 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 rounded">x</button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Two equal-height scrollable cards */}
+          <div className="flex-1 min-h-0 flex flex-col p-3 gap-3 overflow-hidden">
 
-          {/* Sizes & Format section — fills remaining height, own scroll */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="shrink-0 flex items-center px-4 py-2 border-b border-border/50 bg-muted/20">
-              <span className="text-sm font-medium">Sizes &amp; Format</span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
-              <Accordion type="multiple" className="rounded-lg border border-border px-3" role="group" aria-label="Platform size presets">
-                {PLATFORM_GROUPS.map((group) => (
-                  <AccordionItem key={group.id} value={group.id}>
-                    <AccordionTrigger className="py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded">
-                      <span className="flex items-center gap-2">
-                        <span className="font-medium">{group.label}</span>
-                        {group.sizes.some((s) => selectedSizes.has(s.id)) && (
-                          <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground" aria-label={`${group.sizes.filter((s) => selectedSizes.has(s.id)).length} sizes selected`}>{group.sizes.filter((s) => selectedSizes.has(s.id)).length}</span>
-                        )}
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-3">
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => { selectAllForPlatform(group); announceToScreenReader(`All ${group.label} sizes selected`) }} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Select All</Button>
-                        <Button type="button" variant="outline" size="sm" onClick={() => { deselectAllForPlatform(group); announceToScreenReader(`${group.label} sizes deselected`) }} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Deselect All</Button>
-                      </div>
-                      <div className="grid gap-2" role="group" aria-label={`${group.label} size options`}>
-                        {group.sizes.map((preset) => (
-                          <label key={preset.id} className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-                            <div className="flex items-center gap-2">
-                              <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => { toggleSize(preset.id, Boolean(c)); announceToScreenReader(c ? `${preset.label} selected` : `${preset.label} deselected`) }} aria-label={`${preset.label} ${preset.width} by ${preset.height} pixels`} />
-                              <span>{preset.label}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span className="rounded bg-muted px-1.5 py-0.5 font-mono" aria-label={`Aspect ratio ${preset.ratio}`}>{preset.ratio}</span>
-                              <span aria-label={`${preset.width} by ${preset.height} pixels`}>{preset.width}x{preset.height}</span>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              {/* Custom sizes list */}
-              {customSizes.length > 0 && (
-                <div className="grid gap-2" role="group" aria-label="Custom sizes">
-                  {customSizes.map((preset) => (
-                    <div key={preset.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => { toggleSize(preset.id, Boolean(c)); announceToScreenReader(c ? `${preset.label} selected` : `${preset.label} deselected`) }} aria-label={`Custom size ${preset.label}`} />
-                        <span>{preset.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
-                        <span>{preset.width}x{preset.height}</span>
-                        <button type="button" onClick={() => { removeCustomSize(preset.id); announceToScreenReader(`${preset.label} removed`) }} aria-label="Remove custom size" className="hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 rounded"><X className="h-3.5 w-3.5" /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Custom Size Form */}
-              <div className="space-y-3 rounded-lg border border-dashed border-border p-3" role="group" aria-labelledby="custom-size-label">
-                <p className="text-xs font-medium text-muted-foreground" id="custom-size-label">Add Custom Size</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs" htmlFor="custom-width">Width (px)</Label>
-                    <Input id="custom-width" type="number" min="1" max="9999" value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-describedby="width-help" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs" htmlFor="custom-height">Height (px)</Label>
-                    <Input id="custom-height" type="number" min="1" max="9999" value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-describedby="height-help" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs" htmlFor="custom-label-input">Label (optional)</Label>
-                  <Input id="custom-label-input" placeholder={`${customWidth}x${customHeight}`} value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
-                </div>
-                <Button type="button" variant="outline" size="sm" className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" onClick={() => { addCustomSize(); announceToScreenReader("Custom size added") }}>
-                  <Plus className="mr-2 h-3.5 w-3.5" aria-hidden="true" />Add Custom Size
-                </Button>
+            {/* Images card */}
+            <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-border overflow-hidden">
+              <div className="shrink-0 flex items-center gap-2 px-3 py-2 bg-muted/20 border-b border-border">
+                <Crop className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <span className="text-sm font-medium" id="left-panel-label">Images</span>
+                {files.length > 0 && <span className="ml-auto text-xs text-muted-foreground">{files.length} file{files.length !== 1 ? "s" : ""}</span>}
               </div>
-
-              {/* Output Format */}
-              <div className="space-y-3 rounded-lg border border-border p-3" role="group" aria-labelledby="output-format-label">
-                <div className="space-y-1">
-                  <Label className="text-xs" id="output-format-label">Output Format</Label>
-                  <div className="flex gap-2" role="group" aria-label="Format selection">
-                    {(["jpeg", "png", "webp"] as OutputFormat[]).map((fmt) => (
-                      <button key={fmt} type="button" onClick={() => { setOutputFormat(fmt); announceToScreenReader(`${fmt === "jpeg" ? "JPG" : fmt.toUpperCase()} format selected`) }}
-                        aria-pressed={outputFormat === fmt}
-                        aria-label={`${fmt === "jpeg" ? "JPG" : fmt.toUpperCase()} format`}
-                        className={`flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${outputFormat === fmt ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>
-                        {fmt === "jpeg" ? "JPG" : fmt.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {outputFormat !== "png" && (
-                  <div className="space-y-1" role="group" aria-labelledby="quality-label">
-                    <div className="flex justify-between">
-                      <Label className="text-xs" id="quality-label">Quality</Label>
-                      <span className="text-xs text-muted-foreground" aria-live="polite">{quality}%</span>
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+                <FileDropzone ref={uploadRef} accept="image/*" onFilesSelected={handleFilesSelected} maxFiles={20} multiple shortcut="Ctrl+Shift+U" />
+                {selectedChips.length > 0 && (
+                  <div className="space-y-1" role="group" aria-labelledby="selected-sizes-label">
+                    <p className="text-xs font-medium text-muted-foreground" id="selected-sizes-label">{selectedChips.length} size{selectedChips.length !== 1 ? "s" : ""} selected</p>
+                    <div className="flex flex-wrap gap-1.5" role="list" aria-label="Selected sizes">
+                      {selectedChips.map((chip) => (
+                        <span key={chip.id} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs" role="listitem">
+                          {chip.label}
+                          <button type="button" onClick={() => { removeChip(chip.id); announceToScreenReader(`${chip.label} removed`) }} aria-label={`Remove ${chip.label}`} className="ml-0.5 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 rounded">x</button>
+                        </span>
+                      ))}
                     </div>
-                    <input
-                      type="range"
-                      min={50}
-                      max={100}
-                      value={quality}
-                      onChange={(e) => { setQuality(Number(e.target.value)); announceToScreenReader(`Quality ${e.target.value} percent`) }}
-                      className="w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      aria-label={`Quality ${quality} percent`}
-                      aria-valuetext={`${quality} percent`}
-                    />
                   </div>
                 )}
               </div>
-
-              {/* USAGE GUIDE */}
-              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Upload one or more images, select the sizes you want, then click <span className="text-foreground font-medium">Generate</span> in the header.
-                    Each image is resized to every selected size and shown in the Preview panel ready to download.
-                    Use <span className="text-foreground font-medium">Ctrl+Enter</span> to generate without leaving the keyboard.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Platforms and sizes</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    40+ preset sizes across 12 platforms including Instagram, YouTube, LinkedIn, and TikTok.
-                    Use <span className="text-foreground font-medium">Select All</span> or <span className="text-foreground font-medium">Deselect All</span> inside each accordion to pick sizes in bulk.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Custom sizes</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Enter a width, height, and optional label in the <span className="text-foreground font-medium">Add Custom Size</span> form. Custom sizes appear as checkboxes alongside the platform presets and can be removed at any time.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Crop position</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    The Preview panel shows a crop overlay for the selected size. <span className="text-foreground font-medium">Drag</span> the overlay to shift the crop focus before generating.
-                    Use the dropdown to switch between sizes and adjust each independently.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Output format</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="text-foreground font-medium">JPG</span> and <span className="text-foreground font-medium">WebP</span> support a quality slider (50 to 100).
-                    <span className="text-foreground font-medium"> PNG</span> is always lossless.
-                    All resized images download together as a single ZIP file.
-                  </p>
-                </div>
-                <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
-              </div>
-
-              <div className="md:hidden h-[60px]" aria-hidden="true" />
             </div>
+
+            {/* Sizes & Format card */}
+            <div className="flex-1 min-h-0 flex flex-col rounded-lg border border-border overflow-hidden">
+              <div className="shrink-0 flex items-center px-3 py-2 bg-muted/20 border-b border-border">
+                <span className="text-sm font-medium">Sizes &amp; Format</span>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+                <Accordion type="multiple" className="rounded-lg border border-border px-3" role="group" aria-label="Platform size presets">
+                  {PLATFORM_GROUPS.map((group) => (
+                    <AccordionItem key={group.id} value={group.id}>
+                      <AccordionTrigger className="py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded">
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium">{group.label}</span>
+                          {group.sizes.some((s) => selectedSizes.has(s.id)) && (
+                            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground" aria-label={`${group.sizes.filter((s) => selectedSizes.has(s.id)).length} sizes selected`}>{group.sizes.filter((s) => selectedSizes.has(s.id)).length}</span>
+                          )}
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => { selectAllForPlatform(group); announceToScreenReader(`All ${group.label} sizes selected`) }} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Select All</Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => { deselectAllForPlatform(group); announceToScreenReader(`${group.label} sizes deselected`) }} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Deselect All</Button>
+                        </div>
+                        <div className="grid gap-2" role="group" aria-label={`${group.label} size options`}>
+                          {group.sizes.map((preset) => (
+                            <label key={preset.id} className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+                              <div className="flex items-center gap-2">
+                                <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => { toggleSize(preset.id, Boolean(c)); announceToScreenReader(c ? `${preset.label} selected` : `${preset.label} deselected`) }} aria-label={`${preset.label} ${preset.width} by ${preset.height} pixels`} />
+                                <span>{preset.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="rounded bg-muted px-1.5 py-0.5 font-mono" aria-label={`Aspect ratio ${preset.ratio}`}>{preset.ratio}</span>
+                                <span aria-label={`${preset.width} by ${preset.height} pixels`}>{preset.width}x{preset.height}</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+
+                {/* Custom sizes list */}
+                {customSizes.length > 0 && (
+                  <div className="grid gap-2" role="group" aria-label="Custom sizes">
+                    {customSizes.map((preset) => (
+                      <div key={preset.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Checkbox checked={selectedSizes.has(preset.id)} onCheckedChange={(c: boolean | "indeterminate") => { toggleSize(preset.id, Boolean(c)); announceToScreenReader(c ? `${preset.label} selected` : `${preset.label} deselected`) }} aria-label={`Custom size ${preset.label}`} />
+                          <span>{preset.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{preset.ratio}</span>
+                          <span>{preset.width}x{preset.height}</span>
+                          <button type="button" onClick={() => { removeCustomSize(preset.id); announceToScreenReader(`${preset.label} removed`) }} aria-label="Remove custom size" className="hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 rounded"><X className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Custom Size Form */}
+                <div className="space-y-3 rounded-lg border border-dashed border-border p-3" role="group" aria-labelledby="custom-size-label">
+                  <p className="text-xs font-medium text-muted-foreground" id="custom-size-label">Add Custom Size</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs" htmlFor="custom-width">Width (px)</Label>
+                      <Input id="custom-width" type="number" min="1" max="9999" value={customWidth} onChange={(e) => setCustomWidth(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-describedby="width-help" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs" htmlFor="custom-height">Height (px)</Label>
+                      <Input id="custom-height" type="number" min="1" max="9999" value={customHeight} onChange={(e) => setCustomHeight(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-describedby="height-help" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs" htmlFor="custom-label-input">Label (optional)</Label>
+                    <Input id="custom-label-input" placeholder={`${customWidth}x${customHeight}`} value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} className="h-8 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" />
+                  </div>
+                  <Button type="button" variant="outline" size="sm" className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" onClick={() => { addCustomSize(); announceToScreenReader("Custom size added") }}>
+                    <Plus className="mr-2 h-3.5 w-3.5" aria-hidden="true" />Add Custom Size
+                  </Button>
+                </div>
+
+                {/* Output Format */}
+                <div className="space-y-3 rounded-lg border border-border p-3" role="group" aria-labelledby="output-format-label">
+                  <div className="space-y-1">
+                    <Label className="text-xs" id="output-format-label">Output Format</Label>
+                    <div className="flex gap-2" role="group" aria-label="Format selection">
+                      {(["jpeg", "png", "webp"] as OutputFormat[]).map((fmt) => (
+                        <button key={fmt} type="button" onClick={() => { setOutputFormat(fmt); announceToScreenReader(`${fmt === "jpeg" ? "JPG" : fmt.toUpperCase()} format selected`) }}
+                          aria-pressed={outputFormat === fmt}
+                          aria-label={`${fmt === "jpeg" ? "JPG" : fmt.toUpperCase()} format`}
+                          className={`flex-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${outputFormat === fmt ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>
+                          {fmt === "jpeg" ? "JPG" : fmt.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {outputFormat !== "png" && (
+                    <div className="space-y-1" role="group" aria-labelledby="quality-label">
+                      <div className="flex justify-between">
+                        <Label className="text-xs" id="quality-label">Quality</Label>
+                        <span className="text-xs text-muted-foreground" aria-live="polite">{quality}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={50}
+                        max={100}
+                        value={quality}
+                        onChange={(e) => { setQuality(Number(e.target.value)); announceToScreenReader(`Quality ${e.target.value} percent`) }}
+                        className="w-full accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        aria-label={`Quality ${quality} percent`}
+                        aria-valuetext={`${quality} percent`}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* USAGE GUIDE */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Upload one or more images, select the sizes you want, then click <span className="text-foreground font-medium">Generate</span> in the header.
+                      Each image is resized to every selected size and shown in the Preview panel ready to download.
+                      Use <span className="text-foreground font-medium">Ctrl+Enter</span> to generate without leaving the keyboard.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Platforms and sizes</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      40+ preset sizes across 12 platforms including Instagram, YouTube, LinkedIn, and TikTok.
+                      Use <span className="text-foreground font-medium">Select All</span> or <span className="text-foreground font-medium">Deselect All</span> inside each accordion to pick sizes in bulk.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Custom sizes</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Enter a width, height, and optional label in the <span className="text-foreground font-medium">Add Custom Size</span> form. Custom sizes appear as checkboxes alongside the platform presets and can be removed at any time.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Crop position</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      The Preview panel shows a crop overlay for the selected size. <span className="text-foreground font-medium">Drag</span> the overlay to shift the crop focus before generating.
+                      Use the dropdown to switch between sizes and adjust each independently.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Output format</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="text-foreground font-medium">JPG</span> and <span className="text-foreground font-medium">WebP</span> support a quality slider (50 to 100).
+                      <span className="text-foreground font-medium"> PNG</span> is always lossless.
+                      All resized images download together as a single ZIP file.
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Everything runs in your browser. Nothing is sent to a server.</p>
+                </div>
+
+                <div className="md:hidden h-[60px]" aria-hidden="true" />
+              </div>
+            </div>
+
           </div>
         </div>
 
