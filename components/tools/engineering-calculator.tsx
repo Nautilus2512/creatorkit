@@ -5,6 +5,7 @@ import { Delete, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { ShortcutsModal } from "@/components/shortcuts-modal"
 
 let mathRad: MathInst | null = null
 let mathDeg: MathInst | null = null
@@ -66,6 +67,29 @@ const BUTTONS: BtnDef[] = [
   { label: "EE", action: "e",        variant: "fn"  },
   { label: "1/x",action: "1/(",      variant: "fn"  },
   { label: "=",  action: "__eval",   variant: "eq", shortcut: "Enter" },
+]
+
+const CALC_SHORTCUTS = [
+  { keys: ["Enter"],     description: "Evaluate expression" },
+  { keys: ["Escape"],    description: "Clear expression" },
+  { keys: ["Backspace"], description: "Delete last character" },
+  { keys: ["D"],         description: "Toggle DEG / RAD mode" },
+  { keys: ["S"],         description: "Insert sin(" },
+  { keys: ["C"],         description: "Insert cos(" },
+  { keys: ["T"],         description: "Insert tan(" },
+  { keys: ["A"],         description: "Insert asin(" },
+  { keys: ["O"],         description: "Insert acos(" },
+  { keys: ["N"],         description: "Insert atan(" },
+  { keys: ["L"],         description: "Insert ln(" },
+  { keys: ["G"],         description: "Insert log10(" },
+  { keys: ["Q"],         description: "Insert √x (" },
+  { keys: ["P"],         description: "Insert π" },
+  { keys: ["E"],         description: "Insert exp(" },
+  { keys: ["1"],         description: "Switch to Graph tab" },
+  { keys: ["2"],         description: "Switch to Calculus tab" },
+  { keys: ["3"],         description: "Switch to Constants tab" },
+  { keys: ["4"],         description: "Switch to History tab" },
+  { keys: ["?"],         description: "Toggle this shortcuts panel" },
 ]
 
 function getConstantScope() {
@@ -357,7 +381,7 @@ export default function EngineeringCalculator() {
   }, [expr, evalExpr])
 
   const btnClass = (v: BtnDef["variant"]) => {
-    const base = "h-10 w-full rounded-lg text-sm font-medium transition-all active:scale-95 select-none border relative"
+    const base = "h-10 w-full rounded-lg text-sm font-medium transition-all active:scale-95 select-none border relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
     if (v === "eq")      return `${base} bg-primary text-primary-foreground border-primary hover:opacity-90`
     if (v === "primary") return `${base} bg-destructive/80 text-white border-destructive/80 hover:bg-destructive`
     if (v === "fn")      return `${base} bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900/40`
@@ -377,12 +401,18 @@ export default function EngineeringCalculator() {
         "ENTER": "__eval", "ESCAPE": "__clear", "BACKSPACE": "__back",
       }
       
+      if (key === "D") {
+        e.preventDefault()
+        setIsDeg(d => !d)
+        return
+      }
+
       if (shortcutMap[key]) {
         e.preventDefault()
         handleBtn(shortcutMap[key])
         announceToScreenReader(`${key} pressed`)
       }
-      
+
       if (/^[0-9.+\-*/()%]$/.test(e.key)) {
         e.preventDefault()
         handleBtn(e.key)
@@ -432,15 +462,21 @@ export default function EngineeringCalculator() {
 
       {/* ── Desktop: top action bar ── */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
-        <span className="text-sm font-semibold shrink-0">Engineering Calculator</span>
-        {!ready && <span className="ml-2 text-xs text-muted-foreground">Loading…</span>}
+        <span className="text-sm font-semibold shrink-0 mr-1">Scientific Calculator</span>
+        {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+        <div className="ml-auto flex items-center gap-1.5">
+          <ShortcutsModal pageName="Scientific Calculator" shortcuts={CALC_SHORTCUTS} />
+        </div>
       </div>
 
       {/* ── Mobile: compact header + tab switcher ── */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
-          <h2 className="text-base font-semibold">Engineering Calculator</h2>
-          {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold">Scientific Calculator</h2>
+          <div className="flex items-center gap-1.5">
+            {!ready && <span className="text-xs text-muted-foreground">Loading…</span>}
+            <ShortcutsModal pageName="Scientific Calculator" shortcuts={CALC_SHORTCUTS} />
+          </div>
         </div>
         <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={panelTab === "input"} onClick={() => setPanelTab("input")}
@@ -463,7 +499,7 @@ export default function EngineeringCalculator() {
             <div className="flex items-center justify-between mb-2">
               <button
                 onClick={() => setIsDeg(d => !d)}
-                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   isDeg ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
                 }`}
                 role="radio"
@@ -471,17 +507,17 @@ export default function EngineeringCalculator() {
                 aria-label={isDeg ? "Degree mode" : "Radian mode"}
                 title={isDeg ? "Switch to RAD" : "Switch to DEG"}
               >
-                {isDeg ? "DEG" : "RAD"}<kbd className="ml-1.5 hidden md:inline text-[9px] opacity-50" aria-hidden="true">D</kbd>
+                {isDeg ? "DEG" : "RAD"}<kbd className={`ml-1.5 hidden md:inline rounded border px-1 text-[10px] ${isDeg ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">D</kbd>
               </button>
               <div className="flex gap-1" role="group" aria-label="Memory controls">
                 <button onClick={() => setMem(m => m + (parseFloat(display) || 0))}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   title="Memory Add (M+)">M+</button>
                 <button onClick={() => setExpr(e => e + mem.toString())}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   title="Memory Recall (MR)">MR</button>
                 <button onClick={() => setMem(0)}
-                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   title="Memory Clear (MC)">MC</button>
               </div>
             </div>
@@ -526,7 +562,7 @@ export default function EngineeringCalculator() {
               <button 
                 key={t.id} 
                 onClick={() => setRightTab(t.id)}
-                className={`flex-1 py-2.5 text-xs font-medium transition-colors relative ${
+                className={`flex-1 py-2.5 text-xs font-medium transition-colors relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${
                   rightTab === t.id
                     ? "text-foreground border-b-2 border-primary bg-muted/30"
                     : "text-muted-foreground hover:text-foreground"
@@ -537,7 +573,7 @@ export default function EngineeringCalculator() {
                 title={`Press ${t.shortcut} to switch`}
               >
                 {t.label}
-                <kbd className="ml-1 hidden md:inline text-[9px] opacity-50" aria-hidden="true">{t.shortcut}</kbd>
+                <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">{t.shortcut}</kbd>
               </button>
             ))}
           </div>
@@ -674,7 +710,7 @@ export default function EngineeringCalculator() {
                     key={key} 
                     onClick={() => setExpr(e => e + key)} 
                     disabled={!ready}
-                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     role="option"
                     aria-label={`${c.label}: ${c.desc}, value ${c.value.toExponential(3)}`}
                   >
@@ -697,7 +733,7 @@ export default function EngineeringCalculator() {
                 {history.length > 0 && (
                   <button 
                     onClick={() => setHistory([])}
-                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                     aria-label="Clear history"
                   >
                     <RotateCcw className="h-3 w-3" />Clear
@@ -712,7 +748,7 @@ export default function EngineeringCalculator() {
                       <button 
                         key={i} 
                         onClick={() => setExpr(h.result)}
-                        className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full text-left font-mono text-xs rounded border border-border/50 px-3 py-2 hover:border-primary/40 hover:bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         role="listitem"
                         aria-label={`Expression: ${h.expr}, result: ${h.result}`}
                       >

@@ -4,8 +4,8 @@ import EngineeringCalculator from "@/components/tools/engineering-calculator"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Engineering Calculator - CreatorKit",
-  description: "Scientific calculator with trig functions, logarithms, DEG/RAD mode, physical constants, and unit support. Powered by mathjs.",
+  title: "Scientific Calculator - CreatorKit",
+  description: "Scientific calculator with trig, logarithms, DEG/RAD mode, function graphing, numerical calculus, and physical constants. Powered by mathjs.",
 }
 
 export default function EngineeringCalculatorPage() {

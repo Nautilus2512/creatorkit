@@ -47,7 +47,7 @@
 - Game Controller Tester — Gamepad API, real-time states
 - Document Scanner — Perspective warp, brightness/contrast
 - Electrical Calculator — Ohm's Law, AC reactance, three-phase
-- Engineering Calculator — DEG/RAD trig, constants, memory
+- Scientific Calculator — DEG/RAD trig, graphing, calculus, constants, memory
 - Math Calculator — REPL-style, variables, matrices
 
 ### Media (7 tools)
@@ -90,9 +90,9 @@
 ---
 
 ## v1.80.0 — May 2026
-### Rules Compliance Pass — Doc Scanner
+### Document Scanner — Compliance Pass, Rename, Redesign, Multi-Format Download
 
-#### Doc Scanner (`doc-scanner.tsx`) — 10 issues
+#### Rules compliance pass (`doc-scanner.tsx`) — 10 issues
 - Bare-key shortcuts C, U, S, R replaced with Ctrl+Shift modifiers: `Ctrl+Shift+E` (start camera), `Ctrl+Shift+U` (upload photo), `Ctrl+Enter` (scan document), `Ctrl+Shift+Z` (reset / cancel / scan another)
 - `Ctrl+Shift+D` (D hard-conflict) → `Ctrl+Shift+S` (download)
 - ShortcutsModal labels corrected: was showing `["Ctrl", "D"]` for a handler that fired on `Ctrl+Shift+D`; all entries updated to match new shortcuts
@@ -101,14 +101,38 @@
 - `kbd` badges on default buttons: wrong `bg-primary-foreground text-primary border-border` → correct `border-primary-foreground/30 bg-primary-foreground/20` (Start Camera, Scan Document, Download JPEG)
 - Corner handle `<g>` elements: `focus-visible:ring-2 focus-visible:ring-primary` classes added; `onKeyDown` handler added — Enter/Space toggles drag state, arrow keys move handle by 1% per press, Escape releases drag
 - Corner handle `aria-label` updated to include "use arrow keys" instruction
-- Usage guide card added in idle phase (How to use 5 steps, Keyboard shortcuts, Tips, privacy note); idle container restructured to `flex flex-col h-full overflow-y-auto` with `flex-1` centered section and `shrink-0` guide below
-- Download flash state added: `downloading` boolean + `setTimeout(1500ms)`; Download JPEG button rests `variant="default"`, flashes `variant="outline"`; kbd badge conditional between states
-- Brightness, Contrast sliders: `Tab → ← →` hint badges added to labels (desktop only, `hidden md:inline-flex`)
+- Usage guide card added in idle phase (How to use 5 steps, Keyboard shortcuts, Tips, privacy note)
+- Download flash state added: `downloading` boolean + `setTimeout(1500ms)`; button rests `variant="default"`, flashes `variant="outline"`; kbd badge conditional between states
+- Brightness, Contrast sliders: `Tab → ← →` hint badges added to labels (desktop only)
 - Grayscale switch: `Tab → Space` hint badges added to label (desktop only)
-- `announceToScreenReader` messages updated throughout to reference new shortcuts
+
+#### Rename + redesigned idle screen
+- Tool renamed from "Doc Scanner" to "Document Scanner" throughout: component `ShortcutsModal pageName`, toolbar header, page metadata, tools listing title/description, tools page ShortcutsModal label
+- "Document Scanner" title added permanently to toolbar header (all phases); idle-phase action buttons removed from toolbar
+- Idle screen replaced single camera icon with three workflow icons (Upload → ScanLine → Download) to communicate the full process
+- Two-card action area: Upload Photo is primary (2/3 width, dashed primary border, `bg-primary/5`); Live Camera is secondary (1/3 width, muted styling) — reflects that upload is the recommended entry point
+- Usage guide step 1 updated to lead with Upload Photo; Tips reordered to match new emphasis
+
+#### Multi-format download (JPEG / PNG / WebP)
+- `OutputFormat = "jpeg" | "png" | "webp"` type added; `outputFormat` state defaults to JPEG
+- 3-button format selector added to "done" phase adjustments panel (`role="radiogroup"`, each button has `role="radio"` + `aria-checked`)
+- PNG shows note: "Lossless. Best for text documents."; WebP shows: "Smallest file size. Requires a modern browser."
+- `downloadResult` generates correct MIME type, quality argument (PNG skips quality — lossless), and file extension per chosen format
+- Download button label and `aria-label` update live: "Download JPEG / PNG / WEBP"; filename changes to `.jpg` / `.png` / `.webp`
+- Format preference persists across multiple scans within a session (not reset on "Start over")
+
+#### Mobile bottom bar fix (select + done phases)
+- Bar was `shrink-0` in-flow — required scrolling to reach buttons on mobile; split into two separate elements
+- Mobile: `md:hidden fixed bottom-0 left-0 right-0 z-20` with `env(safe-area-inset-bottom)` padding
+- Desktop: `hidden md:flex shrink-0` in-flow with full labels and kbd badges (unchanged UX)
+- Mobile select phase: icon-only `RotateCcw` + full-width `Scan Document`
+- Mobile done phase: icon-only `RotateCcw` | `flex-1 Download JPEG/PNG/WEBP` | icon-only `RefreshCw` — all three fit on narrow screens without overflow
+- `md:hidden h-[60px] shrink-0` spacer added at the bottom of done-phase controls so the fixed bar never covers the last slider or switch
 
 #### Files changed
 - `components/tools/doc-scanner.tsx`
+- `app/tools/doc-scanner/page.tsx`
+- `app/tools/page.tsx`
 
 ---
 
