@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ImageCompressor } from "@/components/tools/image-compressor"
+import ImageCompressor from "@/components/tools/image-compressor"
 import { ArrowLeft } from "lucide-react"
 
 export default function ImageCompressorPage() {
