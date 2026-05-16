@@ -1600,5 +1600,123 @@ Rule documented in rules.md §9: button grids use neutral muted shades; only `eq
 
 ---
 
+## Session v1.82.0 (May 2026) — Gradient Generator: Custom ColorPicker + CB Simulation
+
+### Overview
+Rewrote `gradient-generator.tsx` to replace all native `<input type="color">` elements with the custom `ColorPicker` component from `design-token-generator.tsx`, add full color blindness simulation (rules §22), and document the ColorPicker pattern as rules.md §23.
+
+### Custom ColorPicker
+| Decision | Detail |
+|---|---|
+| Adapted from DTG | All three utility functions (`hexToHSL`, `hslToHex`, `hslToRgb`) copied verbatim; picker logic identical |
+| Props made optional | DTG uses `label`/`shortcut`/`id` as required. For gradient stops (no label shown), all three made optional so the trigger renders a swatch-only button |
+| Pointer Events API | `onPointerDown` + `setPointerCapture` handles both mouse drag and touch drag with one handler; no `touchstart`/`mousemove` duplication |
+| Stop rows as cards | Each stop restructured from a flat row to a `rounded-lg border p-3 space-y-3` card containing the ColorPicker + position slider |
+
+### Color Blindness Simulation
+| Decision | Detail |
+|---|---|
+| Same matrix as DTG/palette extractor | Deuteranopia, protanopia, tritanopia coefficients consistent across all tools |
+| CB buttons in preview panel header | `role="radiogroup"` visible on both desktop and mobile without tab switching |
+| Simulated vs. original | `simulatedCssValue` drives the preview gradient; CSS output `pre` always uses original colors |
+| `announceToScreenReader` on mode change | Screen reader users know when simulation is active |
+
+### rules.md §23 Added
+Documents the custom ColorPicker pattern: props interface, Pointer Events drag API, three utility functions, trigger button markup, accessibility rules, reference to DTG as canonical implementation.
+
+### Commits
+| Hash | Message |
+|---|---|
+| bafdffc | feat: add custom ColorPicker + CB simulation to gradient-generator; document §23 |
+
+---
+
+## Session v1.83.0 (May 2026) — HTML Entity Encoder: Compliance Pass + Quick Insert Reorganization
+
+### Overview
+Full rules.md compliance pass (12 issues) on `html-entity-encoder.tsx`, followed by a separate UX fix reorganising the Quick insert feature which was overflowing the desktop action bar and missing entirely on mobile.
+
+### Rules Compliance Fixes (12 issues)
+| # | Issue | Fix |
+|---|---|---|
+| 1 | `Ctrl+Shift+D` — D hard-conflict | → `Ctrl+Shift+L` |
+| 2 | `Ctrl+Shift+C` — C hard-conflict | → `Ctrl+Shift+V` (§17 copy standard) |
+| 3 | Input guard missing | `instanceof HTMLInputElement/HTMLTextAreaElement` guard added |
+| 4 | Mobile tab buttons no focus rings | `focus-visible:ring-2 focus-visible:ring-inset` added |
+| 5 | Mobile header `pb-1` | → `pb-2` |
+| 6 | Mobile bottom bar `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| 7 | Footer spacer missing | `md:hidden h-[60px]` added in scrollable area |
+| 8 | Encode/Decode kbd blackout bug | Conditional class: `border-primary-foreground/30 bg-primary-foreground/20` when active |
+| 9 | Download button no flash pattern | `downloading` state, variant swap, 1500ms timeout |
+| 10 | `h-full` on textareas inside flex-1 wrapper | → `flex-1` directly on `<Textarea>`; wrapper divs removed |
+| 11 | Fragment wrapper | Removed |
+| 12 | No usage guide | Added: How to use, Quick insert, Swap, Keyboard shortcuts, privacy note |
+
+Layout also restructured to canonical scrollable wrapper + `min-h-[500px]` panels card.
+
+### Quick Insert Reorganization
+**Problem**: 14 character buttons in the single-row action bar caused visible overflow/crowding on desktop. On mobile they were absent entirely.
+
+| Platform | Fix |
+|---|---|
+| Desktop | Action bar split into two rows. Row 1: Encode/Decode/Swap + Copy/Download. Row 2: "Quick insert:" label + all 14 buttons + char count. No more overflow. |
+| Mobile | Horizontally scrollable strip added at the top of the input panel, above the textarea. Only visible on the input tab. Users swipe left to reach all 14 characters. |
+
+`quickInsertButtons(size)` helper extracted — single source renders both desktop and mobile buttons with slightly different padding per size.
+
+### Commits
+| Hash | Message |
+|---|---|
+| 79241e8 | fix: rules.md compliance pass for html-entity-encoder (12 issues) |
+| 4e4880c | fix: reorganise quick insert layout for desktop and mobile |
+
+---
+
+## Session v1.84.0 (May 2026) — Image Compressor: Compliance Pass, UX Fix, FileDropzone Prop
+
+### Overview
+Full rules.md compliance pass (12 issues) on `image-compressor.tsx`, a UX bug fix for the mobile tab-switch-on-recompress problem, em dash removal, and a shared component fix in `file-dropzone.tsx` (hardcoded `Ctrl+O` label). New §7 subsection added to rules.md documenting the hardcoded values anti-pattern.
+
+### Rules Compliance Fixes (12 issues)
+| # | Issue | Fix |
+|---|---|---|
+| 1 | Named export | → `export default`; page.tsx import updated |
+| 2 | `Ctrl+Shift+O` — O hard-conflict | → `Ctrl+Shift+U` |
+| 3 | `Ctrl+Shift+D` — D hard-conflict | → `Ctrl+Shift+S` (§17 download standard) |
+| 4 | Input guard missing | Added to keyboard handler |
+| 5 | Mobile header `pb-1` | → `pb-2` |
+| 6 | Mobile tab buttons no focus rings | `focus-visible:ring-2 focus-visible:ring-inset` added |
+| 7 | Mobile bottom bar `shrink-0` | → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm` |
+| 8 | Footer spacers missing | Added inside both panels' scrollable areas |
+| 9 | Fragment wrapper | Removed |
+| 10 | Download button no flash pattern | `downloading` state, `variant="default"` resting, flashes `variant="outline"` 1500ms, conditional kbd class |
+| 11 | Quality slider label no Tab hint | `Tab + ← →` two-badge hint added (desktop only) |
+| 12 | No usage guide | Added in input panel: formats, quality tips, downloading, privacy note |
+
+### UX Fix — Tab-Switch on Recompress
+**Bug**: `compress()` called `setActiveTab("output")` after every recompression. On mobile, changing the output format or dragging the quality slider would kick the user back to the Result tab mid-adjustment.
+
+**Fix**: Moved `setActiveTab("output")` out of `compress()` into `handleFilesSelected()` only. Format/quality changes now recompress silently in the background. The user stays on whichever tab they are on. The tab only switches automatically when a new file is first uploaded.
+
+This is the same pattern previously applied to csv-json-converter (v1.79.0 Session §Recurring Bug #3).
+
+### FileDropzone Shared Component Fix
+**Bug**: `file-dropzone.tsx` line 106 had `Ctrl+O` hardcoded as a `<kbd>` badge. After `image-compressor.tsx` was updated to use `Ctrl+Shift+U`, the badge still showed the old shortcut. The badge also lacked `hidden md:inline` and was appearing on mobile.
+
+**Fix**: Added optional `shortcut?: string` prop. Badge only renders when `shortcut` is provided. Badge uses `hidden md:inline`. `image-compressor.tsx` passes `shortcut="Ctrl+Shift+U"`.
+
+### rules.md §7 — Shared Components: No Hardcoded Caller Values
+New subsection documents the pattern with the FileDropzone `Ctrl+O` as a concrete real-world example. Rule: any value in a shared component that could differ between callers must be an optional prop; element hidden when not provided. Includes bug/fix code, list of common culprits, grep tip.
+
+### Commits
+| Hash | Message |
+|---|---|
+| 1a05253 | fix: rules.md compliance pass for image-compressor (12 issues + UX fix) |
+| 5fe594b | fix: remove em dashes from image-compressor guide text |
+| a5296cf | fix: replace hardcoded Ctrl+O in FileDropzone with optional shortcut prop |
+| afb3bc3 | docs: add §7 rule on hardcoded values in shared components |
+
+---
+
 *Last updated: 2026-05-16*
 *This file should be updated after each development session for future reference.*

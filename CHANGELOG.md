@@ -89,6 +89,99 @@
 
 ---
 
+## v1.84.0 — May 2026
+### Image Compressor — Compliance Pass, UX Fix, FileDropzone Shortcut Prop
+
+#### Rules compliance pass (`image-compressor.tsx`) — 12 issues + 1 UX fix
+- Named export → default export; `app/tools/image-compressor/page.tsx` import updated
+- `Ctrl+Shift+O` (O hard-conflict) → `Ctrl+Shift+U`; `Ctrl+Shift+D` (D hard-conflict) → `Ctrl+Shift+S`
+- Input guard added to keyboard handler
+- Mobile header `pb-1` → `pb-2`; tab buttons get `focus-visible:` rings
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Footer spacers added inside both panels' scrollable areas
+- Fragment wrapper removed
+- Download button: always `variant="outline"` → resting `variant="default"`, flashes `variant="outline"` 1500ms; conditional kbd class (blackout bug fix)
+- Quality slider label: `Tab + ← →` two-badge hint added (desktop only)
+- Usage guide added inside the input panel: output formats, quality tips, downloading, privacy note
+- Em dashes removed from all guide text
+
+#### UX fix — tab-switch on recompress
+- `setActiveTab("output")` removed from `compress()`; now only called once in `handleFilesSelected()`
+- Format/quality changes now recompress silently in the background without switching the user off the settings panel on mobile
+
+#### FileDropzone shared component (`file-dropzone.tsx`)
+- Added optional `shortcut?: string` prop; kbd badge only renders when prop is provided
+- Kbd badge now uses `hidden md:inline` (was missing — was showing on mobile)
+- `image-compressor.tsx` passes `shortcut="Ctrl+Shift+U"` to match its keyboard handler
+
+#### rules.md §7 addition
+- New subsection "Shared components — no hardcoded caller values"
+- Documents the anti-pattern with the `Ctrl+O` hardcoded in FileDropzone as the real example
+- Rule: any value in a shared component that could differ between callers must be an optional prop; element hidden when not provided
+- Includes bug/fix code example, list of common culprits (shortcut labels, button descriptions, file type hints), grep tip for finding stale labels after a shortcut change
+
+#### Files changed
+- `components/tools/image-compressor.tsx`
+- `components/file-dropzone.tsx`
+- `app/tools/image-compressor/page.tsx`
+- `rules.md`
+
+---
+
+## v1.83.0 — May 2026
+### HTML Entity Encoder — Compliance Pass + Quick Insert Reorganization
+
+#### Rules compliance pass (`html-entity-encoder.tsx`) — 12 issues
+- `Ctrl+Shift+D` (D hard-conflict) → `Ctrl+Shift+L`
+- `Ctrl+Shift+C` (C hard-conflict) → `Ctrl+Shift+V` (also §17 copy standard)
+- Input guard added to keyboard handler
+- Mobile tab buttons: `focus-visible:` rings added
+- Mobile header `pb-1` → `pb-2`
+- Mobile bottom bar: `shrink-0` → `fixed bottom-0 left-0 right-0 z-20 backdrop-blur-sm`
+- Footer spacer added
+- Encode/Decode toggle buttons: conditional kbd badge class fixes blackout bug
+- Download button: always `variant="outline"` → `downloading` flash state, variant swap, 1500ms timeout
+- Textareas: `h-full` inside `overflow-y-auto` wrapper → `flex-1` directly on `<Textarea>`; wrapper divs removed
+- Fragment wrapper removed
+- Layout restructured to scrollable wrapper + `min-h-[500px]` panels card
+- Usage guide added (How to use, Quick insert, Swap, Keyboard shortcuts, privacy note)
+
+#### Quick insert reorganization
+- **Desktop**: action bar split into two rows — row 1 has main controls (Encode/Decode/Swap, Copy, Download); row 2 has the Quick insert strip + char count; eliminates the previous crowding/overflow
+- **Mobile**: horizontally scrollable quick insert strip added inside the input panel above the textarea; only visible on the Plain Text / Encoded HTML tab
+- `quickInsertButtons()` helper extracted to avoid duplicate JSX across desktop and mobile
+
+#### Files changed
+- `components/tools/html-entity-encoder.tsx`
+
+---
+
+## v1.82.0 — May 2026
+### Gradient Generator — Custom ColorPicker + Color Blindness Simulation + rules.md §23
+
+#### Custom visual color picker
+- Replaced all native `<input type="color">` with custom `ColorPicker` component adapted from `design-token-generator.tsx`
+- Props made optional (`label?`, `shortcut?`, `id?`) for use in stop rows where no label is needed
+- 2D SL gradient area + hue slider + hex input; Pointer Events API with `setPointerCapture` handles mouse and touch
+- Stop rows restructured as `rounded-lg border p-3` cards for better visual grouping
+- Added `hexToHSL`, `hslToHex`, `hslToRgb` utility functions; `useMemo` added to imports
+
+#### Color blindness simulation (rules §22)
+- `CBMode` type, `simulateColorBlindness()` matrix, `CB_MODES` constant
+- `cbMode` state + `changeCbMode` callback with `announceToScreenReader`
+- CB mode buttons in preview panel header (`role="radiogroup"`)
+- Gradient preview uses `simulatedCssValue` (simulated stop colors); CSS output always uses original colors
+
+#### rules.md §23 — Custom Visual Color Picker
+- Documents the component pattern, props interface, Pointer Events drag API, three required utility functions, trigger button markup, accessibility rules
+- References `design-token-generator.tsx` as the canonical implementation
+
+#### Files changed
+- `components/tools/gradient-generator.tsx`
+- `rules.md`
+
+---
+
 ## v1.81.0 — May 2026
 ### Scientific Calculator — Compliance Pass, Rename, Button Style, Guides, Mobile Polish
 
