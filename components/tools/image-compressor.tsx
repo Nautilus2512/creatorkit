@@ -269,7 +269,7 @@ export default function ImageCompressor() {
                     ))}
                   </div>
                   {format === "png" && (
-                    <p className="text-xs text-muted-foreground" role="note">PNG is lossless — quality slider has no effect</p>
+                    <p className="text-xs text-muted-foreground" role="note">PNG is lossless. The quality slider has no effect.</p>
                   )}
                 </div>
 
@@ -310,15 +310,15 @@ export default function ImageCompressor() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Drop or select up to <span className="text-foreground font-medium">20 images</span> to compress them all at once.
                   Results appear on the <span className="text-foreground font-medium">Result</span> tab automatically.
-                  Adjust format and quality freely — the tool recompresses in the background without switching you away from settings.
+                  Adjust format and quality freely. The tool recompresses in the background without switching you away from settings.
                 </p>
               </div>
               <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Output formats</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                  <li><span className="text-foreground font-medium">JPEG</span> — lossy compression, best for photos. Smallest file size at high quality settings.</li>
-                  <li><span className="text-foreground font-medium">WebP</span> — modern format with better compression than JPEG. Supported in all current browsers.</li>
-                  <li><span className="text-foreground font-medium">PNG</span> — lossless. File size depends only on image content, not the quality slider.</li>
+                  <li><span className="text-foreground font-medium">JPEG</span> uses lossy compression, best for photos. Smallest file size at high quality settings.</li>
+                  <li><span className="text-foreground font-medium">WebP</span> is a modern format with better compression than JPEG. Supported in all current browsers.</li>
+                  <li><span className="text-foreground font-medium">PNG</span> is lossless. File size depends only on image content, not the quality slider.</li>
                 </ul>
               </div>
               <div className="space-y-1.5">
