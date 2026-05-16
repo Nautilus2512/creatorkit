@@ -383,10 +383,10 @@ export default function EngineeringCalculator() {
   const btnClass = (v: BtnDef["variant"]) => {
     const base = "h-10 w-full rounded-lg text-sm font-medium transition-all active:scale-95 select-none border relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
     if (v === "eq")      return `${base} bg-primary text-primary-foreground border-primary hover:opacity-90`
-    if (v === "primary") return `${base} bg-destructive/80 text-white border-destructive/80 hover:bg-destructive`
-    if (v === "fn")      return `${base} bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900/40`
-    if (v === "op")      return `${base} bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900 hover:bg-amber-100`
-    return `${base} bg-card border-border hover:bg-muted/50`
+    if (v === "primary") return `${base} bg-muted/40 text-destructive border-border hover:bg-destructive/10 hover:border-destructive/40`
+    if (v === "fn")      return `${base} bg-muted/60 text-foreground border-border hover:bg-muted`
+    if (v === "op")      return `${base} bg-muted/30 text-foreground border-border hover:bg-muted/60`
+    return `${base} bg-card text-foreground border-border hover:bg-muted/40`
   }
 
   // Keyboard shortcuts
@@ -550,6 +550,22 @@ export default function EngineeringCalculator() {
                 </button>
               ))}
             </div>
+
+            {/* Calculator guide */}
+            <div className="mt-3 rounded-xl border border-border bg-card p-4 space-y-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground text-sm">How to use</p>
+              <div className="space-y-1.5">
+                <p><span className="font-medium text-foreground">Type & evaluate</span> — build an expression using the buttons or keyboard, then press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Enter</kbd> or <kbd className="rounded border border-border bg-muted px-1 text-[10px]">=</kbd>.</p>
+                <p><span className="font-medium text-foreground">ANS</span> — inserts the last result into your expression.</p>
+                <p><span className="font-medium text-foreground">Memory</span> — <kbd className="rounded border border-border bg-muted px-1 text-[10px]">M+</kbd> adds display to memory, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">MR</kbd> recalls it, <kbd className="rounded border border-border bg-muted px-1 text-[10px]">MC</kbd> clears it.</p>
+                <p><span className="font-medium text-foreground">DEG / RAD</span> — press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">D</kbd> or click the badge to toggle the angle mode for trig functions.</p>
+              </div>
+              <div className="border-t border-border pt-2 space-y-1">
+                <p className="font-medium text-foreground">Keyboard shortcuts</p>
+                <p><kbd className="rounded border border-border bg-muted px-1 text-[10px]">S</kbd> sin( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">C</kbd> cos( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">T</kbd> tan( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">L</kbd> ln( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">G</kbd> log₁₀(</p>
+                <p><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Q</kbd> √( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">P</kbd> π &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">E</kbd> exp( &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">4</kbd> switch tabs</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -614,6 +630,13 @@ export default function EngineeringCalculator() {
                 Use <code className="bg-muted px-1 rounded" aria-label="variable x">x</code> as variable · e.g.{" "}
                 <code className="bg-muted px-1 rounded">x^2 - 3*x + 2</code>
               </p>
+              {/* Graph guide */}
+              <div className="shrink-0 rounded-xl border border-border bg-card p-3 space-y-1.5 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">Graph guide</p>
+                <p><span className="font-medium text-foreground">f(x)</span> — enter any expression using <code className="bg-muted px-1 rounded">x</code>. Supports <code className="bg-muted px-1 rounded">sin</code>, <code className="bg-muted px-1 rounded">cos</code>, <code className="bg-muted px-1 rounded">sqrt</code>, <code className="bg-muted px-1 rounded">pi</code>, and all calculator functions.</p>
+                <p><span className="font-medium text-foreground">x min / x max</span> — set the horizontal range. Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Plot</kbd> or hit <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Enter</kbd> in the f(x) field to redraw.</p>
+                <p>Examples: <code className="bg-muted px-1 rounded">sin(x)</code> · <code className="bg-muted px-1 rounded">x^3 - x</code> · <code className="bg-muted px-1 rounded">exp(-x^2)</code> · <code className="bg-muted px-1 rounded">abs(x)</code></p>
+              </div>
             </div>
           )}
 
@@ -695,6 +718,17 @@ export default function EngineeringCalculator() {
                   )}
                 </div>
               </div>
+
+              {/* Calculus guide */}
+              <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground text-sm">Calculus guide</p>
+                <div className="space-y-1.5">
+                  <p><span className="font-medium text-foreground">Definite Integral</span> — computes ∫ f(x) dx from <em>a</em> to <em>b</em> using Simpson's rule (1000 steps). Result is numerical.</p>
+                  <p><span className="font-medium text-foreground">Derivative at Point</span> — computes f′(x) at a given x using the central difference method. Good for smooth functions.</p>
+                  <p><span className="font-medium text-foreground">Bounds</span> — accept expressions: <code className="bg-muted px-1 rounded">pi</code>, <code className="bg-muted px-1 rounded">pi/2</code>, <code className="bg-muted px-1 rounded">sqrt(2)</code>, or plain numbers.</p>
+                  <p><span className="font-medium text-foreground">Functions</span> — use <code className="bg-muted px-1 rounded">x</code> as the variable. Supports <code className="bg-muted px-1 rounded">sin</code>, <code className="bg-muted px-1 rounded">cos</code>, <code className="bg-muted px-1 rounded">exp</code>, <code className="bg-muted px-1 rounded">log</code>, <code className="bg-muted px-1 rounded">sqrt</code>, and all constants.</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -706,9 +740,9 @@ export default function EngineeringCalculator() {
               </p>
               <div className="grid grid-cols-2 gap-1.5" role="listbox" aria-label="Constants list">
                 {Object.entries(CONSTANTS).map(([key, c]) => (
-                  <button 
-                    key={key} 
-                    onClick={() => setExpr(e => e + key)} 
+                  <button
+                    key={key}
+                    onClick={() => setExpr(e => e + key)}
                     disabled={!ready}
                     className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     role="option"
@@ -721,6 +755,16 @@ export default function EngineeringCalculator() {
                     <p className="text-xs font-mono text-primary mt-0.5">{c.value.toExponential(3)}</p>
                   </button>
                 ))}
+              </div>
+
+              {/* Constants guide */}
+              <div className="mt-4 rounded-xl border border-border bg-card p-4 space-y-2 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground text-sm">Constants guide</p>
+                <div className="space-y-1.5">
+                  <p><span className="font-medium text-foreground">Insert</span> — click any constant card to append its symbol to the calculator expression.</p>
+                  <p><span className="font-medium text-foreground">In expressions</span> — type the symbol directly: <code className="bg-muted px-1 rounded">h * c / e_c</code> or <code className="bg-muted px-1 rounded">k_B * 300</code>.</p>
+                  <p><span className="font-medium text-foreground">Graph & Calculus</span> — constants like <code className="bg-muted px-1 rounded">pi</code> and <code className="bg-muted px-1 rounded">G</code> also work as bounds and inside f(x) expressions.</p>
+                </div>
               </div>
             </div>
           )}
