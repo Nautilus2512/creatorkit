@@ -152,75 +152,85 @@ export default function HtmlEntityEncoder() {
     }
   }, [])
 
+  const quickInsertButtons = (size: "desktop" | "mobile") =>
+    REFERENCE.map(({ char, entity }) => (
+      <button
+        key={entity}
+        onClick={() => insertChar(mode === "encode" ? char : entity)}
+        title={`Insert ${mode === "encode" ? char : entity}`}
+        aria-label={`Insert ${mode === "encode" ? char : entity}`}
+        className={`flex items-center gap-1 rounded border border-border bg-background hover:border-primary/50 active:scale-95 transition-colors font-mono whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          size === "desktop" ? "px-2 py-0.5 text-xs focus-visible:ring-offset-2" : "px-2 py-1 text-xs"
+        }`}
+      >
+        <span className="text-muted-foreground" aria-hidden="true">{char === " " ? "⎵" : char}</span>
+        <span className="text-muted-foreground/40" aria-hidden="true">·</span>
+        <span aria-hidden="true">{entity}</span>
+      </button>
+    ))
+
   return (
     <div className="flex flex-1 flex-col min-h-0">
 
-      {/* DESKTOP: top action bar */}
-      <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2" role="toolbar" aria-label="HTML Entity Encoder controls">
-        <span className="text-sm font-semibold shrink-0 mr-1">HTML Entity Encoder</span>
-        <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-        <div className="flex items-center gap-1" role="group" aria-label="Mode selection">
-          <Button
-            variant={mode === "encode" ? "default" : "outline"}
-            size="sm"
-            onClick={() => switchMode("encode")}
-            aria-pressed={mode === "encode"}
-            aria-label="Encode mode, press Ctrl+Shift+E"
-          >
-            Encode
-            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "encode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+E</kbd>
-          </Button>
-          <Button
-            variant={mode === "decode" ? "default" : "outline"}
-            size="sm"
-            onClick={() => switchMode("decode")}
-            aria-pressed={mode === "decode"}
-            aria-label="Decode mode, press Ctrl+Shift+L"
-          >
-            Decode
-            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "decode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+L</kbd>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={swap}
-            disabled={!output}
-            aria-label="Swap input and output, press Ctrl+Shift+S"
-          >
-            <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
-          </Button>
-        </div>
-        <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
-        <span className="text-xs text-muted-foreground" id="quick-insert-label-desktop">Quick insert:</span>
-        <div className="flex flex-wrap gap-1" role="group" aria-labelledby="quick-insert-label-desktop">
-          {REFERENCE.map(({ char, entity }) => (
-            <button
-              key={entity}
-              onClick={() => insertChar(mode === "encode" ? char : entity)}
-              title={`Insert ${mode === "encode" ? char : entity}`}
-              aria-label={`Insert ${mode === "encode" ? char : entity}`}
-              className="flex items-center gap-1 px-2 py-0.5 rounded border border-border bg-background hover:border-primary/50 transition-colors text-xs font-mono whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      {/* DESKTOP: two-row action bar */}
+      <div className="hidden md:flex flex-col shrink-0 border-b border-border bg-card/95 backdrop-blur-sm">
+        {/* Row 1: main controls */}
+        <div className="flex items-center gap-2 px-4 py-2" role="toolbar" aria-label="HTML Entity Encoder controls">
+          <span className="text-sm font-semibold shrink-0 mr-1">HTML Entity Encoder</span>
+          <div className="h-4 w-px bg-border mx-1" aria-hidden="true" />
+          <div className="flex items-center gap-1" role="group" aria-label="Mode selection">
+            <Button
+              variant={mode === "encode" ? "default" : "outline"}
+              size="sm"
+              onClick={() => switchMode("encode")}
+              aria-pressed={mode === "encode"}
+              aria-label="Encode mode, press Ctrl+Shift+E"
             >
-              <span className="text-muted-foreground" aria-hidden="true">{char === " " ? "⎵" : char}</span>
-              <span className="text-muted-foreground/50" aria-hidden="true">·</span>
-              <span aria-hidden="true">{entity}</span>
-            </button>
-          ))}
+              Encode
+              <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "encode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+E</kbd>
+            </Button>
+            <Button
+              variant={mode === "decode" ? "default" : "outline"}
+              size="sm"
+              onClick={() => switchMode("decode")}
+              aria-pressed={mode === "decode"}
+              aria-label="Decode mode, press Ctrl+Shift+L"
+            >
+              Decode
+              <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${mode === "decode" ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">Ctrl+Shift+L</kbd>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={swap}
+              disabled={!output}
+              aria-label="Swap input and output, press Ctrl+Shift+S"
+            >
+              <ArrowLeftRight className="h-4 w-4 mr-1" aria-hidden="true" />Swap
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            </Button>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            <ShortcutsModal pageName="HTML Entity Encoder" shortcuts={shortcuts} />
+            <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
+              {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
+              {copied ? "Copied!" : "Copy"}
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
+            </Button>
+            <Button variant={downloading ? "outline" : "default"} size="sm" onClick={download} disabled={!output} aria-label="Download output">
+              <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
+            </Button>
+          </div>
         </div>
-        {(input || output) && (
-          <span className="text-xs text-muted-foreground ml-1" aria-live="polite">{input.length} → {output.length} chars</span>
-        )}
-        <div className="ml-auto flex items-center gap-1.5">
-          <ShortcutsModal pageName="HTML Entity Encoder" shortcuts={shortcuts} />
-          <Button variant="outline" size="sm" onClick={copy} disabled={!output} aria-label={copied ? "Copied to clipboard" : "Copy output to clipboard"}>
-            {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
-            {copied ? "Copied!" : "Copy"}
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
-          </Button>
-          <Button variant={downloading ? "outline" : "default"} size="sm" onClick={download} disabled={!output} aria-label="Download output">
-            <Download className="h-4 w-4 mr-1" aria-hidden="true" />Download
-          </Button>
+        {/* Row 2: quick insert */}
+        <div className="flex items-center gap-2 px-4 py-1.5 border-t border-border/50">
+          <span className="text-xs text-muted-foreground shrink-0" id="quick-insert-label-desktop">Quick insert:</span>
+          <div className="flex flex-wrap gap-1 flex-1" role="group" aria-labelledby="quick-insert-label-desktop">
+            {quickInsertButtons("desktop")}
+          </div>
+          {(input || output) && (
+            <span className="text-xs text-muted-foreground shrink-0 ml-2" aria-live="polite">{input.length} → {output.length} chars</span>
+          )}
         </div>
       </div>
 
@@ -262,6 +272,12 @@ export default function HtmlEntityEncoder() {
             role="region"
             aria-label="Input"
           >
+            {/* Mobile: quick insert strip */}
+            <div className="md:hidden shrink-0 overflow-x-auto border-b border-border px-2 py-1.5" role="group" aria-label="Quick insert characters">
+              <div className="flex gap-1 w-max">
+                {quickInsertButtons("mobile")}
+              </div>
+            </div>
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -301,8 +317,9 @@ export default function HtmlEntityEncoder() {
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Quick insert</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Use the <span className="text-foreground font-medium">Quick insert</span> buttons in the toolbar to add common characters or entities directly into the input.
+              Use the <span className="text-foreground font-medium">Quick insert</span> buttons to add common characters or entities directly into the input.
               In Encode mode they insert the raw character. In Decode mode they insert the entity string.
+              On mobile, scroll the strip horizontally to reach all characters.
             </p>
           </div>
           <div className="space-y-1.5">
