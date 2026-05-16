@@ -67,7 +67,7 @@ function FieldRow({ label, value, unit, onChange, placeholder = "0", id, shortcu
           aria-label={`${label} in ${unit}`}
         />
         {shortcut && (
-          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground pointer-events-none" aria-hidden="true">
+          <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground pointer-events-none" aria-hidden="true">
             {shortcut}
           </kbd>
         )}
@@ -137,7 +137,7 @@ function AcReactance() {
           <button
             key={hz}
             onClick={() => setFreq(hz)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${freq === hz ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${freq === hz ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40"}`}
             role="radio"
             aria-checked={freq === hz}
             aria-label={`${hz} Hertz`}
@@ -229,7 +229,7 @@ function ThreePhase() {
           <button
             key={c}
             onClick={() => setCfg(c)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${cfg === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${cfg === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
             aria-checked={cfg === c}
             aria-label={c === "star" ? "Star configuration (Y)" : "Delta configuration (Δ)"}
@@ -311,7 +311,7 @@ function ResistorColorCode() {
               key={c.name}
               onClick={() => onChange(c.name)}
               title={c.name}
-              className={`w-6 h-6 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary ${value === c.name ? "border-primary scale-125" : "border-transparent hover:scale-110"}`}
+              className={`w-6 h-6 rounded border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${value === c.name ? "border-primary scale-125" : "border-transparent hover:scale-110"}`}
               style={{ backgroundColor: c.bg, color: c.text }}
               role="radio"
               aria-checked={value === c.name}
@@ -333,7 +333,7 @@ function ResistorColorCode() {
           <button
             key={b}
             onClick={() => { setBands(b); setSel(b === 4 ? ["Brown","Black","Red","Gold"] : ["Brown","Black","Black","Red","Gold"]) }}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${bands === b ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${bands === b ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
             aria-checked={bands === b}
             aria-label={`${b} band resistor`}
@@ -398,7 +398,7 @@ function TimeConstant() {
           <button
             key={t}
             onClick={() => setType(t)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${type === t ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}
             role="radio"
             aria-checked={type === t}
             aria-label={t === "RC" ? "RC circuit (Resistor-Capacitor)" : "RL circuit (Resistor-Inductor)"}
@@ -466,6 +466,8 @@ export default function ElectricalCalculator() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
       // Number keys 1-6 for tabs
       if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[1-6]$/.test(e.key)) {
         e.preventDefault()
@@ -493,8 +495,7 @@ export default function ElectricalCalculator() {
   }, [setTabWithAnnounce])
 
   return (
-    <>
-      <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex flex-1 flex-col min-h-0">
 
         {/* DESKTOP: top action bar */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
@@ -505,14 +506,14 @@ export default function ElectricalCalculator() {
         </div>
 
         {/* MOBILE: compact header */}
-        <div className="flex md:hidden shrink-0 items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex md:hidden shrink-0 items-center justify-between px-4 pt-3 pb-2 border-b border-border">
           <h2 className="text-base font-semibold">Electrical Calculator</h2>
           <ShortcutsModal pageName="Electrical Calculator" shortcuts={shortcuts} />
         </div>
 
         {/* Content (scrollable) */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex gap-4 min-h-0" style={{ minHeight: "calc(100vh - 10rem)" }}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex gap-4 min-h-[500px]">
             {/* Tab sidebar */}
             <div className="shrink-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card w-48" role="region" aria-label="Calculator selection">
               <div className="shrink-0 border-b border-border px-4 py-3">
@@ -524,7 +525,7 @@ export default function ElectricalCalculator() {
                   <button
                     key={t.id}
                     onClick={() => setTabWithAnnounce(t.id)}
-                    className={`w-full text-left rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                    className={`w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                       tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                     role="tab"
@@ -532,7 +533,7 @@ export default function ElectricalCalculator() {
                     aria-label={`${t.label} (press ${t.shortcut})`}
                     title={`Press ${t.shortcut} to switch`}
                   >
-                    {t.label}<kbd className="ml-auto hidden md:inline float-right rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-foreground" aria-hidden="true">{t.shortcut}</kbd>
+                    <span>{t.label}</span><kbd className={`hidden md:inline rounded border px-1.5 py-0.5 text-[10px] ${tab === t.id ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">{t.shortcut}</kbd>
                   </button>
                 ))}
               </div>
@@ -552,17 +553,50 @@ export default function ElectricalCalculator() {
               </div>
             </div>
           </div>
+
+          {/* Usage guide */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Select a calculator from the sidebar or press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd>.</li>
+                <li>Enter any known values. Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Tab</kbd> to move between fields.</li>
+                <li>Results calculate instantly. <span className="text-foreground font-medium">Highlighted rows</span> show the computed output.</li>
+                <li>Press <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> to blur a focused input and return keyboard focus to the page.</li>
+              </ol>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">1</kbd>–<kbd className="rounded border border-border bg-muted px-1 text-[10px]">6</kbd> Switch between calculators</li>
+                <li><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Escape</kbd> Blur the focused input</li>
+              </ul>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Tips</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li><span className="text-foreground font-medium">Ohm's Law</span> auto-solves for any unknown when 2 of V, I, R, or P are entered.</li>
+                <li>Use scientific notation for small values. For example, 1 µF = 0.000001 F, or enter 1e-6.</li>
+                <li>The <span className="text-foreground font-medium">Resistor Colors</span> tab shows a live resistor diagram that updates with each band selection.</li>
+                <li>All calculations follow IEC and IEEE standards with SI units.</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">Everything runs in your browser. Nothing is sent to a server.</p>
+          </div>
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
 
-        {/* MOBILE: bottom action bar — minimal, no primary action needed */}
-        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
-          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+        {/* MOBILE: bottom tab bar — fixed */}
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-20 flex items-center border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
           <div className="flex-1 overflow-x-auto flex gap-1" role="tablist" aria-label="Available calculators">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTabWithAnnounce(t.id)}
-                className={`shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
+                className={`shrink-0 h-11 px-3 rounded text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === t.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50"}`}
                 role="tab"
                 aria-selected={tab === t.id}
                 aria-label={t.label}
@@ -573,7 +607,6 @@ export default function ElectricalCalculator() {
           </div>
         </div>
 
-      </div>
-    </>
+    </div>
   )
 }
