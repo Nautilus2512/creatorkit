@@ -138,6 +138,7 @@ export default function EngineeringCalculator() {
   const [mem, setMem]         = useState(0)
   const [rightTab, setRightTab] = useState<RightTab>("graph")
   const [panelTab, setPanelTab] = useState<"input" | "output">("input")
+  const [flashedKey, setFlashedKey] = useState<string | null>(null)
 
   // ── Graph state ──
   const [graphFn, setGraphFn]     = useState("sin(x)")
@@ -742,9 +743,17 @@ export default function EngineeringCalculator() {
                 {Object.entries(CONSTANTS).map(([key, c]) => (
                   <button
                     key={key}
-                    onClick={() => setExpr(e => e + key)}
+                    onClick={() => {
+                      setExpr(e => e + key)
+                      setFlashedKey(key)
+                      setTimeout(() => setFlashedKey(k => k === key ? null : k), 500)
+                    }}
                     disabled={!ready}
-                    className="text-left rounded-lg border border-border px-3 py-2 hover:border-primary/50 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className={`text-left rounded-lg border px-3 py-2 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      flashedKey === key
+                        ? "border-primary bg-primary/15 scale-95 shadow-sm shadow-primary/20"
+                        : "border-border hover:border-primary/50 hover:bg-muted/30"
+                    }`}
                     role="option"
                     aria-label={`${c.label}: ${c.desc}, value ${c.value.toExponential(3)}`}
                   >
