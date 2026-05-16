@@ -392,6 +392,31 @@ function save(data: unknown) {
 ```
 Always wrap in try/catch. Always use the prefix `creatorkit-` in storage keys.
 
+### Shared components — no hardcoded caller values
+
+A **hardcoded value** is a literal written directly into the component instead of being passed in as a prop. In a shared component, hardcoded values create a silent mismatch: the tool's keyboard handler or logic is updated, but the badge or label buried in the shared component still shows the old value.
+
+**Rule:** Any value in a shared component that could differ between callers must be an optional prop. When not provided, the element should be hidden or omitted entirely — never show a stale default.
+
+```tsx
+// ❌ Bug — hardcoded shortcut; every tool that uses this shows "Ctrl+O"
+//    even after its handler was changed to Ctrl+Shift+U
+<kbd>Ctrl+O</kbd>
+
+// ✅ Correct — caller decides; no badge if caller doesn't pass shortcut
+interface SharedProps {
+  shortcut?: string  // optional — omit to hide the badge
+}
+{shortcut && <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">{shortcut}</kbd>}
+```
+
+Common values that must never be hardcoded in shared components:
+- Keyboard shortcut labels (`Ctrl+O`, `Ctrl+Enter`, etc.)
+- Button labels or action descriptions that vary per tool
+- File type hints or accept strings shown in UI text
+
+When updating a keyboard shortcut in a tool, always grep for the old shortcut string across the whole `components/` directory to catch any shared component that hardcodes it.
+
 ### Keyboard event handler pattern
 ```tsx
 const handleKeyDown = useCallback((e: KeyboardEvent) => {
