@@ -125,7 +125,7 @@ export const FileDropzone = forwardRef<HTMLInputElement, FileDropzoneProps>(func
             {files.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                className="flex items-center gap-3 min-w-0 rounded-lg border border-border bg-card p-3"
               >
                 <div className="rounded-md bg-muted p-2">
                   <FileImage className="h-4 w-4 text-muted-foreground" />
