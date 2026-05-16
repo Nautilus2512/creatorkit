@@ -542,7 +542,7 @@ export default function EngineeringCalculator() {
                   <span className="relative inline-flex items-center justify-center w-full h-full">
                     {btn.label === "⌫" ? <Delete className="h-4 w-4 mx-auto" /> : btn.label}
                     {btn.shortcut && (
-                      <kbd className="absolute -bottom-0.5 -right-0.5 text-[7px] opacity-40 font-mono" aria-hidden="true">
+                      <kbd className="absolute -bottom-0.5 -right-0.5 text-[7px] opacity-40 font-mono hidden md:inline" aria-hidden="true">
                         {btn.shortcut}
                       </kbd>
                     )}
@@ -574,7 +574,7 @@ export default function EngineeringCalculator() {
 
           {/* Tab bar */}
           <div className="flex shrink-0 border-b border-border" role="tablist" aria-label="Right panel sections">
-            {TABS.map((t, idx) => (
+            {TABS.map((t) => (
               <button 
                 key={t.id} 
                 onClick={() => setRightTab(t.id)}
