@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Download, Upload, Loader2, Check } from "lucide-react"
+import { Download, Upload, Loader2, Check, Info } from "lucide-react"
 import JSZip from "jszip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -303,7 +303,12 @@ export default function ImageCompressor() {
                     ))}
                   </div>
                   {format === "png" && (
-                    <p className="text-xs text-muted-foreground" role="note">PNG uses oxipng lossless optimization. Typically 10-20% smaller than unoptimized PNG. Loads a small optimizer on first use. Quality slider has no effect.</p>
+                    <div className="flex items-start gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2.5" role="note">
+                      <Info className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
+                      <p className="text-xs text-blue-600 leading-relaxed">
+                        PNG uses <span className="font-medium">oxipng lossless optimization</span>, typically 10-20% smaller than unoptimized PNG. Because lossless compression preserves every pixel, savings are limited compared to JPEG or WebP. For maximum file size reduction, switch to <span className="font-medium">JPEG</span> or <span className="font-medium">WebP</span>. Quality slider has no effect.
+                      </p>
+                    </div>
                   )}
                 </div>
 
