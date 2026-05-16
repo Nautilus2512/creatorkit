@@ -193,6 +193,18 @@ const THEMES = {
   sepia: { bg: "#f8f1e3", card: "#f0e6d3", text: "#3d2b1f", sub: "#6b4f3a" },
 }
 
+// ─── Accessibility helper ──────────────────────────────────────────────────────
+function announceToScreenReader(message: string) {
+  const el = document.createElement("div")
+  el.setAttribute("role", "status")
+  el.setAttribute("aria-live", "polite")
+  el.setAttribute("aria-atomic", "true")
+  el.className = "sr-only"
+  el.textContent = message
+  document.body.appendChild(el)
+  setTimeout(() => document.body.removeChild(el), 1000)
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 export default function FontPairer() {
   const [headingFont, setHeadingFont] = useState("Playfair Display")
@@ -216,12 +228,17 @@ export default function FontPairer() {
   }, [])
 
   const applyPairing = (p: Pairing) => { setHeadingFont(p.heading); setBodyFont(p.body) }
-  const randomPairing = useCallback(() => applyPairing(PAIRINGS[Math.floor(Math.random() * PAIRINGS.length)]), [])
+  const randomPairing = useCallback(() => {
+    const p = PAIRINGS[Math.floor(Math.random() * PAIRINGS.length)]
+    applyPairing(p)
+    announceToScreenReader(`Random pairing applied: ${p.heading} and ${p.body}.`)
+  }, [])
 
   const cycleTheme = useCallback(() => {
     const themes: ("light" | "dark" | "sepia")[] = ["light", "dark", "sepia"]
-    const idx = themes.indexOf(theme)
-    setTheme(themes[(idx + 1) % 3])
+    const next = themes[(themes.indexOf(theme) + 1) % 3]
+    setTheme(next)
+    announceToScreenReader(`Theme changed to ${next}.`)
   }, [theme])
 
   const activePairing = PAIRINGS.find(p => p.heading === headingFont && p.body === bodyFont)
@@ -252,17 +269,17 @@ body, p { font-family: var(--font-body); }`
   const copy = useCallback(() => {
     navigator.clipboard.writeText(cssCode)
     setCopied(true)
+    announceToScreenReader("CSS copied to clipboard.")
     setTimeout(() => setCopied(false), 2000)
   }, [cssCode])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "?" || (e.shiftKey && e.key === "/")) return
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "r") { e.preventDefault(); randomPairing() }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "t") { e.preventDefault(); cycleTheme() }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c") { 
-        e.preventDefault(); copy() 
-      }
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "x") { e.preventDefault(); randomPairing() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") { e.preventDefault(); cycleTheme() }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v") { e.preventDefault(); copy() }
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
@@ -271,46 +288,48 @@ body, p { font-family: var(--font-body); }`
   const t = THEMES[theme]
 
   return (
-    <>
-      <div className="flex flex-1 flex-col min-h-0">
+    <div className="flex flex-1 flex-col min-h-0">
 
         {/* Desktop: top action bar */}
         <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
           <span className="text-sm font-semibold shrink-0 mr-1">Font Pairer</span>
           <Button variant="ghost" size="sm" onClick={randomPairing} aria-label="Apply random font pairing">
             <Shuffle className="h-4 w-4 mr-1" aria-hidden="true" />Random
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
           </Button>
           <div className="ml-auto flex items-center gap-1.5">
             <ShortcutsModal pageName="Font Pairer" shortcuts={[
-              { keys: ["Ctrl", "Shift", "R"], description: "Random pairing" },
-              { keys: ["Ctrl", "Shift", "T"], description: "Cycle theme" },
-              { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Random pairing" },
+              { keys: ["Ctrl", "Shift", "L"], description: "Cycle theme" },
+              { keys: ["Ctrl", "Shift", "V"], description: "Copy CSS" },
+              { keys: ["?"], description: "Toggle this panel" },
             ]} />
             <Button variant="outline" size="sm" onClick={copy} aria-label={copied ? "CSS copied" : "Copy CSS"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy CSS"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
             </Button>
           </div>
         </div>
 
         {/* Mobile: compact header + tab switcher */}
         <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <h2 className="text-base font-semibold">Font Pairer</h2>
             <ShortcutsModal pageName="Font Pairer" shortcuts={[
-              { keys: ["Ctrl", "Shift", "R"], description: "Random pairing" },
-              { keys: ["Ctrl", "Shift", "C"], description: "Copy CSS" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Random pairing" },
+              { keys: ["Ctrl", "Shift", "L"], description: "Cycle theme" },
+              { keys: ["Ctrl", "Shift", "V"], description: "Copy CSS" },
+              { keys: ["?"], description: "Toggle this panel" },
             ]} />
           </div>
           <div className="flex" role="tablist" aria-label="Panel selection">
             <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
               Settings
             </button>
             <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
               Preview
             </button>
           </div>
@@ -391,6 +410,23 @@ body, p { font-family: var(--font-body); }`
                 </div>
               </div>
 
+              {/* Usage guide */}
+              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                  <li>Pick a <span className="text-foreground font-medium">Heading Font</span> and a <span className="text-foreground font-medium">Body Font</span> from the lists, or click a suggested pairing to apply both at once.</li>
+                  <li>Use the <span className="text-foreground font-medium">Sizes</span> sliders to adjust heading and body size in the preview.</li>
+                  <li>Switch the preview theme (Light / Dark / Sepia) to check readability across backgrounds.</li>
+                  <li>Click <span className="text-foreground font-medium">Copy CSS</span> to grab the <code className="bg-muted px-1 rounded">@import</code> URL and CSS variables, ready to paste into your stylesheet.</li>
+                </ol>
+                <div className="border-t border-border pt-3 space-y-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Keyboard shortcuts</p>
+                  <p className="text-xs text-muted-foreground"><kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+X</kbd> random pairing &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd> cycle theme &nbsp; <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+V</kbd> copy CSS</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Fonts are loaded from Google Fonts. Nothing you type is sent to a server.</p>
+              </div>
+
+              <div className="md:hidden h-[60px]" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -492,7 +528,7 @@ body, p { font-family: var(--font-body); }`
                   <Button variant="ghost" size="sm" onClick={copy} aria-label={copied ? "CSS copied to clipboard" : "Copy CSS to clipboard"} className="h-7">
                     {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
                     {copied ? "Copied!" : "Copy CSS"}
-                    <kbd className="ml-1.5 hidden md:inline rounded border border-border/30 bg-muted/30 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+                    <kbd className="ml-1.5 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
                   </Button>
                 </div>
                 <pre className="p-4 text-xs font-mono overflow-x-auto bg-muted/10 leading-relaxed whitespace-pre">{cssCode}</pre>
@@ -504,7 +540,7 @@ body, p { font-family: var(--font-body); }`
 
         {/* Mobile: bottom action bar */}
         <div
-          className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+          className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-2 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           <Button variant="ghost" size="sm" className="h-11 px-3" onClick={randomPairing} aria-label="Random pairing">
@@ -518,6 +554,5 @@ body, p { font-family: var(--font-body); }`
         </div>
 
       </div>
-    </>
   )
 }
