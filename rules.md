@@ -152,6 +152,84 @@ For settings controls that are keyboard-navigable but have no dedicated shortcut
 
 ---
 
+### Viewport-filling split-panel layout (CreatorKit standard for two-panel tools)
+
+This is the **required desktop layout** for every tool that has two panels (settings + preview, input + output). Both panels are always visible on screen at the same time. Each panel scrolls independently. The user never needs to scroll the page to move between settings and output.
+
+This is the compact, application-like feel that defines CreatorKit on desktop — no page-level scrolling, no hunting for the output after changing a setting.
+
+#### Height chain (required — every ancestor must be bounded)
+
+The independent-scroll behaviour depends on a complete flex height chain from the page wrapper all the way down to each panel's scroll container. Break any link in the chain and the panels stop scrolling independently.
+
+**`page.tsx`** — page outer div must be `h-screen`, not `min-h-screen`:
+```tsx
+<div className="flex flex-col h-screen overflow-hidden bg-background">
+  <main className="flex flex-col flex-1 min-h-0 mx-auto w-full max-w-none px-3 pt-4 md:px-4">
+    <div className="mb-4 shrink-0">
+      <Link href="/tools">← All Tools</Link>
+    </div>
+    <div className="flex-1 min-h-0">
+      <ToolComponent />
+    </div>
+  </main>
+</div>
+```
+
+**Component root** — uses `h-full` because its parent (`flex-1 min-h-0` wrapper div) provides an explicit bounded height:
+```tsx
+<div className="flex flex-col h-full min-h-0" role="main" aria-label="Tool Name tool">
+  {/* Desktop top action bar (shrink-0) */}
+  {/* Mobile compact header (shrink-0) */}
+  <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
+
+    {/* Left panel */}
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden md:border-r border-border bg-card">
+      <div className="shrink-0 border-b border-border px-4 py-3">
+        <span className="text-sm font-medium" id="settings-panel-label">Settings</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        {/* All settings — scrolls independently */}
+      </div>
+    </div>
+
+    {/* Right panel */}
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-card">
+      <div className="shrink-0 border-b border-border px-4 py-3">
+        <span className="text-sm font-medium" id="preview-panel-label">Preview</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Output / preview — scrolls independently */}
+        {/* Usage guide lives here, below the output */}
+      </div>
+    </div>
+
+  </div>
+</div>
+```
+
+#### Rules
+
+- `h-screen overflow-hidden` on the page outer div. Never `min-h-screen` — that allows the page to grow and breaks the chain.
+- `pt-4` on `<main>`, not `py-4`. Bottom padding is unnecessary when the component fills to the viewport edge.
+- `shrink-0` on the back-link wrapper div. It must never compress.
+- `flex-1 min-h-0` on the div that wraps `<ToolComponent />`. This is the bridge that gives the component a bounded height.
+- Component root uses `h-full min-h-0`, not `flex-1`. Its parent already has a concrete height; `h-full` fills it exactly.
+- `min-h-0` on every flex ancestor in the chain. Without it, browsers use content height as the minimum, preventing independent scrolling.
+- Each panel: `flex flex-col flex-1 min-h-0 overflow-hidden`.
+- Each panel's scrollable body: `flex-1 overflow-y-auto`.
+- Panel header and panel footer rows (download button, action bar): `shrink-0`.
+
+#### Usage guide placement
+
+In this layout the usage guide lives **inside the right panel's scroll area**, below the output. It is never placed outside the panels. This keeps it reachable without a separate full-page scroll.
+
+#### Why not the card pattern?
+
+The card layout (`min-h-[500px] rounded-xl border`) from the single-scroll pattern creates a tall card that scrolls with the page. On desktop, settings scroll out of view the moment the user looks at the output. The viewport-filling pattern eliminates this entirely — both panels are always in frame.
+
+---
+
 ## 4. Mobile Layout (Vertical Screen)
 
 ### Compact header (mobile only)
@@ -570,16 +648,32 @@ The `mounted` guard is required so `document.body` is only referenced client-sid
 
 There are three structural patterns used across all tools. Choose based on the tool's needs.
 
-### Type A — Split panel (input / output)
-Used by: AES Encryptor, URL Encoder, Base64 Encoder, Text Compare, etc.
+### Type A — Viewport-filling split panel (CreatorKit standard for two-panel tools)
+Used by: Image Watermark Adder, Image to PDF, Image to Text, Background Remover, and all future two-panel tools.
 
-- Desktop: two panels side by side, separated by `md:border-r`.
-- Mobile: tab switcher (Input / Output tabs) with active tab visible, inactive tab hidden.
-- Primary action in the top action bar or triggers auto-switching to output tab.
+This is the preferred layout for any tool with two panels. See the full specification in **§3 — Viewport-filling split-panel layout**. Both panels are always visible on desktop. Each panel scrolls independently. The usage guide lives inside the right panel below the output.
+
+- Desktop: two panels side by side, filling the full viewport height. Each panel has its own scroll.
+- Mobile: tab switcher (Settings / Preview tabs) with the active tab visible, inactive tab hidden.
+- Primary action in the desktop top action bar and in the mobile fixed bottom bar.
+
+```
+[Desktop action bar — shrink-0]
+[Left panel: settings, scrolls] | [Right panel: output + guide, scrolls]
+```
+
+### Type A (legacy) — Single-scroll card split panel
+Used by: AES Encryptor, URL Encoder, Base64 Encoder, Text Compare, and other text-transform tools.
+
+For tools where the output is short text and the user does not need to see both panels simultaneously. Panels live inside a rounded card inside a single page-level scroll.
+
+- Desktop: two panels side by side inside a `rounded-xl border` card.
+- Mobile: tab switcher (Input / Output tabs).
+- Usage guide sits below the card in the same page scroll.
 
 ```
 [Desktop action bar]
-[Left panel: input] | [Right panel: output]
+[Card: Left panel | Right panel]
 [Usage guide]
 ```
 
