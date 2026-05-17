@@ -712,28 +712,6 @@ export default function ImageWatermarkAdder() {
             <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
 
-          {files.length > 0 && (
-            <div className="shrink-0 border-t border-border p-4">
-              <Button
-                variant={downloading ? "outline" : "default"}
-                className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                onClick={applyBatch}
-                disabled={processing}
-                aria-label={applyLabel}
-              >
-                {processing ? (
-                  <><span className="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />{applyLabel}</>
-                ) : downloading ? (
-                  <><Check className="mr-2 h-4 w-4" aria-hidden="true" />Done!</>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" aria-hidden="true" />Apply to {files.length} image{files.length !== 1 ? "s" : ""} — Download ZIP
-                    <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 
