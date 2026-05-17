@@ -369,8 +369,8 @@ export default function ImageWatermarkAdder() {
             <span className="text-sm font-medium" id="settings-panel-label">Watermark Settings</span>
           </div>
 
-          {/* Zone 1 — file upload + list (fixed, always visible) */}
-          <div className="shrink-0 border-b border-border p-4 space-y-3" role="group" aria-labelledby="image-upload-label">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          <div className="space-y-3" role="group" aria-labelledby="image-upload-label">
             <Label className="text-sm font-medium" id="image-upload-label">
               Images
               {files.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground font-normal">{files.length} / {MAX_FILES}</span>}
@@ -451,9 +451,6 @@ export default function ImageWatermarkAdder() {
               </div>
             )}
           </div>
-
-          {/* Zone 2 — watermark settings (independently scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
             {/* Watermark type */}
             <div className="space-y-2" role="group" aria-labelledby="watermark-type-label">
