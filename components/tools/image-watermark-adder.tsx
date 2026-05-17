@@ -626,25 +626,6 @@ export default function ImageWatermarkAdder() {
               <p className="text-xs text-muted-foreground">Each square = where the watermark appears on every image</p>
             </div>
 
-            {/* Usage guide */}
-            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
-              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
-                <li>Add images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>. Up to {MAX_FILES} images per batch.</li>
-                <li>Click any image in the list (or press <span className="text-foreground font-medium">↑ / ↓</span>) to preview it with your watermark settings in real time.</li>
-                <li>Choose <span className="text-foreground font-medium">Text</span> or <span className="text-foreground font-medium">Logo</span> and adjust size, opacity, padding, and position.</li>
-                <li>Press <span className="text-foreground font-medium">Apply</span> or <span className="text-foreground font-medium">Ctrl+Shift+S</span>. All images are processed and downloaded as a single ZIP.</li>
-              </ol>
-              <div>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
-                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                  <li>Check a few different images in the list to make sure the watermark is visible across light and dark backgrounds.</li>
-                  <li>PNG files are saved lossless. JPG files are saved at 92% quality.</li>
-                  <li>Processing more than {WARN_FILES} images may be slow on older devices.</li>
-                  <li>Everything runs in your browser. Nothing is sent to a server.</li>
-                </ul>
-              </div>
-            </div>
             <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
         </div>
@@ -691,7 +672,7 @@ export default function ImageWatermarkAdder() {
 
           <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {!previewUrl ? (
               <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-3 text-center" role="status">
                 <div className="rounded-full border border-border bg-muted/50 p-4">
@@ -709,6 +690,24 @@ export default function ImageWatermarkAdder() {
                 className={`w-full rounded-lg border border-border object-contain transition-opacity ${processing ? "opacity-40" : "opacity-100"}`}
               />
             )}
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Add images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>. Up to {MAX_FILES} images per batch.</li>
+                <li>Click any image in the list (or press <span className="text-foreground font-medium">↑ / ↓</span>) to preview it with your watermark settings in real time.</li>
+                <li>Choose <span className="text-foreground font-medium">Text</span> or <span className="text-foreground font-medium">Logo</span> and adjust size, opacity, padding, and position.</li>
+                <li>Press <span className="text-foreground font-medium">Apply</span> or <span className="text-foreground font-medium">Ctrl+Shift+S</span>. All images are processed and downloaded as a single ZIP.</li>
+              </ol>
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>Check a few different images in the list to make sure the watermark is visible across light and dark backgrounds.</li>
+                  <li>PNG files are saved lossless. JPG files are saved at 92% quality.</li>
+                  <li>Processing more than {WARN_FILES} images may be slow on older devices.</li>
+                  <li>Everything runs in your browser. Nothing is sent to a server.</li>
+                </ul>
+              </div>
+            </div>
             <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
 
