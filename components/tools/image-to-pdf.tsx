@@ -448,7 +448,7 @@ export default function ImageToPdf() {
                   <div
                     key={img.id}
                     ref={el => { cellRefs.current[i] = el }}
-                    className={`relative group rounded-lg border overflow-hidden transition-all select-none
+                    className={`relative rounded-lg border overflow-hidden transition-all select-none
                       ${dragIndex === null ? "cursor-grab" : "cursor-grabbing"}
                       ${dragIndex === i ? "opacity-40 scale-95 border-border" : ""}
                       ${dragOver === i && dragIndex !== null && dragIndex !== i ? "ring-2 ring-primary border-primary scale-105" : dragIndex !== i ? "border-border" : ""}
@@ -464,35 +464,36 @@ export default function ImageToPdf() {
                   >
                     <img src={img.url} alt={`Page ${i + 1}: ${img.name}`} className="w-full h-28 object-cover pointer-events-none" />
 
-                    {/* Hover/focus overlay with arrow controls */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1.5" aria-hidden="true">
+                    {/* Trash — top-right corner, always visible */}
+                    <button
+                      onClick={e => { e.stopPropagation(); remove(img.id); announceToScreenReader(`${img.name} removed`) }}
+                      className="absolute top-1.5 right-1.5 rounded-md bg-black/50 p-1.5 text-white hover:bg-red-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      aria-label={`Remove ${img.name}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* Footer — arrows + filename, always visible */}
+                    <div className="flex items-center border-t border-border bg-background/90">
                       <button
-                        onClick={() => { reorder(i, i - 1); announceToScreenReader(`Page moved left`) }}
+                        onClick={e => { e.stopPropagation(); reorder(i, i - 1); announceToScreenReader("Page moved left") }}
                         disabled={i === 0}
-                        className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+                        className="shrink-0 p-2 text-muted-foreground hover:text-foreground disabled:opacity-25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         aria-label="Move page left"
                       >
-                        <ArrowLeft className="h-3 w-3 text-white" />
+                        <ArrowLeft className="h-4 w-4" />
                       </button>
+                      <p className="flex-1 min-w-0 px-1 text-xs truncate text-center">
+                        <span className="font-medium">{i + 1}.</span> {img.name}
+                      </p>
                       <button
-                        onClick={() => { remove(img.id); announceToScreenReader(`${img.name} removed`) }}
-                        className="p-1.5 bg-red-500/70 rounded hover:bg-red-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-                        aria-label={`Remove ${img.name}`}
-                      >
-                        <Trash2 className="h-3 w-3 text-white" />
-                      </button>
-                      <button
-                        onClick={() => { reorder(i, i + 1); announceToScreenReader(`Page moved right`) }}
+                        onClick={e => { e.stopPropagation(); reorder(i, i + 1); announceToScreenReader("Page moved right") }}
                         disabled={i === images.length - 1}
-                        className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+                        className="shrink-0 p-2 text-muted-foreground hover:text-foreground disabled:opacity-25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         aria-label="Move page right"
                       >
-                        <ArrowRight className="h-3 w-3 text-white" />
+                        <ArrowRight className="h-4 w-4" />
                       </button>
-                    </div>
-
-                    <div className="bg-background/90 px-2 py-1 text-xs truncate border-t border-border">
-                      <span className="font-medium">{i + 1}.</span> {img.name}
                     </div>
                   </div>
                 ))}
