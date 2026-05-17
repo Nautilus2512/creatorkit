@@ -154,6 +154,8 @@ For settings controls that are keyboard-navigable but have no dedicated shortcut
 
 ### Viewport-filling split-panel layout (CreatorKit standard for two-panel tools)
 
+Also referred to as **"double panel and double scroll"** — when the user mentions this phrase, it always means this layout: two side-by-side panels, each with its own independent scroll, filling the full viewport height. Any tool that would benefit from showing settings and output simultaneously should use this pattern.
+
 This is the **required desktop layout** for every tool that has two panels (settings + preview, input + output). Both panels are always visible on screen at the same time. Each panel scrolls independently. The user never needs to scroll the page to move between settings and output.
 
 This is the compact, application-like feel that defines CreatorKit on desktop — no page-level scrolling, no hunting for the output after changing a setting.
