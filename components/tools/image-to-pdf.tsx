@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { PDFDocument } from "pdf-lib"
-import { Upload, Download, Check, Trash2, ArrowUp, ArrowDown } from "lucide-react"
+import { Upload, Download, Check, Trash2, ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -49,7 +49,20 @@ export default function ImageToPdf() {
   const [loading, setLoading] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cellRefs = useRef<(HTMLDivElement | null)[]>([])
+  const dragSourceRef = useRef<number | null>(null)
+  const dragTargetRef = useRef<number | null>(null)
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isDraggingRef = useRef(false)
+  const didDragRef = useRef(false)
+
+  useEffect(() => {
+    cellRefs.current = cellRefs.current.slice(0, images.length)
+  }, [images.length])
 
   const add = useCallback((files: FileList | null) => {
     if (!files) return
@@ -63,17 +76,78 @@ export default function ImageToPdf() {
     }
   }, [])
 
-  const remove = (id: string) =>
-    setImages(prev => { const img = prev.find(i => i.id === id); if (img) URL.revokeObjectURL(img.url); return prev.filter(i => i.id !== id) })
-
-  const move = (id: string, dir: -1 | 1) =>
+  const remove = useCallback((id: string) =>
     setImages(prev => {
-      const idx = prev.findIndex(i => i.id === id)
-      if (idx + dir < 0 || idx + dir >= prev.length) return prev
-      const arr = [...prev];
-      [arr[idx], arr[idx + dir]] = [arr[idx + dir], arr[idx]]
+      const img = prev.find(i => i.id === id)
+      if (img) URL.revokeObjectURL(img.url)
+      return prev.filter(i => i.id !== id)
+    }), [])
+
+  const reorder = useCallback((from: number, to: number) => {
+    if (from === to) return
+    setImages(prev => {
+      const arr = [...prev]
+      const [item] = arr.splice(from, 1)
+      arr.splice(to, 0, item)
       return arr
     })
+  }, [])
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, index: number) => {
+    if ((e.target as HTMLElement).closest("button")) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pointerStartRef.current = { x: e.clientX, y: e.clientY }
+    dragSourceRef.current = index
+    isDraggingRef.current = false
+  }, [])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragSourceRef.current === null || !pointerStartRef.current) return
+    const dx = Math.abs(e.clientX - pointerStartRef.current.x)
+    const dy = Math.abs(e.clientY - pointerStartRef.current.y)
+    if (!isDraggingRef.current && (dx > 12 || dy > 12)) {
+      isDraggingRef.current = true
+      setDragIndex(dragSourceRef.current)
+    }
+    if (!isDraggingRef.current) return
+    for (let i = 0; i < cellRefs.current.length; i++) {
+      const cell = cellRefs.current[i]
+      if (!cell) continue
+      const rect = cell.getBoundingClientRect()
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        dragTargetRef.current = i
+        setDragOver(i)
+        return
+      }
+    }
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    const source = dragSourceRef.current
+    const target = dragTargetRef.current
+    if (isDraggingRef.current) {
+      didDragRef.current = true
+      if (source !== null && target !== null && source !== target) {
+        reorder(source, target)
+        announceToScreenReader(`Page moved to position ${target + 1}`)
+      }
+      setDragIndex(null)
+      setDragOver(null)
+    }
+    isDraggingRef.current = false
+    pointerStartRef.current = null
+    dragSourceRef.current = null
+    dragTargetRef.current = null
+  }, [reorder])
+
+  const handlePointerCancel = useCallback(() => {
+    isDraggingRef.current = false
+    pointerStartRef.current = null
+    dragSourceRef.current = null
+    dragTargetRef.current = null
+    setDragIndex(null)
+    setDragOver(null)
+  }, [])
 
   const convert = useCallback(async () => {
     if (!images.length) return
@@ -253,7 +327,7 @@ export default function ImageToPdf() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left panel — Upload zone + guide */}
+        {/* Left panel — Upload zone + settings + guide */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="upload-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="upload-panel-label">Add Images</span>
@@ -277,18 +351,61 @@ export default function ImageToPdf() {
               </p>
             </label>
 
+            {/* Mobile page size + orientation controls */}
+            <div className="md:hidden space-y-3" role="group" aria-label="PDF settings">
+              <div>
+                <p className="text-xs font-medium mb-2">Page size</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Page size">
+                  {(["fit", "a4", "letter"] as PageSize[]).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => { setPageSize(v); announceToScreenReader(v === "fit" ? "Fit to image selected" : `${v.toUpperCase()} selected`) }}
+                      aria-pressed={pageSize === v}
+                      aria-label={v === "fit" ? "Fit to image" : `${v.toUpperCase()} page size`}
+                      className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${pageSize === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+                      {v === "fit" ? "Fit to image" : v.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {pageSize !== "fit" && (
+                <div>
+                  <p className="text-xs font-medium mb-2">Orientation</p>
+                  <div className="flex gap-2" role="group" aria-label="Orientation">
+                    {(["portrait", "landscape"] as Orientation[]).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => { setOrientation(v); announceToScreenReader(`${v} orientation selected`) }}
+                        aria-pressed={orientation === v}
+                        aria-label={`${v} orientation`}
+                        className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${orientation === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Usage guide */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-4">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
               <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
                 <li>Upload one or more images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>.</li>
-                <li>Switch to the <span className="text-foreground font-medium">Preview</span> tab to see page order. Use the arrows to reorder or the trash icon to remove a page.</li>
-                <li>Choose a <span className="text-foreground font-medium">Page size</span> in the header. Fit wraps each page tightly around its image. A4 and Letter use standard print sizes with the image centred and margins applied.</li>
+                <li>Switch to the <span className="text-foreground font-medium">Preview</span> tab to manage page order. Drag pages or use the arrow buttons to reorder.</li>
+                <li>Choose a <span className="text-foreground font-medium">Page size</span>. Fit wraps each page tightly around its image. A4 and Letter use standard print sizes with margins applied.</li>
                 <li>Press <span className="text-foreground font-medium">Generate PDF</span> or <span className="text-foreground font-medium">Ctrl+Shift+P</span> to create and download the PDF.</li>
               </ol>
               <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">2 ways to reorder pages</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li><span className="text-foreground font-medium">Drag.</span> Hold and drag any page to a new position. Works with mouse and touch.</li>
+                  <li><span className="text-foreground font-medium">Arrow buttons.</span> Hover a page and use the left and right arrows to step it one position at a time.</li>
+                </ul>
+              </div>
+              <div>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                  <li>Add images in any order, then reorder them in the Preview panel before generating.</li>
                   <li>Use <span className="text-foreground font-medium">Landscape</span> orientation when your images are wider than they are tall.</li>
                   <li>JPG images embed directly. PNG and WebP are converted internally before embedding.</li>
                   <li>Everything runs in your browser. Nothing is sent to a server.</li>
@@ -302,13 +419,20 @@ export default function ImageToPdf() {
         {/* Right panel — Image list */}
         <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="images-list-label">
           <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
-            <h3 className="text-sm font-medium" id="images-list-label">{images.length} image{images.length !== 1 ? "s" : ""} · pages in order</h3>
+            <div>
+              <h3 className="text-sm font-medium" id="images-list-label">{images.length} image{images.length !== 1 ? "s" : ""} · pages in order</h3>
+              {images.length > 0 && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Drag or use arrows to reorder
+                </p>
+              )}
+            </div>
             {images.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => { setImages([]); announceToScreenReader("All images cleared") }}
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 shrink-0"
                 aria-label="Clear all images"
               >
                 Clear all
@@ -323,19 +447,32 @@ export default function ImageToPdf() {
                 {images.map((img, i) => (
                   <div
                     key={img.id}
-                    className="relative group rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                    ref={el => { cellRefs.current[i] = el }}
+                    className={`relative group rounded-lg border overflow-hidden transition-all select-none
+                      ${dragIndex === null ? "cursor-grab" : "cursor-grabbing"}
+                      ${dragIndex === i ? "opacity-40 scale-95 border-border" : ""}
+                      ${dragOver === i && dragIndex !== null && dragIndex !== i ? "ring-2 ring-primary border-primary scale-105" : dragIndex !== i ? "border-border" : ""}
+                      focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2
+                    `}
+                    style={{ touchAction: "none" }}
+                    onPointerDown={e => handlePointerDown(e, i)}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerCancel}
                     role="listitem"
                     aria-label={`Page ${i + 1}: ${img.name}`}
                   >
-                    <img src={img.url} alt={`Page ${i + 1}: ${img.name}`} className="w-full h-28 object-cover" />
+                    <img src={img.url} alt={`Page ${i + 1}: ${img.name}`} className="w-full h-28 object-cover pointer-events-none" />
+
+                    {/* Hover/focus overlay with arrow controls */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center gap-1.5" aria-hidden="true">
                       <button
-                        onClick={() => { move(img.id, -1); announceToScreenReader(`Page ${i} moved up`) }}
+                        onClick={() => { reorder(i, i - 1); announceToScreenReader(`Page moved left`) }}
                         disabled={i === 0}
                         className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-                        aria-label="Move page up"
+                        aria-label="Move page left"
                       >
-                        <ArrowUp className="h-3 w-3 text-white" />
+                        <ArrowLeft className="h-3 w-3 text-white" />
                       </button>
                       <button
                         onClick={() => { remove(img.id); announceToScreenReader(`${img.name} removed`) }}
@@ -345,14 +482,15 @@ export default function ImageToPdf() {
                         <Trash2 className="h-3 w-3 text-white" />
                       </button>
                       <button
-                        onClick={() => { move(img.id, 1); announceToScreenReader(`Page ${i + 2} moved down`) }}
+                        onClick={() => { reorder(i, i + 1); announceToScreenReader(`Page moved right`) }}
                         disabled={i === images.length - 1}
                         className="p-1.5 bg-white/20 rounded hover:bg-white/40 disabled:opacity-30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-                        aria-label="Move page down"
+                        aria-label="Move page right"
                       >
-                        <ArrowDown className="h-3 w-3 text-white" />
+                        <ArrowRight className="h-3 w-3 text-white" />
                       </button>
                     </div>
+
                     <div className="bg-background/90 px-2 py-1 text-xs truncate border-t border-border">
                       <span className="font-medium">{i + 1}.</span> {img.name}
                     </div>
