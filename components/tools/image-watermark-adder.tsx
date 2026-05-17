@@ -125,6 +125,7 @@ export default function ImageWatermarkAdder() {
   const inputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileListRef = useRef<HTMLDivElement>(null)
 
   const addFiles = useCallback((incoming: File[]) => {
     const imageFiles = incoming.filter(f => f.type.startsWith("image/"))
@@ -146,6 +147,13 @@ export default function ImageWatermarkAdder() {
   // Derive a stable key for the currently selected file
   const selectedFile = files[selectedFileIndex] ?? null
   const selectedFileKey = selectedFile ? `${selectedFile.name}-${selectedFile.size}-${selectedFileIndex}` : ""
+
+  // Auto-scroll file list to keep the selected item visible
+  useEffect(() => {
+    if (!fileListRef.current) return
+    const item = fileListRef.current.children[selectedFileIndex] as HTMLElement | undefined
+    item?.scrollIntoView({ block: "nearest" })
+  }, [selectedFileIndex])
 
   // Reload preview image only when selected file actually changes
   useEffect(() => {
@@ -250,9 +258,9 @@ export default function ImageWatermarkAdder() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        if (!(e.ctrlKey || e.metaKey)) return
-      }
+      const inInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+      if (inInput && !(e.ctrlKey || e.metaKey)) return
+
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
         e.preventDefault()
         if (files.length > 0 && !processing) applyBatch()
@@ -261,6 +269,17 @@ export default function ImageWatermarkAdder() {
         e.preventDefault()
         inputRef.current?.click()
         announceToScreenReader("Upload dialog opened")
+      }
+      if (!inInput && files.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        e.preventDefault()
+        setSelectedFileIndex(prev => {
+          const next = e.key === "ArrowDown"
+            ? Math.min(prev + 1, files.length - 1)
+            : Math.max(prev - 1, 0)
+          if (next !== prev) announceToScreenReader(`Previewing ${files[next].name}`)
+          return next
+        })
+        setActiveTab("output")
       }
     }
     window.addEventListener("keydown", handler)
@@ -276,7 +295,7 @@ export default function ImageWatermarkAdder() {
     : "Apply Watermark"
 
   return (
-    <div className="flex flex-1 flex-col min-h-0" role="main" aria-label="Image Watermark Adder tool">
+    <div className="flex flex-col h-full min-h-0" role="main" aria-label="Image Watermark Adder tool">
       {/* Desktop top action bar */}
       <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-2">
         <span className="text-sm font-semibold shrink-0 mr-1">Image Watermark Adder</span>
@@ -286,6 +305,7 @@ export default function ImageWatermarkAdder() {
             shortcuts={[
               { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
               { keys: ["Ctrl", "Shift", "S"], description: "Apply watermark and download ZIP" },
+              { keys: ["↑", "↓"], description: "Navigate images in list" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
@@ -319,6 +339,7 @@ export default function ImageWatermarkAdder() {
             shortcuts={[
               { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
               { keys: ["Ctrl", "Shift", "S"], description: "Apply watermark and download ZIP" },
+              { keys: ["↑", "↓"], description: "Navigate images in list" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
@@ -399,7 +420,7 @@ export default function ImageWatermarkAdder() {
                     Clear all
                   </button>
                 </div>
-                <div className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border" role="list" aria-label="Queued images — click to preview">
+                <div ref={fileListRef} className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border" role="list" aria-label="Queued images — click to preview">
                   {files.map((file, i) => (
                     <div
                       key={`${file.name}-${i}`}
@@ -610,7 +631,7 @@ export default function ImageWatermarkAdder() {
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
               <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
                 <li>Add images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>. Up to {MAX_FILES} images per batch.</li>
-                <li>Click any image in the list to preview it with your watermark settings in real time.</li>
+                <li>Click any image in the list (or press <span className="text-foreground font-medium">↑ / ↓</span>) to preview it with your watermark settings in real time.</li>
                 <li>Choose <span className="text-foreground font-medium">Text</span> or <span className="text-foreground font-medium">Logo</span> and adjust size, opacity, padding, and position.</li>
                 <li>Press <span className="text-foreground font-medium">Apply</span> or <span className="text-foreground font-medium">Ctrl+Shift+S</span>. All images are processed and downloaded as a single ZIP.</li>
               </ol>
