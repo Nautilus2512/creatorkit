@@ -1,8 +1,8 @@
-﻿"use client"
+"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { PDFDocument } from "pdf-lib"
-import { Upload, Download, Trash2, ArrowUp, ArrowDown, FileDown } from "lucide-react"
+import { Upload, Download, Check, Trash2, ArrowUp, ArrowDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ShortcutsModal } from "@/components/shortcuts-modal"
@@ -13,7 +13,7 @@ function announceToScreenReader(message: string) {
   announcement.setAttribute("role", "status")
   announcement.setAttribute("aria-live", "polite")
   announcement.setAttribute("aria-atomic", "true")
-  announcement.className = 'sr-only'
+  announcement.className = "sr-only"
   announcement.textContent = message
   document.body.appendChild(announcement)
   setTimeout(() => document.body.removeChild(announcement), 1000)
@@ -31,7 +31,6 @@ const PAGE_DIMS: Record<string, [number, number]> = {
 async function fileToEmbeddable(pdf: PDFDocument, file: File) {
   const bytes = await file.arrayBuffer()
   if (file.type === "image/jpeg") return pdf.embedJpg(bytes)
-  // For PNG / WebP / anything else → canvas → PNG bytes
   const bitmap = await createImageBitmap(file)
   const canvas = document.createElement("canvas")
   canvas.width = bitmap.width
@@ -48,7 +47,7 @@ export default function ImageToPdf() {
   const [pageSize, setPageSize] = useState<PageSize>("fit")
   const [orientation, setOrientation] = useState<Orientation>("portrait")
   const [loading, setLoading] = useState(false)
-  const [downloaded, setDownloaded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -60,6 +59,7 @@ export default function ImageToPdf() {
     setImages(prev => [...prev, ...newImages])
     if (newImages.length > 0) {
       announceToScreenReader(`${newImages.length} image${newImages.length > 1 ? "s" : ""} added`)
+      setActiveTab("output")
     }
   }, [])
 
@@ -104,9 +104,9 @@ export default function ImageToPdf() {
         download: "images.pdf",
       })
       a.click()
-      setDownloaded(true)
+      setDownloading(true)
       announceToScreenReader("PDF created and downloaded")
-      setTimeout(() => setDownloaded(false), 2000)
+      setTimeout(() => setDownloading(false), 1500)
     } finally {
       setLoading(false)
     }
@@ -114,11 +114,28 @@ export default function ImageToPdf() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "?" || (e.shiftKey && e.key === "/")) return
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        if (!(e.ctrlKey || e.metaKey)) return
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") {
         e.preventDefault()
         fileInputRef.current?.click()
         announceToScreenReader("Upload dialog opened")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+        e.preventDefault()
+        setPageSize("fit")
+        announceToScreenReader("Fit to image selected")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "4") {
+        e.preventDefault()
+        setPageSize("a4")
+        announceToScreenReader("A4 selected")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault()
+        setPageSize("letter")
+        announceToScreenReader("Letter selected")
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "p") {
         e.preventDefault()
@@ -137,16 +154,20 @@ export default function ImageToPdf() {
         <div className="flex items-center gap-4 flex-wrap" role="group" aria-label="PDF settings">
           <div className="flex items-center gap-2" role="group" aria-labelledby="page-size-label">
             <Label className="text-xs text-muted-foreground" id="page-size-label">Page size:</Label>
-            {(["fit", "a4", "letter"] as PageSize[]).map(v => (
-              <button
-                key={v}
-                onClick={() => { setPageSize(v); announceToScreenReader(v === "fit" ? "Fit to image selected" : `${v.toUpperCase()} selected`) }}
-                aria-pressed={pageSize === v}
-                aria-label={v === "fit" ? "Fit to image" : `${v.toUpperCase()} page size`}
-                className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${pageSize === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
-                {v === "fit" ? "Fit to image" : v.toUpperCase()}
-              </button>
-            ))}
+            {(["fit", "a4", "letter"] as PageSize[]).map(v => {
+              const shortcut = v === "fit" ? "Ctrl+Shift+F" : v === "a4" ? "Ctrl+Shift+4" : "Ctrl+Shift+L"
+              return (
+                <button
+                  key={v}
+                  onClick={() => { setPageSize(v); announceToScreenReader(v === "fit" ? "Fit to image selected" : `${v.toUpperCase()} selected`) }}
+                  aria-pressed={pageSize === v}
+                  aria-label={v === "fit" ? "Fit to image" : `${v.toUpperCase()} page size`}
+                  className={`text-xs px-3 py-1 rounded-full border capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${pageSize === v ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                  {v === "fit" ? "Fit to image" : v.toUpperCase()}
+                  <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${pageSize === v ? "border-primary-foreground/30 bg-primary-foreground/20" : "border-border bg-muted"}`} aria-hidden="true">{shortcut}</kbd>
+                </button>
+              )
+            })}
           </div>
           {pageSize !== "fit" && (
             <div className="flex items-center gap-2" role="group" aria-labelledby="orientation-label">
@@ -168,23 +189,30 @@ export default function ImageToPdf() {
           <ShortcutsModal
             pageName="Image to PDF"
             shortcuts={[
-              { keys: ["Ctrl", "Shift", "O"], description: "Upload images" },
-              { keys: ["Ctrl", "Shift", "P"], description: "Create PDF" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
+              { keys: ["Ctrl", "Shift", "F"], description: "Page size: Fit to image" },
+              { keys: ["Ctrl", "Shift", "4"], description: "Page size: A4" },
+              { keys: ["Ctrl", "Shift", "L"], description: "Page size: Letter" },
+              { keys: ["Ctrl", "Shift", "P"], description: "Generate PDF" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
           <Button
             size="sm"
+            variant={downloading ? "outline" : "default"}
             onClick={() => convert()}
             disabled={!images.length || loading}
-            aria-label={downloaded ? "PDF created and downloaded" : loading ? "Converting images to PDF" : "Create and download PDF"}
+            aria-label={downloading ? "PDF created and downloaded" : loading ? "Converting images to PDF" : "Create and download PDF"}
           >
-            {downloaded ? <FileDown className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-            {downloaded ? "Downloaded!" : loading ? "Converting..." : "Generate PDF"}
-            {images.length > 0 && !loading && !downloaded && (
-              <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1.5 text-[10px] opacity-60" aria-hidden="true">
-                Ctrl+Shift+P
-              </kbd>
+            {loading ? (
+              <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Converting...</>
+            ) : downloading ? (
+              <><Check className="h-4 w-4 mr-1" aria-hidden="true" />Generated!</>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-1" aria-hidden="true" />Generate PDF
+                <kbd className="ml-2 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+P</kbd>
+              </>
             )}
           </Button>
         </div>
@@ -192,43 +220,46 @@ export default function ImageToPdf() {
 
       {/* Mobile: compact header + tab switcher */}
       <div className="flex md:hidden flex-col shrink-0 border-b border-border">
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h2 className="text-base font-semibold">Image to PDF</h2>
           <ShortcutsModal
             pageName="Image to PDF"
             shortcuts={[
-              { keys: ["Ctrl", "Shift", "O"], description: "Upload images" },
-              { keys: ["Ctrl", "Shift", "P"], description: "Create PDF" },
+              { keys: ["Ctrl", "Shift", "U"], description: "Upload images" },
+              { keys: ["Ctrl", "Shift", "F"], description: "Page size: Fit to image" },
+              { keys: ["Ctrl", "Shift", "4"], description: "Page size: A4" },
+              { keys: ["Ctrl", "Shift", "L"], description: "Page size: Letter" },
+              { keys: ["Ctrl", "Shift", "P"], description: "Generate PDF" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button
             role="tab"
             aria-selected={activeTab === "input"}
             onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Upload
           </button>
           <button
             role="tab"
             aria-selected={activeTab === "output"}
             onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Preview
           </button>
         </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left panel — Upload zone */}
+        {/* Left panel — Upload zone + guide */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="upload-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="upload-panel-label">Add Images</span>
           </div>
-          <div className="flex-1 flex flex-col p-4">
-            <label className="flex-1 flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <label className="flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-border rounded-xl hover:border-primary/50 transition-colors focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 min-h-[150px]">
               <input
                 type="file"
                 accept="image/*"
@@ -241,8 +272,30 @@ export default function ImageToPdf() {
               <Upload className="h-8 w-8 text-muted-foreground/40 mb-2" aria-hidden="true" />
               <p className="text-xs font-medium text-center">Click or drop images here</p>
               <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP</p>
-              <p className="text-xs text-muted-foreground mt-2">or press Ctrl+Shift+O</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                or press <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+U</kbd>
+              </p>
             </label>
+
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Upload one or more images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>.</li>
+                <li>Switch to the <span className="text-foreground font-medium">Preview</span> tab to see page order. Use the arrows to reorder or the trash icon to remove a page.</li>
+                <li>Choose a <span className="text-foreground font-medium">Page size</span> in the header. Fit wraps each page tightly around its image. A4 and Letter use standard print sizes with the image centred and margins applied.</li>
+                <li>Press <span className="text-foreground font-medium">Generate PDF</span> or <span className="text-foreground font-medium">Ctrl+Shift+P</span> to create and download the PDF.</li>
+              </ol>
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>Add images in any order, then reorder them in the Preview panel before generating.</li>
+                  <li>Use <span className="text-foreground font-medium">Landscape</span> orientation when your images are wider than they are tall.</li>
+                  <li>JPG images embed directly. PNG and WebP are converted internally before embedding.</li>
+                  <li>Everything runs in your browser. Nothing is sent to a server.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
         </div>
 
@@ -313,19 +366,25 @@ export default function ImageToPdf() {
 
       {/* Mobile bottom action bar */}
       <div
-        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex-1" />
         <Button
           size="sm"
           className="h-11 px-4"
+          variant={downloading ? "outline" : "default"}
           onClick={() => convert()}
           disabled={!images.length || loading}
-          aria-label={downloaded ? "PDF created and downloaded" : loading ? "Converting images to PDF" : "Create and download PDF"}
+          aria-label={downloading ? "PDF created and downloaded" : loading ? "Converting images to PDF" : "Create and download PDF"}
         >
-          {downloaded ? <FileDown className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-          {downloaded ? "Downloaded!" : loading ? "Converting..." : "Generate PDF"}
+          {loading ? (
+            <><span className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent inline-block" aria-hidden="true" />Converting...</>
+          ) : downloading ? (
+            <><Check className="h-4 w-4 mr-1" aria-hidden="true" />Generated!</>
+          ) : (
+            <><Download className="h-4 w-4 mr-1" aria-hidden="true" />Generate PDF</>
+          )}
         </Button>
       </div>
     </div>
