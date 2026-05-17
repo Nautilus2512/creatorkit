@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ImageWatermarkAdder } from "@/components/tools/image-watermark-adder"
+import ImageWatermarkAdder from "@/components/tools/image-watermark-adder"
 import { ArrowLeft } from "lucide-react"
 
 export default function ImageWatermarkAdderPage() {
