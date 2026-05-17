@@ -100,6 +100,7 @@ function renderWatermark(
 
 export default function ImageWatermarkAdder() {
   const [files, setFiles] = useState<File[]>([])
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0)
   const [previewImageEl, setPreviewImageEl] = useState<HTMLImageElement | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [watermarkType, setWatermarkType] = useState<WatermarkType>("text")
@@ -124,7 +125,6 @@ export default function ImageWatermarkAdder() {
   const inputRef = useRef<HTMLInputElement>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const prevFirstFileRef = useRef<File | null>(null)
 
   const addFiles = useCallback((incoming: File[]) => {
     const imageFiles = incoming.filter(f => f.type.startsWith("image/"))
@@ -136,26 +136,34 @@ export default function ImageWatermarkAdder() {
 
   const removeFile = useCallback((index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index))
+    setSelectedFileIndex(prev => {
+      if (prev === index) return Math.max(0, index - 1)
+      if (prev > index) return prev - 1
+      return prev
+    })
   }, [])
 
-  // Load preview image only when first file actually changes
+  // Derive a stable key for the currently selected file
+  const selectedFile = files[selectedFileIndex] ?? null
+  const selectedFileKey = selectedFile ? `${selectedFile.name}-${selectedFile.size}-${selectedFileIndex}` : ""
+
+  // Reload preview image only when selected file actually changes
   useEffect(() => {
-    if (files.length === 0) {
+    if (!selectedFileKey) {
       setPreviewImageEl(null)
       setPreviewUrl(null)
-      prevFirstFileRef.current = null
       return
     }
-    if (files[0] === prevFirstFileRef.current) return
-    prevFirstFileRef.current = files[0]
-    const url = URL.createObjectURL(files[0])
+    const file = files[selectedFileIndex]
+    const url = URL.createObjectURL(file)
     const img = new Image()
     img.onload = () => setPreviewImageEl(img)
     img.src = url
     return () => URL.revokeObjectURL(url)
-  }, [files])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFileKey])
 
-  // Re-render preview when settings or preview image changes
+  // Re-render preview whenever settings or preview image changes
   useEffect(() => {
     if (!previewImageEl || !canvasRef.current) return
     const canvas = canvasRef.current
@@ -334,88 +342,97 @@ export default function ImageWatermarkAdder() {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
-        {/* Left panel — settings */}
+        {/* Left panel — two zones: fixed file section + scrollable settings */}
         <div className={`${activeTab === "input" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden border-b md:border-b-0 md:border-r border-border bg-card`} role="region" aria-labelledby="settings-panel-label">
           <div className="shrink-0 border-b border-border px-4 py-3">
             <span className="text-sm font-medium" id="settings-panel-label">Watermark Settings</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
-            {/* Multi-file upload */}
-            <div className="space-y-3" role="group" aria-labelledby="image-upload-label">
-              <Label className="text-sm font-medium" id="image-upload-label">
-                Images
-                {files.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground font-normal">{files.length} / {MAX_FILES}</span>}
-              </Label>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Drop images here or click to upload"
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(Array.from(e.dataTransfer.files)) }}
-                onClick={() => inputRef.current?.click()}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
-                className={`relative flex min-h-[80px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                  isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
-                }`}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => { if (e.target.files) { addFiles(Array.from(e.target.files)); e.target.value = "" } }}
-                  aria-label="Select image files"
-                />
-                <div className="flex flex-col items-center gap-1.5 px-4 text-center">
-                  <div className="rounded-full bg-muted p-2.5"><Upload className="h-4 w-4 text-muted-foreground" aria-hidden="true" /></div>
+          {/* Zone 1 — file upload + list (fixed, always visible) */}
+          <div className="shrink-0 border-b border-border p-4 space-y-3" role="group" aria-labelledby="image-upload-label">
+            <Label className="text-sm font-medium" id="image-upload-label">
+              Images
+              {files.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground font-normal">{files.length} / {MAX_FILES}</span>}
+            </Label>
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Drop images here or click to upload"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(Array.from(e.dataTransfer.files)) }}
+              onClick={() => inputRef.current?.click()}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
+              className={`relative flex min-h-[72px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/50"
+              }`}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => { if (e.target.files) { addFiles(Array.from(e.target.files)); e.target.value = "" } }}
+                aria-label="Select image files"
+              />
+              <div className="flex items-center gap-3 px-4 text-center">
+                <div className="rounded-full bg-muted p-2 shrink-0"><Upload className="h-4 w-4 text-muted-foreground" aria-hidden="true" /></div>
+                <div className="text-left">
                   <p className="text-xs font-medium">Drop images here or click to add</p>
                   <p className="text-xs text-muted-foreground">JPG, PNG, WebP · up to {MAX_FILES} images · <kbd className="hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd></p>
                 </div>
               </div>
-
-              {/* File list */}
-              {files.length > 0 && (
-                <div className="space-y-2">
-                  {files.length > WARN_FILES && (
-                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400" role="alert" aria-live="polite">
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-                      <span>
-                        <span className="font-medium">{files.length} images queued.</span> Processing more than {WARN_FILES} images at once may be slow or fail on older or low-memory devices. Large files increase this risk. Proceed at your own discretion.
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{files.length} image{files.length !== 1 ? "s" : ""} queued</span>
-                    <button
-                      onClick={() => setFiles([])}
-                      className="text-xs text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
-                      aria-label="Clear all images"
-                    >
-                      Clear all
-                    </button>
-                  </div>
-                  <div className="max-h-44 overflow-y-auto rounded-lg border border-border divide-y divide-border" role="list" aria-label="Queued images">
-                    {files.map((file, i) => (
-                      <div key={`${file.name}-${i}`} className="flex items-center gap-2 px-3 py-2 min-w-0 hover:bg-muted/30" role="listitem">
-                        <span className="text-xs text-muted-foreground shrink-0 w-5 text-right tabular-nums">{i + 1}</span>
-                        <span className="flex-1 min-w-0 truncate text-xs">{file.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{formatBytes(file.size)}</span>
-                        <button
-                          onClick={() => removeFile(i)}
-                          aria-label={`Remove ${file.name}`}
-                          className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-                        >
-                          <X className="h-3 w-3" aria-hidden="true" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+
+            {files.length > 0 && (
+              <div className="space-y-2">
+                {files.length > WARN_FILES && (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-600 dark:text-amber-400" role="alert" aria-live="polite">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+                    <span><span className="font-medium">{files.length} images queued.</span> Processing more than {WARN_FILES} images at once may be slow or fail on older or low-memory devices. Large files increase this risk. Proceed at your own discretion.</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{files.length} image{files.length !== 1 ? "s" : ""} queued</span>
+                  <button onClick={() => { setFiles([]); setSelectedFileIndex(0) }} className="text-xs text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded" aria-label="Clear all images">
+                    Clear all
+                  </button>
+                </div>
+                <div className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border" role="list" aria-label="Queued images — click to preview">
+                  {files.map((file, i) => (
+                    <div
+                      key={`${file.name}-${i}`}
+                      onClick={() => { setSelectedFileIndex(i); setActiveTab("output"); announceToScreenReader(`Previewing ${file.name}`) }}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedFileIndex(i); setActiveTab("output") } }}
+                      tabIndex={0}
+                      className={`flex items-center gap-2 px-3 py-2 min-w-0 cursor-pointer transition-colors border-l-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary ${
+                        selectedFileIndex === i
+                          ? "bg-primary/10 border-primary"
+                          : "hover:bg-muted/30 border-transparent"
+                      }`}
+                      role="listitem"
+                      aria-label={`${file.name}${selectedFileIndex === i ? ", currently previewed" : ", click to preview"}`}
+                    >
+                      <span className={`text-xs shrink-0 w-5 text-right tabular-nums ${selectedFileIndex === i ? "text-primary font-medium" : "text-muted-foreground"}`}>{i + 1}</span>
+                      <span className={`flex-1 min-w-0 truncate text-xs ${selectedFileIndex === i ? "text-foreground font-medium" : ""}`}>{file.name}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{formatBytes(file.size)}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeFile(i) }}
+                        aria-label={`Remove ${file.name}`}
+                        className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                      >
+                        <X className="h-3 w-3" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Zone 2 — watermark settings (independently scrollable) */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
 
             {/* Watermark type */}
             <div className="space-y-2" role="group" aria-labelledby="watermark-type-label">
@@ -459,7 +476,7 @@ export default function ImageWatermarkAdder() {
                   aria-label="Drop logo here or click to upload"
                   onDragOver={(e) => { e.preventDefault(); setIsDraggingLogo(true) }}
                   onDragLeave={() => setIsDraggingLogo(false)}
-                  onDrop={(e) => { e.preventDefault(); setIsDraggingLogo(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith("image/")) { handleLogoFile(f); announceToScreenReader(`${f.name} logo added`) } }}
+                  onDrop={(e) => { e.preventDefault(); setIsDraggingLogo(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith("image/")) handleLogoFile(f) }}
                   onClick={() => logoInputRef.current?.click()}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); logoInputRef.current?.click() } }}
                   className={`relative flex min-h-[70px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
@@ -474,7 +491,7 @@ export default function ImageWatermarkAdder() {
                         <p className="truncate text-xs font-medium">{logoFileName}</p>
                         <p className="text-xs text-muted-foreground">{logoEl.naturalWidth} × {logoEl.naturalHeight}px</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); setLogoEl(null); setLogoFileName(""); announceToScreenReader("Logo removed") }} aria-label="Remove logo" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                      <button onClick={(e) => { e.stopPropagation(); setLogoEl(null); setLogoFileName("") }} aria-label="Remove logo" className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                         <X className="h-3 w-3" aria-hidden="true" />
                       </button>
                     </div>
@@ -555,7 +572,7 @@ export default function ImageWatermarkAdder() {
                   <input
                     type="color"
                     value={color}
-                    onChange={(e) => { setColor(e.target.value); announceToScreenReader(`Custom color selected`) }}
+                    onChange={(e) => { setColor(e.target.value); announceToScreenReader("Custom color selected") }}
                     className="h-8 w-8 cursor-pointer rounded-md border border-border bg-transparent p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     aria-label="Custom color picker"
                   />
@@ -593,14 +610,14 @@ export default function ImageWatermarkAdder() {
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
               <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
                 <li>Add images using the drop zone above or <span className="text-foreground font-medium">Ctrl+Shift+U</span>. Up to {MAX_FILES} images per batch.</li>
-                <li>Choose <span className="text-foreground font-medium">Text</span> or <span className="text-foreground font-medium">Logo</span> and configure the watermark. The preview updates live using the first image.</li>
-                <li>Adjust size, opacity, padding, and position until the preview looks right.</li>
-                <li>Press <span className="text-foreground font-medium">Apply</span> or <span className="text-foreground font-medium">Ctrl+Shift+S</span>. All images are processed and downloaded as a single ZIP file.</li>
+                <li>Click any image in the list to preview it with your watermark settings in real time.</li>
+                <li>Choose <span className="text-foreground font-medium">Text</span> or <span className="text-foreground font-medium">Logo</span> and adjust size, opacity, padding, and position.</li>
+                <li>Press <span className="text-foreground font-medium">Apply</span> or <span className="text-foreground font-medium">Ctrl+Shift+S</span>. All images are processed and downloaded as a single ZIP.</li>
               </ol>
               <div>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
                 <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-                  <li>The preview only shows the first image. The same watermark settings are applied to all images in the batch.</li>
+                  <li>Check a few different images in the list to make sure the watermark is visible across light and dark backgrounds.</li>
                   <li>PNG files are saved lossless. JPG files are saved at 92% quality.</li>
                   <li>Processing more than {WARN_FILES} images may be slow on older devices.</li>
                   <li>Everything runs in your browser. Nothing is sent to a server.</li>
@@ -613,15 +630,22 @@ export default function ImageWatermarkAdder() {
 
         {/* Right panel — preview */}
         <div className={`${activeTab === "output" ? "flex" : "hidden"} md:flex flex-col flex-1 min-h-0 overflow-hidden bg-card`} role="region" aria-labelledby="preview-panel-label">
-          <div className="shrink-0 border-b border-border px-4 py-3 space-y-2">
+          <div className="shrink-0 border-b border-border px-4 py-3 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium" id="preview-panel-label">
-                {processing ? `Processing…` : files.length > 1 ? `Preview — image 1 of ${files.length}` : "Preview"}
+                {processing
+                  ? "Processing…"
+                  : selectedFile
+                  ? `Preview — ${selectedFile.name}`
+                  : "Preview"}
               </span>
               {processing && (
                 <span className="text-xs text-muted-foreground tabular-nums">{processedCount} / {files.length}</span>
               )}
             </div>
+            {files.length > 1 && !processing && (
+              <p className="text-[11px] text-muted-foreground">Click any image in the list to switch the preview</p>
+            )}
             {processing && (
               <>
                 <div
@@ -654,13 +678,13 @@ export default function ImageWatermarkAdder() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">No images yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Add images — the first one previews here with your watermark settings</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add images — click any file in the list to preview it here</p>
                 </div>
               </div>
             ) : (
               <img
                 src={previewUrl}
-                alt="Watermark preview of the first image in your batch"
+                alt={`Watermark preview of ${selectedFile?.name ?? "image"}`}
                 className={`w-full rounded-lg border border-border object-contain transition-opacity ${processing ? "opacity-40" : "opacity-100"}`}
               />
             )}
