@@ -123,7 +123,7 @@ export default function InvoiceGenerator() {
 
   useEffect(() => {
     const saved = localStorage.getItem("creatorkit-invoice")
-    if (saved) try { setForm(JSON.parse(saved)) } catch {}
+    if (saved) try { setForm(f => ({ ...f, ...JSON.parse(saved) })) } catch {}
   }, [])
 
   useEffect(() => {
