@@ -258,7 +258,8 @@ export default function MarkdownToHtml() {
           {copied ? "Copied!" : "Copy HTML"}
         </Button>
         <Button variant="outline" size="sm" className="h-11 px-3" onClick={download} disabled={!html} aria-label="Download HTML">
-          {downloaded ? <FileCheck className="h-4 w-4" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
+          {downloaded ? <FileCheck className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+          {downloaded ? "Saved!" : ".html"}
         </Button>
       </div>
     </div>
