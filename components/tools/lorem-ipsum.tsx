@@ -114,11 +114,11 @@ export default function LoremIpsum() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "?" || (e.shiftKey && e.key === "/")) return
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "g") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
         e.preventDefault()
         generate()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && output) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && output) {
         e.preventDefault()
         copy()
       }
@@ -160,7 +160,7 @@ export default function LoremIpsum() {
             >
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied!" : "Copy"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
             </Button>
             <Button
               variant="ghost"
@@ -170,7 +170,7 @@ export default function LoremIpsum() {
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={downloaded ? "File downloaded" : "Download generated text"}
             >
-              {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+              {downloaded ? <FileCheck className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
               {downloaded ? "Saved!" : "Download"}
               <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
@@ -180,7 +180,7 @@ export default function LoremIpsum() {
               aria-label="Generate lorem ipsum text"
             >
               <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />Generate
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+G</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+E</kbd>
             </Button>
           </div>
         </div>
@@ -256,11 +256,30 @@ export default function LoremIpsum() {
               </div>
             )}
           </div>
+
+          <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+              <li>Choose a <span className="text-foreground font-medium">Type</span> — paragraphs, sentences, or words — and set the <span className="text-foreground font-medium">Count</span>.</li>
+              <li>Toggle <span className="text-foreground font-medium">Start with "Lorem ipsum…"</span> to begin with the classic opening, or leave it off for fully random text.</li>
+              <li>Click <span className="text-foreground font-medium">Generate</span> to create the text. Click again at any time to regenerate.</li>
+              <li>Use <span className="text-foreground font-medium">Copy</span> to copy to clipboard or <span className="text-foreground font-medium">Download</span> to save as a .txt file.</li>
+            </ol>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+              <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                <li>The word count and character count update live in the footer below the output.</li>
+                <li>Paragraphs are capped at 20, sentences at 50, and words at 500.</li>
+                <li>Everything runs in your browser — no text is sent to a server.</li>
+              </ul>
+            </div>
+          </div>
+          <div className="md:hidden h-[60px]" aria-hidden="true" />
         </div>
 
         {/* MOBILE: bottom action bar */}
         <div
-          className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+          className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
           <Button
@@ -282,7 +301,7 @@ export default function LoremIpsum() {
             disabled={!output}
             aria-label={downloaded ? "File downloaded" : "Download generated text"}
           >
-            {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+            {downloaded ? <FileCheck className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
             {downloaded ? "Saved!" : "Download"}
           </Button>
           <div className="flex-1" />
