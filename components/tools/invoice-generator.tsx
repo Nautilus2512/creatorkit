@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Plus, Trash2, Download, RotateCcw, FileCheck, Upload, X, BadgeCheck } from "lucide-react"
+import { Plus, Trash2, Download, RotateCcw, FileCheck, Upload, X, BadgeCheck, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,10 +47,151 @@ const DEFAULT: Form = {
   items: [{ id: "1", description: "", qty: "1", price: "" }],
 }
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "MYR", "SGD", "INR"]
+interface Currency { code: string; name: string }
+const ALL_CURRENCIES: Currency[] = [
+  { code: "AED", name: "UAE Dirham" },
+  { code: "AFN", name: "Afghan Afghani" },
+  { code: "ALL", name: "Albanian Lek" },
+  { code: "AMD", name: "Armenian Dram" },
+  { code: "ANG", name: "Netherlands Antillean Guilder" },
+  { code: "AOA", name: "Angolan Kwanza" },
+  { code: "ARS", name: "Argentine Peso" },
+  { code: "AUD", name: "Australian Dollar" },
+  { code: "AWG", name: "Aruban Florin" },
+  { code: "AZN", name: "Azerbaijani Manat" },
+  { code: "BAM", name: "Bosnia-Herzegovina Convertible Mark" },
+  { code: "BBD", name: "Barbadian Dollar" },
+  { code: "BDT", name: "Bangladeshi Taka" },
+  { code: "BGN", name: "Bulgarian Lev" },
+  { code: "BHD", name: "Bahraini Dinar" },
+  { code: "BMD", name: "Bermudian Dollar" },
+  { code: "BND", name: "Brunei Dollar" },
+  { code: "BOB", name: "Bolivian Boliviano" },
+  { code: "BRL", name: "Brazilian Real" },
+  { code: "BSD", name: "Bahamian Dollar" },
+  { code: "BWP", name: "Botswanan Pula" },
+  { code: "BYN", name: "Belarusian Ruble" },
+  { code: "BZD", name: "Belize Dollar" },
+  { code: "CAD", name: "Canadian Dollar" },
+  { code: "CHF", name: "Swiss Franc" },
+  { code: "CLP", name: "Chilean Peso" },
+  { code: "CNY", name: "Chinese Yuan" },
+  { code: "COP", name: "Colombian Peso" },
+  { code: "CRC", name: "Costa Rican Colón" },
+  { code: "CUP", name: "Cuban Peso" },
+  { code: "CVE", name: "Cape Verdean Escudo" },
+  { code: "CZK", name: "Czech Koruna" },
+  { code: "DJF", name: "Djiboutian Franc" },
+  { code: "DKK", name: "Danish Krone" },
+  { code: "DOP", name: "Dominican Peso" },
+  { code: "DZD", name: "Algerian Dinar" },
+  { code: "EGP", name: "Egyptian Pound" },
+  { code: "ETB", name: "Ethiopian Birr" },
+  { code: "EUR", name: "Euro" },
+  { code: "FJD", name: "Fijian Dollar" },
+  { code: "GBP", name: "British Pound" },
+  { code: "GEL", name: "Georgian Lari" },
+  { code: "GHS", name: "Ghanaian Cedi" },
+  { code: "GMD", name: "Gambian Dalasi" },
+  { code: "GTQ", name: "Guatemalan Quetzal" },
+  { code: "GYD", name: "Guyanaese Dollar" },
+  { code: "HKD", name: "Hong Kong Dollar" },
+  { code: "HNL", name: "Honduran Lempira" },
+  { code: "HTG", name: "Haitian Gourde" },
+  { code: "HUF", name: "Hungarian Forint" },
+  { code: "IDR", name: "Indonesian Rupiah" },
+  { code: "ILS", name: "Israeli Shekel" },
+  { code: "INR", name: "Indian Rupee" },
+  { code: "IQD", name: "Iraqi Dinar" },
+  { code: "IRR", name: "Iranian Rial" },
+  { code: "ISK", name: "Icelandic Króna" },
+  { code: "JMD", name: "Jamaican Dollar" },
+  { code: "JOD", name: "Jordanian Dinar" },
+  { code: "JPY", name: "Japanese Yen" },
+  { code: "KES", name: "Kenyan Shilling" },
+  { code: "KGS", name: "Kyrgystani Som" },
+  { code: "KHR", name: "Cambodian Riel" },
+  { code: "KRW", name: "South Korean Won" },
+  { code: "KWD", name: "Kuwaiti Dinar" },
+  { code: "KYD", name: "Cayman Islands Dollar" },
+  { code: "KZT", name: "Kazakhstani Tenge" },
+  { code: "LAK", name: "Laotian Kip" },
+  { code: "LBP", name: "Lebanese Pound" },
+  { code: "LKR", name: "Sri Lankan Rupee" },
+  { code: "LRD", name: "Liberian Dollar" },
+  { code: "MAD", name: "Moroccan Dirham" },
+  { code: "MDL", name: "Moldovan Leu" },
+  { code: "MKD", name: "Macedonian Denar" },
+  { code: "MMK", name: "Myanmar Kyat" },
+  { code: "MNT", name: "Mongolian Tugrik" },
+  { code: "MOP", name: "Macanese Pataca" },
+  { code: "MUR", name: "Mauritian Rupee" },
+  { code: "MVR", name: "Maldivian Rufiyaa" },
+  { code: "MWK", name: "Malawian Kwacha" },
+  { code: "MXN", name: "Mexican Peso" },
+  { code: "MYR", name: "Malaysian Ringgit" },
+  { code: "MZN", name: "Mozambican Metical" },
+  { code: "NAD", name: "Namibian Dollar" },
+  { code: "NGN", name: "Nigerian Naira" },
+  { code: "NIO", name: "Nicaraguan Córdoba" },
+  { code: "NOK", name: "Norwegian Krone" },
+  { code: "NPR", name: "Nepalese Rupee" },
+  { code: "NZD", name: "New Zealand Dollar" },
+  { code: "OMR", name: "Omani Rial" },
+  { code: "PAB", name: "Panamanian Balboa" },
+  { code: "PEN", name: "Peruvian Sol" },
+  { code: "PGK", name: "Papua New Guinean Kina" },
+  { code: "PHP", name: "Philippine Peso" },
+  { code: "PKR", name: "Pakistani Rupee" },
+  { code: "PLN", name: "Polish Zloty" },
+  { code: "PYG", name: "Paraguayan Guarani" },
+  { code: "QAR", name: "Qatari Riyal" },
+  { code: "RON", name: "Romanian Leu" },
+  { code: "RSD", name: "Serbian Dinar" },
+  { code: "RUB", name: "Russian Ruble" },
+  { code: "RWF", name: "Rwandan Franc" },
+  { code: "SAR", name: "Saudi Riyal" },
+  { code: "SCR", name: "Seychellois Rupee" },
+  { code: "SDG", name: "Sudanese Pound" },
+  { code: "SEK", name: "Swedish Krona" },
+  { code: "SGD", name: "Singapore Dollar" },
+  { code: "SOS", name: "Somali Shilling" },
+  { code: "SRD", name: "Surinamese Dollar" },
+  { code: "SYP", name: "Syrian Pound" },
+  { code: "SZL", name: "Swazi Lilangeni" },
+  { code: "THB", name: "Thai Baht" },
+  { code: "TJS", name: "Tajikistani Somoni" },
+  { code: "TMT", name: "Turkmenistani Manat" },
+  { code: "TND", name: "Tunisian Dinar" },
+  { code: "TRY", name: "Turkish Lira" },
+  { code: "TTD", name: "Trinidad and Tobago Dollar" },
+  { code: "TWD", name: "Taiwan Dollar" },
+  { code: "TZS", name: "Tanzanian Shilling" },
+  { code: "UAH", name: "Ukrainian Hryvnia" },
+  { code: "UGX", name: "Ugandan Shilling" },
+  { code: "USD", name: "US Dollar" },
+  { code: "UYU", name: "Uruguayan Peso" },
+  { code: "UZS", name: "Uzbekistani Som" },
+  { code: "VES", name: "Venezuelan Bolívar" },
+  { code: "VND", name: "Vietnamese Dong" },
+  { code: "VUV", name: "Vanuatu Vatu" },
+  { code: "WST", name: "Samoan Tala" },
+  { code: "XAF", name: "Central African CFA Franc" },
+  { code: "XCD", name: "East Caribbean Dollar" },
+  { code: "XOF", name: "West African CFA Franc" },
+  { code: "XPF", name: "CFP Franc" },
+  { code: "YER", name: "Yemeni Rial" },
+  { code: "ZAR", name: "South African Rand" },
+  { code: "ZMW", name: "Zambian Kwacha" },
+  { code: "ZWL", name: "Zimbabwean Dollar" },
+]
 
 function fmt(n: number, currency: string) {
-  return new Intl.NumberFormat("en", { style: "currency", currency, minimumFractionDigits: 2 }).format(isNaN(n) ? 0 : n)
+  try {
+    return new Intl.NumberFormat("en", { style: "currency", currency }).format(isNaN(n) ? 0 : n)
+  } catch {
+    return `${currency} ${isNaN(n) ? "0.00" : n.toFixed(2)}`
+  }
 }
 
 function buildHtml(f: Form, sub: number, discount: number, tax: number, total: number) {
@@ -119,7 +260,11 @@ export default function InvoiceGenerator() {
   const [form, setForm] = useState<Form>(DEFAULT)
   const [downloaded, setDownloaded] = useState(false)
   const [activeTab, setActiveTab] = useState<"input" | "output">("input")
+  const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [currencySearch, setCurrencySearch] = useState("")
   const printedRef = useRef(false)
+  const currencyRef = useRef<HTMLDivElement>(null)
+  const currencyInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem("creatorkit-invoice")
@@ -129,6 +274,31 @@ export default function InvoiceGenerator() {
   useEffect(() => {
     localStorage.setItem("creatorkit-invoice", JSON.stringify(form))
   }, [form])
+
+  // Close currency dropdown on outside click
+  useEffect(() => {
+    if (!currencyOpen) return
+    const handler = (e: MouseEvent) => {
+      if (!currencyRef.current?.contains(e.target as Node)) {
+        setCurrencyOpen(false)
+        setCurrencySearch("")
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [currencyOpen])
+
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if (currencyOpen) currencyInputRef.current?.focus()
+  }, [currencyOpen])
+
+  const filteredCurrencies = currencySearch
+    ? ALL_CURRENCIES.filter(c =>
+        c.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
+        c.name.toLowerCase().includes(currencySearch.toLowerCase())
+      )
+    : ALL_CURRENCIES
 
   const set = useCallback(<K extends keyof Form>(k: K, v: Form[K]) => setForm(f => ({ ...f, [k]: v })), [])
 
@@ -342,18 +512,61 @@ export default function InvoiceGenerator() {
                   <Field label="Due Date" value={form.dueDate} onChange={v => { set("dueDate", v); announceToScreenReader(`Due date set to ${v}`) }} type="date" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground" htmlFor="currency-select">Currency</Label>
-                    <select
-                      id="currency-select"
-                      value={form.currency}
-                      onChange={e => { set("currency", e.target.value); announceToScreenReader(`${e.target.value} currency selected`) }}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                      aria-label="Select currency"
+
+                  {/* Currency searchable combobox */}
+                  <div className="space-y-1 relative" ref={currencyRef}>
+                    <Label className="text-xs text-muted-foreground" htmlFor="currency-btn">Currency</Label>
+                    <button
+                      id="currency-btn"
+                      type="button"
+                      onClick={() => { setCurrencyOpen(o => !o); setCurrencySearch("") }}
+                      onKeyDown={e => { if (e.key === "Escape") { setCurrencyOpen(false); setCurrencySearch("") } }}
+                      className="h-8 w-full flex items-center justify-between rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label={`Currency: ${form.currency}. Click to change`}
+                      aria-expanded={currencyOpen}
+                      aria-haspopup="listbox"
                     >
-                      {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                      <span className="font-mono font-medium">{form.currency}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${currencyOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                    </button>
+                    {currencyOpen && (
+                      <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-border bg-card shadow-lg overflow-hidden">
+                        <div className="p-2 border-b border-border">
+                          <input
+                            ref={currencyInputRef}
+                            type="text"
+                            value={currencySearch}
+                            onChange={e => setCurrencySearch(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Escape") { setCurrencyOpen(false); setCurrencySearch("") } }}
+                            placeholder="Search by code or name..."
+                            className="w-full h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                            aria-label="Search currencies"
+                          />
+                        </div>
+                        <div className="max-h-44 overflow-y-auto" role="listbox" aria-label="Currency options">
+                          {filteredCurrencies.length === 0 ? (
+                            <p className="px-3 py-2 text-xs text-muted-foreground">No currencies found</p>
+                          ) : filteredCurrencies.map(c => (
+                            <button
+                              key={c.code}
+                              role="option"
+                              aria-selected={form.currency === c.code}
+                              onClick={() => { set("currency", c.code); setCurrencyOpen(false); setCurrencySearch(""); announceToScreenReader(`${c.code} selected`) }}
+                              className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors ${
+                                form.currency === c.code
+                                  ? "bg-primary/10 text-primary font-medium"
+                                  : "hover:bg-muted/50 text-foreground"
+                              }`}
+                            >
+                              <span className="font-mono font-medium w-10 shrink-0">{c.code}</span>
+                              <span className={form.currency === c.code ? "" : "text-muted-foreground"}>{c.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
+
                   <Field label="Tax Rate (%)" value={form.taxRate} onChange={v => { set("taxRate", v); announceToScreenReader(`Tax rate ${v} percent`) }} placeholder="0" type="number" />
                 </div>
 
@@ -560,7 +773,7 @@ export default function InvoiceGenerator() {
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
               <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
                 <li>Fill in <span className="text-foreground font-medium">From</span> (your business) and <span className="text-foreground font-medium">Bill To</span> (your client) details on the left. Upload a logo to appear at the top of the invoice.</li>
-                <li>Set the invoice number, dates, currency, tax rate, and optional discount.</li>
+                <li>Set the invoice number, dates, currency, tax rate, and optional discount. Type in the currency field to search all world currencies.</li>
                 <li>Add line items with a description, quantity, and unit price. The amount calculates automatically.</li>
                 <li>Click <span className="text-foreground font-medium">Mark as Paid</span> in the preview header to add a PAID stamp to the invoice.</li>
                 <li>Click <span className="text-foreground font-medium">Download / Print</span> or press <span className="text-foreground font-medium">Ctrl+Shift+P</span>, then choose <span className="text-foreground font-medium">Save as PDF</span> in the print dialog.</li>
