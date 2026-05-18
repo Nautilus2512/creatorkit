@@ -410,8 +410,11 @@ export default function JsFormatter() {
             </div>
             {/* Mobile: options collapsed above code */}
             <div className="flex md:hidden flex-1 flex-col min-h-0 overflow-hidden">
-              <div className="shrink-0 overflow-y-auto max-h-64 border-b border-border bg-muted/5">
+              <div className="shrink-0 overflow-y-auto max-h-64 border-b-2 border-border bg-card">
                 <OptionsPanel />
+              </div>
+              <div className="shrink-0 flex items-center border-b border-border bg-muted/20 px-4 py-2" aria-hidden="true">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Code Editor</span>
               </div>
               <Textarea
                 value={code}
