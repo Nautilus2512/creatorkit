@@ -72,8 +72,8 @@ console.log('Total:',calculateTotal(cart))
 
 const shortcuts = [
   { keys: ["Ctrl", "Shift", "F"], description: "Format code" },
-  { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
-  { keys: ["Ctrl", "Shift", "C"], description: "Copy output" },
+  { keys: ["Ctrl", "Shift", "U"], description: "Upload file" },
+  { keys: ["Ctrl", "Shift", "V"], description: "Copy output" },
   { keys: ["Ctrl", "Shift", "S"], description: "Download file" },
   { keys: ["?"], description: "Toggle this panel" },
 ]
@@ -182,12 +182,12 @@ export default function JsFormatter() {
         e.preventDefault()
         if (status === "ready") format()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") {
         e.preventDefault()
         fileRef.current?.click()
         announceToScreenReader("File upload dialog opened")
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && formatted) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && formatted) {
         e.preventDefault()
         copy()
       }
@@ -307,7 +307,7 @@ export default function JsFormatter() {
           aria-label="Upload file to format"
         >
           <Upload className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Upload file
-          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
         </Button>
         <input ref={fileRef} type="file" accept=".js,.jsx,.ts,.tsx,.css,.scss,.html,.json,.md" className="hidden" onChange={upload} aria-label="Select code file" />
       </div>
@@ -329,7 +329,7 @@ export default function JsFormatter() {
             aria-label={status !== "ready" ? "Format (Prettier not ready)" : "Format code with Prettier"}
           >
             <Code2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Format
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-primary-foreground/30 bg-primary-foreground/20 px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+F</kbd>
           </Button>
           <Button
             variant="outline"
@@ -338,7 +338,7 @@ export default function JsFormatter() {
             aria-label="Upload file to format"
           >
             <Upload className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Upload
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+O</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+U</kbd>
           </Button>
           {status === "loading" && <span className="text-xs text-muted-foreground flex items-center gap-1.5" aria-live="polite"><Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />Loading Prettier…</span>}
           {status === "ready" && <span className="text-xs text-green-600 dark:text-green-400" role="status" aria-live="polite">● Prettier ready</span>}
@@ -350,12 +350,12 @@ export default function JsFormatter() {
             <Button variant="outline" size="sm" onClick={() => copy()} disabled={!formatted} aria-label={copied ? "Copied to clipboard" : "Copy formatted code to clipboard"}>
               {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               {copied ? "Copied" : "Copy"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
             </Button>
-            <Button size="sm" onClick={() => download()} disabled={!formatted} aria-label={downloaded ? "File downloaded" : "Download formatted file"}>
-              {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+            <Button size="sm" variant={downloaded ? "outline" : "default"} onClick={() => download()} disabled={!formatted} aria-label={downloaded ? "File downloaded" : "Download formatted file"}>
+              {downloaded ? <FileCheck className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
               {downloaded ? "Saved!" : "Download"}
-              <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+              <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloaded ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
             </Button>
           </div>
         </div>
@@ -368,11 +368,11 @@ export default function JsFormatter() {
           </div>
           <div className="flex" role="tablist" aria-label="Panel selection">
             <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
               Code Input
             </button>
             <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+              className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
               Formatted
             </button>
           </div>
@@ -429,33 +429,55 @@ export default function JsFormatter() {
             role="region" aria-label="Formatted Output">
             <div className="flex-1 overflow-y-auto">
               {fmtErr
-                ? <div className="flex-1 p-4 overflow-auto" role="alert"><div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3 text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap">{fmtErr}</div></div>
+                ? <div className="p-4" role="alert"><div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 p-3 text-xs font-mono text-red-600 dark:text-red-400 whitespace-pre-wrap">{fmtErr}</div></div>
                 : <pre
-                    className="flex-1 overflow-auto p-4 text-sm font-mono whitespace-pre leading-relaxed"
+                    className="p-4 text-sm font-mono whitespace-pre leading-relaxed"
                     role="textbox"
                     aria-label="Formatted code output"
                     aria-readonly="true"
                   >{formatted || <span className="text-muted-foreground italic">Formatted output will appear here…</span>}</pre>
               }
+              <div className="p-4 pt-0 space-y-4">
+                <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                  <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                    <li>Paste your code into the left panel, or click <span className="text-foreground font-medium">Upload</span> (<span className="text-foreground font-medium">Ctrl+Shift+U</span>) to open a file directly.</li>
+                    <li>Select the correct language in the Options sidebar. Language is also detected automatically from the file extension on upload.</li>
+                    <li>Adjust Prettier options as needed: print width, tab width, quotes, semicolons, and trailing commas.</li>
+                    <li>Click <span className="text-foreground font-medium">Format</span> or press <span className="text-foreground font-medium">Ctrl+Shift+F</span>. Formatted code appears in this panel.</li>
+                    <li>Copy with <span className="text-foreground font-medium">Ctrl+Shift+V</span> or download with <span className="text-foreground font-medium">Ctrl+Shift+S</span>.</li>
+                  </ol>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+                    <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                      <li>Enable <span className="text-foreground font-medium">Auto-format on type</span> to reformat instantly as you edit.</li>
+                      <li>Prettier loads from CDN on first use. The green dot in the toolbar confirms it is ready.</li>
+                      <li>Supports JavaScript, JSX, TypeScript, TSX, CSS, HTML, JSON, and Markdown.</li>
+                      <li>Everything runs in your browser. Nothing is sent to a server.</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="md:hidden h-[60px]" aria-hidden="true" />
+              </div>
             </div>
           </div>
 
         </div>
 
         {/* MOBILE: bottom action bar */}
-        <div className="flex md:hidden shrink-0 items-center gap-1.5 border-t border-border bg-card/95 px-3 py-2"
+        <div className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-          <Button size="sm" className="h-11 px-3" onClick={() => { format() }} disabled={status !== "ready"}>
-            <Code2 className="h-4 w-4" /><span className="ml-1 text-xs">Format</span>
+          <Button size="sm" className="h-11 px-3" onClick={() => { format() }} disabled={status !== "ready"} aria-label={status !== "ready" ? "Format (Prettier not ready)" : "Format code"}>
+            <Code2 className="h-4 w-4" aria-hidden="true" /><span className="ml-1 text-xs">Format</span>
           </Button>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => copy()} disabled={!formatted}>
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => copy()} disabled={!formatted} aria-label={copied ? "Copied to clipboard" : "Copy formatted code"}>
+            {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
             <span className="ml-1 text-xs">{copied ? "Copied" : "Copy"}</span>
           </Button>
-          <Button size="sm" className="h-11 px-3" onClick={() => download()} disabled={!formatted}>
-            {downloaded ? <FileCheck className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-            <span className="ml-1 text-xs">Save</span>
+          <Button size="sm" variant={downloaded ? "outline" : "default"} className="h-11 px-3" onClick={() => download()} disabled={!formatted} aria-label={downloaded ? "File downloaded" : "Download formatted file"}>
+            {downloaded ? <FileCheck className="h-4 w-4" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
+            <span className="ml-1 text-xs">{downloaded ? "Saved!" : "Save"}</span>
           </Button>
         </div>
 
