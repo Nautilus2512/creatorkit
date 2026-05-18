@@ -95,7 +95,7 @@ export default function MarkdownToHtml() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "?" || (e.shiftKey && e.key === "/")) return
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "c" && html) {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v" && html) {
         e.preventDefault()
         copy()
       }
@@ -103,7 +103,7 @@ export default function MarkdownToHtml() {
         e.preventDefault()
         download()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "o") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "u") {
         e.preventDefault()
         fileInputRef.current?.click()
         announceToScreenReader("File upload dialog opened")
@@ -113,7 +113,7 @@ export default function MarkdownToHtml() {
         setInput(EXAMPLE)
         announceToScreenReader("Example loaded")
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "v") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") {
         e.preventDefault()
         setView(view === "preview" ? "html" : "preview")
         announceToScreenReader(view === "preview" ? "HTML view" : "Preview view")
@@ -131,21 +131,21 @@ export default function MarkdownToHtml() {
         <span className="text-sm font-semibold shrink-0 mr-1">Markdown → HTML</span>
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal pageName="Markdown to HTML" shortcuts={[
-            { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
+            { keys: ["Ctrl", "Shift", "U"], description: "Upload file" },
             { keys: ["Ctrl", "Shift", "E"], description: "Load example" },
-            { keys: ["Ctrl", "Shift", "V"], description: "Toggle preview/HTML" },
-            { keys: ["Ctrl", "Shift", "C"], description: "Copy HTML" },
+            { keys: ["Ctrl", "Shift", "L"], description: "Toggle preview/HTML" },
+            { keys: ["Ctrl", "Shift", "V"], description: "Copy HTML" },
             { keys: ["Ctrl", "Shift", "S"], description: "Download HTML" },
           ]} />
           <Button variant="outline" size="sm" onClick={copy} disabled={!html} aria-label={copied ? "HTML copied" : "Copy HTML"}>
             {copied ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
             {copied ? "Copied!" : "Copy HTML"}
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+C</kbd>
+            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+V</kbd>
           </Button>
-          <Button variant="outline" size="sm" onClick={download} disabled={!html} aria-label={downloaded ? "Downloaded" : "Download HTML"}>
-            {downloaded ? <FileCheck className="h-4 w-4 mr-1" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
+          <Button variant={downloaded ? "outline" : "default"} size="sm" onClick={download} disabled={!html} aria-label={downloaded ? "Downloaded" : "Download HTML"}>
+            {downloaded ? <FileCheck className="h-4 w-4 mr-1" aria-hidden="true" /> : <Download className="h-4 w-4 mr-1" aria-hidden="true" />}
             {downloaded ? "Saved!" : ".html"}
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+S</kbd>
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloaded ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+S</kbd>
           </Button>
         </div>
       </div>
@@ -155,18 +155,18 @@ export default function MarkdownToHtml() {
         <div className="flex items-center justify-between px-4 pt-3 pb-1">
           <h2 className="text-base font-semibold">Markdown → HTML</h2>
           <ShortcutsModal pageName="Markdown to HTML" shortcuts={[
-            { keys: ["Ctrl", "Shift", "O"], description: "Upload file" },
-            { keys: ["Ctrl", "Shift", "C"], description: "Copy HTML" },
+            { keys: ["Ctrl", "Shift", "U"], description: "Upload file" },
+            { keys: ["Ctrl", "Shift", "V"], description: "Copy HTML" },
             { keys: ["Ctrl", "Shift", "S"], description: "Download HTML" },
           ]} />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button role="tab" aria-selected={activeTab === "input"} onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Markdown
           </button>
           <button role="tab" aria-selected={activeTab === "output"} onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}>
             Output
           </button>
         </div>
@@ -184,7 +184,7 @@ export default function MarkdownToHtml() {
               <label className="cursor-pointer">
                 <input type="file" accept=".md,.txt,.markdown" className="hidden" onChange={handleFile} ref={fileInputRef} aria-label="Upload markdown file" />
                 <Button variant="ghost" size="sm" asChild aria-label="Upload markdown file">
-                  <span className="flex items-center gap-1"><Upload className="h-4 w-4" aria-hidden="true" />Upload<kbd className="ml-1 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+O</kbd></span>
+                  <span className="flex items-center gap-1"><Upload className="h-4 w-4" aria-hidden="true" />Upload<kbd className="ml-1 hidden md:inline rounded border border-muted-foreground/30 bg-muted/20 px-1 text-[10px] opacity-60" aria-hidden="true">Ctrl+Shift+U</kbd></span>
                 </Button>
               </label>
             </div>
@@ -203,14 +203,41 @@ export default function MarkdownToHtml() {
               <Button variant={view === "html" ? "default" : "ghost"} size="sm" onClick={() => { setView("html"); announceToScreenReader("HTML view") }} aria-pressed={view === "html"} aria-label="Show HTML">
                 <Code className="h-4 w-4 mr-1" aria-hidden="true" />HTML
               </Button>
-              <kbd className="flex items-center text-[10px] text-muted-foreground opacity-60 ml-1" aria-hidden="true">Ctrl+Shift+V</kbd>
+              <kbd className="flex items-center text-[10px] text-muted-foreground opacity-60 ml-1" aria-hidden="true">Ctrl+Shift+L</kbd>
             </div>
           </div>
-          {view === "preview" ? (
-            <div className="flex-1 overflow-y-auto p-4 prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: html || '<p style="color: var(--muted-foreground)">Preview will appear here...</p>' }} role="region" aria-label="HTML preview" />
-          ) : (
-            <Textarea value={html} readOnly placeholder="HTML output will appear here..." className="flex-1 resize-none border-0 rounded-none font-mono text-xs focus-visible:ring-0 bg-muted/10 p-4" aria-label="HTML output" />
-          )}
+          <div className="flex-1 overflow-y-auto">
+            {view === "preview" ? (
+              <div
+                className="p-4 prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: html || '<p style="color: var(--muted-foreground)">Preview will appear here...</p>' }}
+                role="region"
+                aria-label="HTML preview"
+              />
+            ) : (
+              <Textarea value={html} readOnly placeholder="HTML output will appear here..." className="min-h-[300px] w-full resize-none border-0 rounded-none font-mono text-xs focus-visible:ring-0 bg-muted/10 p-4" aria-label="HTML output" />
+            )}
+            <div className="p-4 pt-0">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+                <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                  <li>Type or paste Markdown in the left panel. The output updates live as you type.</li>
+                  <li>Use <span className="text-foreground font-medium">Preview</span> to see the rendered HTML, or <span className="text-foreground font-medium">HTML</span> to inspect the raw markup. Toggle with <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Ctrl+Shift+L</kbd>.</li>
+                  <li>Click <span className="text-foreground font-medium">Upload</span> to load a <span className="text-foreground font-medium">.md</span> or <span className="text-foreground font-medium">.txt</span> file, or <span className="text-foreground font-medium">Example</span> to load a sample document.</li>
+                  <li>Use <span className="text-foreground font-medium">Copy HTML</span> to copy the raw markup, or <span className="text-foreground font-medium">.html</span> to download it as a file.</li>
+                </ol>
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+                  <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                    <li>Tables, code blocks, and blockquotes are fully supported.</li>
+                    <li>The word count and character count update live in the footer below the output.</li>
+                    <li>Everything runs in your browser. Nothing is sent to a server.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
+          </div>
           {html && (
             <div className="shrink-0 border-t border-border bg-card/95 px-4 py-2 text-xs text-muted-foreground flex gap-4" role="status" aria-live="polite">
               <span>{input.trim().split(/\s+/).filter(Boolean).length} words in</span>
@@ -222,7 +249,7 @@ export default function MarkdownToHtml() {
 
       {/* Mobile: bottom action bar */}
       <div
-        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <div className="flex-1" />
@@ -231,7 +258,7 @@ export default function MarkdownToHtml() {
           {copied ? "Copied!" : "Copy HTML"}
         </Button>
         <Button variant="outline" size="sm" className="h-11 px-3" onClick={download} disabled={!html} aria-label="Download HTML">
-          {downloaded ? <FileCheck className="h-4 w-4" /> : <Download className="h-4 w-4" aria-hidden="true" />}
+          {downloaded ? <FileCheck className="h-4 w-4" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
         </Button>
       </div>
     </div>
