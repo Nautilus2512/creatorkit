@@ -309,8 +309,9 @@ export default function JsonFormatter() {
             <Label htmlFor="minified-mobile" className="text-xs">{showMinified ? "Minified" : "Formatted"}</Label>
           </div>
           <div className="flex-1" />
-          <Button variant="ghost" size="sm" className="h-11 px-3" onClick={() => { fileInputRef.current?.click(); announceToScreenReader("File upload dialog opened") }} aria-label="Upload JSON file">
+          <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => { fileInputRef.current?.click(); announceToScreenReader("File upload dialog opened") }} aria-label="Upload JSON file">
             <FileJson className="h-4 w-4" aria-hidden="true" />
+            <span className="ml-1 text-xs">Upload</span>
           </Button>
           <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => copy()} disabled={!isValid} aria-label={copied ? "Copied to clipboard" : "Copy JSON"}>
             {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
