@@ -306,9 +306,12 @@ export default function JsonFormatter() {
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
           <div className="flex items-center gap-1.5">
             <Switch id="minified-mobile" checked={showMinified} onCheckedChange={(v) => { setShowMinified(v); announceToScreenReader(v ? "Minified output" : "Formatted output") }} />
-            <Label htmlFor="minified-mobile" className="text-xs">{showMinified ? "Mini" : "Fmt"}</Label>
+            <Label htmlFor="minified-mobile" className="text-xs">{showMinified ? "Minified" : "Formatted"}</Label>
           </div>
           <div className="flex-1" />
+          <Button variant="ghost" size="sm" className="h-11 px-3" onClick={() => { fileInputRef.current?.click(); announceToScreenReader("File upload dialog opened") }} aria-label="Upload JSON file">
+            <FileJson className="h-4 w-4" aria-hidden="true" />
+          </Button>
           <Button variant="outline" size="sm" className="h-11 px-3" onClick={() => copy()} disabled={!isValid} aria-label={copied ? "Copied to clipboard" : "Copy JSON"}>
             {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
             <span className="ml-1 text-xs">{copied ? "Copied!" : "Copy"}</span>
