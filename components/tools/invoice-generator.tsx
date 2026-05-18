@@ -651,6 +651,7 @@ export default function InvoiceGenerator() {
                   aria-label="Invoice notes"
                 />
               </div>
+              <div className="md:hidden h-[60px]" aria-hidden="true" />
             </div>
           </div>
         </div>
