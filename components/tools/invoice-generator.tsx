@@ -103,12 +103,12 @@ export default function InvoiceGenerator() {
   const printedRef = useRef(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("ck-invoice")
+    const saved = localStorage.getItem("creatorkit-invoice")
     if (saved) try { setForm(JSON.parse(saved)) } catch {}
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("ck-invoice", JSON.stringify(form))
+    localStorage.setItem("creatorkit-invoice", JSON.stringify(form))
   }, [form])
 
   const set = useCallback(<K extends keyof Form>(k: K, v: Form[K]) => setForm(f => ({ ...f, [k]: v })), [])
@@ -156,7 +156,7 @@ export default function InvoiceGenerator() {
         e.preventDefault()
         printInvoice()
       }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "r") {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "x") {
         e.preventDefault()
         reset()
       }
@@ -178,26 +178,27 @@ export default function InvoiceGenerator() {
           aria-label="Clear all invoice data"
         >
           <RotateCcw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />Clear
-          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+R</kbd>
+          <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+X</kbd>
         </Button>
         <div className="ml-auto flex items-center gap-1.5">
           <ShortcutsModal
             pageName="Invoice Generator"
             shortcuts={[
               { keys: ["Ctrl", "Shift", "P"], description: "Print / Preview invoice" },
-              { keys: ["Ctrl", "Shift", "R"], description: "Reset form" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Reset form" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
           <Button
             size="sm"
+            variant={downloaded ? "outline" : "default"}
             onClick={() => printInvoice()}
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             aria-label={downloaded ? "Invoice ready for printing" : "Print or download invoice as PDF"}
           >
-            {downloaded ? <FileCheck className="h-3.5 w-3.5 mr-1.5" /> : <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />}
+            {downloaded ? <FileCheck className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> : <Download className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />}
             {downloaded ? "Ready!" : "Download / Print"}
-            <kbd className="ml-1 hidden md:inline rounded border border-border bg-muted px-1 text-[10px]" aria-hidden="true">Ctrl+Shift+P</kbd>
+            <kbd className={`ml-1 hidden md:inline rounded border px-1 text-[10px] ${downloaded ? "border-border bg-muted" : "border-primary-foreground/30 bg-primary-foreground/20"}`} aria-hidden="true">Ctrl+Shift+P</kbd>
           </Button>
         </div>
       </div>
@@ -210,17 +211,17 @@ export default function InvoiceGenerator() {
             pageName="Invoice Generator"
             shortcuts={[
               { keys: ["Ctrl", "Shift", "P"], description: "Print / Preview invoice" },
-              { keys: ["Ctrl", "Shift", "R"], description: "Reset form" },
+              { keys: ["Ctrl", "Shift", "X"], description: "Reset form" },
               { keys: ["?"], description: "Toggle this panel" },
             ]}
           />
         </div>
-        <div className="flex" role="tablist">
+        <div className="flex" role="tablist" aria-label="Panel selection">
           <button
             role="tab"
             aria-selected={activeTab === "input"}
             onClick={() => setActiveTab("input")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "input" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
           >
             Form
           </button>
@@ -228,7 +229,7 @@ export default function InvoiceGenerator() {
             role="tab"
             aria-selected={activeTab === "output"}
             onClick={() => setActiveTab("output")}
-            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
+            className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${activeTab === "output" ? "border-primary text-foreground" : "border-transparent text-muted-foreground"}`}
           >
             Preview
           </button>
@@ -359,7 +360,7 @@ export default function InvoiceGenerator() {
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" id="preview-panel-label">Preview</span>
             <span className="text-xs text-muted-foreground" aria-live="polite">Auto-saved locally</span>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             <div
               className="bg-white dark:bg-card rounded-xl border border-border shadow-sm p-6 md:p-8 font-sans text-sm text-foreground"
               role="img"
@@ -431,13 +432,34 @@ export default function InvoiceGenerator() {
                 </div>
               )}
             </div>
+
+            <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">How to use</p>
+              <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal list-inside">
+                <li>Fill in <span className="text-foreground font-medium">From</span> (your business) and <span className="text-foreground font-medium">Bill To</span> (your client) details on the left.</li>
+                <li>Set the invoice number, issue date, due date, and currency.</li>
+                <li>Add line items with a description, quantity, and unit price. The amount calculates automatically.</li>
+                <li>Click <span className="text-foreground font-medium">Download / Print</span> or press <span className="text-foreground font-medium">Ctrl+Shift+P</span> to open the invoice in a new tab.</li>
+                <li>In the browser print dialog, choose <span className="text-foreground font-medium">Save as PDF</span> to export, or send directly to a printer.</li>
+              </ol>
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tips</p>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>Your data saves automatically as you type. It will still be here when you return.</li>
+                  <li>Use <span className="text-foreground font-medium">Ctrl+Shift+X</span> to clear all fields and start a fresh invoice.</li>
+                  <li>The Tax field applies a percentage to the subtotal. Leave it at 0 if tax does not apply.</li>
+                  <li>Everything runs in your browser. Nothing is sent to a server.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="md:hidden h-[60px]" aria-hidden="true" />
           </div>
         </div>
       </div>
 
       {/* Mobile: bottom action bar */}
       <div
-        className="flex md:hidden shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3 py-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 flex items-center gap-1.5 border-t border-border bg-card/95 backdrop-blur-sm px-3 py-2 z-20"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <Button
